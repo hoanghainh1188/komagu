@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # Add nuget / gradle / npm entries when remediate/ modules gain dependencies.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
