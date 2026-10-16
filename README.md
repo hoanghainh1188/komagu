@@ -85,6 +85,7 @@ without a verdict, invalid JSON, …). Fix those before reporting.
 | `adapters/` | Generators and notes for Claude Code, Cursor, OpenHands, generic LLM platforms |
 | `governance/` | Usage policy: roles, data protection, approval gates, metrics |
 | `tests/` | Fixture apps with known bugs, pre-scan self-test, agent evaluation tools |
+| `docs/` | Internal business and planning documents (Modernization Boilerplates proposal, Boilerplate 1 plan) |
 
 ## Evaluating the agents (recommended before the first real audit)
 
