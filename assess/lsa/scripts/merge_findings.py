@@ -24,11 +24,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import KIT_VERSION, read_json, write_json  # noqa: E402
 
 KIT = Path(__file__).resolve().parent.parent
+# Generated bundles carry schemas/ next to scripts/; in the source repo they live in <repo>/contracts/schemas.
+SCHEMAS = KIT / "schemas" if (KIT / "schemas").is_dir() else KIT.parent.parent / "contracts" / "schemas"
 SEV_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
 
 
 def load_validator(schema_name: str):
-    schema = read_json(KIT / "schemas" / schema_name)
+    schema = read_json(SCHEMAS / schema_name)
     try:
         import jsonschema  # optional; old versions lack Draft 2020-12, the kit schemas also validate as Draft 7
         cls = getattr(jsonschema, "Draft202012Validator", None) or getattr(jsonschema, "Draft7Validator")

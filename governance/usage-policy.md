@@ -78,7 +78,7 @@ into the platform.
 |---|---|---|
 | Endpoint coverage | endpoints audited / endpoints inventoried | 100 % |
 | Precision | accepted by Person B / (confirmed + likely) | ≥ 70 % |
-| Recall on test fixtures | `tests/score_findings.py` on fixture repos | ≥ 90 % |
+| Recall on test fixtures | `assess/lsa/tests/score_findings.py` on fixture repos | ≥ 90 % |
 | Review time | minutes Person B spends per finding | track only |
 | Cost | tokens per endpoint audited | track only |
 

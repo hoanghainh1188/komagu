@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent
+REPO = KIT.parent.parent
 VERSION = (KIT / "VERSION").read_text().strip()
 
 ROLES = [
@@ -46,15 +47,17 @@ ROLES = [
      "knowledge": []},
 ]
 
-COPY_DIRS = ["prompts", "knowledge", "schemas", "scripts", "templates", "governance"]
+# bundle folder -> source folder; schemas and governance are shared at the repository root
+COPY_DIRS = {"prompts": KIT / "prompts", "knowledge": KIT / "knowledge", "schemas": REPO / "contracts" / "schemas",
+             "scripts": KIT / "scripts", "templates": KIT / "templates", "governance": REPO / "governance"}
 
 
 def copy_kit(dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
-    for d in COPY_DIRS:
+    for d, src in COPY_DIRS.items():
         if (dest / d).exists():
             shutil.rmtree(dest / d)
-        shutil.copytree(KIT / d, dest / d, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copytree(src, dest / d, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copy2(KIT / "VERSION", dest / "VERSION")
 
 
