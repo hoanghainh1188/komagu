@@ -57,6 +57,16 @@ Pipeline (phases in `prompts/00-orchestrator.md`): deterministic pre-scan → st
 
 `run_tests.py` checks injection recall, NOFLAG precision, route coverage of BOLA markers, and an end-to-end prescan→merge→SARIF→report run. When you change a regex, add/adjust a fixture line with the right marker.
 
+## Working with issues
+
+Tasks are tracked as GitHub issues in `hoanghainh1188/komainu` and on project board #6 (`gh project ... 6 --owner hoanghainh1188`; fields Status, Priority P0–P2, Size).
+
+- Every change starts from an issue; create one first if none exists, with a `Source:` line pointing to the doc section it comes from.
+- Branch name: `<issue-number>-<short-kebab-description>` (e.g. `9-d1-authz-library`).
+- PR body includes `Closes #N`; move the project item to In progress / In review as work advances.
+- Labels: one or more `area:*` (`assess`, `contracts`, `remediate`, `operate`, `delivery`, `governance`, `docs`) matching the folder touched; `decision` for items that need a choice by management or the owner — record the outcome in an ADR under `docs/adr/`.
+- Boilerplate 1 work is assigned to milestones M1–M5, which mirror the approval points in `docs/boilerplate-1-delivery-plan.md`.
+
 ## Other
 
 - Kit version is in `VERSION`; note changes in `CHANGELOG.md`.
