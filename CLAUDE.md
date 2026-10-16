@@ -65,6 +65,7 @@ Tasks are tracked as GitHub issues in `hoanghainh1188/komainu` and on project bo
 - Branch name: `<issue-number>-<short-kebab-description>` (e.g. `9-d1-authz-library`).
 - PR body includes `Closes #N`; move the project item to In progress / In review as work advances.
 - Labels: one or more `area:*` (`assess`, `contracts`, `remediate`, `operate`, `delivery`, `governance`, `docs`) matching the folder touched; `decision` for items that need a choice by management or the owner — record the outcome in an ADR under `docs/adr/`.
+- Never push to `main` directly. The repo is private on GitHub Free, so `main` has no server-side protection; a versioned pre-push hook blocks it locally (enable per clone: `git config core.hooksPath .githooks`). Merge is squash-only and CI (`.github/workflows/lsa-tests.yml`) must be green before merging.
 - Boilerplate 1 work is assigned to milestones M1–M5, which mirror the approval points in `docs/boilerplate-1-delivery-plan.md`.
 
 ## Other
