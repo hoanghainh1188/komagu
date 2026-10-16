@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/stack-profile.schema.json",
+  "title": "LSA stack profile",
+  "type": "object",
+  "required": [
+    "repo",
+    "stacks",
+    "file_counts"
+  ],
+  "properties": {
+    "repo": {
+      "type": "string"
+    },
+    "generated_by": {
+      "type": "string"
+    },
+    "stacks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "e.g. php, php-codeigniter, java-servlet, java-struts1, java-struts2, java-spring-mvc, java-mybatis, java-ibatis, java-hibernate, dotnet-webforms, dotnet-mvc, dotnet-webapi, dotnet-asmx, classic-asp, perl-cgi, coldfusion, node-express, python-django, python-flask, ruby-rails, sql-procedures"
+          },
+          "language": {
+            "type": "string"
+          },
+          "version_hint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confirmed": {
+            "type": "boolean"
+          },
+          "root": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "folder of the sub-application that uses this stack ('' = repository root)"
+          }
+        }
+      }
+    },
+    "data_access": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "databases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "file_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "knowledge_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "checks that may live outside the visible code (gateway, stored procedures, DB views, web server auth)"
+    }
+  }
+}

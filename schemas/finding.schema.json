@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/finding.schema.json",
+  "title": "LSA finding",
+  "type": "object",
+  "required": [
+    "finding_id",
+    "category",
+    "subtype",
+    "title",
+    "location",
+    "evidence",
+    "severity",
+    "confidence",
+    "cwe",
+    "recommendation",
+    "status"
+  ],
+  "properties": {
+    "finding_id": {
+      "type": "string",
+      "pattern": "^(BOLA|INJ)-[A-Za-z0-9_.-]+$"
+    },
+    "category": {
+      "enum": [
+        "bola",
+        "sql_injection",
+        "nosql_injection"
+      ]
+    },
+    "subtype": {
+      "enum": [
+        "missing_ownership_check",
+        "ownership_check_bypassable",
+        "id_from_request_used_as_identity",
+        "no_authentication",
+        "parent_checked_child_not",
+        "check_result_ignored",
+        "string_concatenation",
+        "string_interpolation",
+        "format_string",
+        "template_placeholder",
+        "dynamic_identifier",
+        "operator_injection",
+        "js_injection",
+        "second_order",
+        "stored_procedure_dynamic_sql",
+        "missing_role_check"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "route_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "candidate_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "endpoint": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "one string; several methods joined with |"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "location": {
+      "type": "object",
+      "required": [
+        "file",
+        "start_line"
+      ],
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "start_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "line",
+          "why"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "code": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "data_flow": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "attack_scenario": {
+      "type": "string"
+    },
+    "impact": {
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info"
+      ]
+    },
+    "confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "cwe": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^CWE-[0-9]+$"
+      }
+    },
+    "owasp": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommendation": {
+      "type": "string"
+    },
+    "fix_example": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "unverified",
+        "confirmed",
+        "likely",
+        "rejected",
+        "needs_review",
+        "accepted_risk",
+        "fixed"
+      ]
+    },
+    "verification": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "verdict": {
+          "enum": [
+            "confirmed",
+            "likely",
+            "rejected"
+          ]
+        },
+        "checked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "control_found": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        },
+        "reason_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "suggested_subtype": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "suggested_cwe": {
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      }
+    },
+    "human_review": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "reviewer": {
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "accept",
+            "reject",
+            "change_severity"
+          ]
+        },
+        "date": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

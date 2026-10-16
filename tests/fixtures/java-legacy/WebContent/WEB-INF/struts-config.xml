@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<struts-config>
+  <action-mappings>
+    <action path="/user/edit" type="com.acme.struts.EditUserAction" name="userForm" scope="request"/>
+  </action-mappings>
+</struts-config>

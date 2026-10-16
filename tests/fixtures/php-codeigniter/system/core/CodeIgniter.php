@@ -1,0 +1,1 @@
+<?php // CodeIgniter core placeholder

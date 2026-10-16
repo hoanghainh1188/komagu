@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/verification.schema.json",
+  "title": "LSA verifier output",
+  "type": "object",
+  "required": ["verifications"],
+  "properties": {
+    "batch_id": {"type": "string"},
+    "verifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "verdict", "confidence", "checked"],
+        "properties": {
+          "finding_id": {"type": "string"},
+          "verdict": {"enum": ["confirmed", "likely", "rejected"]},
+          "reason_code": {"enum": ["traced", "code_not_visible", "config_not_visible", "data_ownership_unclear",
+                                   "control_found", "evidence_mismatch", "not_executed", "not_reachable", "not_attacker_controlled"]},
+          "severity": {"enum": ["critical", "high", "medium", "low", "info", null]},
+          "confidence": {"enum": ["high", "medium", "low"]},
+          "suggested_subtype": {"type": ["string", "null"]},
+          "suggested_cwe": {"type": ["array", "null"], "items": {"type": "string", "pattern": "^CWE-[0-9]+$"}},
+          "checked": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "control_found": {"type": ["object", "null"]},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "new_issues": {
+      "type": "array",
+      "description": "possible issues noticed during verification that no finding in the batch covers; the orchestrator sends them back to the matching auditor",
+      "items": {"type": "object", "required": ["category", "file", "line", "why"],
+                "properties": {"category": {"enum": ["bola", "sql_injection", "nosql_injection"]}, "file": {"type": "string"},
+                               "line": {"type": "integer"}, "why": {"type": "string"}}}
+    },
+    "out_of_scope_notes": {"type": "array", "items": {"type": "string"}}
+  }
+}

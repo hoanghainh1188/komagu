@@ -1,0 +1,221 @@
+{
+  "repo": "repo",
+  "generated_by": "lsa detect_stack.py 0.1.0 + stack-detector agent (10-stack-detector)",
+  "stacks": [
+    {
+      "id": "php",
+      "language": "php",
+      "version_hint": "PHP 4/5 (<=5.6: mysql_* used, removed in PHP 7)",
+      "evidence": [
+        "php-plain/inc/db.php:2 mysql_connect",
+        "php-plain/inc/db.php:4 new PDO",
+        "php-plain/mongo_find.php:3 legacy MongoClient (ext/mongo, PHP 5)",
+        "sub-app: php-plain/"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "php-codeigniter",
+      "language": "php",
+      "version_hint": "CodeIgniter 2/3 (core file is a placeholder, version not visible)",
+      "evidence": [
+        "php-codeigniter/system/core/CodeIgniter.php:1 placeholder only",
+        "php-codeigniter/application/controllers/Invoice.php:2 extends MY_Controller (source not in repo)",
+        "php-codeigniter/application/controllers/Invoice.php:6 $this->load->database()"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "java-servlet",
+      "language": "java",
+      "version_hint": "Servlet 2.x (web.xml mapping, no @WebServlet)",
+      "evidence": [
+        "java-legacy/WebContent/WEB-INF/web.xml:11-18 OrderServlet -> /order/view",
+        "java-legacy/src/com/acme/web/OrderServlet.java:7 extends HttpServlet"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "java-jsp",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "java-legacy/WebContent/order/detail.jsp:2-6 scriptlet with JDBC query"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "java-struts1",
+      "language": "java",
+      "version_hint": "Struts 1.x",
+      "evidence": [
+        "java-legacy/WebContent/WEB-INF/struts-config.xml:4 action /user/edit",
+        "java-legacy/src/com/acme/struts/EditUserAction.java:7 extends org.apache.struts.action.Action",
+        "NOTE: no ActionServlet declared in web.xml; *.do wiring not visible"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "java-spring-mvc",
+      "language": "java",
+      "version_hint": "Spring MVC 2.5-3.x style (@RequestMapping(method=...), no @GetMapping)",
+      "evidence": [
+        "java-legacy/src/com/acme/web/InvoiceController.java:8-9 @Controller @RequestMapping(\"/invoices\")",
+        "NOTE: no DispatcherServlet in web.xml; URL prefix/wiring not visible"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "java-mybatis",
+      "language": "java",
+      "version_hint": "MyBatis 3 (mybatis-3-mapper DTD)",
+      "evidence": [
+        "java-legacy/src/com/acme/mapper/OrderMapper.xml:2-3",
+        "no Java caller of OrderMapper found in repo"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "java-hibernate",
+      "language": "java",
+      "version_hint": "Hibernate 3+ (org.hibernate.Session.createQuery)",
+      "evidence": [
+        "java-legacy/src/com/acme/web/InvoiceController.java:4,29"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "dotnet-webforms",
+      "language": "csharp/vbnet",
+      "version_hint": ".NET Framework WebForms (C# and VB.NET code-behind)",
+      "evidence": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx:1 Language=C#",
+        "dotnet-legacy/Web/Orders/EditOrder.aspx:1 Language=VB",
+        "dotnet-legacy/Web/Web.config:4 Forms authentication"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "dotnet-handlers",
+      "language": "csharp",
+      "version_hint": null,
+      "evidence": [
+        "dotnet-legacy/Web/Handlers/GetFile.ashx:4 IHttpHandler"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "dotnet-mvc",
+      "language": "csharp",
+      "version_hint": "ASP.NET MVC (System.Web.Mvc, MVC 3-5) with EF6-style DbContext",
+      "evidence": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:2 using System.Web.Mvc",
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:13,28 DbSet.Find / Database.SqlQuery (ShopDb class not in repo)"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "classic-asp",
+      "language": "vbscript",
+      "version_hint": "Classic ASP (VBScript) + ADO",
+      "evidence": [
+        "classic-asp/shop/inc/conn.asp:2 ADODB.Connection",
+        "classic-asp/shop/member.asp:1-2 #include auth.asp/conn.asp",
+        "note: no .asa file exists; pre-scan count '.asa,.asp=4' is 4 .asp files"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "perl-cgi",
+      "language": "perl",
+      "version_hint": "CGI.pm + CGI::Session + DBI (DBD::mysql)",
+      "evidence": [
+        "perl-cgi/cgi-bin/order.cgi:3-5,10"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "coldfusion",
+      "language": "cfml",
+      "version_hint": "version not visible; no Application.cfc/.cfm in repo",
+      "evidence": [
+        "coldfusion/app/order.cfm:2 cfquery",
+        "coldfusion/app/OrderService.cfc:2 access=\"remote\" function"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "node-express",
+      "language": "javascript",
+      "version_hint": "Express 4.x (express.Router())",
+      "evidence": [
+        "node-express/routes/orders.js:1-2",
+        "no app.js / package.json / ../db / ../models in repo"
+      ],
+      "confirmed": true
+    },
+    {
+      "id": "python-flask",
+      "language": "python",
+      "version_hint": "Flask + Flask-Login",
+      "evidence": [
+        "python-flask/app.py:1-2",
+        "db module not in repo"
+      ],
+      "confirmed": true
+    }
+  ],
+  "data_access": [
+    "PHP mysql_* (no binding): php-plain",
+    "PHP PDO prepared statements: php-plain/order_detail_safe.php",
+    "PHP legacy MongoClient (ext/mongo): php-plain/mongo_find.php",
+    "CodeIgniter Database (query() with/without bindings, get_where Query Builder)",
+    "JDBC Statement/PreparedStatement (Servlet, JSP scriptlet, Struts 1 action)",
+    "MyBatis 3 XML mapper",
+    "Hibernate Session HQL (createQuery)",
+    "DAO helper InvoiceDao (source not in repo)",
+    "ADO.NET SqlCommand (WebForms C#/VB)",
+    "Entity Framework 6 style DbContext (Find, LINQ, Database.SqlQuery)",
+    "Classic ADO (ADODB.Connection.Execute)",
+    "ColdFusion cfquery / cfqueryparam",
+    "Perl DBI (prepare/execute/do)",
+    "Node db.query (mysql-style driver, module not in repo)",
+    "Node MongoDB driver / Mongoose-style model (Order.findById/findOne)",
+    "Python DB-API cursor.execute",
+    "T-SQL stored procedure with dynamic SQL EXEC(@sql): sql-procs/sp_search_orders.sql (no caller in repo)"
+  ],
+  "databases": [
+    "MySQL (php-plain mysql_connect/PDO dsn, perl dbi:mysql)",
+    "SQL Server (T-SQL procedure; ADO.NET SqlClient in dotnet-legacy)",
+    "MongoDB (node-express, php-plain/mongo_find.php)",
+    "Unknown engine: classic-asp (Application(\"ConnStr\")), coldfusion (datasource shop), java-legacy (DataSourceHolder), php-codeigniter, python-flask, node db.query"
+  ],
+  "file_counts": {
+    ".php": 9,
+    ".asp": 4,
+    ".xml": 3,
+    ".java": 3,
+    ".cs": 2,
+    ".aspx": 2,
+    ".cfc": 1,
+    ".cfm": 1,
+    ".config": 1,
+    ".ashx": 1,
+    ".vb": 1,
+    ".jsp": 1,
+    ".js": 1,
+    ".cgi": 1,
+    ".py": 1,
+    ".sql": 1
+  },
+  "knowledge_files": [
+    "knowledge/stacks/php.md",
+    "knowledge/stacks/java.md",
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/classic-asp.md",
+    "knowledge/stacks/perl-cgi.md",
+    "knowledge/stacks/coldfusion.md",
+    "knowledge/stacks/node-python-ruby.md"
+  ],
+  "notes": "Confirmed by stack-detector. Multi-stack test repo: 10 top-level sub-apps (classic-asp, coldfusion, dotnet-legacy, java-legacy, node-express, perl-cgi, php-codeigniter, php-plain, python-flask, sql-procs). Each is a separate application; no shared auth. Many security-relevant helpers are referenced but not in repo (LoginFilter, BasePage, MY_Controller, InvoiceDao, CurrentUserId, DocStore, ShopDb, node app/db, flask db/user_loader) - see auth-model.md section 6. No version manifests (pom.xml, packages.config, composer.json, package.json, requirements.txt) present; version hints are inferred from APIs."
+}

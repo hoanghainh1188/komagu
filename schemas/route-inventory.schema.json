@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/route-inventory.schema.json",
+  "title": "LSA route inventory (one batch or merged)",
+  "type": "object",
+  "required": [
+    "routes"
+  ],
+  "$defs": {
+    "loc": {
+      "type": "object",
+      "required": [
+        "file",
+        "line"
+      ],
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "properties": {
+    "batch_id": {
+      "type": "string"
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "route_id",
+          "method",
+          "path",
+          "handler",
+          "id_inputs",
+          "guards",
+          "data_ops",
+          "needs_bola_audit"
+        ],
+        "properties": {
+          "route_id": {
+            "type": "string"
+          },
+          "method": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "path": {
+            "type": "string"
+          },
+          "path_source": {
+            "enum": [
+              "file",
+              "declared",
+              "convention",
+              "inferred"
+            ]
+          },
+          "handler": {
+            "type": "object",
+            "required": [
+              "file",
+              "line"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer"
+              },
+              "symbol": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "id_inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "source"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "source": {
+                  "enum": [
+                    "query",
+                    "form",
+                    "path",
+                    "cookie",
+                    "header",
+                    "body",
+                    "hidden_field",
+                    "file_name",
+                    "any",
+                    "unknown"
+                  ]
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "guards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "name"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "authn",
+                    "role",
+                    "ownership",
+                    "unknown"
+                  ]
+                },
+                "name": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "position": {
+                  "enum": [
+                    "before_handler",
+                    "in_handler",
+                    "in_query",
+                    "in_helper",
+                    "outside_code"
+                  ],
+                  "description": "where the check runs"
+                }
+              }
+            }
+          },
+          "data_ops": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "enum": [
+                    "read",
+                    "update",
+                    "delete",
+                    "create",
+                    "file_read",
+                    "file_write",
+                    "export"
+                  ]
+                },
+                "target": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "needs_bola_audit": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "app_root": {
+            "type": "string",
+            "description": "folder of the sub-application (from auth-model.md section 0); path is relative to its web root"
+          },
+          "other_inputs": {
+            "type": "array",
+            "description": "request values that are not object identifiers (search text, sort, filters) - context for the injection audit",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "source"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "route_id",
+          "reason"
+        ],
+        "properties": {
+          "route_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "out_of_scope_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
