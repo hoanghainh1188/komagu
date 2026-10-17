@@ -1,0 +1,872 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "LSA Legacy Security Audit (AI-assisted)",
+          "version": "0.1.0",
+          "informationUri": "https://owasp.org/API-Security/",
+          "rules": [
+            {
+              "id": "lsa/bola/missing_role_check",
+              "name": "bola.missing_role_check",
+              "shortDescription": {
+                "text": "Broken object level authorization (BOLA/IDOR) — missing role check"
+              },
+              "fullDescription": {
+                "text": "The endpoint accesses an object selected by a request-controlled identifier without binding the access to the current user or tenant."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-285",
+                  "CWE-639",
+                  "API5:2023",
+                  "API1:2023"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/bola/missing_ownership_check",
+              "name": "bola.missing_ownership_check",
+              "shortDescription": {
+                "text": "Broken object level authorization (BOLA/IDOR) — missing ownership check"
+              },
+              "fullDescription": {
+                "text": "The endpoint accesses an object selected by a request-controlled identifier without binding the access to the current user or tenant."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-639",
+                  "CWE-862",
+                  "API1:2023",
+                  "A01:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/string_interpolation",
+              "name": "sql_injection.string_interpolation",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — string interpolation"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/nosql_injection/operator_injection",
+              "name": "nosql_injection.operator_injection",
+              "shortDescription": {
+                "text": "NoSQL query built from untrusted input — operator injection"
+              },
+              "fullDescription": {
+                "text": "A NoSQL filter or server-side script is built from request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-943",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/nosql_injection/js_injection",
+              "name": "nosql_injection.js_injection",
+              "shortDescription": {
+                "text": "NoSQL query built from untrusted input — js injection"
+              },
+              "fullDescription": {
+                "text": "A NoSQL filter or server-side script is built from request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-943",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/string_concatenation",
+              "name": "sql_injection.string_concatenation",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — string concatenation"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/dynamic_identifier",
+              "name": "sql_injection.dynamic_identifier",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — dynamic identifier"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "lsa/bola/missing_role_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Any logged-in user can delete arbitrary user accounts via admin.php?action=delete [POST /admin.php?action=delete] — Verify that the current session belongs to an authorized administrator before allowing user deletion, and use a prepared statement bound to the validated user ID."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 13
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Only checks that $_SESSION['user_id'] is non-empty; does not check administrator role or account ownership"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Target user ID read directly from POST form parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Deletes arbitrary user row matching $id with no role check or session ownership constraint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0002-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-285",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Order shipping address readable by any logged-in user via id parameter [GET /order_detail.php] — Constrain the order lookup by the authenticated user's session ID (AND user_id = ?) using a prepared statement, as done in order_detail_safe.php."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 8
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Checks login status only (inc/auth.php:4); does not verify order ownership"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Order ID taken from request query string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Queries orders by id alone without constraining user_id to $_SESSION['user_id']"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "Outputs the fetched order's address without any post-load owner comparison"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0004-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "User deletion query interpolates unvalidated POST id into DELETE statement [POST /admin.php?action=delete] — Use PDO prepared statements with bound parameters or cast the identifier to an integer before query execution."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11,
+                  "endLine": 12
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source: unvalidated POST parameter id"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Sink: unquoted string interpolation into mysql_query with no cast or binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0002-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/nosql_injection/operator_injection",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "MongoDB findOne filter passes raw GET parameters allowing operator injection [GET /mongo_find.php] — Validate that login and pass are scalar strings or explicitly cast them to string before passing to findOne."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 5
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source and sink: $_GET['login'] and $_GET['pass'] passed directly into MongoCollection::findOne filter without scalar type enforcement"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0003-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-943"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/nosql_injection/js_injection",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "MongoDB $where query concatenates unvalidated GET parameter into JavaScript expression [GET /mongo_find.php] — Replace the $where JavaScript evaluation with a standard field equality filter using scalar string values."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source and sink: $_GET['n'] concatenated directly into MongoDB $where JavaScript string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0004-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-943"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "Order detail query concatenates unvalidated GET id into SELECT statement [GET /order_detail.php] — Use a PDO prepared statement with bound parameters and scope the query to the authenticated user."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source: unvalidated GET parameter id"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Sink: unquoted concatenation of $id into mysql_query"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0005-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "Product search query concatenates GET keyword sanitized only with addslashes [GET /search.php] — Use PDO prepared statements with bound parameters instead of addslashes and string concatenation."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 11
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source and weak sanitizer: $_GET['q'] passed only through addslashes()"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Concatenated into SQL LIKE clause"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Sink: executed via mysql_query without parameter binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0006-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/dynamic_identifier",
+          "ruleIndex": 6,
+          "level": "error",
+          "message": {
+            "text": "Product search query concatenates unvalidated GET sort parameter into ORDER BY clause [GET /search.php] — Validate the sort parameter against a strict exact-match allow-list of permitted column names and directions."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 11
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source: unvalidated GET parameter sort"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Concatenated directly into ORDER BY clause without allow-list validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Sink: executed via mysql_query"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0007-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Product category query interpolates unvalidated GET cat parameter in heredoc SQL [GET /search.php] — Use a PDO prepared statement with a bound parameter for the category filter."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12,
+                  "endLine": 16
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Source and interpolation: $_GET['cat'] interpolated directly into heredoc SQL string $q"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Sink: heredoc query executed via mysql_query without binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0008-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_role_check",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "Admin user lookup accessible to any logged-in user without role or ownership check [GET /admin.php?action=view] — Enforce an administrator role check from the server-side session before dispatching admin actions, or restrict the query to $_SESSION['user_id'] if intended for self-service profile lookup."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 9
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Enforces session login only (!empty($_SESSION['user_id'])); no administrator role or ownership check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Target user ID taken directly from query parameter uid"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Queries users table by arbitrary uid without binding to $_SESSION['user_id'] or verifying admin role (note: $r is not rendered in this file)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0001-1"
+          },
+          "properties": {
+            "security-severity": "3.0",
+            "severity": "low",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-285",
+              "CWE-639"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

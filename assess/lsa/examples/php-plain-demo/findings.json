@@ -1,0 +1,680 @@
+{
+  "generated_by": "lsa merge_findings.py 0.1.0",
+  "summary": {
+    "total_reported": 10,
+    "active": 10,
+    "rejected_by_verifier": 0,
+    "by_severity": {
+      "critical": 1,
+      "high": 8,
+      "medium": 0,
+      "low": 1,
+      "info": 0
+    },
+    "by_category": {
+      "bola": 3,
+      "sql_injection": 5,
+      "nosql_injection": 2
+    },
+    "by_status": {
+      "unverified": 0,
+      "confirmed": 10,
+      "likely": 0,
+      "rejected": 0,
+      "needs_review": 0
+    }
+  },
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0002-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Any logged-in user can delete arbitrary user accounts via admin.php?action=delete",
+      "route_id": "R-0002",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin.php?action=delete"
+      },
+      "location": {
+        "file": "admin.php",
+        "start_line": 10,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "admin.php",
+          "line": 2,
+          "code": "require_once 'inc/auth.php';",
+          "why": "Only checks that $_SESSION['user_id'] is non-empty; does not check administrator role or account ownership"
+        },
+        {
+          "file": "admin.php",
+          "line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "Target user ID read directly from POST form parameter"
+        },
+        {
+          "file": "admin.php",
+          "line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "Deletes arbitrary user row matching $id with no role check or session ownership constraint"
+        }
+      ],
+      "data_flow": [
+        "$_POST['id'] (admin.php:11)",
+        "$id (admin.php:11)",
+        "mysql_query(\"DELETE FROM users WHERE id = $id\") without role or owner check (admin.php:12)"
+      ],
+      "attack_scenario": "A normal authenticated user sends POST /admin.php?action=delete with body id=<other_user_id>, deleting another user's account.",
+      "impact": "Any logged-in user can delete arbitrary user accounts from the users table, causing account loss and denial of service.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023",
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the current session belongs to an authorized administrator before allowing user deletion, and use a prepared statement bound to the validated user ID.",
+      "fix_example": "if (empty($_SESSION['is_admin'])) { http_response_code(403); exit; }\n$st = $pdo->prepare('DELETE FROM users WHERE id = ?');\n$st->execute(array((int)$_POST['id']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "admin.php:1-15",
+          "inc/auth.php:1-7 (checks $_SESSION['user_id'] login only, no admin role check)",
+          "inc/db.php:1-5",
+          "repository root for .htaccess or global access controls (none present)"
+        ],
+        "control_found": null,
+        "notes": "Verified that admin.php:2 only checks session login via inc/auth.php and performs no role or ownership check before deleting arbitrary user rows in admin.php:11-12.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0004-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order shipping address readable by any logged-in user via id parameter",
+      "route_id": "R-0004",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "GET",
+        "path": "/order_detail.php"
+      },
+      "location": {
+        "file": "order_detail.php",
+        "start_line": 5,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "order_detail.php",
+          "line": 2,
+          "code": "require_once 'inc/auth.php';",
+          "why": "Checks login status only (inc/auth.php:4); does not verify order ownership"
+        },
+        {
+          "file": "order_detail.php",
+          "line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "Order ID taken from request query string"
+        },
+        {
+          "file": "order_detail.php",
+          "line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "Queries orders by id alone without constraining user_id to $_SESSION['user_id']"
+        },
+        {
+          "file": "order_detail.php",
+          "line": 8,
+          "code": "echo htmlspecialchars($order['address']);",
+          "why": "Outputs the fetched order's address without any post-load owner comparison"
+        }
+      ],
+      "data_flow": [
+        "$_GET['id'] (order_detail.php:5)",
+        "$id (order_detail.php:5)",
+        "mysql_query(\"SELECT * FROM orders WHERE id = \" . $id) (order_detail.php:6)",
+        "echo htmlspecialchars($order['address']) (order_detail.php:8)"
+      ],
+      "attack_scenario": "Logged-in User A requests GET /order_detail.php?id=<order_id_of_user_B> and reads User B's order address.",
+      "impact": "Any authenticated user can read other customers' order records and personal shipping addresses.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Constrain the order lookup by the authenticated user's session ID (AND user_id = ?) using a prepared statement, as done in order_detail_safe.php.",
+      "fix_example": "$st = $pdo->prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?');\n$st->execute(array($_GET['id'], $_SESSION['user_id']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "order_detail.php:1-9",
+          "order_detail_safe.php:1-9 (confirms orders.user_id is the ownership column)",
+          "inc/auth.php:1-7",
+          "post-query comparison in order_detail.php:7-8 (none present)"
+        ],
+        "control_found": null,
+        "notes": "order_detail.php:6 queries orders by $_GET['id'] alone and outputs $order['address'] at line 8 without scoping to $_SESSION['user_id'].",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0002-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "User deletion query interpolates unvalidated POST id into DELETE statement",
+      "route_id": "R-0002",
+      "candidate_id": "I-0002",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin.php?action=delete"
+      },
+      "location": {
+        "file": "admin.php",
+        "start_line": 11,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "admin.php",
+          "line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "Source: unvalidated POST parameter id"
+        },
+        {
+          "file": "admin.php",
+          "line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "Sink: unquoted string interpolation into mysql_query with no cast or binding"
+        }
+      ],
+      "data_flow": [
+        "$_POST['id'] (admin.php:11)",
+        "$id (admin.php:11)",
+        "mysql_query(\"DELETE FROM users WHERE id = $id\") (admin.php:12)"
+      ],
+      "attack_scenario": "An authenticated user submits a crafted id parameter in the POST body to alter the WHERE clause of the DELETE statement.",
+      "impact": "Arbitrary deletion of user records or manipulation of database contents accessible to the application database account.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use PDO prepared statements with bound parameters or cast the identifier to an integer before query execution.",
+      "fix_example": "$stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');\n$stmt->execute(array((int)$_POST['id']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "admin.php:10-13",
+          "inc/auth.php:1-7",
+          "inc/db.php:1-5 (connects as 'app', not root/sa)"
+        ],
+        "control_found": null,
+        "notes": "Unvalidated $_POST['id'] is directly interpolated into an unquoted numeric context in mysql_query at admin.php:12 with no cast or escaping.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0003-1",
+      "category": "nosql_injection",
+      "subtype": "operator_injection",
+      "title": "MongoDB findOne filter passes raw GET parameters allowing operator injection",
+      "route_id": "R-0003",
+      "candidate_id": "I-0003",
+      "endpoint": {
+        "method": "GET",
+        "path": "/mongo_find.php"
+      },
+      "location": {
+        "file": "mongo_find.php",
+        "start_line": 5,
+        "end_line": 5
+      },
+      "evidence": [
+        {
+          "file": "mongo_find.php",
+          "line": 5,
+          "code": "$doc = $coll->findOne(array('login' => $_GET['login'], 'pass' => $_GET['pass']));",
+          "why": "Source and sink: $_GET['login'] and $_GET['pass'] passed directly into MongoCollection::findOne filter without scalar type enforcement"
+        }
+      ],
+      "data_flow": [
+        "$_GET['login'], $_GET['pass'] (mongo_find.php:5)",
+        "$coll->findOne(...) (mongo_find.php:5)"
+      ],
+      "attack_scenario": "An authenticated user supplies array query parameters for login or pass so PHP constructs nested associative arrays interpreted as MongoDB query operators.",
+      "impact": "Unauthorized query filter manipulation and credential check bypass on the shop.members collection.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-943"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Validate that login and pass are scalar strings or explicitly cast them to string before passing to findOne.",
+      "fix_example": "$doc = $coll->findOne(array('login' => (string)$_GET['login'], 'pass' => (string)$_GET['pass']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "mongo_find.php:1-7",
+          "inc/auth.php:1-7"
+        ],
+        "control_found": null,
+        "notes": "$_GET['login'] and $_GET['pass'] are passed directly into MongoCollection::findOne at mongo_find.php:5 without scalar string validation or casting, allowing array operator injection.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0004-1",
+      "category": "nosql_injection",
+      "subtype": "js_injection",
+      "title": "MongoDB $where query concatenates unvalidated GET parameter into JavaScript expression",
+      "route_id": "R-0003",
+      "candidate_id": "I-0004",
+      "endpoint": {
+        "method": "GET",
+        "path": "/mongo_find.php"
+      },
+      "location": {
+        "file": "mongo_find.php",
+        "start_line": 6,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "mongo_find.php",
+          "line": 6,
+          "code": "$docs = $coll->find(array('$where' => \"this.name == '\" . $_GET['n'] . \"'\"));",
+          "why": "Source and sink: $_GET['n'] concatenated directly into MongoDB $where JavaScript string"
+        }
+      ],
+      "data_flow": [
+        "$_GET['n'] (mongo_find.php:6)",
+        "$coll->find(array('$where' => ...)) (mongo_find.php:6)"
+      ],
+      "attack_scenario": "An authenticated user provides a crafted n query parameter that breaks out of the string literal inside the $where JavaScript predicate.",
+      "impact": "Arbitrary JavaScript predicate evaluation inside the MongoDB query context and unauthorized disclosure of shop.members documents.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-943"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Replace the $where JavaScript evaluation with a standard field equality filter using scalar string values.",
+      "fix_example": "$docs = $coll->find(array('name' => (string)$_GET['n']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "mongo_find.php:1-7",
+          "inc/auth.php:1-7"
+        ],
+        "control_found": null,
+        "notes": "$_GET['n'] is concatenated directly into a MongoDB $where JavaScript expression at mongo_find.php:6 with no sanitization.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0005-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "Order detail query concatenates unvalidated GET id into SELECT statement",
+      "route_id": "R-0004",
+      "candidate_id": "I-0005",
+      "endpoint": {
+        "method": "GET",
+        "path": "/order_detail.php"
+      },
+      "location": {
+        "file": "order_detail.php",
+        "start_line": 5,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "order_detail.php",
+          "line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "Source: unvalidated GET parameter id"
+        },
+        {
+          "file": "order_detail.php",
+          "line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "Sink: unquoted concatenation of $id into mysql_query"
+        }
+      ],
+      "data_flow": [
+        "$_GET['id'] (order_detail.php:5)",
+        "$id (order_detail.php:5)",
+        "mysql_query(\"SELECT * FROM orders WHERE id = \" . $id) (order_detail.php:6)"
+      ],
+      "attack_scenario": "An authenticated user supplies a crafted id query parameter to modify the SQL query structure and retrieve arbitrary rows.",
+      "impact": "Unauthorized disclosure of order records and other tables accessible to the database user.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use a PDO prepared statement with bound parameters and scope the query to the authenticated user.",
+      "fix_example": "$stmt = $pdo->prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?');\n$stmt->execute(array($_GET['id'], $_SESSION['user_id']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "order_detail.php:1-9",
+          "inc/auth.php:1-7",
+          "inc/db.php:1-5"
+        ],
+        "control_found": null,
+        "notes": "$_GET['id'] is concatenated unquoted into mysql_query at order_detail.php:6 with no integer cast or parameter binding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0006-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "Product search query concatenates GET keyword sanitized only with addslashes",
+      "route_id": "R-0006",
+      "candidate_id": "I-0006",
+      "endpoint": {
+        "method": "GET",
+        "path": "/search.php"
+      },
+      "location": {
+        "file": "search.php",
+        "start_line": 5,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "search.php",
+          "line": 5,
+          "code": "$kw = addslashes($_GET['q']);",
+          "why": "Source and weak sanitizer: $_GET['q'] passed only through addslashes()"
+        },
+        {
+          "file": "search.php",
+          "line": 8,
+          "code": "$sql .= \" AND name LIKE '%\" . $kw . \"%'\";",
+          "why": "Concatenated into SQL LIKE clause"
+        },
+        {
+          "file": "search.php",
+          "line": 11,
+          "code": "$res = mysql_query($sql);",
+          "why": "Sink: executed via mysql_query without parameter binding"
+        }
+      ],
+      "data_flow": [
+        "$_GET['q'] (search.php:5)",
+        "$kw (search.php:5)",
+        "$sql (search.php:8)",
+        "mysql_query($sql) (search.php:11)"
+      ],
+      "attack_scenario": "An authenticated user supplies a crafted search term where addslashes fails to prevent quote breakout (such as under multibyte connection encodings) to alter the SQL query.",
+      "impact": "Unauthorized reading of database tables accessible to the application database account.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use PDO prepared statements with bound parameters instead of addslashes and string concatenation.",
+      "fix_example": "$stmt = $pdo->prepare('SELECT id, name FROM products WHERE name LIKE ?');\n$stmt->execute(array('%' . $_GET['q'] . '%'));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "search.php:1-18",
+          "inc/auth.php:1-7",
+          "inc/db.php:1-5 (no mysql_set_charset call)"
+        ],
+        "control_found": null,
+        "notes": "$_GET['q'] is only passed through addslashes() at search.php:5 before concatenation into LIKE at line 8 and execution via mysql_query at line 11; addslashes is not an adequate SQLi defense per injection-patterns.md §3.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0007-1",
+      "category": "sql_injection",
+      "subtype": "dynamic_identifier",
+      "title": "Product search query concatenates unvalidated GET sort parameter into ORDER BY clause",
+      "route_id": "R-0006",
+      "candidate_id": "I-0007",
+      "endpoint": {
+        "method": "GET",
+        "path": "/search.php"
+      },
+      "location": {
+        "file": "search.php",
+        "start_line": 6,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "search.php",
+          "line": 6,
+          "code": "$sort = $_GET['sort'];",
+          "why": "Source: unvalidated GET parameter sort"
+        },
+        {
+          "file": "search.php",
+          "line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "Concatenated directly into ORDER BY clause without allow-list validation"
+        },
+        {
+          "file": "search.php",
+          "line": 11,
+          "code": "$res = mysql_query($sql);",
+          "why": "Sink: executed via mysql_query"
+        }
+      ],
+      "data_flow": [
+        "$_GET['sort'] (search.php:6)",
+        "$sort (search.php:6)",
+        "$sql (search.php:9)",
+        "mysql_query($sql) (search.php:11)"
+      ],
+      "attack_scenario": "An authenticated user passes arbitrary SQL expressions in the sort query parameter to inject into the ORDER BY clause.",
+      "impact": "Unauthorized data extraction via boolean/time-based inference or error-based SQL injection across database tables.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Validate the sort parameter against a strict exact-match allow-list of permitted column names and directions.",
+      "fix_example": "$allowed = array('id', 'name');\n$sort = in_array($_GET['sort'], $allowed, true) ? $_GET['sort'] : 'id';",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "search.php:1-18",
+          "inc/auth.php:1-7",
+          "inc/db.php:1-5"
+        ],
+        "control_found": null,
+        "notes": "Unvalidated $_GET['sort'] is concatenated directly into the ORDER BY clause at search.php:9 and executed via mysql_query at line 11 without allow-list validation.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "INJ-I-0008-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "Product category query interpolates unvalidated GET cat parameter in heredoc SQL",
+      "route_id": "R-0006",
+      "candidate_id": "I-0008",
+      "endpoint": {
+        "method": "GET",
+        "path": "/search.php"
+      },
+      "location": {
+        "file": "search.php",
+        "start_line": 12,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "search.php",
+          "line": 14,
+          "code": "WHERE category = '{$_GET['cat']}'",
+          "why": "Source and interpolation: $_GET['cat'] interpolated directly into heredoc SQL string $q"
+        },
+        {
+          "file": "search.php",
+          "line": 16,
+          "code": "$res2 = mysql_query($q);",
+          "why": "Sink: heredoc query executed via mysql_query without binding"
+        }
+      ],
+      "data_flow": [
+        "$_GET['cat'] (search.php:14)",
+        "$q (search.php:12-15)",
+        "mysql_query($q) (search.php:16)"
+      ],
+      "attack_scenario": "An authenticated user provides a crafted cat query parameter to break out of the single-quoted string in the WHERE clause.",
+      "impact": "Unauthorized disclosure of data from any table accessible to the application database account.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use a PDO prepared statement with a bound parameter for the category filter.",
+      "fix_example": "$stmt = $pdo->prepare('SELECT * FROM products WHERE category = ?');\n$stmt->execute(array($_GET['cat']));",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "search.php:12-16",
+          "inc/auth.php:1-7",
+          "inc/db.php:1-5"
+        ],
+        "control_found": null,
+        "notes": "$_GET['cat'] is interpolated directly into the heredoc SQL string at search.php:14 and executed via mysql_query at line 16 without escaping or parameter binding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0001-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user lookup accessible to any logged-in user without role or ownership check",
+      "route_id": "R-0001",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "GET",
+        "path": "/admin.php?action=view"
+      },
+      "location": {
+        "file": "admin.php",
+        "start_line": 6,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "admin.php",
+          "line": 2,
+          "code": "require_once 'inc/auth.php';",
+          "why": "Enforces session login only (!empty($_SESSION['user_id'])); no administrator role or ownership check"
+        },
+        {
+          "file": "admin.php",
+          "line": 7,
+          "code": "$uid = (int)$_GET['uid'];",
+          "why": "Target user ID taken directly from query parameter uid"
+        },
+        {
+          "file": "admin.php",
+          "line": 8,
+          "code": "$r = mysql_query(\"SELECT * FROM users WHERE id = \" . $uid);",
+          "why": "Queries users table by arbitrary uid without binding to $_SESSION['user_id'] or verifying admin role (note: $r is not rendered in this file)"
+        }
+      ],
+      "data_flow": [
+        "$_GET['uid'] (admin.php:7)",
+        "$uid cast to int (admin.php:7)",
+        "mysql_query(\"SELECT * FROM users WHERE id = \" . $uid) without role or owner filter (admin.php:8)"
+      ],
+      "attack_scenario": "A regular logged-in user sends GET /admin.php?action=view&uid=<other_user_id> and triggers a database lookup on another user's record without administrator privilege or ownership verification.",
+      "impact": "Unauthorized query execution against arbitrary rows in the users table by any authenticated user; however, the result resource $r is not fetched or output in admin.php, so data is not directly exposed in the HTTP response (rated low per bola-patterns.md section 6).",
+      "severity": "low",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023",
+        "API1:2023"
+      ],
+      "recommendation": "Enforce an administrator role check from the server-side session before dispatching admin actions, or restrict the query to $_SESSION['user_id'] if intended for self-service profile lookup.",
+      "fix_example": "if (empty($_SESSION['is_admin'])) { http_response_code(403); exit; }",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "admin.php:1-15",
+          "inc/auth.php:1-7 (login check only)",
+          "post-query usage of $r in admin.php:8-9 (never fetched or output)"
+        ],
+        "control_found": null,
+        "notes": "No admin role or ownership check exists before querying users by $_GET['uid'] at admin.php:8; severity remains low because $r is not rendered.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      }
+    }
+  ]
+}
