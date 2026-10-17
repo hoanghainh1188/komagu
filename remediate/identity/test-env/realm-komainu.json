@@ -1,0 +1,94 @@
+{
+  "id": "komainu",
+  "realm": "komainu",
+  "displayName": "Komainu Security Realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "Admin", "description": "Administrator role" },
+      { "name": "Member", "description": "Standard tenant member role" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "komainu-portal",
+      "name": "Komainu Demo Portal SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:5173"
+      ]
+    },
+    {
+      "clientId": "komainu-api",
+      "name": "Komainu Resource Server API",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "email": "alice@alpha.test",
+      "firstName": "Alice",
+      "lastName": "Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "tenant_id": ["tenant-alpha"]
+      },
+      "credentials": [
+        { "type": "password", "value": "password123", "temporary": false }
+      ],
+      "realmRoles": ["Member"]
+    },
+    {
+      "username": "bob",
+      "email": "bob@alpha.test",
+      "firstName": "Bob",
+      "lastName": "Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "tenant_id": ["tenant-alpha"]
+      },
+      "credentials": [
+        { "type": "password", "value": "password123", "temporary": false }
+      ],
+      "realmRoles": ["Member"]
+    },
+    {
+      "username": "charlie",
+      "email": "charlie@beta.test",
+      "firstName": "Charlie",
+      "lastName": "Beta",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "tenant_id": ["tenant-beta"]
+      },
+      "credentials": [
+        { "type": "password", "value": "password123", "temporary": false }
+      ],
+      "realmRoles": ["Member"]
+    }
+  ]
+}
