@@ -78,7 +78,7 @@ Operating model: **AI-Augmented Engineering Team**. Harry acts as the Principal 
 
 Approval points:
 
-1. **Design review (end of week 2):** D1 interface, threat model, demo app scope. Approved by the lead and Harry.
+1. **Design review (end of week 2):** D1 interface, threat model, demo app scope. **Approved by Harry and lead on 2026-10-17** (see [ADR-0004](adr/0004-b1-design-review-d1-threat-model-demo-app.md)).
 2. **API freeze (end of week 5):** D1/D2 public API fixed; changes after this need the lead's approval.
 3. **MVP release (end of week 8):** D1–D6 pass their tests; version 0.1 tagged.
 4. **Findings sign-off (week 10):** Person B accepts or rejects each assessment finding before it reaches the client.
@@ -147,6 +147,7 @@ Pages opened on 2026-10-16:
 - [AWS WAF managed rule groups](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-use-case.html) — `AWSManagedRulesSQLiRuleSet`
 - [Kong Gateway rate limiting plugin](https://developer.konghq.com/plugins/rate-limiting/)
 - [Schemathesis — object-level authorization guide](https://schemathesis.readthedocs.io/en/stable/guides/object-level-authorization/)
+- [ADR-0004 — B1 Design Review](adr/0004-b1-design-review-d1-threat-model-demo-app.md)
 - [Modernization Boilerplates — Proposal](modernization-boilerplates-proposal.md)
 - LSA kit: this repository (`README.md`)
 
@@ -155,3 +156,4 @@ Pages opened on 2026-10-16:
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1 | 2026-10-16 | First plan |
+| 0.2 | 2026-10-17 | Strategic decisions resolved (ADR-0002 IP open core, ADR-0003 Coraza WAF, AI team staffing); Approval Point 1 (Design review) accepted per ADR-0004 |
