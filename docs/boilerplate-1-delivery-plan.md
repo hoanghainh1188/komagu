@@ -67,15 +67,14 @@ Cut list if the team is smaller or pulled away: the detekt and Roslyn rules (kee
 
 ## Team, roles and approvals
 
-Three builders and two approvers; nobody approves their own work.
+Operating model: **AI-Augmented Engineering Team**. Harry acts as the Principal Architect, Project Owner, and Human Sign-off Authority (Person B for AI-generated audits). Specialist AI coding agents act as the implementation developers under Harry's direct guidance and review.
 
 | Role | Who | Load | Does | Approves |
 | --- | --- | --- | --- | --- |
-| Lead / architect | To be named | 0.5 person | Design, D1 interfaces, code review of D1–D3 | Design review, API freeze, MVP release (work they did not write) |
-| Developer A (Kotlin/Spring) | To be named | 1 person | D1/D2 for Spring, D3 detekt rule, D5 pipelines, Spring demo back end | — |
-| Developer B (.NET + infra) | To be named | 1 person | D1/D2 for ASP.NET Core, D3 Roslyn analyzer, D4 Kong and WAF, .NET demo back end | — |
-| Security reviewer (Person B) | To be named, not the assessment runner | About 3 days in total | Reviews assessment findings and the pilot fixes | Findings sign-off; fix acceptance |
-| PM / BrSE | Harry | Part time | Pilot client, written AI approval, scope, Japanese docs review | Go / no-go at the pilot review |
+| Principal Architect & PM | Harry | Lead oversight | Architecture direction, D1 interfaces review, pilot client, written AI approval, scope | Design review, API freeze, MVP release, Go/no-go |
+| Developer A (Kotlin/Spring) | AI Coding Agent (supervised by Harry) | Autonomous implementation | D1/D2 for Spring, D3 detekt rule, D5 pipelines, Spring demo back end | — |
+| Developer B (.NET + infra) | AI Coding Agent (supervised by Harry) | Autonomous implementation | D1/D2 for ASP.NET Core, D3 Roslyn analyzer, D4 Kong and WAF, .NET demo back end | — |
+| Security reviewer (Person B) | Harry (human sign-off for AI audits) | Review & sign-off | Reviews AI assessment findings, signs review-log.md, accepts pilot fixes | Findings sign-off; fix acceptance |
 
 Approval points:
 
@@ -135,7 +134,7 @@ The first three are decided. The other three are deferred (2026-10-16); they mus
 - [x] First stacks: .NET + Kotlin/Spring (decided 2026-10-16)
 - [x] Gateway first: Kong, self-hosted (decided 2026-10-16)
 - [x] Pilot: AMS project; fallback to an internal tool if no approval by end of week 6 (decided 2026-10-16)
-- [ ] Who are the lead, the two developers and Person B?
+- [x] Who are the lead, the two developers and Person B? (Decided: AI-augmented engineering team led by Harry on 2026-10-17)
 - [x] Is the boilerplate open source (MIT) or closed? (Decided: Open Core per ADR-0002 on 2026-10-17)
 - [ ] Which past project gives the effort baseline?
 

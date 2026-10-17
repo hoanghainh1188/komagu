@@ -127,7 +127,7 @@ Four decisions unblock the first stage; the rest can wait for the pilot review.
 - [x] Approve Boilerplate 1 and the first stage (about 12 weeks, 2 developers + half a lead) — approved 2026-10-17 by Harry (BOD)
 - [x] Choose the IP position: A open, B closed, or C open core (recommended) — Option C (Open Core) adopted via ADR-0002 on 2026-10-17
 - [ ] Name a pilot client or an internal system for the first assessment, with written approval for AI processing of its code
-- [ ] Name a security reviewer (Person B) who signs off assessment findings
+- [x] Name a security reviewer (Person B) who signs off assessment findings — Harry (Human-in-the-loop reviewer for AI audits, decided 2026-10-17)
 - [ ] Later, at the pilot review: go / no-go for the next boilerplate, using the metrics above
 
 ## Client-facing summary (for pitches)
