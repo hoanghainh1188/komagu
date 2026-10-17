@@ -1,0 +1,4633 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "LSA Legacy Security Audit (AI-assisted)",
+          "version": "0.1.0",
+          "informationUri": "https://owasp.org/API-Security/",
+          "rules": [
+            {
+              "id": "lsa/bola/id_from_request_used_as_identity",
+              "name": "bola.id_from_request_used_as_identity",
+              "shortDescription": {
+                "text": "Broken object level authorization (BOLA/IDOR) — id from request used as identity"
+              },
+              "fullDescription": {
+                "text": "The endpoint accesses an object selected by a request-controlled identifier without binding the access to the current user or tenant."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-639",
+                  "CWE-566",
+                  "API1:2023"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/bola/no_authentication",
+              "name": "bola.no_authentication",
+              "shortDescription": {
+                "text": "Broken object level authorization (BOLA/IDOR) — no authentication"
+              },
+              "fullDescription": {
+                "text": "The endpoint accesses an object selected by a request-controlled identifier without binding the access to the current user or tenant."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-306",
+                  "CWE-639",
+                  "API1:2023",
+                  "API2:2023"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/bola/missing_ownership_check",
+              "name": "bola.missing_ownership_check",
+              "shortDescription": {
+                "text": "Broken object level authorization (BOLA/IDOR) — missing ownership check"
+              },
+              "fullDescription": {
+                "text": "The endpoint accesses an object selected by a request-controlled identifier without binding the access to the current user or tenant."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-639",
+                  "CWE-862",
+                  "API1:2023",
+                  "A01:2021"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/template_placeholder",
+              "name": "sql_injection.template_placeholder",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — template placeholder"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/string_concatenation",
+              "name": "sql_injection.string_concatenation",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — string concatenation"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/string_interpolation",
+              "name": "sql_injection.string_interpolation",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — string interpolation"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/nosql_injection/operator_injection",
+              "name": "nosql_injection.operator_injection",
+              "shortDescription": {
+                "text": "NoSQL query built from untrusted input — operator injection"
+              },
+              "fullDescription": {
+                "text": "A NoSQL filter or server-side script is built from request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-943",
+                  "A03:2021"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/nosql_injection/js_injection",
+              "name": "nosql_injection.js_injection",
+              "shortDescription": {
+                "text": "NoSQL query built from untrusted input — js injection"
+              },
+              "fullDescription": {
+                "text": "A NoSQL filter or server-side script is built from request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-943",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/dynamic_identifier",
+              "name": "sql_injection.dynamic_identifier",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — dynamic identifier"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/stored_procedure_dynamic_sql",
+              "name": "sql_injection.stored_procedure_dynamic_sql",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — stored procedure dynamic sql"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "5.5"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/format_string",
+              "name": "sql_injection.format_string",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — format string"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "8.0"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "lsa/bola/id_from_request_used_as_identity",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Any logged-in user can delete any member via GET member_id [ANY /shop/member.asp?mode=delete] — Restrict deletion to the session member (or an enforced admin role); bind member_id to Session(\"UserID\"); require POST."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9,
+                  "endLine": 10
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/inc/auth.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "DELETE by query-string id; no owner/role binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0002-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-566"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Remote CFC getOrder returns any order to anonymous callers [ANY /app/OrderService.cfc?method=getOrder] — Change access to public/private, or check session.userID and bind user_id = <cfqueryparam value=\"#session.userID#\"> in the query."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2,
+                  "endLine": 7
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Remotely callable over URL/form; no login check in the component"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Lookup by caller-supplied id only; no owner filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Full order row(s) returned as JSON"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "No Application.cfc/.cfm in repo; server-level restriction unknown (reason for medium confidence)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0004-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Anonymous file download by file_id in GetFile.ashx (Handlers folder allows all users) [ANY /Handlers/GetFile.ashx] — Remove the <location path=\"Handlers\"> allow-all rule (or scope it to truly public handlers), require an authenticated user in ProcessRequest, and look up the file by id AND owner = Session/User identity, returning 404 on mismatch. Confirm what DocStore.PathFor does."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 11
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Overrides global <deny users=\"?\"/> (Web.config:5); handler is reachable anonymously"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Web.config",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Object ID from query string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Only the request ID is passed; no user identity passed to the helper. Helper source not in repo"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "File streamed with no authn check, no owner check, no stop path in the handler"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0009-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/id_from_request_used_as_identity",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Any user's email can be changed via user_id request parameter [ANY /user/edit.do] — Take the user id from session.getAttribute(\"loginUser\"); ignore user_id from the request; use bound parameters."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Struts action mapping"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/WEB-INF/struts-config.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Target user identity taken from request; no session lookup"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "UPDATE by request id, no ownership/role check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "LoginFilter source missing (assumed login only); no ActionServlet mapping, so reachability assumed"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/WEB-INF/web.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0012-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-566"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Any client can delete any cart by cart id (no login, no owner filter) [GET /perl-cgi/cgi-bin/order.cgi] — Stop when $uid is undefined (print 401/redirect and exit), and delete with a bound owner filter."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8,
+                  "endLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "load() returns an empty session when none exists; not a login check (auth-model §2)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "uid read but never tested"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Delete by request cart id only; no user_id binding; runs on every request"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0024-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Any logged-in user can delete any user via admin.php?action=delete [POST /php-plain/admin.php?action=delete] — Enforce an admin role check from the session and exit on failure; use a bound, int-cast id."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 13
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only; no role check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/inc/auth.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Target id from POST body"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Deletes any user row; no admin role, no owner/self binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0029-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/template_placeholder",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Remote CFC getOrder puts orderId into cfquery without cfqueryparam [ANY /coldfusion/app/OrderService.cfc?method=getOrder] — Use cfqueryparam with cf_sql_integer and declare the argument type numeric; add an auth check."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "remotely callable, no login check (auth-model §2/§5)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "type string: no numeric validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "unquoted numeric context; CF quote-escaping does not help"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/OrderService.cfc",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0006-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "detail.jsp executes Statement query with concatenated order_no [GET /java-legacy/WebContent/order/detail.jsp] — Use PreparedStatement with a bound parameter; move DB access out of the JSP."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/order/detail.jsp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3,
+                  "endLine": 5
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: request parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/order/detail.jsp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "concatenated in quotes, no escaping; Statement sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/order/detail.jsp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0014-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated order servlet concatenates orderId into JDBC Statement [GET /order/view] — Use PreparedStatement with setString/setLong (as already done on line 18-19), and add the servlet path to the login filter."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11,
+                  "endLine": 15
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "LoginFilter covers *.do only; /order/view (web.xml:17) is not filtered"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/WEB-INF/web.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "read but never checked"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "source: request parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "concatenated into Statement.executeQuery, sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0018-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "/stats interpolates req.query.shop into SQL without login [GET /stats] — Use a placeholder and parse the value as integer."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28,
+                  "endLine": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "no ensureLoggedIn"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "template literal, numeric context"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0021-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "medium",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/nosql_injection/operator_injection",
+          "ruleIndex": 6,
+          "level": "error",
+          "message": {
+            "text": "POST /login passes req.body directly as Mongo filter [POST /login] — Build the filter from typed string fields and compare a password hash in code."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 20,
+                  "endLine": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "no auth by design"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "whole request body is the filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0022-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-943"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "order.cgi interpolates id param into prepared SQL with no binds [GET /perl-cgi/cgi-bin/order.cgi] — Use the bound form already on line 16-17."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11,
+                  "endLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "not a login check (auth-model §2)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "source"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "interpolated, numeric context"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "executed with no binds"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0024-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "order.cgi DELETE concatenates cart param [POST /perl-cgi/cgi-bin/order.cgi] — Bind the value."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 19,
+                  "endLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "request param concatenated, numeric context, do() sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0025-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/id_from_request_used_as_identity",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Any logged-in user can rename any member via form member_id [ANY /shop/member.asp?mode=edit] — Do not take the member id from the request; use Session(\"UserID\"), or add AND member_id = CLng(Session(\"UserID\")) and use a parameterized ADO Command."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 4,
+                  "endLine": 8
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only; no object scope"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/inc/auth.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Target member chosen by request field; Session(\"UserID\") never used"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "UPDATE runs with no owner binding and no later check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0001-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-566"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Order address readable by any logged-in user via id [ANY /shop/order.asp] — Use the same pattern as line 12: CLng the id and add AND user_id = CLng(Session(\"UserID\")); return 404 if no row."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 7
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from QueryString/Form/Cookie"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "No user_id filter (contrast line 12 which binds Session(\"UserID\"))"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Address of the loaded order is returned to the caller"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0003-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "order.cfm renders unscoped qOrder instead of owner-bound qMine [ANY /app/order.cfm] — Remove qOrder and render qMine; stop with 404 when qMine.recordCount is 0."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2,
+                  "endLine": 10
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "qOrder: id only, no owner filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Owner binding exists only in qMine, whose result is never used"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "Output comes from the unscoped query"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0005-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Invoice details readable by any logged-in user via id [ANY /Invoice/Details/{id}] — Filter by owner as in Mine: FirstOrDefault(i => i.Id == id && i.UserId == CurrentUserId()) and return HttpNotFound() when null."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11,
+                  "endLine": 15
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login only, no Roles/Policy"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Load by primary key only; no owner comparison before View(inv) (contrast Mine, line 20)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "ShopDb source not in repo (auth-model Unknowns); a global filter is unlikely for Find but not provable"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0006-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Invoice search returns any customer's invoices to any logged-in user [POST /Invoice/Search] — Add AND UserId = @uid bound to the current user (or require an enforced staff role); use SqlQuery with parameters."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 25,
+                  "endLine": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login only, no Roles/Policy"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Selector from request; no UserId filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "No role check; business intent (staff search vs customer self-search) unknown, hence medium confidence"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 26
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0008-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Invoice readable by id via Spring show() with no owner or login check visible [GET /invoices/{id}] — Use invoiceDao.findByIdAndOwner(id, principal.getName()) and return 404 on null; add authentication for /invoices/*."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 15,
+                  "endLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from path"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "DAO lookup by id only (contrast findByIdAndOwner at line 23); InvoiceDao source not in repo"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0014-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Invoice search by customer returns any customer's invoices [GET /invoices/search] — Bind the owner from Principal in the HQL (and i.owner = :owner) with named parameters, or restrict to an enforced staff role."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 27,
+                  "endLine": 31
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Selector from query string; no Principal used"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "HQL filters by customer only; no owner binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0016-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Any logged-in user can read any order via /orders/:id (findById) [GET /orders/:id] — Use the scoped lookup already used in /orders/:id/mine: findOne({_id: req.params.id, owner: req.user._id}); return 404 when null."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8,
+                  "endLine": 10
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Loads by path id only and returns the full document; no owner comparison"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0018-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Invoice readable by id with no owner filter (Invoice::view) [GET /invoice/view/{id}] — Use the mine() pattern: get_where('invoices', ['id' => $id, 'user_id' => $this->session->userdata('user_id')]); show_404() when no row."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9,
+                  "endLine": 12
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from URI segment"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "No user_id filter (compare mine() at :16)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Row rendered without owner comparison"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0025-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Order detail (address) readable for any order id by any logged-in user [GET /php-plain/order_detail.php] — Use the order_detail_safe.php pattern: PDO with WHERE id = ? AND user_id = ? bound to $_SESSION['user_id']."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 8
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from query string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "No user_id filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Other user's address printed; no comparison with $_SESSION['user_id']"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0031-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Any logged-in user can read any order via /orders/<order_id> [GET /orders/<int:order_id>] — Bind the order to the current principal in the query (as my_order does at app.py:20), or load and compare owner and return 404 on mismatch. Also switch to parameter binding."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8,
+                  "endLine": 13
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Object ID taken from the URL path (attacker-controlled)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Login check only (Flask-Login); not an ownership check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Lookup by id only; no user_id filter, unlike the safe variant at line 20"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "Row returned to caller with no post-load owner comparison"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0034-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Member UPDATE concatenates unquoted member_id from POST [POST /classic-asp/shop/member.asp?mode=edit] — Use ADODB.Command with ? parameters, or CLng() the id after IsNumeric with failure stopping the page."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 8
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: form field, numeric context, no cast"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "name part is escaped in quoted context (enough for that part only)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "sink, no parameters"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0002-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Member DELETE concatenates unquoted member_id from query string [GET /classic-asp/shop/member.asp?mode=delete] — Bind member_id via ADODB.Command parameter or CLng() after IsNumeric check."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 10
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source query string concatenated into sink, numeric context"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/member.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0003-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Order SELECT concatenates unvalidated id from Request() [GET /classic-asp/shop/order.asp] — Use the pattern already on line 10-12 (IsNumeric + CLng) or ADODB.Command parameters."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: query/form/cookie collection"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "concatenated in numeric context, sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "classic-asp/shop/order.asp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0004-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/template_placeholder",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "order.cfm qOrder puts url.id into cfquery without cfqueryparam [GET /coldfusion/app/order.cfm] — Remove qOrder and use the parameterized qMine query (order.cfm:5-9)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2,
+                  "endLine": 4
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "login required only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "url.id in numeric context, no cfqueryparam"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "coldfusion/app/order.cfm",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0007-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Invoice search concatenates customer into EF SqlQuery [POST /Invoice/Search] — Use SqlQuery with a SqlParameter, or LINQ (db.Invoices.Where(i => i.Customer == customer))."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 26,
+                  "endLine": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "login-only gate, no Roles"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "source: model-bound POST/query value"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 26
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "concatenated into raw EF SQL, sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0008-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "EditOrder UPDATE concatenates txtNote.Text and hidden field hfOrderId [POST /dotnet-legacy/Web/Orders/EditOrder.aspx] — Use SqlCommand parameters for both values."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 12
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "TextBox value, quoted, not escaped (I-0009)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "hidden field, client-controlled, numeric context (I-0010)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "command built from string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "sink, no parameters"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0009-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "OrderDetail executes SELECT concatenated with query-string id [GET /dotnet-legacy/Web/Orders/OrderDetail.aspx] — Execute the parameterized 'safe' command from line 16-18 instead of line 13."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 15
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: query string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "concatenated, numeric context"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "sink executed"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0011-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "EditUserAction prepareStatement built by concatenating email and user_id [POST /user/edit.do] — Use ? placeholders and setString/setLong."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "source"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "prepared but concatenated; no placeholders"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/struts/EditUserAction.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0016-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Invoice search builds HQL by concatenating customer parameter [GET /invoices/search] — Use a named HQL parameter."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 27,
+                  "endLine": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: request parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "concatenated HQL, Hibernate sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/InvoiceController.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0017-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-564",
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "/reports concatenates req.query.month into SQL [GET /reports] — Use placeholders supported by the driver ('?' for mysql, $1 for pg)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16,
+                  "endLine": 18
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "login only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "concatenated, quoted, no escaping; db.query sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0020-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/nosql_injection/js_injection",
+          "ruleIndex": 7,
+          "level": "error",
+          "message": {
+            "text": "/search builds Mongo $where JavaScript from req.query.n [GET /search] — Remove $where; use a normal equality filter with a string-cast value."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 24,
+                  "endLine": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "string concatenated into server-side JS"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 25
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0023-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-943"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "CodeIgniter invoice view interpolates URI segment into db->query [ANY /invoice/view/{id}] — Use query bindings or get_where with an int cast, as done in mine() and update()."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9,
+                  "endLine": 10
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: URI segment /invoice/view/<id>"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "interpolated in unquoted numeric context, sink without binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0026-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "admin.php delete interpolates POST id into mysql_query [POST /php-plain/admin.php?action=delete] — Cast to int as on line 7, or use PDO prepared statements."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11,
+                  "endLine": 12
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source, no cast"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "interpolated unquoted, mysql_query sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0028-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/nosql_injection/js_injection",
+          "ruleIndex": 7,
+          "level": "error",
+          "message": {
+            "text": "mongo_find.php builds $where JavaScript from GET n [GET /php-plain/mongo_find.php] — Drop $where; use an equality filter with a string cast."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "request value concatenated into server-side JS"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0030-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "low",
+            "status": "likely",
+            "cwe": [
+              "CWE-943"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Order detail query concatenates unquoted GET id [GET /php-plain/order_detail.php] — Use a PDO prepared statement with a bound integer parameter (the $pdo handle already exists in inc/db.php:4)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "login-only gate (inc/auth.php:4-6); any logged-in user reaches the sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "source: query string, no cast"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "concatenated in numeric (unquoted) context and sent to mysql_query"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/order_detail.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0031-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_concatenation",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Product search LIKE clause relies on addslashes only [GET /php-plain/search.php] — Bind the keyword as a parameter (PDO) instead of addslashes; build the LIKE pattern in code."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 11
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: query string; addslashes is a weak sanitizer (multibyte bypass with SJIS/GBK)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "concatenated inside quotes"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "sink, no binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0032-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "low",
+            "status": "likely",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/dynamic_identifier",
+          "ruleIndex": 8,
+          "level": "error",
+          "message": {
+            "text": "ORDER BY clause taken directly from GET sort [GET /php-plain/search.php] — Map sort to an exact allow-list of column names; default otherwise."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 11
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: query string, no allow-list"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "raw identifier/expression appended"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0033-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "Category filter interpolates $_GET['cat'] in heredoc SQL [GET /php-plain/search.php] — Use a prepared statement with a bound parameter."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12,
+                  "endLine": 16
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "request value interpolated directly into quoted SQL, no escaping at all"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/search.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0034-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "medium",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "Flask search builds LIKE query with f-string [GET|POST /search] — Pass q as a bound parameter."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 27,
+                  "endLine": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "login-only gate"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 25
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "source: query string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "f-string interpolation into SQL, sink without parameters"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "python-flask/app.py",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0036-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Order note writable on any order via client-controlled hidden field [POST /Orders/EditOrder.aspx] — Add AND UserId = @uid bound to Session[\"UserID\"]; check rows affected; use parameters."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6,
+                  "endLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Order id held in a hidden field (client-controlled, not protected by ViewState MAC)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "UPDATE by hidden-field id; no UserId filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Write executes with no prior ownership check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "BasePage not in repo; assumed login only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0010-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "Unfiltered JSP loads any order by order_no without login [ANY /order/detail.jsp] — Move the JSP under WEB-INF or extend LoginFilter to it; add AND user_id = ? bound to the session user; use PreparedStatement parameters."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/order/detail.jsp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3,
+                  "endLine": 5
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "LoginFilter covers *.do only; detail.jsp outside WEB-INF is directly reachable"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/WEB-INF/web.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "ID from request"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/order/detail.jsp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 3
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Lookup by order_no only; no session user referenced"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/order/detail.jsp",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0013-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "Order row loaded by request orderId on unauthenticated servlet, no owner filter [GET /order/view] — Map LoginFilter to /order/view (or /*), stop when loginUser is null, and add AND user_id = ? bound to the session user's id."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8,
+                  "endLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "LoginFilter covers only *.do; /order/view (web.xml:17) is not filtered"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/WebContent/WEB-INF/web.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Session user read but never tested; no stop when null"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "ID from query string or form body (attacker-controlled)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "Executed query filters on id only; no user_id / loginUser binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/web/OrderServlet.java",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0017-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Reports selected by month with no owner/tenant filter; per-user scope unknown [GET /reports] — Confirm with the owner whether reports are per-user/per-shop. If so, add AND owner_id = ? bound to req.user._id (and use a bound parameter for month)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16,
+                  "endLine": 18
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Returns all reports of the month to any logged-in user; no owner column"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0020-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "low",
+            "status": "needs_review",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Item search returns all matching items with no owner filter; ownership of items unknown [GET /search] — Confirm whether items are public catalog data. If per-user, add owner: req.user._id to the filter and replace $where with a field match."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 24,
+                  "endLine": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Filter on name only; no owner field. $where injection allows dropping the name filter entirely"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 25
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0022-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "low",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "Unauthenticated per-shop order count via request-controlled shop id [GET /stats] — Add ensureLoggedIn and derive shop_id from req.user (server-side), not from the query string."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28,
+                  "endLine": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "No ensureLoggedIn on this route (unlike the others in the file)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Tenant key shop_id taken from query string; not bound to any session value"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "node-express/routes/orders.js",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0023-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Invoice note writable for any invoice id from POST (Invoice::update) [POST /invoice/update] — Add AND user_id = ? bound to the session user and check affected_rows(); return 404/403 when 0."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 20,
+                  "endLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from POST body"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Bound (no SQLi) but WHERE has no user_id; no prior ownership lookup"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-codeigniter/application/controllers/Invoice.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 23
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0027-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "medium",
+            "status": "likely",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/template_placeholder",
+          "ruleIndex": 3,
+          "level": "warning",
+          "message": {
+            "text": "MyBatis list query uses ${orderBy} (caller not in repo) — Find the Java caller of OrderMapper.list; validate orderBy against an allow-list there or use <choose> in the mapper."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 10
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "${} is raw text substitution in MyBatis; no allow-list visible"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "#{userId} is bound (safe); only orderBy is raw"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0015-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "low",
+            "status": "likely",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/nosql_injection/operator_injection",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "mongo_find.php uses GET login/pass directly in Mongo filter [GET /php-plain/mongo_find.php] — Cast both values to string (or reject arrays) and compare a password hash."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 5
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "PHP turns pass[$ne]= into an array operator"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/mongo_find.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0029-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-943"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/stored_procedure_dynamic_sql",
+          "ruleIndex": 9,
+          "level": "warning",
+          "message": {
+            "text": "sp_search_orders builds and EXECs dynamic SQL from @Customer and @Sort — Use sp_executesql with @Customer as a parameter and map @Sort through an allow-list (or QUOTENAME on an allowed column)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sql-procs/sp_search_orders.sql",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 6
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "@Customer concatenated in quotes without REPLACE/QUOTENAME; @Sort raw identifier"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sql-procs/sp_search_orders.sql",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "dynamic SQL sink inside the DB; caller-side binding does not protect it"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sql-procs/sp_search_orders.sql",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0037-1"
+          },
+          "properties": {
+            "security-severity": "5.5",
+            "severity": "medium",
+            "confidence": "low",
+            "status": "likely",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "Order detail loaded by query id without owner filter (owner-bound command never executed) [ANY /Orders/OrderDetail.aspx] — Execute the parameterized owner-bound command (line 16-18) instead of cmd; return 404 when no row."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 18
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from query string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Executed query (line 15) has no UserId filter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Owner-bound command is built but never executed"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "Page has an address label; its population is not visible in repo"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0011-1"
+          },
+          "properties": {
+            "security-severity": "3.0",
+            "severity": "low",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/no_authentication",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "Order loaded by request id without owner filter (line 13) on unauthenticated CGI [GET /perl-cgi/cgi-bin/order.cgi] — Remove the unbound query at :13 and use only the bound query at :16-17 after checking $uid is defined."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11,
+                  "endLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "ID from query or POST body"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Executed (:14) with id only; the owner-bound variant is the separate query at :16-17"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "perl-cgi/cgi-bin/order.cgi",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0024-2"
+          },
+          "properties": {
+            "security-severity": "3.0",
+            "severity": "low",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-306",
+              "CWE-639"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "Any logged-in user can load any user record via admin.php?action=view&uid= [GET /php-plain/admin.php?action=view] — Enforce an admin role check (from session) at the top of admin.php and exit on failure; if non-admins may view, restrict to uid = $_SESSION['user_id']."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 9
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Login check only; no role check anywhere (auth-model §3)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/inc/auth.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Target user id from query string (cast only prevents SQLi)"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Loads any user row; no admin role or self check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "php-plain/admin.php",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0028-1"
+          },
+          "properties": {
+            "security-severity": "3.0",
+            "severity": "low",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/format_string",
+          "ruleIndex": 10,
+          "level": "error",
+          "message": {
+            "text": "OrderDetail.aspx.cs formats Request[\"ref\"] into SELECT query via string.Format [ANY /Orders/OrderDetail.aspx] — Use a parameterized SqlCommand with @ref bound via Parameters.Add."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 19,
+                  "endLine": 21
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Split construction: formats untrusted Request[\"ref\"] into SQL string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Execution sink for sql2 without parameter binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0012-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "OrderDetail.aspx.cs interpolates Request.Form[\"cart\"] into DELETE query via C# interpolated string [ANY /Orders/OrderDetail.aspx] — Use a parameterized SqlCommand with @cartId and bind Session[\"UserID\"] for ownership."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 20,
+                  "endLine": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Split construction: interpolates untrusted Request.Form[\"cart\"] into DELETE SQL"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Execution sink for sql3 without parameter binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0013-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

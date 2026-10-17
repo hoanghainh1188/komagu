@@ -1,0 +1,28 @@
+{
+  "route_candidates": 36,
+  "inventoried": 36,
+  "rejected": 0,
+  "missing_from_inventory": [],
+  "bola_routes_to_audit": 34,
+  "bola_routes_without_verdict": [],
+  "injection_candidates": 38,
+  "injection_candidates_without_verdict": [],
+  "findings_without_verification": [],
+  "duplicates_removed": [],
+  "validation_errors": [],
+  "new_issues_from_verifier": [],
+  "out_of_scope_notes": [
+    "bola-routes-001.json: java-legacy/WebContent/order/detail.jsp:7 reflects ${param.no} unescaped (XSS).",
+    "bola-routes-001.json: dotnet-legacy/Web/Orders/EditOrder.aspx.vb:14 Response.Redirect(...,False) does not stop; occurs after the write here.",
+    "bola-routes-001.json: classic-asp/shop/member.asp:10 destructive DELETE reachable by GET (CSRF exposure).",
+    "bola-routes-003.json: R-0009: path traversal possible if DocStore.PathFor builds a filesystem path from file_id (dotnet-legacy/Web/Handlers/GetFile.ashx:9-10); helper not in repo.",
+    "bola-routes-003.json: R-0034: query built with % string formatting (python-flask/app.py:12); <int:> converter limits input to integers, so likely not injectable — injection auditor to confirm.",
+    "bola-routes-003.json: R-0030: NoSQL operator injection (login/pass arrays, mongo_find.php:5) and $where JS injection ($_GET['n'], mongo_find.php:6) — for injection auditor.",
+    "bola-routes-003.json: R-0030: plaintext password comparison in Mongo query (mongo_find.php:5) suggests passwords stored unhashed.",
+    "inj-001.json: XSS: request parameter reflected via ${param.no} without escaping (java-legacy/WebContent/order/detail.jsp:7).",
+    "inj-001.json: XSS: #qOrder.address# output without encoding (coldfusion/app/order.cfm:10).",
+    "inj-001.json: Credentials passed in GET query string (php-plain/mongo_find.php:5); plaintext password compare implied.",
+    "inj-002.json: BOLA: php-plain/order_detail.php:6, python-flask/app.py:12, dotnet InvoiceController.cs:13, php-codeigniter Invoice.php:10/23, OrderServlet.java:15 read/update objects by id without owner filter (for BOLA auditor).",
+    "inj-002.json: java-legacy/src/com/acme/web/InvoiceController.java:29 HQL concatenation of customer - not in this batch; verify it is covered by another batch."
+  ]
+}
