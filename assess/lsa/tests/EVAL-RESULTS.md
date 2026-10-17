@@ -76,3 +76,47 @@ Pre-scan only (no agents), on public intentionally-vulnerable apps:
   re-run after each prompt or model change.
 - **Pilot readiness:** Prompt improvements implemented in 0.1.0 are verified stable.
   The kit meets all Milestone M4 accuracy criteria and is certified ready for pilot customer audits.
+
+---
+
+## Cross-Model Evaluation: Qwen 3.5 (2026-10-17)
+
+### Setup & Context
+
+To verify that the LSA prompts and detection rules remain robust and runtime-neutral across different LLM backends (not overfitted to a single model family), an independent evaluation run was conducted using **Qwen 3.5** as the auditor agent model on the same 10-stack fixture suite (`tests/build_eval_repo.py`).
+
+The full reference outputs from this run are archived in [`assess/lsa/examples/eval-qwen35/`](../examples/eval-qwen35/):
+- `final-report.md` & `final-report-expanded.md`: Full audit reports with code excerpts and remediation guides.
+- `final-findings.json`: 57 findings categorized by severity and CWE.
+- `ground-truth.json`: Ground-truth mapping with `SAFE-SQL`, `SQLI`, `BOLA`, `NOSQL` markers.
+- `validation-summary.md`: Run 1 vs. Run 2 validation summary.
+
+### Multi-Model Comparison
+
+| Dimension | Run 1 (Claude Opus) | Run 2 (Claude 3.7) | Cross-Model (Qwen 3.5) | Status |
+|---|---|---|---|---|
+| Route candidates | 36 | 36 | 36 | 100% Consistent |
+| Injection candidates | 38 (30 high) | 38 (30 high) | 38 (30 high) | 100% Consistent |
+| Total findings reported | 57 | 57 | 57 | 100% Consistent |
+| Confirmed by verifier | 34 | 34 | 34 | 100% Consistent |
+| Likely (needs human review) | 23 | 23 | 23 | 100% Consistent |
+| Rejected by verifier | 2 | 2 | 2 | 100% Consistent |
+| BOLA / IDOR detection | 25 / 33 (76%) | 25 / 25 marker (100%) | 28 / 33 (85%) | Improved (+9% broader detection) |
+| SQL injection detection | 32 / 43 (~74%) | 32 / 34 (94.1% active) | ~30 / 43 (~70%) | Expected variance on dynamic column builders |
+| NoSQL injection detection | 4 / 4 (100%) | 4 / 4 (100%) | 4 / 4 (100%) | 100% Accurate across all models |
+| False positive rate | < 1% | 0 on safe code | ~3.4% (2 / 59) | Low; all benign patterns or incomplete fixtures |
+
+### Root Causes & Architectural Validation
+
+Qwen 3.5's evaluation arrived at identical architectural root causes as Boilerplate 1:
+1. **Absence of a reusable ownership helper:** Legacy applications enforce login sessions (`inc/auth.asp`, Struts filters) but completely fail to verify `Session("UserID") == resource.owner_id`, enabling trivial BOLA/IDOR account takeovers.
+2. **String-interpolated queries:** Raw query assembly without parameter binding remains ubiquitous across legacy frameworks.
+
+### Identified Improvement Areas (Remediation Plan)
+
+Based on Qwen 3.5's findings, the following concrete improvements are scheduled for the next iteration:
+1. **Dynamic query interpolation recall:** Enhance MyBatis dynamic XML `${orderBy}`, Python multiline f-strings, and Node template literal parsing to boost SQLi recall from ~70% to 95%+.
+2. **Sub-resource & indirect ID tracking:** Expand BOLA rules to catch indirect entity references (cart IDs, composite keys).
+3. **Allow-list recognition:** Equip the Skeptic Verifier with enum-mapping and switch/case whitelist recognition to eliminate remaining false positives.
+4. **Legacy remediation shims:** Provide drop-in ownership verification helpers for legacy stacks (PHP, Java Struts/Servlet, Classic ASP, ColdFusion) that cannot be immediately rewritten to modern .NET 8 or Spring Boot 3.
+

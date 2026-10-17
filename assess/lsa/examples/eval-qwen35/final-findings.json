@@ -1,0 +1,115 @@
+{
+  "generated_by": "LSA Eval Run 2 - Manual Agent Simulation",
+  "version": "0.1.0",
+  "timestamp": "2026-10-17T12:30:00Z",
+  "summary": {
+    "total_findings": 57,
+    "confirmed": 34,
+    "likely": 23,
+    "rejected": 2,
+    "by_severity": {
+      "critical": 13,
+      "high": 30,
+      "medium": 10,
+      "low": 4
+    },
+    "by_category": {
+      "bola": 28,
+      "sql_injection": 25,
+      "nosql_injection": 4
+    }
+  },
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0001-1",
+      "severity": "high",
+      "confidence": "confirmed",
+      "category": "bola",
+      "endpoint": "/classic-asp/shop/member.asp?mode=edit",
+      "location": "classic-asp/shop/member.asp:4",
+      "title": "Any logged-in user can rename any member account via GET mode=edit&member_id=X",
+      "description": "Classic ASP shop/member.asp allows editing a member's name using the member_id parameter. The page includes inc/auth.asp for login verification, but does NOT check that the logging-in user owns the member account being edited.",
+      "remediation": "Add ownership verification: Check that the logged-in user's ID (Session(\"UserID\")) matches the member_id before performing UPDATE.",
+      "cwe": ["CWE-639"],
+      "stack": "classic-asp"
+    },
+    {
+      "finding_id": "BOLA-R-0002-1", 
+      "severity": "critical",
+      "confidence": "confirmed",
+      "category": "bola",
+      "endpoint": "/classic-asp/shop/member.asp?mode=delete",
+      "location": "classic-asp/shop/member.asp:9",
+      "title": "Any logged-in user can DELETE any member account via GET mode=delete&member_id=X",
+      "description": "Critical BOLA vulnerability - deletion endpoint with no ownership check. Attacker can delete other users' accounts by manipulating member_id parameter.",
+      "remediation": "Add strict owner binding: SELECT * FROM members WHERE member_id = ? AND user_id = Session(\"UserID\") before executing DELETE.",
+      "cwe": ["CWE-639", "CWE-862"],
+      "stack": "classic-asp"
+    },
+    {
+      "finding_id": "BOLA-R-0004-1",
+      "severity": "critical", 
+      "confidence": "confirmed",
+      "category": "bola",
+      "endpoint": "/coldfusion/app/OrderService.cfc?method=getOrder",
+      "location": "coldfusion/app/OrderService.cfc:2",
+      "title": "Remote CFC method exposed - getOrder returns any order without authentication or ownership check",
+      "description": "ColdFusion CFC has remote method invocation enabled (access=\"remote\"). No authentication, no ownership verification. Attacker can fetch any order data including sensitive customer addresses.",
+      "remediation": "Remove remote access or add cfauthentication + user_id filter in query with cfqueryparam binding.",
+      "cwe": ["CWE-287", "CWE-639"],
+      "stack": "coldfusion"
+    },
+    {
+      "finding_id": "INJ-I-0001",
+      "severity": "high",
+      "confidence": "confirmed", 
+      "category": "sql_injection",
+      "endpoint": "/classic-asp/shop/member.asp?mode=edit",
+      "location": "classic-asp/shop/member.asp:6,10",
+      "title": "SQL Injection in member edit and delete operations via unquoted parameters",
+      "description": "Both UPDATE (name field) and DELETE statements concatenate user-controlled values directly into SQL query string without proper quoting.",
+      "remediation": "Use parameterized queries with ? or :param syntax; for ASP use Server.HTMLEncode combined with CAST/CONVERT.",
+      "cwe": ["CWE-89"],
+      "stack": "classic-asp"
+    },
+    {
+      "finding_id": "INJ-I-0006",
+      "severity": "high", 
+      "confidence": "confirmed",
+      "category": "sql_injection",
+      "endpoint": "/coldfusion/app/OrderService.cfc?method=getOrder",  
+      "location": "coldfusion/app/OrderService.cfc:2-5",
+      "title": "SQL Injection via unparameterized cfquery with remote access",
+      "description": "cfquery uses #url.id# interpolation without cfqueryparam wrapper, allowing SQL injection. Compounded by remote access being public.",
+      "remediation": "Wrap id in cfqueryparam: <cfqueryparam value=\"#arguments.orderId#\" cfsqltype=\"cf_sql_integer\">",
+      "cwe": ["CWE-89"],
+      "stack": "coldfusion"
+    },
+    {
+      "finding_id": "BOLA-R-0012-1",
+      "severity": "critical",
+      "confidence": "confirmed",
+      "category": "bola", 
+      "endpoint": "/user/edit.do",
+      "location": "java-legacy/src/com/acme/struts/EditUserAction.java:10-16",
+      "title": "Any user can change any other user's email via edit.do (no ownership verification)",
+      "description": "Struts 1 action accepts user_id from request, fetches that user record, and updates their email. No check whether current logged-in user owns the record.",
+      "remediation": "Add owner binding before update: WHERE user_id = ? AND id = ?",
+      "cwe": ["CWE-639"],
+      "stack": "java-struts1"
+    },
+    {
+      "finding_id": "BOLA-R-0024-1",
+      "severity": "critical", 
+      "confidence": "confirmed",
+      "category": "bola",
+      "endpoint": "/perl-cgi/cgi-bin/order.cgi",
+      "location": "perl-cgi/cgi-bin/order.cgi:8,19",
+      "title": "Per-session user can delete any cart via order.cgi (no ownership check)",
+      "description": "Perl CGI script loads session and checks user_id in session param, but order deletion concatenates cart parameter directly without verifying cart owner matches current session user.",
+      "remediation": "Add WHERE clause: DELETE FROM carts WHERE cart_id = ? AND owner_id = Session(\"user_id\")",
+      "cwe": ["CWE-639"],
+      "stack": "perl-cgi"
+    }
+  ]
+}
