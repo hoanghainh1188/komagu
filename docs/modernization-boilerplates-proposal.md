@@ -26,7 +26,7 @@ Four public incidents in two months and one rule change make data protection and
 | 2026-09-16 | [JGC Digital Metabase intrusion](https://scan.netsecurity.ne.jp/article/2026/10/09/56422.html) | A vulnerability in the Metabase BI tool was exploited; about 60,000 items of customer information were obtained. | 5. DevSecOps & SBOM |
 | 2026-08-06 | [Metabase CVE-2026-72898](https://scan.netsecurity.ne.jp/article/2026/08/19/55958.html) | Unauthenticated SQL injection, CVSS 10, zero-day exploitation confirmed by the vendor; JPCERT/CC advisory on 2026-08-14. | 5. DevSecOps & SBOM; 1. Secure API (injection) |
 
-- **Legacy estate.** METI's DX Report warned that legacy systems could cost Japan up to 12 trillion yen a year from 2025 ([summary by SMBC](https://www.smbc.co.jp/hojin/magazine/planning/about-2025-digital-cliff.html); original report to be cited before external use).
+- **Legacy estate.** METI's DX Report warned that legacy systems could cost Japan up to 12 trillion yen a year from 2025 ([METI DX Report 2018](https://www.meti.go.jp/shingikai/mono_info_service/digital_transformation/20180907_report.html); [SMBC summary](https://www.smbc.co.jp/hojin/magazine/planning/about-2025-digital-cliff.html)).
 - **What we could not confirm.** The draft linked the Metabase case to the Digital Agency. No source we opened says so; we drop that link until one does.
 - **No BOLA claim on Times Car.** The cause is not public. We must not tell clients it was an API authorization flaw.
 
@@ -155,11 +155,12 @@ Pages opened on 2026-10-16:
 - [JGC Digital Metabase 不正アクセス — ScanNetSecurity](https://scan.netsecurity.ne.jp/article/2026/10/09/56422.html)
 - [Metabase に SQLインジェクションの脆弱性、ゼロデイ攻撃も確認 — ScanNetSecurity](https://scan.netsecurity.ne.jp/article/2026/08/19/55958.html)
 - [Metabase CVE-2026-72898 — INTERNET Watch](https://internet.watch.impress.co.jp/docs/news/2134355.html)
-- [2025年の崖 — SMBC](https://www.smbc.co.jp/hojin/magazine/planning/about-2025-digital-cliff.html) (secondary; cite the METI DX Report itself before external use)
+- [DXレポート ～ITシステム「2025年の崖」克服とDXの本格的な展開～ — 経済産業省 (METI)](https://www.meti.go.jp/shingikai/mono_info_service/digital_transformation/20180907_report.html) (2018-09-07; primary source for the 12 trillion yen annual legacy cost estimate)
+- [2025年の崖 — SMBC](https://www.smbc.co.jp/hojin/magazine/planning/about-2025-digital-cliff.html) (secondary summary)
 
 ## Version history
 
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1 | 2026-10-16 | Rewrite of the original draft: sourced context, assessment-first offer, open/closed decision, measured claims only |
-| 0.2 | 2026-10-17 | Approved by BOD; Open Core model adopted (ADR-0002); AI staffing model established; explicit gaps recorded for past project evidence |
+| 0.2 | 2026-10-17 | Approved by BOD; Open Core model adopted (ADR-0002); AI staffing model established; explicit gaps recorded for past project evidence; original METI DX Report cited |
