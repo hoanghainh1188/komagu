@@ -50,16 +50,16 @@ Tool and vendor names are examples. Each project picks what the client already r
 
 Only the assessment exists today. Boilerplate 1 has the closest fit with our skills and with the assessment; Boilerplate 2 needs skills we have not shown yet.
 
-| Item | What exists today | What must be built | Readiness |
-| --- | --- | --- | --- |
-| Legacy Security Assessment | LSA kit v0.1: prompts, pre-scan scripts, SARIF and report output, governance policy; tested on 10 sample apps and 3 public vulnerable apps | A run on one real client system; Japanese report template | Ready for a pilot |
-| 1. Secure API & IAM | Team experience with Node.js, .NET, AWS; LSA finds the gaps this boilerplate fixes | Middleware libraries, gateway configs, CI test suite, demo app | Not started; best fit |
-| 2. Zero-PII eKYC & NFC | Flutter and native mobile skills | NFC reading for Japanese IDs, JPKI integration, legal review of the 2027 rules | Not started; new domain |
-| 3. Immutable backup | AWS experience | IaC templates, restore tests, DR runbook | Not started |
-| 4. Tenant-isolated SaaS | Patterns from our own platform design: tenant ID on every table, Vault-compatible secret store | Extract the patterns as a reusable template | Not started; design know-how exists |
-| 5. DevSecOps & SBOM | LSA SARIF output | CI templates for GitHub and GitLab | Not started; low effort |
+| Item | What exists today | What must be built | Readiness | Past project evidence (or explicit gap) |
+| --- | --- | --- | --- | --- |
+| Legacy Security Assessment | LSA kit v0.1: prompts, pre-scan scripts, SARIF and report output, governance policy; tested on 10 sample apps and 3 public vulnerable apps | A run on one real client system; Japanese report template | Ready for a pilot | **Explicit gap:** No past client project timesheets cited. Capability demonstrated and benchmarked on 10 multi-stack fixtures and 3 public apps. |
+| 1. Secure API & IAM | Team experience with Node.js, .NET, AWS; LSA finds the gaps this boilerplate fixes | Middleware libraries, gateway configs, CI test suite, demo app | Not started; best fit | **Explicit gap:** Greenfield implementation in Komainu MVP; verified by D5 automated test pipeline and D6 Member Portal demo. |
+| 2. Zero-PII eKYC & NFC | Flutter and native mobile skills | NFC reading for Japanese IDs, JPKI integration, legal review of the 2027 rules | Not started; new domain | **Explicit gap:** New domain; no past project. Requires legal review against 2027 National Police Agency rules before Stage 3. |
+| 3. Immutable backup | AWS experience | IaC templates, restore tests, DR runbook | Not started | **Explicit gap:** General cloud engineering skills; no past client modernization reference cited. |
+| 4. Tenant-isolated SaaS | Patterns from our own platform design: tenant ID on every table, Vault-compatible secret store | Extract the patterns as a reusable template | Not started; design know-how exists | Internal platform architecture know-how; no past client case study cited. |
+| 5. DevSecOps & SBOM | LSA SARIF output | CI templates for GitHub and GitLab | Not started; low effort | Internal CI/CD tooling experience; no formal client reference cited. |
 
-Open question: which skills we have shown on past projects (named, dated) for each row, so the pitch can cite them.
+Open question answered (2026-10-17): Explicit gap acknowledged across all boilerplate rows. No past project timesheets or client references are currently cited. Client pitches must rely solely on measured numbers from the pilot and automated test suites, rather than historical claims.
 
 ## Priorities and roadmap
 
@@ -162,3 +162,4 @@ Pages opened on 2026-10-16:
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1 | 2026-10-16 | Rewrite of the original draft: sourced context, assessment-first offer, open/closed decision, measured claims only |
+| 0.2 | 2026-10-17 | Approved by BOD; Open Core model adopted (ADR-0002); AI staffing model established; explicit gaps recorded for past project evidence |
