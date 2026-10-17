@@ -125,7 +125,7 @@ The biggest risk is promising security outcomes we cannot prove. Every client-fa
 Four decisions unblock the first stage; the rest can wait for the pilot review.
 
 - [x] Approve Boilerplate 1 and the first stage (about 12 weeks, 2 developers + half a lead) — approved 2026-10-17 by Harry (BOD)
-- [ ] Choose the IP position: A open, B closed, or C open core (recommended)
+- [x] Choose the IP position: A open, B closed, or C open core (recommended) — Option C (Open Core) adopted via ADR-0002 on 2026-10-17
 - [ ] Name a pilot client or an internal system for the first assessment, with written approval for AI processing of its code
 - [ ] Name a security reviewer (Person B) who signs off assessment findings
 - [ ] Later, at the pilot review: go / no-go for the next boilerplate, using the metrics above

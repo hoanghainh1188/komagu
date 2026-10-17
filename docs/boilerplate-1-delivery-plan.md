@@ -136,7 +136,7 @@ The first three are decided. The other three are deferred (2026-10-16); they mus
 - [x] Gateway first: Kong, self-hosted (decided 2026-10-16)
 - [x] Pilot: AMS project; fallback to an internal tool if no approval by end of week 6 (decided 2026-10-16)
 - [ ] Who are the lead, the two developers and Person B?
-- [ ] Is the boilerplate open source (MIT) or closed? (Proposal decision, needed before publishing anything.)
+- [x] Is the boilerplate open source (MIT) or closed? (Decided: Open Core per ADR-0002 on 2026-10-17)
 - [ ] Which past project gives the effort baseline?
 
 ## Sources
