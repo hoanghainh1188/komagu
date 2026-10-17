@@ -49,9 +49,9 @@ starts and its gate in the proposal has passed.
   `prompts/00-orchestrator.md` and the adapters; `tests/run_tests.py` must pass
   after the move.
 - Schemas move from the kit to `contracts/`; new tools and modules must follow them.
-- The open / closed / open-core decision is still open. Closed parts (client
-  configs, assessment know-how) must not live here if this repository becomes public,
-  and `docs/strategy/` must then be split out.
-- "Komainu" is a common noun; exclusive trademark registration is unlikely.
-  GitHub name, domain and Japanese trademark (J-PlatPat) checks are not done yet
-  and need legal review before external use.
+- The open / closed / open-core decision was resolved: Open Core adopted via ADR-0002.
+- **Name, domain and trademark findings (completed 2026-10-17, Issue #6):**
+  - **Japanese Trademark (J-PlatPat):** As a cultural common noun, exclusive registration for "Komainu" alone is unlikely. In Class 9 (software) and Class 42 (IT security services), related registrations exist (e.g. Reg. No. 6565860 by Juggernaut Inc. for security DX; and international use by Nomura-backed Komainu crypto custody). Externally in Japan, use qualified brand names (e.g. *Komainu Security* or *Komainu Modernization*) rather than "Komainu" alone to avoid confusion and trademark conflicts.
+  - **GitHub:** `github.com/komainu` is held by the digital asset custody firm. Organization name `komainu-security` is available for public release.
+  - **Domain:** `komainu.com` is held by the custody firm. Use `komainu.dev` or `komainu-security.com` for public documentation.
+  - The internal project, repository, and product code name remains **`komainu`**.
