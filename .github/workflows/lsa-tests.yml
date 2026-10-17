@@ -16,7 +16,7 @@ jobs:
         # The kit promises Python 3.8+; test the oldest and a current version.
         python: ["3.8", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
