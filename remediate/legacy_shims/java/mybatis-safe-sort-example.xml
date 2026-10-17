@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  Komainu Legacy Remediation Reference for MyBatis / iBATIS XML Mappers
+
+  Fixes:
+  1. BOLA (CWE-639): Binds #{sessionUserId} from server-side session on every SELECT/UPDATE/DELETE.
+  2. SQL Injection (CWE-89): Replaces vulnerable `ORDER BY ${orderBy}` interpolation with a strict
+     static `<choose><when>` allow-list so user input is never interpolated into SQL.
+-->
+<mapper namespace="dev.komainu.legacy.OrderMapper">
+
+  <!-- SAFE: Two-way bound lookup by orderId AND sessionUserId -->
+  <select id="findOrderByIdForUser" resultType="map">
+    SELECT order_id, user_id, total_amount, status, created_at
+    FROM orders
+    WHERE order_id = #{orderId}
+      AND user_id = #{sessionUserId}
+  </select>
+
+  <!-- SAFE: Dynamic sorting using static <choose><when> allow-list instead of ${orderBy} -->
+  <select id="listOrdersForUserSafeSort" resultType="map">
+    SELECT order_id, user_id, total_amount, status, created_at
+    FROM orders
+    WHERE user_id = #{sessionUserId}
+    ORDER BY
+    <choose>
+      <when test="sortBy == 'amount_asc'">total_amount ASC</when>
+      <when test="sortBy == 'amount_desc'">total_amount DESC</when>
+      <when test="sortBy == 'status'">status ASC</when>
+      <otherwise>created_at DESC</otherwise>
+    </choose>
+  </select>
+
+  <!-- SAFE: Two-way bound DELETE preventing cross-user deletion (BOLA-R-0002 / P13) -->
+  <delete id="deleteOrderForUser">
+    DELETE FROM orders
+    WHERE order_id = #{orderId}
+      AND user_id = #{sessionUserId}
+  </delete>
+
+</mapper>
