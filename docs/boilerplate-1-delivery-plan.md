@@ -1,6 +1,6 @@
 # Boilerplate 1 — Secure API & IAM: Delivery Plan
 
-Version 0.1 · 2026-10-16 · Owner: Harry · Status: draft
+Version 0.1 · 2026-10-17 · Owner: Harry · Status: approved by management (BOD) on 2026-10-17
 
 ## Goal and success criteria
 
