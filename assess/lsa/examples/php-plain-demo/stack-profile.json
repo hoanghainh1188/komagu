@@ -1,0 +1,42 @@
+{
+  "repo": "php-plain",
+  "generated_by": "lsa 10-stack-detector (from detect_stack.py 0.1.0)",
+  "stacks": [
+    {
+      "id": "php",
+      "language": "php",
+      "version_hint": "PHP 5.x (uses mysql_connect/mysql_query and legacy MongoClient)",
+      "evidence": [
+        "inc/auth.php:1-7",
+        "inc/db.php:1-4",
+        "admin.php:1-14",
+        "mongo_find.php:1-6",
+        "order_detail.php:1-8",
+        "order_detail_safe.php:1-8",
+        "search.php:1-17"
+      ],
+      "confirmed": true,
+      "root": ""
+    }
+  ],
+  "data_access": [
+    "mysql_* (no binding)",
+    "PDO",
+    "MongoDB (legacy MongoClient)"
+  ],
+  "databases": [
+    "MySQL",
+    "MongoDB"
+  ],
+  "file_counts": {
+    ".php": 7
+  },
+  "knowledge_files": [
+    "knowledge/stacks/php.md"
+  ],
+  "notes": "Confirmed plain PHP 5.x application (7 .php files, no MVC framework). Uses raw mysql_* calls (inc/db.php:2-3, admin.php:8,12, order_detail.php:6, search.php:11,16,17), PDO prepared statements (inc/db.php:4, order_detail_safe.php:5-6), and legacy MongoClient (mongo_find.php:3-6).",
+  "unknowns": [
+    "Login handler `/login.php` (referenced in `inc/auth.php:5`) is not present in the repository; how `$_SESSION['user_id']` and any role flags are populated is outside visible code.",
+    "Web server / PHP configuration (`.htaccess`, `php.ini`, vhost config) is not present in the repository; no server-level access control on `/admin.php` or `inc/` is visible."
+  ]
+}
