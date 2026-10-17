@@ -1,0 +1,41 @@
+services:
+  kong:
+    image: kong:3.6-alpine
+    container_name: komainu-kong-gateway
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    volumes:
+      - ./kong/kong.yaml:/kong/declarative/kong.yaml:ro
+    ports:
+      - "8000:8000"  # Public API Gateway proxy port
+      - "8001:8001"  # Kong Admin API (internal / dev inspection)
+    depends_on:
+      - coraza-waf
+    restart: unless-stopped
+
+  coraza-waf:
+    image: ghcr.io/corazawaf/coraza-caddy:latest
+    container_name: komainu-coraza-waf
+    volumes:
+      - ./coraza/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./coraza/coraza.conf:/etc/coraza/coraza.conf:ro
+      - ./coraza/rules:/etc/coraza/rules:ro
+    expose:
+      - "8080"
+    depends_on:
+      - mock-backend
+    restart: unless-stopped
+
+  mock-backend:
+    build:
+      context: ./mock-backend
+    container_name: komainu-mock-backend
+    expose:
+      - "5000"
+    restart: unless-stopped

@@ -1,0 +1,67 @@
+_format_version: "3.0"
+
+services:
+  - name: komainu-api-service
+    url: http://coraza-waf:8080/api/v1
+    connect_timeout: 5000
+    read_timeout: 30000
+    write_timeout: 30000
+    routes:
+      - name: api-v1-routes
+        paths:
+          - /api/v1
+        strip_path: false
+        protocols:
+          - http
+          - https
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 120
+              second: 10
+              policy: local
+              fault_tolerant: true
+              hide_client_headers: false
+              error_code: 429
+              error_message: "API rate limit exceeded. Please back off and retry."
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:3000"
+        - "http://localhost:5173"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+        - HEAD
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - X-Requested-With
+        - X-Correlation-ID
+        - traceparent
+      exposed_headers:
+        - X-Correlation-ID
+        - Content-Length
+      credentials: true
+      max_age: 3600
+
+  - name: correlation-id
+    config:
+      header_name: X-Correlation-ID
+      generator: uuid#counter
+      echo_downstream: true
+
+  - name: response-transformer
+    config:
+      remove:
+        headers:
+          - X-Kong-Upstream-Latency
+          - X-Kong-Proxy-Latency
+          - Server

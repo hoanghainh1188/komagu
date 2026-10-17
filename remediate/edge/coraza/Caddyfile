@@ -1,0 +1,23 @@
+{
+    order coraza_waf first
+    log {
+        output stdout
+        format json
+        level INFO
+    }
+}
+
+:8080 {
+    coraza_waf {
+        load_owasp_crs
+        directives `
+            Include /etc/coraza/coraza.conf
+            Include /etc/coraza/rules/coraza-crs-custom.conf
+        `
+    }
+
+    reverse_proxy http://mock-backend:5000 {
+        header_up Host {upstream_hostport}
+        header_up X-Real-IP {remote_host}
+    }
+}
