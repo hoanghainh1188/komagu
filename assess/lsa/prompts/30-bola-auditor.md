@@ -31,13 +31,16 @@ Trace these three things for each `data_ops` item:
 2. **Identity source** — where "current user / tenant" comes from. Only
    server-side session, a verified token, or framework principal counts.
    A `user_id` / `company_id` taken from the request **does not count**.
-3. **Binding** — is identity bound to the object access? Accept only:
-   - the query includes `AND owner_col = <session value>` (or a join that
-     does the same), **or**
-   - the object is loaded, then compared to the session value, and the
-     handler stops (return / throw / redirect + exit) on mismatch, **or**
-   - a helper listed as SAFE in `auth-model.md` is called with the same ID
-     before the access, and its result is enforced, **or**
+3. **Two-way binding** — is the server-side identity strictly bound to the
+   target object identifier (`id`, `member_id`, `cart_id`, `order_id`, `item_id`)?
+   Accept only:
+   - the query includes `AND owner_col = <session value>` (or a `JOIN` to an
+     ownership table that binds the session user to the sub-resource), **or**
+   - the object is loaded, then its owner column is compared to the session
+     value, and the handler immediately stops (return / throw / redirect + exit)
+     on mismatch, **or**
+   - a helper listed as SAFE in `auth-model.md` is called with the **exact same
+     target ID and session user** before the access, and its result is enforced, **or**
    - a framework policy that is clearly object-scoped (e.g.
      `[Authorize(Policy=...)]` with a resource handler, Laravel
      `authorize('update', $order)`, Spring `@PreAuthorize` that references the
@@ -45,10 +48,17 @@ Trace these three things for each `data_ops` item:
 
 ### Things that are NOT an ownership check
 
-- Login check only (`if (!isset($_SESSION['user']))`, `[Authorize]` with no
-  policy, `@Secured("ROLE_USER")`).
+- **Login guard alone (`Login ≠ Authorization`)**: `if (!isset($_SESSION['user']))`,
+  `<!--#include file="../inc/auth.asp"-->`, `LoginFilter`, `[Authorize]` with no
+  resource policy, or `@Secured("ROLE_USER")`. These prove the caller is logged in,
+  **not** that `Session("UserID")` owns the `member_id`, `cart_id`, or `order_id`
+  in the request.
 - Role check only (`isAdmin`) — unless the endpoint is admin-only by design
   and the role check is enforced. Then it is not BOLA (note it).
+- Indirect / sub-resource operations (`DELETE FROM carts WHERE cart_id = ?`,
+  `DELETE FROM members WHERE member_id = ?`) where the handler assumes a
+  `cart_id` or `member_id` parameter belongs to the current session without
+  verifying `AND user_id = <session_uid>`.
 - Checking the ID is numeric, exists, or is "not empty".
 - Hiding the link in the UI, using POST instead of GET, "unguessable" IDs that
   are listed elsewhere, encrypted IDs where the key is static and the

@@ -8,12 +8,32 @@ Parameterization Cheat Sheet; CWE-89, CWE-564, CWE-943.
 | Pattern | Examples |
 |---|---|
 | Concatenation | PHP `.`/`.=`, Java/C#/JS `+`/`+=`, VB/ASP `&`/`&=`, Perl `.`, Python `+` |
-| Interpolation | PHP `"... $id"` / `"{$row['id']}"`, Perl `"... $id"`, Ruby `"#{id}"`, JS template `` `${id}` ``, C# `$"... {id}"`, Python f-string |
+| Interpolation | PHP `"... $id"` / `"{$row['id']}"`, Perl `"... $id"`, Ruby `"#{id}"`, JS template `` `${id}` `` (including multiline template literals), C# `$"... {id}"`, Python f-string (`f"..."` and multiline `f"""..."""`) |
 | Formatting | `String.format`, `string.Format`, `sprintf`, Python `%` / `.format`, `MessageFormat` |
-| Template placeholder | MyBatis `${param}`, iBATIS `$param$`, ColdFusion `#var#` inside `<cfquery>` without `<cfqueryparam>` |
+| Template placeholder | MyBatis `${param}` (even when mixed with `#{safeParam}`), iBATIS `$param$`, ColdFusion `#var#` / `#url.id#` / `#arguments.id#` inside `<cfquery>` without `<cfqueryparam>` |
 | Builder misuse | `whereRaw`, `DB::raw`, `orderByRaw`, Hibernate `createQuery("..." + x)`, `createSQLQuery`, Criteria `Restrictions.sqlRestriction(x)`, CodeIgniter `$this->db->where("id = $id")` / `query("..." . $x)` |
-| Dynamic identifiers | `ORDER BY $sort`, `SELECT $cols`, table names from input — binding cannot help, allow-list is required |
+| Dynamic identifiers | `ORDER BY $sort`, `ORDER BY ${orderBy}`, `GROUP BY $col`, `SELECT $cols`, table names from input — parameter binding cannot bind identifiers; an explicit allow-list is required |
 | Stored procedure dynamic SQL | `EXEC('SELECT ... ' + @p)`, `sp_executesql` with concatenated string, Oracle `EXECUTE IMMEDIATE '...' || p` |
+
+### 1.1 High-risk multi-stack interpolation nuances
+
+- **MyBatis / iBATIS XML (`${...}` vs. `#{...}`)**: `#{param}` compiles to a `?`
+  PreparedStatement placeholder (safe). `${param}` (and iBATIS `$param$`) performs
+  raw string substitution before statement preparation. A query that uses `#{id}`
+  in `WHERE` but `${orderBy}` in `ORDER BY` is **vulnerable** (`template_placeholder`
+  / `dynamic_identifier`) unless the mapper XML wraps it in a static `<choose><when>`
+  allow-list or the Java caller strictly validates against an enum/Set of column names.
+- **Multi-line & split construction**: In C# (`string.Format`, `$"..."`), Python
+  (`f"""..."""`), and Node.js (`` `SELECT ... ${expr}` ``), a query string is often
+  assigned to a local variable (`sql2`, `sql3`) and executed several lines later
+  (`new SqlCommand(sql2, conn).ExecuteReader()`, `cursor.execute(sql)`). Trace every
+  built SQL variable to its execution sink and include both the construction line
+  and the sink line in the finding evidence.
+- **ColdFusion `<cfquery>`**: ColdFusion auto-escapes single quotes inside
+  `#...#` only in string literals, which fails completely for unquoted numeric
+  expressions (`WHERE id = #url.id#`), `ORDER BY #url.sort#`, or when
+  `preserveSingleQuotes()` is used. Any request-derived `#...#` inside `<cfquery>`
+  not wrapped in `<cfqueryparam>` must be flagged as `template_placeholder`.
 
 ## 2. Sinks by stack
 
@@ -52,7 +72,7 @@ Parameterization Cheat Sheet; CWE-89, CWE-564, CWE-943.
 |---|---|---|
 | Bound parameters (`?`, `:name`, `@p`, `#{}` in MyBatis, `cfqueryparam`) | Yes | Only if **every** dynamic value is bound. |
 | Integer cast (`(int)`, `intval`, `Integer.parseInt`, `CLng` after `IsNumeric`, `int.Parse`) | Yes for numeric context | Check failure handling; `IsNumeric` in VBScript accepts `1e5`, `&H10` — still numeric, low risk. |
-| Allow-list for identifiers / sort / direction | Yes | Must be exact match, not "contains". |
+| Allow-list for identifiers / sort / direction | Yes | Must be exact match (`switch`/`case`, `in_array(..., true)`, `Set.contains`, Enum parse, or MyBatis `<choose><when>` with static SQL), not substring "contains". |
 | `mysql_real_escape_string` / `mysqli_real_escape_string` | Only inside quotes | Unquoted numeric context (`WHERE id = $id`) stays injectable. Charset issues with GBK/SJIS if `SET NAMES` used instead of `set_charset`. |
 | `addslashes` | No (weak) | Multibyte bypass with SJIS/GBK — relevant for Japanese legacy systems. |
 | `Replace(x, "'", "''")` (ASP/VB/C#) | Only inside quotes, and only for string context | Numeric context injectable. |
@@ -78,6 +98,7 @@ Parameterization Cheat Sheet; CWE-89, CWE-564, CWE-943.
 | Reachable without login, tainted, no sanitizer | critical |
 | Reachable after login (any user), tainted, no sanitizer | high (critical only if the repo shows the DB account is admin / `sa` / `root`) |
 | Reachable only by admin role, or second-order | medium |
+| Dynamic identifier (`ORDER BY ${sort}`) with no allow-list | high (if reachable by normal user) or medium (if constrained context) |
 | Dynamic identifier with partial validation; regex/ReDoS | medium / low |
 | Query is executed, but the code path is not reachable from HTTP today (dead page, internal batch) | low |
 
@@ -87,6 +108,9 @@ A string that is built but **never sent to any sink** is not a finding: verdict 
 
 - String concatenation of **constants only** (`"SELECT * FROM " . TABLE_NAME`).
 - Value cast to int earlier, in another function. Trace the caller.
+- Dynamic `ORDER BY` or column name strictly mapped through a hardcoded
+  `switch`/`case`, `in_array($sort, ['id', 'date'], true)`, Enum, or static
+  MyBatis `<choose><when>` block.
 - Prepared statement where only placeholders are concatenated
   (`"IN (" + String.join(",", Collections.nCopies(n, "?")) + ")"`) — safe if
   values are bound afterwards.

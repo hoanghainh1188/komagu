@@ -33,11 +33,22 @@ find controls the auditor missed.
    skipped:
    - Global filters / interceptors / base classes / `Global.asax` /
      `web.config` `<location>` / `.htaccess` / `auto_prepend_file`.
-   - Code *after* the query that compares the owner before output.
-   - Helper functions and DAO layers (a DAO may always add `user_id`).
+   - Code *after* the query that compares the owner before output (with an
+     enforced `exit` / `return` / `throw`).
+   - Helper functions and DAO layers (a DAO may always add `user_id` or call
+     `checkOwnership(id, sessionUser)`).
    - Framework policies, annotations, decorators on the class.
-   - For injection: casts, allow-lists, binding inside the helper, typed
-     parameters (`int id` in a method signature, `SqlDbType.Int`).
+   - **For injection & dynamic identifiers (`ORDER BY`, column/table names):**
+     check for integer casts (`(int)`, `intval`, `Integer.parseInt`, `CLng`),
+     parameter binding inside the helper, typed parameters (`int id` in a
+     method signature, `SqlDbType.Int`), and **explicit allow-lists / enum
+     mappings**:
+     - `switch`/`case` or `if`/`else` mapping input to hardcoded column literals,
+     - `in_array($sort, ['id', 'name', 'created_at'], true)` / `Set.contains`,
+     - strongly-typed `Enum` parsing, or
+     - MyBatis `<choose><when test="...">` blocks containing only static SQL.
+     If an exact-match allow-list constrains the identifier before query
+     assembly, reject the finding (`verdict: "rejected"`, `reason_code: "control_found"`).
 3. **Check reachability.** Is the code reachable from HTTP? Is it dead code,
    a test, an admin-only page behind a role check? (Admin-only does not
    remove BOLA between tenants — check tenant scoping.)
@@ -45,13 +56,18 @@ find controls the auditor missed.
 5. Give a verdict and a `reason_code`:
    - `confirmed` (`traced`) — you independently traced it and found no
      control. Real but low impact is still `confirmed`; lower the severity
-     (e.g. `low` when a read result is never shown).
+     (e.g. `low` when a read result is never shown). Note: if a dynamic
+     identifier (`${orderBy}`) or indirect resource key (`cart_id`, `member_id`)
+     has **no** visible allow-list or owner binding in the repository, mark it
+     `confirmed` (`traced`) — never assume an unseen external caller validates it.
    - `likely` — strong evidence, but something that decides it is not
      visible: code (`code_not_visible`), configuration such as `php.ini`, DB
      charset, IIS settings (`config_not_visible`), or whether the data is
-     per-user at all (`data_ownership_unclear`). Re-judge severity as in
+     per-user at all (`data_ownership_unclear`, e.g. an unscoped summary
+     report that may be intentionally global). Re-judge severity as in
      step 4; set confidence `medium` or `low`.
-   - `rejected` — cite why: `control_found` (with `control_found` file:line),
+   - `rejected` — cite why: `control_found` (with `control_found` file:line
+     pointing to the owner check, cast, binding, or allow-list),
      `evidence_mismatch`, `not_executed` (the query is built but never sent
      to a sink), `not_reachable`, `not_attacker_controlled`.
 6. If the subtype or CWE is wrong, put the right one in

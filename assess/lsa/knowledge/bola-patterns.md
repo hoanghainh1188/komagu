@@ -8,13 +8,14 @@ Authorization; OWASP WSTG-ATHZ-04 (Testing for IDOR); CWE-639
 
 | Shape | Legacy examples |
 |---|---|
-| Query string | `detail.php?id=12`, `Report.aspx?no=2020-01`, `view.asp?code=A1` |
+| Query string | `detail.php?id=12`, `Report.aspx?no=2020-01`, `view.asp?code=A1`, `member.asp?mode=delete&member_id=12` |
 | Form / hidden field | `<input type="hidden" name="user_id">`, ViewState-held IDs, `__doPostBack` arguments |
 | Path segment | `/order/12`, Struts `/edit.do/12`, MVC `{controller}/{action}/{id}` |
 | Cookie | `Request("id")` in Classic ASP also reads cookies; `$_REQUEST` includes cookies (by `request_order`) |
 | JSON / XML body | AJAX handlers (`*.ashx`, `ajax.php`), SOAP `.asmx` web methods |
 | File name | `download.php?file=invoice_12.pdf`, `GetFile.ashx?path=` |
 | Composite | `?company=3&id=12` where `company` is also request-controlled |
+| Indirect / sub-resource key | `cart_id`, `item_id`, `line_id`, `attachment_id`, `invoice_no`, `ref` — operates on a child or session-linked table (`DELETE FROM carts WHERE cart_id = ?`) without joining to or verifying the parent/session owner |
 
 ## 2. Where ownership checks hide (look here before reporting)
 
@@ -63,7 +64,12 @@ Authorization; OWASP WSTG-ATHZ-04 (Testing for IDOR); CWE-639
 - **P11 Sequential "secret" keys**: `token`, `code` or encrypted IDs that are
   predictable or encrypted with a static key and not bound to the user.
 - **P12 Unauthenticated data endpoint**: page excluded from the login filter
-  (`<location path="Api" allow users="*">`, `/public/`), returns per-user data.
+  (`<location path="Api" allow users="*">`, `/public/`, ColdFusion `access="remote"` CFC method), returns per-user data.
+- **P13 Indirect / session-detached resource key**: endpoint enforces login
+  (`inc/auth.asp`, session existence check, `LoginFilter`), then mutates or
+  deletes a sub-resource or account by `cart_id`, `member_id`, or `item_id`
+  taken from the request without two-way binding to `Session("UserID")` /
+  authenticated principal.
 
 ## 4. Safe patterns (do not report)
 
