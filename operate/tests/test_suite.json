@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "Protected Order CRUD",
+      "path": "/api/orders/{id}",
+      "resource_id": "1",
+      "auto_crud": true,
+      "attacker_token": "token-user-b"
+    }
+  ]
+}
