@@ -21,49 +21,69 @@ user can influence**, and whether that data can change the query's meaning.
 
 1. **Find the sink.** The call that sends the query to the database
    (`mysql_query`, `$db->query`, `Statement.executeQuery`,
-   `SqlCommand.ExecuteReader`, `conn.Execute`, `$dbh->do`, `<cfquery>`,
-   `collection.find`, MyBatis mapper with `${}`…). The candidate line may be
-   where the string is built; follow the variable to the sink.
-   No sink reached → `not_a_query` verdict.
-2. **Find every dynamic part** of the query string. For each, trace it
-   **backwards** to its origin, across functions and files (max depth 3):
+   `SqlCommand.ExecuteReader`, `SqlCommand.ExecuteNonQuery`, `conn.Execute`,
+   `$dbh->do`, `<cfquery>`, `collection.find`, MyBatis mapper with `${}`…).
+   - **Split construction & multiple queries in one handler:** The candidate
+     line is often where a query string variable (`sql`, `sql2`, `sql3`) is
+     constructed via `string.Format`, `$"..."`, Python f-strings (`f"..."` /
+     `f"""..."""`), or JS template literals (`` `... ${x}` ``), while the
+     execution sink (`new SqlCommand(sql2, conn).ExecuteReader()`,
+     `cursor.execute(sql)`) appears several lines later. Always trace the local
+     variable forward to its execution call, set `location.start_line` to the
+     construction line and `location.end_line` to the execution line, and include
+     both lines in `evidence`.
+   - No sink reached anywhere in the call chain → `not_a_query` verdict.
+2. **Find every dynamic part** of the query string (including `ORDER BY`,
+   `GROUP BY`, column/table names, and MyBatis `${...}` / ColdFusion `#...#`
+   expressions). For each, trace it **backwards** to its origin, across
+   functions and files (max depth 3):
    - Request input (query, form, cookie, header, path, JSON, uploaded file
-     name) → tainted.
+     name, ColdFusion `url.*` / `form.*` / remote `arguments.*`) → tainted.
+   - MyBatis mapper XML `${param}` or iBATIS `$param$`: even when sibling
+     parameters use safe `#{id}`, any `${orderBy}` or `${col}` performs raw
+     string substitution and is tainted if the caller passes request input.
    - Data read from the DB that was originally user input (second-order) →
      tainted, confidence max `medium`.
    - Session value set by the server, constant, config, enum → not tainted.
 3. **Check sanitizers on the path.** Judge them by
    `knowledge/injection-patterns.md` → "Sanitizers that are / are not enough".
    Short version:
-   - Enough: parameter binding; strict cast to integer (`(int)`,
-     `intval`, `Integer.parseInt` with failure handled, `CInt` with
-     `IsNumeric` + error handling); allow-list match for identifiers
-     (column / sort / table names).
+   - Enough: parameter binding (`?`, `@p`, `#{}` in MyBatis, `<cfqueryparam>`);
+     strict cast to integer (`(int)`, `intval`, `Integer.parseInt` with failure
+     handled, `CInt` with `IsNumeric` + error handling); **explicit allow-list**
+     match for identifiers (`switch`/`case`, `in_array(..., true)`, `Set.contains`,
+     Enum parse, or static MyBatis `<choose><when>`).
    - Not enough alone: `addslashes`, manual `replace("'", "''")` (enough only
      inside quotes, and not for numeric context or with multibyte charsets),
      `mysql_real_escape_string` on an **unquoted** value, `htmlspecialchars`,
      `strip_tags`, length limits, client-side validation, `escape()` on
-     identifiers.
+     identifiers, or ColdFusion auto-escaping on unquoted `#url.id#`.
 4. **NoSQL specifics.** Flag: `$where` / `mapReduce` / `$function` with built
    strings; request objects passed directly as a filter
    (`find(req.body)`, `find($_GET['q'])` — PHP arrays allow `q[$ne]=`);
    JSON parsed from the request and merged into a filter; regex built from
    input without escaping (ReDoS / data leak).
 5. **Decide a verdict:**
-   - `vulnerable` — tainted data reaches the query structure without an
-     enough sanitizer.
-   - `safe` — all dynamic parts are untainted or enough-sanitized. Cite why.
+   - `vulnerable` — tainted data reaches the query structure (including dynamic
+     `ORDER BY` / identifiers without an explicit allow-list in visible code)
+     without an enough sanitizer. Do **not** downgrade unvalidated `${orderBy}`
+     or dynamic column interpolation to `needs_review` merely because runtime
+     values are unknown; if no allow-list exists in code, it is `vulnerable`.
+   - `safe` — all dynamic parts are untainted or enough-sanitized. Cite the
+     exact sanitizer or allow-list `file:line`.
    - `needs_review` — origin cannot be traced (dynamic include, reflection,
      stored procedure that builds dynamic SQL inside the DB, etc.).
    - `not_a_query` — false positive of the pre-scan (log message, comment,
-     UI text).
+     UI text, or string built and never passed to any DB sink).
 
 Finding rules:
 - Write a finding for every `vulnerable` verdict (`status: "unverified"`)
   and every `needs_review` verdict (`status: "needs_review"`).
-- One data flow = one finding. If the build line and the sink line are two
-  candidates (e.g. `SET @sql = ...` and `EXEC(@sql)`), give both verdicts the
-  same `finding_ids`.
+- One data flow = one finding. If a method builds and executes multiple distinct
+  tainted queries (e.g. `cmd`, `sql2`, `sql3`), write a separate finding for
+  each distinct query flow. If the build line and the sink line of the **same**
+  query are two separate pre-scan candidates (e.g. `SET @sql = ...` and
+  `EXEC(@sql)`), give both verdicts the same `finding_ids`.
 - `reason` is allowed on any verdict; use it for confidence caveats.
 - `endpoint.method` is one string; join several with `|` (`"GET|POST"`).
   Use `null` for `endpoint` when the code is not reachable from a known route.
@@ -72,7 +92,8 @@ Finding rules:
   `endpoint` from that route.
 
 Also check the **same file** for sibling queries the pre-scan missed (same
-variable, same helper). Add them with ID `<candidate_id>-x1`.
+variable, same helper, or adjacent `string.Format` / `$"..."` queries in the
+same method). Add them with ID `<candidate_id>-x1`.
 
 ## Output
 
