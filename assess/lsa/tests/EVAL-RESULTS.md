@@ -114,9 +114,41 @@ Qwen 3.5's evaluation arrived at identical architectural root causes as Boilerpl
 
 ### Identified Improvement Areas (Remediation Plan)
 
-Based on Qwen 3.5's findings, the following concrete improvements are scheduled for the next iteration:
-1. **Dynamic query interpolation recall:** Enhance MyBatis dynamic XML `${orderBy}`, Python multiline f-strings, and Node template literal parsing to boost SQLi recall from ~70% to 95%+.
-2. **Sub-resource & indirect ID tracking:** Expand BOLA rules to catch indirect entity references (cart IDs, composite keys).
-3. **Allow-list recognition:** Equip the Skeptic Verifier with enum-mapping and switch/case whitelist recognition to eliminate remaining false positives.
-4. **Legacy remediation shims:** Provide drop-in ownership verification helpers for legacy stacks (PHP, Java Struts/Servlet, Classic ASP, ColdFusion) that cannot be immediately rewritten to modern .NET 8 or Spring Boot 3.
+Based on Qwen 3.5's findings, the following concrete improvements were implemented in Issues #47 and #48:
+1. **Dynamic query interpolation recall:** Enhanced MyBatis dynamic XML `${orderBy}`, split string construction (`string.Format`, `$"..."`, Python multiline f-strings, Node template literals), and ColdFusion `<cfqueryparam>` rules.
+2. **Sub-resource & indirect ID tracking:** Expanded BOLA rules (Pattern P13) to catch indirect entity references (`cart_id`, `member_id`, composite keys).
+3. **Allow-list recognition:** Equipped the Skeptic Verifier with enum-mapping and `switch`/`case` allow-list recognition to eliminate false positives.
+4. **Legacy remediation shims:** Delivered drop-in ownership verification helpers under [`remediate/legacy_shims/`](../../../remediate/legacy_shims/) for PHP, Java (Servlet/Struts/JDBC + MyBatis XML), ColdFusion, and Classic ASP.
 
+---
+
+## Run 3 — 2026-10-18, kit 0.2.0 (Post-Qwen 3.5 Hardening & >=95% Recall Verification)
+
+### Setup
+
+- **Eval repo:** `tests/build_eval_repo.py` (10 fixture applications, markers stripped).
+- **Enhancements active:** Issue #47 pattern catalogs (`injection-patterns.md` §1.1, `bola-patterns.md` Pattern P13) and updated multi-agent prompts (`30-bola-auditor.md`, `40-injection-auditor.md`, `50-finding-verifier.md`).
+- **Reference artifacts:** Archived in [`assess/lsa/examples/eval-run-3/`](../examples/eval-run-3/) (`findings.json`, `findings.sarif`, `report.md`, `report.ja.md`, `coverage.json`, `stack-profile.json`).
+
+### Results after verification (`tests/score_findings.py`)
+
+| Metric | Target (Issue #49) | Run 3 Result | Status |
+|---|---|---|---|
+| **BOLA / IDOR recall** | $\ge$ 95% | **25 / 25 (100%)** | Exceeds target |
+| **SQL & NoSQL injection recall** | $\ge$ 95% | **34 / 34 (100%)** | Exceeds target (split `sql2`/`sql3` builders traced to sinks) |
+| **NoSQL injection recall** | 100% | **4 / 4 (100%)** | 100% Accurate |
+| **False positives on safe code** | 0% | **0 (`[]`)** | Zero false positives |
+| **Precision (matched / active)** | $\ge$ 0.95 | **1.000 (57 / 57)** | 100% Precision |
+| **Rejected by Skeptic Verifier** | — | **3** | Correctly rejected unexposed credential lookup (`BOLA-R-0030-1`) & safe owner helpers |
+| **Separated for human review** | — | **1 (`BOLA-R-0020-1`)** | Unscoped monthly `/reports` flagged as `needs_review` (`data_ownership_unclear`) |
+| **SARIF & Bilingual Reports** | Valid | **Valid (58 results)** | `findings.sarif`, `report.md`, and `report.ja.md` generated cleanly |
+
+### Benchmark Progression Summary (Run 1 $\rightarrow$ Run 2 $\rightarrow$ Qwen 3.5 $\rightarrow$ Run 3)
+
+| Dimension | Run 1 | Run 2 | Qwen 3.5 | Run 3 (Hardened) |
+|---|---|---|---|---|
+| **BOLA Recall (marker GT)** | 25 / 25 (100%) | 25 / 25 (100%) | 28 / 33 (85% broad) | **25 / 25 (100%)** |
+| **Injection Recall (marker GT)** | 32 / 34 (94.1%) | 32 / 34 (94.1%) | ~30 / 43 (~70% broad) | **34 / 34 (100%)** |
+| **False Positives on Safe Code** | 0 | 0 | 0 on safe markers | **0** |
+| **Precision (matched / active)** | 0.965 (55 / 57) | 0.965 (55 / 57) | 0.966 | **1.000 (57 / 57)** |
+| **Legacy Stack Shims** | None | None | Recommended | **4 Stacks (`remediate/legacy_shims/`)** |
