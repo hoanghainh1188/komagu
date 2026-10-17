@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MemberPortal.Backend</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komainu.Security.Authorization\Komainu.Security.Authorization.csproj" />
+    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komainu.Security.AspNetCore\Komainu.Security.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komainu.Security.EntityFrameworkCore\Komainu.Security.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\..\remediate\identity\dotnet\src\Komainu.Security.Identity\Komainu.Security.Identity.csproj" />
+    <ProjectReference Include="..\..\..\remediate\query\dotnet\src\Komainu.Security.Query\Komainu.Security.Query.csproj" />
+  </ItemGroup>
+
+</Project>
