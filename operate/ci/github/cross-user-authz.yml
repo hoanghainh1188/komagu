@@ -1,0 +1,91 @@
+name: Komainu Continuous Security Verification
+
+on:
+  workflow_call:
+    inputs:
+      base_url:
+        description: 'Target API base URL (e.g. http://127.0.0.1:8080)'
+        required: true
+        type: string
+      config_path:
+        description: 'Path to test suite configuration file'
+        required: false
+        default: 'operate/tests/test_suite.json'
+        type: string
+      findings_path:
+        description: 'Path to LSA findings.json for SARIF export'
+        required: false
+        default: 'audit-out/findings.json'
+        type: string
+    secrets:
+      ATTACKER_TOKEN:
+        description: 'Bearer token for Persona B (Attacker)'
+        required: false
+
+jobs:
+  cross-user-authorization:
+    name: Cross-User BOLA/IDOR Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Cross-User Authz Tester
+        env:
+          ATTACKER_TOKEN: ${{ secrets.ATTACKER_TOKEN }}
+        run: |
+          python3 operate/cross-user-tester/runner.py \
+            --base-url "${{ inputs.base_url }}" \
+            --config "${{ inputs.config_path }}" \
+            --output cross-user-results.json \
+            ${ATTACKER_TOKEN:+--attacker-token "$ATTACKER_TOKEN"}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-user-test-results
+          path: cross-user-results.json
+
+  lsa-sarif-export:
+    name: Convert LSA Findings to SARIF & Upload to Code Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check if Findings File Exists
+        id: check_findings
+        run: |
+          if [ -f "${{ inputs.findings_path }}" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Convert Findings to SARIF v2.1.0
+        if: steps.check_findings.outputs.exists == 'true'
+        run: |
+          python3 operate/lsa-sarif/lsa_to_sarif.py \
+            --input "${{ inputs.findings_path }}" \
+            --output komainu-lsa.sarif
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: steps.check_findings.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: komainu-lsa.sarif
+          category: komainu-lsa-audit
