@@ -14,6 +14,14 @@ obj/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
+# Node / Frontend
+node_modules/
+dist/
+
+# SQLite Databases
+*.db
+*.db-journal
+
 # IDE & OS
 .idea/
 .vscode/
