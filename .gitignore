@@ -2,3 +2,21 @@ __pycache__/
 *.pyc
 lsa-out/
 .lsa-out/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Gradle / JVM
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.DS_Store
+
