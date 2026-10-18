@@ -1,0 +1,46 @@
+{
+  "name": "komainu",
+  "version": "0.2.0",
+  "description": "Security-First Legacy Modernization Platform CLI (LSA Kit, IAM Perimeter, Cross-User Testing)",
+  "main": "bin/komainu.js",
+  "bin": {
+    "komainu": "./bin/komainu.js"
+  },
+  "files": [
+    "bin/",
+    "assess/",
+    "operate/",
+    "remediate/",
+    "contracts/",
+    "examples/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node bin/komainu.js --version && python3 -m unittest discover -s operate/tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoanghainh1188/komainu.git"
+  },
+  "keywords": [
+    "security",
+    "legacy-modernization",
+    "lsa",
+    "bola",
+    "idor",
+    "sqli",
+    "nosql",
+    "audit",
+    "static-analysis",
+    "sarif"
+  ],
+  "author": "Komainu Contributors",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/hoanghainh1188/komainu/issues"
+  },
+  "homepage": "https://github.com/hoanghainh1188/komainu#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
