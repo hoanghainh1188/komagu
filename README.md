@@ -3,10 +3,11 @@
 > **Security-First Modernization Platform for Legacy Enterprise Systems**  
 > *Assess what is vulnerable, protect immediately at the edge, remediate with reusable modules, and operate with continuous verification.*
 
-[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v0.1.0%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
+[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v0.2.1%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
+[![npm](https://img.shields.io/badge/npm-komainu--guard%20v0.2.1-cb3837.svg)](https://www.npmjs.com/package/komainu-guard)
 [![Boilerplate 1](https://img.shields.io/badge/Boilerplate%201-D1--D6%20Complete-blue.svg)](examples/member-portal/)
 [![SARIF v2.1.0](https://img.shields.io/badge/Standards-OASIS%20SARIF%20v2.1.0-orange.svg)](operate/lsa_sarif/)
-[![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
+[![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%7C%20HTML-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
 
 Komainu (狛犬) is named after the paired guardian lion-dogs at the entrance of a Shinto shrine. They stand as an **a–un (阿吽)** pair: one with an open mouth to assess and call out weaknesses, and one with a closed mouth to remediate and seal the perimeter. 
 
@@ -37,8 +38,8 @@ flowchart LR
 
 1. **Assess (LSA):** High-precision AI-assisted security audit across 10 legacy stacks.
 2. **Protect (Edge):** Immediate zero-code-change perimeter shield using Kong Gateway and Coraza WAF.
-3. **Remediate (Boilerplate 1):** Drop-in, production-ready modules for .NET 8 and Kotlin / Spring Boot 3.
-4. **Operate (Verify):** Automated cross-user authorization tests in CI blocking pull requests that introduce BOLA.
+3. **Remediate (Boilerplate 1):** Drop-in, production-ready modules for .NET 8, Kotlin / Spring Boot 3, and legacy shims.
+4. **Operate (Verify):** Unified CLI and automated cross-user authorization tests in CI blocking pull requests that introduce BOLA.
 
 ---
 
@@ -50,18 +51,19 @@ An autonomous multi-agent audit pipeline designed to inspect legacy repositories
 - **Multi-Agent Architecture:**
   - `10-stack-detector`: Identifies server frameworks, auth models, and DB layers.
   - `20-route-mapper`: Catalogs all public and private routes.
-  - `30-bola-auditor`: Inspects object-level access controls per route.
-  - `40-injection-auditor`: Traces dynamic SQL/NoSQL query constructions.
+  - `30-bola-auditor`: Inspects object-level access controls per route (including indirect FK/parent ownership).
+  - `40-injection-auditor`: Traces dynamic SQL/NoSQL query constructions and multi-step string builders.
   - `50-finding-verifier` (*Skeptic Mode*): Adversarial agent actively seeking evidence to refute false positives.
   - `60-reporter`: Generates executive summaries and technical markdown reports.
-- **Empirical Benchmark (Evaluation Run 2):**
+- **Empirical Benchmark ([Evaluation Run 3](assess/lsa/tests/EVAL-RESULTS.md)):**
   - **BOLA/IDOR Recall:** **100%** (25/25 vectors detected).
-  - **Injection Recall:** **94.1%** (32/34 candidates detected; 2 inert string builders correctly distinguished).
-  - **False Positives on Safe Code:** **0** (Parameterized queries and owner checks not flagged).
-  - **Precision:** **0.965** (55/57 findings verified).
-- **Standards & Bilingual Output:**
+  - **Injection Recall:** **100%** (34/34 SQL & NoSQL candidates detected, including split multi-step query builders).
+  - **False Positives on Safe Code:** **0** (Parameterized queries, allow-lists, and owner checks not flagged).
+  - **Precision:** **1.000** (57/57 active findings verified).
+- **Standards, Bilingual & Interactive Output:**
   - Standard **OASIS SARIF v2.1.0** for direct import into GitHub Security Code Scanning.
-  - Bilingual reports: English (`report.md`) and Japanese (`report.ja.md`, compliant with IPA/NISC security guidelines).
+  - Bilingual Markdown reports: English (`report.md`) and Japanese (`report.ja.md`, compliant with IPA/NISC security guidelines).
+  - **Interactive HTML Audit Dashboard (`report.html`):** Self-contained, offline-ready visual dashboard with SVG severity/category charts, filtering, and instant English/Japanese (`EN`/`日本語`) language toggle.
 
 ### 2. Protect — Edge Security (`remediate/edge/`)
 Before touching a single line of fragile legacy backend code, Komainu deploys immediate edge protection:
@@ -70,7 +72,7 @@ Before touching a single line of fragile legacy backend code, Komainu deploys im
 - **Granular Rate Limiting:** Enforces request quotas per Consumer ID, IP address, or API credential.
 
 ### 3. Remediate — Reusable Security Modules (`remediate/`)
-Drop-in authorization, authentication, and safe query libraries for modern target stacks:
+Drop-in authorization, authentication, and safe query libraries for both modern target stacks and existing legacy codebases:
 - **Object-Level Authorization (`remediate/authz`):**
   - Libraries for **ASP.NET Core (.NET 8)** and **Spring Security (Kotlin / Spring Boot 3)**.
   - **Deny-by-default:** Missing ownership checks or unauthorized access strictly return **HTTP 404 Not Found** (preventing ID enumeration).
@@ -80,9 +82,13 @@ Drop-in authorization, authentication, and safe query libraries for modern targe
   - Enforces **RFC 9700 / OAuth 2.1 Best Current Practice** (Authorization Code + PKCE only, exact redirect URIs, strict token verification).
 - **Safe Query Analyzers (`remediate/query`):**
   - Compile-time static analyzers (**C# Roslyn Analyzer** and **Kotlin Detekt Rule**) that flag raw string interpolation in SQL/JPQL at build time.
+- **Legacy Remediation Shims (`remediate/legacy_shims`):**
+  - Lightweight, drop-in ownership verification and safe query helpers for **PHP**, **Java (Servlet/JDBC/MyBatis XML)**, **ColdFusion (`CFML`)**, and **Classic ASP (`VBScript`)** to patch vulnerabilities in-place before full migration.
 
-### 4. Operate — Continuous Verification & CI/CD (`operate/`)
-Ensures that fixed vulnerabilities never regress:
+### 4. Operate — Unified CLI & Continuous Verification (`operate/`)
+Ensures zero-friction developer experience and guarantees that fixed vulnerabilities never regress:
+- **Unified CLI (`bin/komainu` & `operate/cli`):**
+  - Single entrypoint (`komainu scan | protect | test | demo | help`) distributed via npmjs (`npx komainu-guard`) and Docker (`ghcr.io/hoanghainh1188/komainu`).
 - **Cross-User Authorization Test Runner (`operate/cross_user_tester`):**
   - Automated CLI test suite simulating multi-tenant access (User A attempting to GET, PUT, or DELETE User B's resources).
   - Fails the build if an endpoint allows cross-user data leakage.
@@ -101,15 +107,18 @@ A complete reference system demonstrating all deliverables working end-to-end:
 
 ```text
 komainu/
+├── bin/                  # Unified CLI entrypoints (komainu Python CLI & komainu.js npx bridge)
 ├── assess/               # Finding vulnerabilities
-│   └── lsa/              # Legacy Security Assessment kit (pre-scan, agents, prompts, tests)
+│   └── lsa/              # Legacy Security Assessment kit (pre-scan, agents, prompts, HTML/MD/SARIF reports)
 ├── contracts/            # JSON Schemas (finding, route-inventory, stack-profile, verification)
 ├── remediate/            # Reusable remediation modules
 │   ├── authz/            # D1: Object-level authorization (.NET 8 & Spring Boot 3)
 │   ├── identity/         # D2: OpenID Connect authentication & token validation
 │   ├── query/            # D3: Safe query helpers, Roslyn analyzer & Detekt rule
-│   └── edge/             # D4: Kong gateway declarative configuration & Coraza WAF
+│   ├── edge/             # D4: Kong gateway declarative configuration & Coraza WAF
+│   └── legacy_shims/     # Drop-in ownership & safe-query shims (PHP, Java, ColdFusion, Classic ASP)
 ├── operate/              # Continuous verification & operations
+│   ├── cli/              # Unified Komainu CLI implementation (scan, protect, test, demo, help)
 │   ├── cross_user_tester/# D5: Automated cross-user authorization CLI test runner
 │   ├── lsa_sarif/        # SARIF v2.1.0 converter for CI code scanning
 │   └── ci/               # GitHub Actions & GitLab CI workflow templates
