@@ -90,7 +90,7 @@ The pilot runs on one real system from week 9 to week 12; it is the only source 
 
 **Choosing the pilot system.** The pilot is the AMS (application maintenance) project, if its client gives written approval for AI processing of the code by the end of week 6 (governed by [Pilot AI Processing Approval & Data Governance Protocol](pilot-client-ai-approval-consent.md)). Otherwise we use an internal tool. Either way the system should have a web API with per-user data and 30–150 endpoints. A system written in a legacy stack the LSA kit supports (PHP, Java, ASP.NET, Classic ASP) shows the most value.
 
-1. **Prepare (week 9):** written approval, model hosting chosen per the client's policy, baseline effort figure picked from a comparable past project.
+1. **Prepare (week 9):** written approval (per [AI Data Governance](pilot-client-ai-approval-consent.md)), model hosting chosen per the client's policy, baseline effort figure determined by [ADR-0005](adr/0005-effort-baseline-and-roi-measurement.md).
 2. **Assess (week 9–10):** run the LSA pipeline; Person B signs off findings; report to the owner.
 3. **Protect the edge (week 10):** put D4 in front of the system: rate limits and WAF rules. This lowers risk before any code change.
 4. **Fix (week 10–12):** for endpoints in a supported stack, adopt D1/D2; for others, fix with D3 patterns. Each fix gets a cross-user test (D5).
@@ -136,7 +136,7 @@ The first three are decided. The other three are deferred (2026-10-16); they mus
 - [x] Pilot: AMS project; fallback to an internal tool if no approval by end of week 6 (decided 2026-10-16)
 - [x] Who are the lead, the two developers and Person B? (Decided: AI-augmented engineering team led by Harry on 2026-10-17)
 - [x] Is the boilerplate open source (MIT) or closed? (Decided: Open Core per ADR-0002 on 2026-10-17)
-- [ ] Which past project gives the effort baseline?
+- [x] Which past project gives the effort baseline? (Decided: Dual-Baseline Framework via [ADR-0005](adr/0005-effort-baseline-and-roi-measurement.md): IPA Japan standards + empirical D6 benchmark, adopted 2026-10-18)
 
 ## Sources
 
