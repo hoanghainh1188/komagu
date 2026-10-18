@@ -64,7 +64,7 @@ jobs:
       - name: Test D3 Safe Query & Roslyn Analyzer (.NET 8)
         run: dotnet test remediate/query/dotnet/tests/Komainu.Security.Query.Tests/Komainu.Security.Query.Tests.csproj
 
-      - name: Test D6 Member Portal End-to-End BOLA Verification
+      - name: Test D6 Member Portal End-to-End BOLA & D5 Continuous Authorization Verification
         run: python3 -m unittest discover -s examples/member-portal/tests -p "test_*.py"
 
   spring-suites:

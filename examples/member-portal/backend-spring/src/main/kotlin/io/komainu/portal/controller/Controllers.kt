@@ -166,19 +166,23 @@ class DocumentController(
 class LegacyTestController(
     private val orderRepository: OrderRepository,
     private val entityManager: EntityManager,
-    @Value("\${enable.security.test.vulnerabilities:true}")
+    private val securityManager: KomainuSecurityManager,
+    @Value("\${enable.security.test.vulnerabilities:false}")
     private val vulnerabilitiesEnabled: Boolean
 ) {
     @GetMapping("/legacy-orders/{id}")
     fun getLegacyOrder(@PathVariable id: String): ResponseEntity<Any> {
-        if (!vulnerabilitiesEnabled) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Disabled"))
+        if (vulnerabilitiesEnabled) {
+            // PLANT-BOLA: Return order directly without verifying ownership
+            val order = orderRepository.findById(id).orElse(null)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Not found"))
+            return ResponseEntity.ok(order)
         }
 
-        // PLANT-BOLA: Return order directly without verifying ownership
+        // REMEDIATED (D1): Enforce ownership check with 404 deny-by-default
         val order = orderRepository.findById(id).orElse(null)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Not found"))
-
+        securityManager.requireOwnership(order, ResourceOperation.READ)
         return ResponseEntity.ok(order)
     }
 
@@ -187,30 +191,43 @@ class LegacyTestController(
         @PathVariable id: String,
         @RequestBody request: UpdateOrderRequest
     ): ResponseEntity<Any> {
-        if (!vulnerabilitiesEnabled) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Disabled"))
+        if (vulnerabilitiesEnabled) {
+            // PLANT-BOLA: Direct update without ownership check
+            val order = orderRepository.findById(id).orElse(null)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Not found"))
+
+            request.description?.let { order.description = it }
+            request.status?.let { order.status = it }
+            val updated = orderRepository.save(order)
+            return ResponseEntity.ok(updated)
         }
 
-        // PLANT-BOLA: Direct update without ownership check
+        // REMEDIATED (D1): Enforce ownership check on update
         val order = orderRepository.findById(id).orElse(null)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Not found"))
+        securityManager.requireOwnership(order, ResourceOperation.UPDATE)
 
         request.description?.let { order.description = it }
         request.status?.let { order.status = it }
         val updated = orderRepository.save(order)
-
         return ResponseEntity.ok(updated)
     }
 
     @DeleteMapping("/legacy-orders/{id}")
     fun deleteLegacyOrder(@PathVariable id: String): ResponseEntity<Any> {
-        if (!vulnerabilitiesEnabled) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Disabled"))
+        if (vulnerabilitiesEnabled) {
+            // PLANT-BOLA: Direct deletion without ownership check
+            val order = orderRepository.findById(id).orElse(null)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Not found"))
+
+            orderRepository.delete(order)
+            return ResponseEntity.noContent().build()
         }
 
-        // PLANT-BOLA: Direct deletion without ownership check
+        // REMEDIATED (D1): Enforce ownership check on delete
         val order = orderRepository.findById(id).orElse(null)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Not found"))
+        securityManager.requireOwnership(order, ResourceOperation.DELETE)
 
         orderRepository.delete(order)
         return ResponseEntity.noContent().build()
@@ -218,13 +235,18 @@ class LegacyTestController(
 
     @GetMapping("/legacy-search")
     fun searchLegacy(@RequestParam query: String): ResponseEntity<Any> {
-        if (!vulnerabilitiesEnabled) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Disabled"))
+        if (vulnerabilitiesEnabled) {
+            // PLANT-SQLI: String concatenation in native SQL query
+            val sql = "SELECT * FROM portal_orders WHERE description LIKE '%$query%'"
+            val queryResult = entityManager.createNativeQuery(sql, OrderEntity::class.java).resultList
+            return ResponseEntity.ok(queryResult)
         }
 
-        // PLANT-SQLI: String concatenation in native SQL query
-        val sql = "SELECT * FROM portal_orders WHERE description LIKE '%$query%'"
-        val queryResult = entityManager.createNativeQuery(sql, OrderEntity::class.java).resultList
+        // REMEDIATED (D3): Parameterized query preventing SQL injection
+        val queryResult = entityManager.createQuery(
+            "SELECT o FROM OrderEntity o WHERE o.description LIKE :query",
+            OrderEntity::class.java
+        ).setParameter("query", "%$query%").resultList
 
         return ResponseEntity.ok(queryResult)
     }
