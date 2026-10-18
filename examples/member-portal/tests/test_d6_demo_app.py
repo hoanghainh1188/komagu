@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -39,19 +40,32 @@ class TestDemoAppVerification(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        if not shutil.which("dotnet"):
+            raise unittest.SkipTest(".NET SDK not installed on host")
+
         cls.port = find_free_port()
         cls.base_url = f"http://127.0.0.1:{cls.port}"
 
+        backend_dir = os.path.join(PROJECT_ROOT, "examples", "member-portal", "backend-dotnet")
         backend_dll = os.path.join(
-            PROJECT_ROOT,
-            "examples",
-            "member-portal",
-            "backend-dotnet",
+            backend_dir,
             "bin",
             "Debug",
             "net8.0",
             "MemberPortal.Backend.dll",
         )
+
+        # Automatically build the .NET backend if the compiled artifact is missing (e.g. after git clean)
+        if not os.path.isfile(backend_dll):
+            build_res = subprocess.run(
+                ["dotnet", "build", backend_dir, "-c", "Debug"],
+                capture_output=True,
+                text=True,
+            )
+            if build_res.returncode != 0:
+                raise RuntimeError(
+                    f"Failed to build .NET backend:\nStdout: {build_res.stdout}\nStderr: {build_res.stderr}"
+                )
 
         env = os.environ.copy()
         env["ASPNETCORE_URLS"] = cls.base_url

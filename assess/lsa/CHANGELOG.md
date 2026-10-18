@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.1 — 2026-10-18
+
+Platform release (v0.2.0 / v0.2.1).
+
+- **Pattern & Prompt Hardening (Run 3):** Enhanced `injection-patterns.md` (§1.1
+  dynamic `WHERE`/`ORDER BY`/`GROUP BY` clause concatenation and multi-step
+  query builders) and `bola-patterns.md` (Pattern P13: indirect reference via
+  foreign key / parent object & unscoped bulk listing).
+- **Skeptic Verifier Upgrades:** Added explicit allow-list (`switch`/`case`,
+  enum mapping) and parent-ownership recognition in `50-finding-verifier.md`.
+- **Empirical Benchmark (Evaluation Run 3):** Verified 100% BOLA/IDOR recall
+  (25/25), 100% SQL/NoSQL injection recall (34/34), 0 false positives on safe
+  code, and 1.000 precision (57/57 active findings).
+- **Bilingual & Interactive Reporting:** Added Japanese report template
+  (`60-reporter-ja.md`, `report.ja.md` compliant with IPA/NISC terminology) and
+  zero-dependency interactive HTML audit dashboard (`report.html`) with inline
+  SVG charts and instant English/Japanese toggle.
+- **Unified CLI & Zero-Install Distribution:** Packaged into `komainu` CLI
+  (`bin/komainu`), all-in-one Docker image, and `komainu-guard` on npmjs.
+
 ## 0.1.0 — 2026-10-16
 
 First version.
