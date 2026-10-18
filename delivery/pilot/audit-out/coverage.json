@@ -1,0 +1,15 @@
+{
+  "route_candidates": 24,
+  "inventoried": 24,
+  "rejected": 0,
+  "missing_from_inventory": [],
+  "bola_routes_to_audit": 16,
+  "bola_routes_without_verdict": [],
+  "injection_candidates": 2,
+  "injection_candidates_without_verdict": [],
+  "findings_without_verification": [],
+  "duplicates_removed": [],
+  "validation_errors": [],
+  "new_issues_from_verifier": [],
+  "out_of_scope_notes": []
+}

@@ -1,0 +1,485 @@
+{
+  "batch_id": "routes-001",
+  "routes": [
+    {
+      "route_id": "R-0001",
+      "method": ["GET"],
+      "path": "/api/v1/auth/personas",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/AuthController.cs",
+        "line": 39,
+        "symbol": "AuthController.GetPersonas"
+      },
+      "id_inputs": [],
+      "other_inputs": [],
+      "guards": [],
+      "data_ops": [],
+      "needs_bola_audit": false,
+      "notes": "Public mock persona catalog returning static in-memory identities; no object identifier inputs or database operations."
+    },
+    {
+      "route_id": "R-0002",
+      "method": ["GET"],
+      "path": "/api/v1/documents",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/DocumentsController.cs",
+        "line": 24,
+        "symbol": "DocumentsController.ListDocuments"
+      },
+      "id_inputs": [],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "authn",
+          "name": "_authzService.GetCurrentUserId",
+          "file": "backend-dotnet/Controllers/DocumentsController.cs",
+          "line": 26,
+          "position": "in_handler"
+        },
+        {
+          "type": "ownership",
+          "name": "WithUserScope",
+          "file": "backend-dotnet/Controllers/DocumentsController.cs",
+          "line": 30,
+          "position": "in_query"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Documents",
+          "file": "backend-dotnet/Controllers/DocumentsController.cs",
+          "line": 29
+        }
+      ],
+      "needs_bola_audit": false,
+      "notes": "Collection list endpoint scoped to current user and tenant via WithUserScope; no client-supplied object identifier."
+    },
+    {
+      "route_id": "R-0003",
+      "method": ["GET"],
+      "path": "/api/v1/documents/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/DocumentsController.cs",
+        "line": 38,
+        "symbol": "DocumentsController.GetDocument"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/DocumentsController.cs",
+          "line": 38
+        }
+      ],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "_authzService.AuthorizeAsync",
+          "file": "backend-dotnet/Controllers/DocumentsController.cs",
+          "line": 46,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Documents",
+          "file": "backend-dotnet/Controllers/DocumentsController.cs",
+          "line": 40
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Single document retrieval protected by object-level ownership check via AuthorizeAsync returning 404 on denial."
+    },
+    {
+      "route_id": "R-0004",
+      "method": ["GET"],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 28,
+        "symbol": "LegacyTestController.GetLegacyOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 28
+        }
+      ],
+      "other_inputs": [],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 36
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Planted test endpoint: retrieves order by ID directly from DbContext without authn or ownership verification."
+    },
+    {
+      "route_id": "R-0005",
+      "method": ["PUT"],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 47,
+        "symbol": "LegacyTestController.UpdateLegacyOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 47
+        }
+      ],
+      "other_inputs": [
+        {
+          "name": "request",
+          "source": "body",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 47
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 55
+        },
+        {
+          "op": "update",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 63
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Planted test endpoint: updates order description/status without authentication or object ownership checks."
+    },
+    {
+      "route_id": "R-0006",
+      "method": ["DELETE"],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 69,
+        "symbol": "LegacyTestController.DeleteLegacyOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 69
+        }
+      ],
+      "other_inputs": [],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 77
+        },
+        {
+          "op": "delete",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 84
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Planted test endpoint: deletes order by ID without authentication or object ownership checks."
+    },
+    {
+      "route_id": "R-0007",
+      "method": ["GET"],
+      "path": "/api/v1/test/legacy-search",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 90,
+        "symbol": "LegacyTestController.SearchLegacy"
+      },
+      "id_inputs": [],
+      "other_inputs": [
+        {
+          "name": "query",
+          "source": "query",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 90
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 99
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Planted test endpoint: queries Orders table across all users/tenants via raw SQL string interpolation without authentication or user scoping."
+    },
+    {
+      "route_id": "R-0008",
+      "method": ["GET"],
+      "path": "/api/v1/orders",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 29,
+        "symbol": "OrdersController.ListOrders"
+      },
+      "id_inputs": [],
+      "other_inputs": [
+        {
+          "name": "sort",
+          "source": "query",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 29
+        },
+        {
+          "name": "dir",
+          "source": "query",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 29
+        }
+      ],
+      "guards": [
+        {
+          "type": "authn",
+          "name": "_authzService.GetCurrentUserId",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 31,
+          "position": "in_handler"
+        },
+        {
+          "type": "ownership",
+          "name": "WithUserScope",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 35,
+          "position": "in_query"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 35
+        }
+      ],
+      "needs_bola_audit": false,
+      "notes": "Collection list endpoint with sort allowlist; scoped to authenticated user and tenant via WithUserScope; no object identifier inputs."
+    },
+    {
+      "route_id": "R-0009",
+      "method": ["GET"],
+      "path": "/api/v1/orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 59,
+        "symbol": "OrdersController.GetOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 59
+        }
+      ],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "_authzService.AuthorizeAsync",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 68,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 61
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Single order retrieval protected by object-level ownership verification via AuthorizeAsync returning 404 on denial."
+    },
+    {
+      "route_id": "R-0010",
+      "method": ["POST"],
+      "path": "/api/v1/orders",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 79,
+        "symbol": "OrdersController.CreateOrder"
+      },
+      "id_inputs": [],
+      "other_inputs": [
+        {
+          "name": "request",
+          "source": "body",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 79
+        }
+      ],
+      "guards": [
+        {
+          "type": "authn",
+          "name": "_authzService.GetCurrentUserId",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 81,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "create",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 95
+        }
+      ],
+      "needs_bola_audit": false,
+      "notes": "Order creation endpoint setting OwnerUserId and TenantId from authenticated security context; no client-controlled object ID."
+    },
+    {
+      "route_id": "R-0011",
+      "method": ["PUT"],
+      "path": "/api/v1/orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 101,
+        "symbol": "OrdersController.UpdateOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 101
+        }
+      ],
+      "other_inputs": [
+        {
+          "name": "request",
+          "source": "body",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 101
+        }
+      ],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "_authzService.AuthorizeAsync",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 109,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 103
+        },
+        {
+          "op": "update",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 117
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Order update endpoint verified by object-level ownership check via AuthorizeAsync with Operation.Update."
+    },
+    {
+      "route_id": "R-0012",
+      "method": ["DELETE"],
+      "path": "/api/v1/orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-dotnet",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 123,
+        "symbol": "OrdersController.DeleteOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 123
+        }
+      ],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "_authzService.AuthorizeAsync",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 131,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 125
+        },
+        {
+          "op": "delete",
+          "target": "Orders",
+          "file": "backend-dotnet/Controllers/OrdersController.cs",
+          "line": 138
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Order deletion endpoint verified by object-level ownership check via AuthorizeAsync with Operation.Delete."
+    }
+  ],
+  "rejected": [],
+  "out_of_scope_notes": [],
+  "notes": "Mapped all 12 ASP.NET Core Web API routes for backend-dotnet."
+}

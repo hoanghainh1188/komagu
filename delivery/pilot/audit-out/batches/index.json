@@ -1,0 +1,21 @@
+{
+  "routes": [
+    {
+      "batch_id": "routes-001",
+      "count": 12,
+      "files": 4
+    },
+    {
+      "batch_id": "routes-002",
+      "count": 12,
+      "files": 1
+    }
+  ],
+  "injection": [
+    {
+      "batch_id": "injection-001",
+      "count": 2,
+      "files": 2
+    }
+  ]
+}

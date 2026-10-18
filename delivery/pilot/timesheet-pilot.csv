@@ -1,0 +1,6 @@
+Date,Engineer,WorkstreamTag,Stage,EndpointCount,HoursSpent,PersonDays,ArtifactOrCommit,Description,Notes
+2026-10-18,Agent/[PILOT-ORCH],[PILOT-LSA],Week 9,24,2.0,0.25,delivery/pilot/pilot-config.json,"Pilot configuration & environment initialization","Fallback system activated: Deliverable D6 Member Portal (24 endpoints)"
+2026-10-18,Agent/[PILOT-LSA],[PILOT-LSA],Week 9,24,3.0,0.375,delivery/pilot/audit-out/auth-model.md,"Phase 1-2: Pre-scan & Stack Detection","Target D6 scanned: 24 endpoints, 2 injection candidates, auth model documented"
+2026-10-18,Agent/[PILOT-LSA],[PILOT-LSA],Week 10,24,6.0,0.750,delivery/pilot/audit-out/routes.json,"Phase 3-4: Route mapping, BOLA & SQLi audit","24 routes mapped, 16 audited for BOLA (6 vuln), 2 reviewed for SQLi (2 vuln)"
+2026-10-18,Agent/[PILOT-LSA],[PILOT-LSA],Week 10,24,3.0,0.375,delivery/pilot/audit-out/findings/verified-001.json,"Phase 5: Skeptic Verification","Independent verification: 8/8 findings confirmed (0 false positives)"
+2026-10-18,Harry Nguyen/[PILOT-LEAD],[PILOT-SIGN],Week 10,24,2.0,0.250,delivery/pilot/audit-out/review-log.md,"Phase 6 & Person B Sign-off","Bilingual reports generated, findings reviewed and Person B sign-off obtained"

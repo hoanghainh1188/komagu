@@ -1,0 +1,41 @@
+{
+  "batch_id": "injection-001",
+  "files": [
+    "backend-dotnet/Controllers/LegacyTestController.cs",
+    "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/java.md"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "I-0001",
+      "rule": "sql-interpolation",
+      "category_hint": "sql",
+      "subtype_hint": "string_interpolation",
+      "language": "cs",
+      "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+      "line": 98,
+      "snippet": "var rawSql = $\"SELECT * FROM Orders WHERE Description LIKE '%{query}%'\";",
+      "sql_var": "rawSql",
+      "input_hint": "none",
+      "sanitizer_hints": [],
+      "priority": "normal"
+    },
+    {
+      "candidate_id": "I-0002",
+      "rule": "sql-interpolation",
+      "category_hint": "sql",
+      "subtype_hint": "string_interpolation",
+      "language": "java",
+      "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+      "line": 226,
+      "snippet": "val sql = \"SELECT * FROM portal_orders WHERE description LIKE '%$query%'\"",
+      "sql_var": "sql",
+      "input_hint": "request_input_in_file",
+      "sanitizer_hints": [],
+      "priority": "normal"
+    }
+  ]
+}

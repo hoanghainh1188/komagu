@@ -1,0 +1,459 @@
+{
+  "batch_id": "verify-001",
+  "files": [
+    "backend-dotnet/Controllers/LegacyTestController.cs",
+    "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/java.md"
+  ],
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0005-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Unauthenticated cross-tenant order modification via legacy test endpoint",
+      "route_id": "R-0005",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "PUT",
+        "path": "/api/v1/test/legacy-orders/{id}"
+      },
+      "location": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "start_line": 47,
+        "end_line": 66
+      },
+      "evidence": [
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 47,
+          "code": "public async Task<ActionResult<Order>> UpdateLegacyOrder(string id, [FromBody] UpdateOrderRequest request)",
+          "why": "Target order ID and update payload received from untrusted request body and route parameter"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 55,
+          "code": "var order = await _dbContext.Orders.FirstOrDefaultAsync(o => o.Id == id);",
+          "why": "Loads order by primary key without verifying caller identity or tenant"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 63,
+          "code": "await _dbContext.SaveChangesAsync();",
+          "why": "Persists status and description changes without checking caller authorization"
+        }
+      ],
+      "data_flow": [
+        "id path parameter and UpdateOrderRequest body (LegacyTestController.cs:47)",
+        "FirstOrDefaultAsync(o => o.Id == id) (LegacyTestController.cs:55)",
+        "SaveChangesAsync() (LegacyTestController.cs:63)"
+      ],
+      "attack_scenario": "An attacker sends PUT /api/v1/test/legacy-orders/{id} with another user's order ID and payload to mutate order description and status without authentication.",
+      "impact": "Unauthorized modification of customer orders across tenant boundaries, compromising data integrity.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify caller identity and object ownership using _authzService.AuthorizeAsync with ResourceOperation.Update, returning 404 on authorization failure.",
+      "fix_example": "var auth = await _authzService.AuthorizeAsync(User, order, ResourceOperation.Update);\nif (!auth.Succeeded) return NotFound();",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0006-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Unauthenticated cross-tenant order deletion via legacy test endpoint",
+      "route_id": "R-0006",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "DELETE",
+        "path": "/api/v1/test/legacy-orders/{id}"
+      },
+      "location": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "start_line": 69,
+        "end_line": 87
+      },
+      "evidence": [
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 69,
+          "code": "public async Task<IActionResult> DeleteLegacyOrder(string id)",
+          "why": "Target order ID received from client via URL route parameter without validation"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 77,
+          "code": "var order = await _dbContext.Orders.FirstOrDefaultAsync(o => o.Id == id);",
+          "why": "Retrieves order to delete by ID alone with no ownership validation"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 83,
+          "code": "_dbContext.Orders.Remove(order);",
+          "why": "Removes the order from database without verifying caller ownership"
+        }
+      ],
+      "data_flow": [
+        "id path parameter (LegacyTestController.cs:69)",
+        "FirstOrDefaultAsync(o => o.Id == id) (LegacyTestController.cs:77)",
+        "Orders.Remove(order) (LegacyTestController.cs:83)"
+      ],
+      "attack_scenario": "An attacker sends DELETE /api/v1/test/legacy-orders/{id} with any order ID to delete that order across tenants without authentication.",
+      "impact": "Permanent deletion of order records belonging to any user or tenant, causing severe data loss.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Require caller authentication and object-level deletion authorization using _authzService.AuthorizeAsync with ResourceOperation.Delete.",
+      "fix_example": "var auth = await _authzService.AuthorizeAsync(User, order, ResourceOperation.Delete);\nif (!auth.Succeeded) return NotFound();\n_dbContext.Orders.Remove(order);",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0001-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "Raw SQL query uses string interpolation with unvalidated search query parameter",
+      "candidate_id": "I-0001",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "GET",
+        "path": "/api/v1/test/legacy-search"
+      },
+      "location": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "start_line": 98,
+        "end_line": 99
+      },
+      "evidence": [
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 90,
+          "code": "public async Task<ActionResult<List<Order>>> SearchLegacy([FromQuery] string query)",
+          "why": "source: unvalidated query parameter"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 98,
+          "code": "var rawSql = $\"SELECT * FROM Orders WHERE Description LIKE '%{query}%'\";",
+          "why": "string interpolation directly constructs SQL statement"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 99,
+          "code": "var results = await _dbContext.Orders.FromSqlRaw(rawSql).ToListAsync();",
+          "why": "sink: raw SQL execution without parameter binding"
+        }
+      ],
+      "data_flow": [
+        "[FromQuery] string query (backend-dotnet/Controllers/LegacyTestController.cs:90)",
+        "rawSql (backend-dotnet/Controllers/LegacyTestController.cs:98)",
+        "_dbContext.Orders.FromSqlRaw(rawSql) (backend-dotnet/Controllers/LegacyTestController.cs:99)"
+      ],
+      "attack_scenario": "An unauthenticated caller provides a crafted query parameter to escape the LIKE string literal and inject arbitrary SQL clauses or statements.",
+      "impact": "Arbitrary SQL execution against the underlying database, allowing an attacker to read, modify, or delete orders across all tenants.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with FromSqlInterpolated or bind parameters through FormattableString rather than passing interpolated strings to FromSqlRaw.",
+      "fix_example": "var results = await _dbContext.Orders.FromSqlInterpolated($\"SELECT * FROM Orders WHERE Description LIKE {'%' + query + '%'}\").ToListAsync();",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0004-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Unauthenticated cross-tenant order retrieval via legacy test endpoint",
+      "route_id": "R-0004",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "GET",
+        "path": "/api/v1/test/legacy-orders/{id}"
+      },
+      "location": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "start_line": 28,
+        "end_line": 44
+      },
+      "evidence": [
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 28,
+          "code": "public async Task<ActionResult<Order>> GetLegacyOrder(string id)",
+          "why": "Order identifier supplied directly from URL route path without validation"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 36,
+          "code": "var order = await _dbContext.Orders.FirstOrDefaultAsync(o => o.Id == id);",
+          "why": "Direct query on Orders table by id alone without tenant or user ownership constraint"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 43,
+          "code": "return Ok(order);",
+          "why": "Returns full order record without post-load owner verification or caller authorization"
+        }
+      ],
+      "data_flow": [
+        "id path parameter (LegacyTestController.cs:28)",
+        "FirstOrDefaultAsync(o => o.Id == id) (LegacyTestController.cs:36)",
+        "Ok(order) (LegacyTestController.cs:43)"
+      ],
+      "attack_scenario": "An unauthenticated user sends GET /api/v1/test/legacy-orders/{id} with any order ID and receives the complete order entity belonging to another user or tenant.",
+      "impact": "Cross-tenant data exposure disclosing customer orders, total amount, order description, and owner identity without authentication.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Enforce authentication and verify caller ownership and tenant scope using _authzService.AuthorizeAsync before returning order data.",
+      "fix_example": "var order = await _dbContext.Orders.FirstOrDefaultAsync(o => o.Id == id);\nif (order == null) return NotFound();\nvar auth = await _authzService.AuthorizeAsync(User, order, ResourceOperation.Read);\nif (!auth.Succeeded) return NotFound();",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0022-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Unauthenticated cross-tenant order modification via Spring legacy test endpoint",
+      "route_id": "R-0022",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "PUT",
+        "path": "/api/v1/test/legacy-orders/{id}"
+      },
+      "location": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "start_line": 185,
+        "end_line": 204
+      },
+      "evidence": [
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 185,
+          "code": "fun updateLegacyOrder(@PathVariable id: String, @RequestBody request: UpdateOrderRequest): ResponseEntity<Any>",
+          "why": "Target order ID and updated fields received from untrusted request without validation"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 195,
+          "code": "val order = orderRepository.findById(id).orElse(null)",
+          "why": "Fetches order to mutate by ID alone without verifying ownership or tenant"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 200,
+          "code": "val updated = orderRepository.save(order)",
+          "why": "Saves modified order entity directly without ownership check"
+        }
+      ],
+      "data_flow": [
+        "id path variable and UpdateOrderRequest body (Controllers.kt:185)",
+        "orderRepository.findById(id) (Controllers.kt:195)",
+        "orderRepository.save(order) (Controllers.kt:200)"
+      ],
+      "attack_scenario": "An attacker sends PUT /api/v1/test/legacy-orders/{id} with modified fields to alter any user's order in any tenant.",
+      "impact": "Unauthorized tampering and alteration of order status and descriptions across tenant boundaries.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Enforce ownership check via securityManager.requireOwnership(order, ResourceOperation.UPDATE) prior to mutating and saving the entity.",
+      "fix_example": "val order = orderRepository.findById(id).orElse(null)\nsecurityManager.requireOwnership(order, ResourceOperation.UPDATE)\nrequest.description?.let { order!!.description = it }\n...",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0023-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Unauthenticated cross-tenant order deletion via Spring legacy test endpoint",
+      "route_id": "R-0023",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "DELETE",
+        "path": "/api/v1/test/legacy-orders/{id}"
+      },
+      "location": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "start_line": 205,
+        "end_line": 217
+      },
+      "evidence": [
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 205,
+          "code": "fun deleteLegacyOrder(@PathVariable id: String): ResponseEntity<Any>",
+          "why": "Target order ID received from client via path variable without validation"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 212,
+          "code": "val order = orderRepository.findById(id).orElse(null)",
+          "why": "Fetches order to delete without tenant or owner verification"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 215,
+          "code": "orderRepository.delete(order)",
+          "why": "Deletes order row from database without verifying caller authorization or ownership"
+        }
+      ],
+      "data_flow": [
+        "id path variable (Controllers.kt:205)",
+        "orderRepository.findById(id) (Controllers.kt:212)",
+        "orderRepository.delete(order) (Controllers.kt:215)"
+      ],
+      "attack_scenario": "An attacker sends DELETE /api/v1/test/legacy-orders/{id} with any order id and permanently deletes the record without authorization.",
+      "impact": "Unauthorized deletion of orders across tenants, resulting in permanent data loss.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify caller ownership via securityManager.requireOwnership(order, ResourceOperation.DELETE) before executing deletion.",
+      "fix_example": "val order = orderRepository.findById(id).orElse(null)\nsecurityManager.requireOwnership(order, ResourceOperation.DELETE)\norderRepository.delete(order!!)\nreturn ResponseEntity.noContent().build()",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0002-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "Native SQL query interpolates unvalidated search query parameter",
+      "candidate_id": "I-0002",
+      "route_id": "R-0024",
+      "endpoint": {
+        "method": "GET",
+        "path": "/api/v1/test/legacy-search"
+      },
+      "location": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "start_line": 226,
+        "end_line": 227
+      },
+      "evidence": [
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 220,
+          "code": "fun searchLegacy(@RequestParam query: String): ResponseEntity<Any>",
+          "why": "source: unvalidated request parameter"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 226,
+          "code": "val sql = \"SELECT * FROM portal_orders WHERE description LIKE '%$query%'\"",
+          "why": "string template interpolation directly into SQL string"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 227,
+          "code": "val queryResult = entityManager.createNativeQuery(sql, OrderEntity::class.java).resultList",
+          "why": "sink: native query execution without parameter binding"
+        }
+      ],
+      "data_flow": [
+        "@RequestParam query (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:220)",
+        "sql (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:226)",
+        "entityManager.createNativeQuery(sql, ...) (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:227)"
+      ],
+      "attack_scenario": "An unauthenticated caller provides a crafted query parameter containing SQL syntax to break out of the LIKE pattern and manipulate the query structure.",
+      "impact": "Arbitrary SQL execution in the database, allowing an attacker to read or manipulate records across all tenants.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with named or positional parameters via Query.setParameter instead of string interpolation.",
+      "fix_example": "val queryResult = entityManager.createNativeQuery(\"SELECT * FROM portal_orders WHERE description LIKE :query\", OrderEntity::class.java).setParameter(\"query\", \"%$query%\").resultList",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0021-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Unauthenticated cross-tenant order retrieval via Spring legacy test endpoint",
+      "route_id": "R-0021",
+      "candidate_id": null,
+      "endpoint": {
+        "method": "GET",
+        "path": "/api/v1/test/legacy-orders/{id}"
+      },
+      "location": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "start_line": 172,
+        "end_line": 184
+      },
+      "evidence": [
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 172,
+          "code": "fun getLegacyOrder(@PathVariable id: String): ResponseEntity<Any>",
+          "why": "Target order ID taken directly from request path variable without validation"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 179,
+          "code": "val order = orderRepository.findById(id).orElse(null)",
+          "why": "Queries database by primary key alone using Spring Data repository without tenant or owner scoping"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 182,
+          "code": "return ResponseEntity.ok(order)",
+          "why": "Returns the fetched order entity without post-load ownership comparison"
+        }
+      ],
+      "data_flow": [
+        "id path variable (Controllers.kt:172)",
+        "orderRepository.findById(id) (Controllers.kt:179)",
+        "ResponseEntity.ok(order) (Controllers.kt:182)"
+      ],
+      "attack_scenario": "An attacker sends GET /api/v1/test/legacy-orders/{id} and retrieves any order in the system across all tenants without authentication.",
+      "impact": "Confidentiality breach exposing customer order records, tenant IDs, and user IDs across tenant boundaries.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-862"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Enforce ownership verification via securityManager.requireOwnership(order, ResourceOperation.READ) before returning the order entity.",
+      "fix_example": "val order = orderRepository.findById(id).orElse(null)\nsecurityManager.requireOwnership(order, ResourceOperation.READ)\nreturn ResponseEntity.ok(order!!)",
+      "status": "unverified"
+    }
+  ]
+}

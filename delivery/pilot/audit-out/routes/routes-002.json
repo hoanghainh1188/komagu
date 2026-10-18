@@ -1,0 +1,507 @@
+{
+  "batch_id": "routes-002",
+  "routes": [
+    {
+      "route_id": "R-0013",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/auth/personas",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 59,
+        "symbol": "getPersonas"
+      },
+      "id_inputs": [],
+      "other_inputs": [],
+      "guards": [],
+      "data_ops": [],
+      "needs_bola_audit": false,
+      "notes": "Public persona catalog returning static seed data; no object identifier and no per-user data access."
+    },
+    {
+      "route_id": "R-0014",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/orders",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 71,
+        "symbol": "listOrders"
+      },
+      "id_inputs": [],
+      "other_inputs": [
+        {
+          "name": "sort",
+          "source": "query",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 73
+        },
+        {
+          "name": "dir",
+          "source": "query",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 74
+        }
+      ],
+      "guards": [
+        {
+          "type": "authn",
+          "name": "securityManager.getCurrentUserId()",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 76,
+          "position": "in_handler"
+        },
+        {
+          "type": "ownership",
+          "name": "orderRepository.findByTenantIdAndOwnerUserId(tenantId, userId)",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 79,
+          "position": "in_query"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 79
+        }
+      ],
+      "needs_bola_audit": false,
+      "notes": "Collection endpoint scoped to authenticated tenant and user via findByTenantIdAndOwnerUserId; no individual object identifier input."
+    },
+    {
+      "route_id": "R-0015",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 94,
+        "symbol": "getOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 95
+        }
+      ],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "securityManager.requireOwnership(order, ResourceOperation.READ)",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 98,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 96
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Retrieves order by id; verified for tenant and owner ownership via KomainuSecurityManager.requireOwnership."
+    },
+    {
+      "route_id": "R-0016",
+      "method": [
+        "POST"
+      ],
+      "path": "/api/v1/orders",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 102,
+        "symbol": "createOrder"
+      },
+      "id_inputs": [],
+      "other_inputs": [
+        {
+          "name": "request",
+          "source": "body",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 103
+        }
+      ],
+      "guards": [
+        {
+          "type": "authn",
+          "name": "securityManager.getCurrentUserId()",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 104,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "create",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 115
+        }
+      ],
+      "needs_bola_audit": false,
+      "notes": "Order creation assigns UUID server-side and binds ownership to authenticated user/tenant; no client-controlled object identifier input."
+    },
+    {
+      "route_id": "R-0017",
+      "method": [
+        "PUT"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 119,
+        "symbol": "updateOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 121
+        }
+      ],
+      "other_inputs": [
+        {
+          "name": "request",
+          "source": "body",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 122
+        }
+      ],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "securityManager.requireOwnership(order, ResourceOperation.UPDATE)",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 125,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 124
+        },
+        {
+          "op": "update",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 130
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Updates order by id; verified for tenant and owner ownership via KomainuSecurityManager.requireOwnership."
+    },
+    {
+      "route_id": "R-0018",
+      "method": [
+        "DELETE"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 133,
+        "symbol": "deleteOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 134
+        }
+      ],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "securityManager.requireOwnership(order, ResourceOperation.DELETE)",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 136,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 135
+        },
+        {
+          "op": "delete",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 138
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Deletes order by id; verified for tenant and owner ownership via KomainuSecurityManager.requireOwnership."
+    },
+    {
+      "route_id": "R-0019",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/documents",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 149,
+        "symbol": "listDocuments"
+      },
+      "id_inputs": [],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "authn",
+          "name": "securityManager.getCurrentUserId()",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 151,
+          "position": "in_handler"
+        },
+        {
+          "type": "ownership",
+          "name": "documentRepository.findByTenantIdAndOwnerUserId(tenantId, userId)",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 153,
+          "position": "in_query"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_documents",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 153
+        }
+      ],
+      "needs_bola_audit": false,
+      "notes": "Collection endpoint scoped to authenticated tenant and user via findByTenantIdAndOwnerUserId; no individual object identifier input."
+    },
+    {
+      "route_id": "R-0020",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/documents/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 156,
+        "symbol": "getDocument"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 157
+        }
+      ],
+      "other_inputs": [],
+      "guards": [
+        {
+          "type": "ownership",
+          "name": "securityManager.requireOwnership(doc, ResourceOperation.READ)",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 159,
+          "position": "in_handler"
+        }
+      ],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_documents",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 158
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Retrieves document by id; verified for tenant and owner ownership via KomainuSecurityManager.requireOwnership."
+    },
+    {
+      "route_id": "R-0021",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 172,
+        "symbol": "getLegacyOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 173
+        }
+      ],
+      "other_inputs": [],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 179
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Test endpoint (PLANT-BOLA): retrieves order directly by id via orderRepository.findById without authn or ownership check."
+    },
+    {
+      "route_id": "R-0022",
+      "method": [
+        "PUT"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 185,
+        "symbol": "updateLegacyOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 187
+        }
+      ],
+      "other_inputs": [
+        {
+          "name": "request",
+          "source": "body",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 188
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 195
+        },
+        {
+          "op": "update",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 200
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Test endpoint (PLANT-BOLA): updates order directly by id via orderRepository.save without authn or ownership check."
+    },
+    {
+      "route_id": "R-0023",
+      "method": [
+        "DELETE"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 205,
+        "symbol": "deleteLegacyOrder"
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 206
+        }
+      ],
+      "other_inputs": [],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 212
+        },
+        {
+          "op": "delete",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 215
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Test endpoint (PLANT-BOLA): deletes order directly by id via orderRepository.delete without authn or ownership check."
+    },
+    {
+      "route_id": "R-0024",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/test/legacy-search",
+      "path_source": "declared",
+      "app_root": "backend-spring",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 219,
+        "symbol": "searchLegacy"
+      },
+      "id_inputs": [],
+      "other_inputs": [
+        {
+          "name": "query",
+          "source": "query",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 220
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read",
+          "target": "portal_orders",
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 227
+        }
+      ],
+      "needs_bola_audit": true,
+      "notes": "Test endpoint (PLANT-SQLI): searches per-user orders via unparameterized native SQL query with no authn or tenant/user scoping."
+    }
+  ],
+  "rejected": []
+}

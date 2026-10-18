@@ -1,0 +1,710 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "LSA Legacy Security Audit (AI-assisted)",
+          "version": "0.2.1",
+          "informationUri": "https://owasp.org/API-Security/",
+          "rules": [
+            {
+              "id": "lsa/bola/missing_ownership_check",
+              "name": "bola.missing_ownership_check",
+              "shortDescription": {
+                "text": "Broken object level authorization (BOLA/IDOR) — missing ownership check"
+              },
+              "fullDescription": {
+                "text": "The endpoint accesses an object selected by a request-controlled identifier without binding the access to the current user or tenant."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-639",
+                  "CWE-862",
+                  "API1:2023"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "lsa/sql_injection/string_interpolation",
+              "name": "sql_injection.string_interpolation",
+              "shortDescription": {
+                "text": "SQL/HQL query built from untrusted input — string interpolation"
+              },
+              "fullDescription": {
+                "text": "A query string is built by concatenation, interpolation or formatting with request-controlled data."
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-89",
+                  "A03:2021"
+                ],
+                "security-severity": "9.5"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated cross-tenant order modification via legacy test endpoint [PUT /api/v1/test/legacy-orders/{id}] — Verify caller identity and object ownership using _authzService.AuthorizeAsync with ResourceOperation.Update, returning 404 on authorization failure."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 47,
+                  "endLine": 66
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Target order ID and update payload received from untrusted request body and route parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 47
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Loads order by primary key without verifying caller identity or tenant"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 55
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Persists status and description changes without checking caller authorization"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 63
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0005-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated cross-tenant order deletion via legacy test endpoint [DELETE /api/v1/test/legacy-orders/{id}] — Require caller authentication and object-level deletion authorization using _authzService.AuthorizeAsync with ResourceOperation.Delete."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 69,
+                  "endLine": 87
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Target order ID received from client via URL route parameter without validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 69
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Retrieves order to delete by ID alone with no ownership validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 77
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Removes the order from database without verifying caller ownership"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 83
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0006-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated cross-tenant order modification via Spring legacy test endpoint [PUT /api/v1/test/legacy-orders/{id}] — Enforce ownership check via securityManager.requireOwnership(order, ResourceOperation.UPDATE) prior to mutating and saving the entity."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 185,
+                  "endLine": 204
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Target order ID and updated fields received from untrusted request without validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 185
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Fetches order to mutate by ID alone without verifying ownership or tenant"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 195
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Saves modified order entity directly without ownership check"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 200
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0022-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated cross-tenant order deletion via Spring legacy test endpoint [DELETE /api/v1/test/legacy-orders/{id}] — Verify caller ownership via securityManager.requireOwnership(order, ResourceOperation.DELETE) before executing deletion."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 205,
+                  "endLine": 217
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Target order ID received from client via path variable without validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 205
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Fetches order to delete without tenant or owner verification"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 212
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Deletes order row from database without verifying caller authorization or ownership"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 215
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0023-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Raw SQL query uses string interpolation with unvalidated search query parameter [GET /api/v1/test/legacy-search] — Use parameterized queries with FromSqlInterpolated or bind parameters through FormattableString rather than passing interpolated strings to FromSqlRaw."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 98,
+                  "endLine": 99
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: unvalidated query parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 90
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "string interpolation directly constructs SQL statement"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 98
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "sink: raw SQL execution without parameter binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 99
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0001-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/sql_injection/string_interpolation",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Native SQL query interpolates unvalidated search query parameter [GET /api/v1/test/legacy-search] — Use parameterized queries with named or positional parameters via Query.setParameter instead of string interpolation."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 226,
+                  "endLine": 227
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "source: unvalidated request parameter"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 220
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "string template interpolation directly into SQL string"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 226
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "sink: native query execution without parameter binding"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 227
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "INJ-I-0002-1"
+          },
+          "properties": {
+            "security-severity": "9.5",
+            "severity": "critical",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated cross-tenant order retrieval via legacy test endpoint [GET /api/v1/test/legacy-orders/{id}] — Enforce authentication and verify caller ownership and tenant scope using _authzService.AuthorizeAsync before returning order data."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28,
+                  "endLine": 44
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Order identifier supplied directly from URL route path without validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Direct query on Orders table by id alone without tenant or user ownership constraint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 36
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Returns full order record without post-load owner verification or caller authorization"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-dotnet/Controllers/LegacyTestController.cs",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 43
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0004-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        },
+        {
+          "ruleId": "lsa/bola/missing_ownership_check",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Unauthenticated cross-tenant order retrieval via Spring legacy test endpoint [GET /api/v1/test/legacy-orders/{id}] — Enforce ownership verification via securityManager.requireOwnership(order, ResourceOperation.READ) before returning the order entity."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 172,
+                  "endLine": 184
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "Target order ID taken directly from request path variable without validation"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 172
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "Queries database by primary key alone using Spring Data repository without tenant or owner scoping"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 179
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "Returns the fetched order entity without post-load ownership comparison"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 182
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "lsaFindingId": "BOLA-R-0021-1"
+          },
+          "properties": {
+            "security-severity": "8.0",
+            "severity": "high",
+            "confidence": "high",
+            "status": "confirmed",
+            "cwe": [
+              "CWE-639",
+              "CWE-862"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

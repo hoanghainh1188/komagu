@@ -1,0 +1,55 @@
+{
+  "repo": "member-portal",
+  "generated_by": "lsa detect_stack.py 0.2.1 + confirmed by 10-stack-detector",
+  "stacks": [
+    {
+      "id": "dotnet-webapi",
+      "language": "csharp",
+      "version_hint": ".NET 8.0 (net8.0) ASP.NET Core Web API",
+      "evidence": [
+        "TargetFramework net8.0 in backend-dotnet/MemberPortal.Backend.csproj:4",
+        "Controllers with [ApiController] inheriting ControllerBase in backend-dotnet/Controllers/*.cs",
+        "WebApplication builder with AddControllers() and MapControllers() in backend-dotnet/Program.cs:37,53"
+      ],
+      "confirmed": true,
+      "root": "backend-dotnet"
+    },
+    {
+      "id": "java-spring-mvc",
+      "language": "kotlin",
+      "version_hint": "Spring Boot 3.3.4, Kotlin 2.0.21, Java 17",
+      "evidence": [
+        "Spring Boot 3.3.4 and Kotlin 2.0.21 plugins in backend-spring/build.gradle.kts:1-5",
+        "@SpringBootApplication in backend-spring/src/main/kotlin/io/komainu/portal/Application.kt:32",
+        "@RestController and @RequestMapping in backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:29,63,143,164"
+      ],
+      "confirmed": true,
+      "root": "backend-spring"
+    }
+  ],
+  "data_access": [
+    "Entity Framework Core 8.0 (Microsoft.EntityFrameworkCore.Sqlite)",
+    "Spring Data JPA / Hibernate (spring-boot-starter-data-jpa)",
+    "Raw SQL via EntityFramework FromSqlRaw in backend-dotnet/Controllers/LegacyTestController.cs:99",
+    "Raw SQL via EntityManager createNativeQuery in backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:227"
+  ],
+  "databases": [
+    "SQLite",
+    "H2",
+    "PostgreSQL"
+  ],
+  "file_counts": {
+    ".cs": 7,
+    ".kt": 4,
+    ".ts": 2
+  },
+  "knowledge_files": [
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/java.md"
+  ],
+  "notes": "Confirmed stacks: dotnet-webapi (.NET 8 C#) and java-spring-mvc (Spring Boot 3.3.4 Kotlin). Removed dotnet-mvc because backend-dotnet exclusively serves REST APIs (ControllerBase + [ApiController]) without Razor MVC views. Removed Oracle from databases (false-positive in heuristic scan triggered by the comment 'oracle ID probing'). Confirmed SQLite (dotnet) and H2 (spring), plus PostgreSQL in docker-compose.",
+  "unknowns": [
+    "Edge reverse proxy (Kong Gateway 3.6+ with OWASP Coraza WAF) described in architectural documentation (README.md:16-19,31-33); not verified in direct backend execution.",
+    "External OIDC / Keycloak identity provider described in architecture (README.md:28,135-139); mocked in local test backends via DemoAuthenticationHandler and DemoTokenFilter."
+  ]
+}

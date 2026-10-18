@@ -20,7 +20,7 @@ from merge_findings import extract_json  # noqa: E402
 
 EXT_LANG = {".php": "php", ".inc": "php", ".java": "java", ".jsp": "java", ".xml": "java", ".cs": "cs", ".vb": "vb",
             ".aspx": "aspx", ".ashx": "cs", ".asmx": "cs", ".asp": "vb", ".pl": "perl", ".cgi": "perl", ".pm": "perl",
-            ".cfm": "cfml", ".cfc": "cfml", ".js": "js", ".py": "python", ".rb": "ruby"}
+            ".cfm": "cfml", ".cfc": "cfml", ".js": "js", ".py": "python", ".rb": "ruby", ".kt": "java"}
 
 
 def ext_lang(path: str) -> str:
