@@ -1,0 +1,9 @@
+Date,Engineer,WorkstreamTag,Stage,EndpointCount,HoursSpent,PersonDays,ArtifactOrCommit,Description,Notes
+2026-11-02,Harry,[PILOT-LSA],Week 9,50,4.0,0.50,out/stack-profile.json,"Environment setup and LSA pre-scan","Stack confirmed: PHP Plain; 0 secrets exposed"
+2026-11-03,Harry,[PILOT-LSA],Week 9,50,4.0,0.50,out/findings.json,"Phase 4 Auditor run and Phase 5 Skeptic verification","10 candidate findings evaluated"
+2026-11-04,Harry,[PILOT-LSA],Week 10,50,4.0,0.50,out/review-log.md,"Person B findings sign-off and report delivery","Signed review-log.md; 8 accepted findings"
+2026-11-05,Developer B,[PILOT-GATEWAY],Week 10,50,4.0,0.50,docker-compose.yml,"Deploy Kong Gateway & Coraza WAF sidecar","Per-IP rate limits active, CRS v4 SQLi rules active"
+2026-11-09,Developer A,[PILOT-REMEDIATE],Week 11,15,8.0,1.00,commit:remediate-d1,"Adopt D1 object-level authorization on critical endpoints","15 endpoints covered with owner check"
+2026-11-10,Developer A,[PILOT-REMEDIATE],Week 11,20,8.0,1.00,commit:remediate-d2-d3,"Adopt D2 OIDC token validation & D3 safe query refactoring","20 endpoints refactored to parameterized SQL"
+2026-11-12,Developer B,[PILOT-TEST-CI],Week 12,50,8.0,1.00,.github/workflows/authz-ci.yml,"Deploy D5 Schemathesis cross-user CI pipeline","Plant-and-verify cross-user tests all passing"
+2026-11-13,Harry,[PILOT-TEST-CI],Week 12,50,4.0,0.50,docs/pilot-final-report.md,"Re-scan verification and ROI calculation per ADR-0005","100% accepted findings closed; 75.7% savings achieved"
