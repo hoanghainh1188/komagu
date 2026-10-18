@@ -88,7 +88,7 @@ Approval points:
 
 The pilot runs on one real system from week 9 to week 12; it is the only source of the numbers we may later show clients.
 
-**Choosing the pilot system.** The pilot is the AMS (application maintenance) project, if its client gives written approval for AI processing of the code by the end of week 6. Otherwise we use an internal tool. Either way the system should have a web API with per-user data and 30–150 endpoints. A system written in a legacy stack the LSA kit supports (PHP, Java, ASP.NET, Classic ASP) shows the most value.
+**Choosing the pilot system.** The pilot is the AMS (application maintenance) project, if its client gives written approval for AI processing of the code by the end of week 6 (governed by [Pilot AI Processing Approval & Data Governance Protocol](pilot-client-ai-approval-consent.md)). Otherwise we use an internal tool. Either way the system should have a web API with per-user data and 30–150 endpoints. A system written in a legacy stack the LSA kit supports (PHP, Java, ASP.NET, Classic ASP) shows the most value.
 
 1. **Prepare (week 9):** written approval, model hosting chosen per the client's policy, baseline effort figure picked from a comparable past project.
 2. **Assess (week 9–10):** run the LSA pipeline; Person B signs off findings; report to the owner.
