@@ -53,7 +53,7 @@ Examples:
         "--out",
         "-o",
         dest="out_dir",
-        help="Output directory for audit artifacts (default: <target>/.komainu/out)",
+        help="Output directory for audit artifacts (default: ./komainu-out)",
     )
     parser.add_argument(
         "--lang",
@@ -88,7 +88,7 @@ def execute_scan(args: argparse.Namespace) -> int:
         return 2
 
     project_name = args.project or target_path.name
-    out_dir = Path(args.out_dir).resolve() if args.out_dir else (target_path / ".komainu" / "out")
+    out_dir = Path(args.out_dir).resolve() if args.out_dir else (Path.cwd() / "komainu-out")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     step(f"Scanning target repository {color(str(target_path), BOLD)}")

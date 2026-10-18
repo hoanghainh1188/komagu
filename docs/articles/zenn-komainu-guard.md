@@ -137,21 +137,20 @@ AI の出力はドラフトであり、最終的な確定情報ではありま�
 - **Version:** `0.2.1`
 
 ### 実行例
-インストール不要で、`npx` コマンドだけで実行できます：
+インストール不要で、`npx` コマンドだけで即座にスキャンを実行できます：
 
 ```bash
 # ヘルプと使用可能なサブコマンド一覧
 npx --yes komainu-guard help
 
-# リポジトリの静的プリスキャン（スタック判定・候補抽出）
-npx --yes komainu-guard pre-scan ./my-legacy-app
-
-# 完全な脆弱性監査の実行
-npx --yes komainu-guard audit ./my-legacy-app --out ./audit-out
-
-# インタラクティブな HTML レポートの表示
-npx --yes komainu-guard report ./audit-out
+# リポジトリのスキャン（スタック検出、ルート候補抽出、日本語HTML＆Markdownレポート生成）
+npx --yes komainu-guard scan ./my-legacy-app --out ./audit-out --lang ja --format all
 ```
+
+:::message
+**CLI とマルチエージェント AI パイプラインの役割分担：**  
+`komainu-guard scan` は完全ローカルで高速に Phase 1（決定論的プリスキャン）を実行し、機密情報をマスキングした上で AST 解析結果と構造化レポートを生成します。深層監査（Phase 4–5 の Auditor / Skeptic Verifier）は、このプリスキャン成果物をインプットとしてエージェントワークフローにより精密に実行されます。
+:::
 
 ### ベンチマーク実績（Evaluation Run 3）
 多様な脆弱性パターンと正常コードを混合させた検証テストセットにおいて：

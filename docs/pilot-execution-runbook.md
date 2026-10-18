@@ -45,7 +45,7 @@ Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho *
   1. Kiểm tra văn bản [AI Processing Approval Consent Form](pilot-client-ai-approval-consent.md) gửi khách hàng AMS.
   2. **Quy tắc cổng chặn Tuần 6 (Week 6 Hard Gate):**
      - **Nếu ĐÃ CÓ văn bản ký kết (Approved):** Chạy Pilot chính thức trên mã nguồn hệ thống AMS.
-     - **Nếu CHƯA CÓ văn bản ký kết trước hạn chót Tuần 6:** Kích hoạt ngay lập tức **Fallback System** (Ứng dụng Member Portal D6 + Internal Tool 42 endpoints). Gắn nhãn kết quả đo lường là *"Internal System Reference Metrics"*.
+     - **Nếu CHƯA CÓ văn bản ký kết trước hạn chót Tuần 6:** Kích hoạt ngay lập tức **Fallback System** (Ứng dụng Member Portal D6 24 endpoints). Gắn nhãn kết quả đo lường là *"Internal System Reference Metrics"*.
   3. Cập nhật trạng thái `fallbackActive` trong file cấu hình `delivery/pilot/pilot-config.json` (dựa trên mẫu `delivery/pilot/pilot-config.sample.json`).
 
 ### Bước 1.2: Thiết lập Hạ tầng Tính toán AI (Model Hosting Setup)
@@ -87,23 +87,24 @@ Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho *
 
 ## 3. Phase 2: Tuần 9–10 — Rà soát An ninh & Thẩm định Person B
 
-### Bước 2.1: Chạy Rà soát Cú pháp Tĩnh (Pre-scan)
-Sử dụng gói `komainu-guard` đã phát hành để quét tự động:
+### Bước 2.1: Chạy Rà soát Cú pháp Tĩnh & Sinh Báo cáo Ban đầu (Scan)
+Sử dụng gói `komainu-guard` đã phát hành để quét tự động toàn bộ mã nguồn mục tiêu:
 ```bash
-npx --yes komainu-guard pre-scan /path/to/target-repo --out ./pilot-out
+# Thực hiện quét tĩnh, trích xuất route candidates và sinh báo cáo song ngữ
+npx --yes komainu-guard scan /path/to/target-repo --out ./pilot-out --lang all --format all
 ```
-- **Kiểm tra đầu ra:**
+- **Kiểm tra đầu ra trong `./pilot-out`:**
   - `stack-profile.json`: Xác nhận đúng ngôn ngữ/framework (PHP, Java, .NET...).
   - `routes.candidates.json`: Đạt độ phủ 100% các endpoint của hệ thống (từ 30 đến 150 endpoints).
-  - Tự động kiểm tra và lọc sạch các chuỗi bí mật (Secret Redaction).
+  - `injection.candidates.json`: Các điểm nghi vấn SQL/query interpolation.
+  - Tự động lọc sạch các chuỗi bí mật (Secret Redaction).
+  - `report.html` & `report.md`: Báo cáo sơ bộ trực quan.
 
-### Bước 2.2: Chạy Kiểm toán Sâu (Deep Audit)
-```bash
-npx --yes komainu-guard audit /path/to/target-repo --out ./pilot-out
-```
-- Các subagent AI thực hiện:
-  - Phase 4: `Auditor` phát hiện BOLA/IDOR và SQL Injection.
-  - Phase 5: `Skeptic Verifier` tiến hành phản biện, cố gắng chứng minh Auditor sai để loại trừ triệt để False Positive.
+### Bước 2.2: Chạy Kiểm toán Sâu bằng Multi-Agent (Deep Audit Workflow)
+Sử dụng các prompt template LSA runtime neutral (`assess/lsa/prompts/`) đưa vào agent context với dữ liệu đầu vào là thư mục `./pilot-out`:
+1. **Phase 2 & 3:** Chạy `10-stack-detector` và `20-route-mapper` để hoàn thiện `auth-model.md` và `route-inventory.json`.
+2. **Phase 4:** Chạy `30-bola-auditor` và `40-injection-auditor` để tìm kiếm BOLA/IDOR và SQLi trên từng batch endpoints.
+3. **Phase 5:** Chạy `50-finding-verifier` (Skeptic Verifier) phản biện và loại trừ triệt để False Positives để hoàn thiện `findings.json`.
 
 ### Bước 2.3: Thẩm định Con người Độc lập (Person B Protocol)
 - **Người thực hiện:** Harry (Security Reviewer / Person B).
@@ -113,12 +114,13 @@ npx --yes komainu-guard audit /path/to/target-repo --out ./pilot-out
   3. **Tiêu chuẩn nghiệm thu:** Tỷ lệ chấp thuận đạt $\ge 70\%$ tổng số phát hiện của AI.
   4. Harry ký tên và ghi ngày tháng vào cuối file `review-log.md`.
 
-### Bước 2.4: Xuất Bản Báo cáo
+### Bước 2.4: Xuất Bản Báo cáo Hoàn chỉnh
+Chạy cập nhật lại báo cáo sau thẩm định Person B:
 ```bash
-npx --yes komainu-guard report ./pilot-out
+python3 assess/lsa/scripts/render_report.py ./pilot-out --lang all
 ```
 - Cung cấp trọn bộ báo cáo cho khách hàng / BOD:
-  - Báo cáo Markdown tóm tắt điều hành (`report.md`).
+  - Báo cáo Markdown tóm tắt điều hành (`report.md`, `report.ja.md`).
   - File SARIF (`findings.sarif`) để import vào GitHub Security Tab / SonarQube.
   - Báo cáo HTML tương tác standalone (`report.html`) để xem trực tiếp trên trình duyệt.
 

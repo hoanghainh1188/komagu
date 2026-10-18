@@ -37,6 +37,8 @@ INPUTS: Dict[str, List[Tuple[re.Pattern, int, str]]] = {
         (re.compile(r"@RequestParam\s*\(\s*(?:value\s*=\s*|name\s*=\s*)?\"([^\"]+)\""), 1, "query"),
         (re.compile(r"@RequestParam(?:\([^)]*\))?\s+(?:final\s+)?[\w<>\[\]]+\s+(\w+)"), 1, "query"),
         (re.compile(r"@PathVariable(?:\s*\(\s*(?:value\s*=\s*|name\s*=\s*)?\"([^\"]+)\"\s*\))?\s+(?:final\s+)?[\w<>\[\]]+\s+(\w+)"), 2, "path"),
+        (re.compile(r"@PathVariable(?:\s*\(\s*(?:value\s*=\s*|name\s*=\s*)?\"([^\"]+)\"\s*\))?\s+(?:val\s+|var\s+)?(\w+)\s*:\s*[\w<>?.\[\]]+"), 2, "path"),
+        (re.compile(r"@RequestParam(?:\([^)]*\))?\s+(?:val\s+|var\s+)?(\w+)\s*:\s*[\w<>?.\[\]]+"), 1, "query"),
         (re.compile(r"@(?:PathParam|QueryParam|FormParam)\s*\(\s*\"([^\"]+)\"\s*\)"), 1, "any"),
         (re.compile(r"\$\{\s*param\.(\w+)\s*\}"), 1, "any"),
         (re.compile(r"public\s+void\s+set(\w+)\s*\(\s*(?:String|Long|long|Integer|int)\s+\w+\s*\)"), 1, "struts2_setter"),
@@ -227,9 +229,7 @@ def segments(text: str, decl_rx: re.Pattern) -> List[Tuple[re.Match, int, int]]:
 PHP_METHOD = re.compile(r"^[ \t]*(?:(public|protected|private)\s+)?(?:static\s+)?function\s+&?(\w+)\s*\(", re.M)
 JAVA_METHOD_ANN = re.compile(r"@(RequestMapping|GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|Path)\b\s*(\(([^)]*)\))?")
 JAVA_HTTP_ANN = re.compile(r"@(GET|POST|PUT|DELETE|PATCH)\b")
-CS_ACTION = re.compile(r"^[ \t]*public\s+(?:virtual\s+|async\s+|override\s+)*(?:ActionResult|ViewResult|JsonResult|FileResult|"
-                       r"ContentResult|PartialViewResult|RedirectResult|HttpResponseMessage|IHttpActionResult|"
-                       r"Task<[^>]+>|IEnumerable<[^>]+>|[A-Z]\w*(?:<[^>]+>)?)\s+(\w+)\s*\(([^)]*)\)", re.M)
+CS_ACTION = re.compile(r"^[ \t]*public\s+(?!record\b|class\b)(?:virtual\s+|async\s+|override\s+|static\s+)*[A-Za-z0-9_<>., \[\]?]+\s+(\w+)\s*\(([^)]*)\)", re.M)
 VB_ACTION = re.compile(r"^[ \t]*Public\s+(?:Overridable\s+|Async\s+)*Function\s+(\w+)\s*\(([^)]*)\)\s+As\s+[\w.(<>) ]+", re.M | re.I)
 WEBMETHOD = re.compile(r"(\[WebMethod[^\]]*\]|<WebMethod[^>]*>|\[OperationContract[^\]]*\]|<OperationContract[^>]*>)[\s\S]{0,300}?"
                        r"(?:public|Public)\s+(?:[\w<>\[\]]+\s+)*?(?:Function\s+|Sub\s+)?(\w+)\s*\(", re.I)
@@ -309,12 +309,15 @@ def java_declared(c: Collector, rel: str, text: str) -> bool:
         if cm and m.start() == cm.start():
             continue
         after = text[m.end(): m.end() + 600]
-        sig = re.search(r"(?:public|protected)\s+[\w<>\[\],.? ]+\s+(\w+)\s*\(", after)
-        if not sig:
-            continue
         # skip class-level annotation
         if re.match(r"\s*(?:@\w+(?:\([^)]*\))?\s*)*(?:public\s+)?(?:abstract\s+)?class\b", after):
             continue
+        sig = re.search(r"(?:(?:public|protected)\s+[\w<>\[\],.? ]+|fun|(?:override|suspend)\s+fun)\s+(\w+)\s*\(", after)
+        if not sig:
+            continue
+        before = text[:m.start()]
+        cls_m = list(re.finditer(r"@(?:RequestMapping|Path)\s*\(\s*(?:value\s*=\s*|path\s*=\s*)?\"([^\"]*)\"[^)]*\)[\s\S]{0,300}?(?:class\b)", before))
+        method_cls_prefix = cls_m[-1].group(1) if cls_m else cls_prefix
         args = m.group(3) or ""
         pv = re.search(r"(?:value\s*=\s*|path\s*=\s*)?\{?\s*\"([^\"]*)\"", args)
         sub = pv.group(1) if pv else ""
@@ -325,7 +328,7 @@ def java_declared(c: Collector, rel: str, text: str) -> bool:
         if ann == "Path":
             hv = JAVA_HTTP_ANN.search(text[max(0, m.start() - 200): m.end() + 200])
             verbs = [hv.group(1)] if hv else ["ANY"]
-        path = "/" + "/".join(p.strip("/") for p in (cls_prefix, sub) if p.strip("/"))
+        path = "/" + "/".join(p.strip("/") for p in (method_cls_prefix, sub) if p.strip("/"))
         nxt = re.search(r"\n\s*@(RequestMapping|GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|Path)\b(?!Variable|Param)", text[m.end():])
         body = text[m.start(): m.end() + (nxt.start() if nxt else len(text))]
         line = line_of(text, m.start())
@@ -382,37 +385,51 @@ def xml_declared(c: Collector, rel: str, text: str, class_index: Dict[str, str])
 
 def dotnet_declared(c: Collector, rel: str, text: str) -> bool:
     found = False
-    cm = re.search(r"class\s+(\w+?)Controller\s*:\s*(\w*Controller|ApiController)|Class\s+(\w+?)Controller[\s\S]{0,80}?Inherits\s+(\w*Controller|ApiController)", text, re.I)
+    cm = re.search(r"(?:\[ApiController\][\s\S]{0,100}?)?class\s+(\w+?)Controller\s*(?::\s*(\w+))?|Class\s+(\w+?)Controller[\s\S]{0,80}?Inherits\s+(\w+)", text, re.I)
     if cm:
         ctrl = (cm.group(1) or cm.group(3))
-        api = "Api" in (cm.group(2) or cm.group(4) or "")
-        prefix_m = re.search(r"\[RoutePrefix\(\s*\"([^\"]+)\"\s*\)\]", text)
-        prefix = "/" + prefix_m.group(1).strip("/") if prefix_m else (f"/api/{ctrl.lower()}" if api else f"/{ctrl}")
+        base_cls = cm.group(2) or cm.group(4) or ""
+        api = ("Api" in base_cls) or ("Base" in base_cls) or ("[ApiController]" in text)
+        prefix_m = re.search(r"\[(?:RoutePrefix|Route)\(\s*\"([^\"]+)\"\s*\)\]", text)
+        prefix = ("/" + prefix_m.group(1).strip("/").replace("[controller]", ctrl.lower())) if prefix_m else (f"/api/{ctrl.lower()}" if api else f"/{ctrl}")
         is_vb = rel.lower().endswith(".vb")
         rx = VB_ACTION if is_vb else CS_ACTION
-        for m, s, e in segments(text, rx):
+        ctrl_body = text[cm.end():]
+        class_end = ctrl_body.rfind("}")
+        if class_end > 0:
+            ctrl_body = ctrl_body[:class_end]
+        for m, s, e in segments(ctrl_body, rx):
             name = m.group(1)
             if name in ("Dispose", "Initialize", "OnActionExecuting", "ToString", "Equals", "GetHashCode") or name == ctrl + "Controller":
                 continue
-            pre = text[max(0, s - 400): s]
-            attrs_block = pre[pre.rfind("}") + 1:] if "}" in pre else pre
+            pre = ctrl_body[max(0, s - 300): s]
+            attr_lines = [line.strip() for line in pre.splitlines() if line.strip().startswith("[")]
+            attrs_block = " ".join(attr_lines)
             verbs = re.findall(r"Http(Get|Post|Put|Delete|Patch)", attrs_block) or (
                 [v for v in ("Get", "Post", "Put", "Delete") if api and name.startswith(v)][:1]) or ["ANY"]
+            http_route = re.search(r"Http(?:Get|Post|Put|Delete|Patch)\s*\(\s*\"([^\"]+)\"", attrs_block)
             route = re.search(r"Route\(\s*\"([^\"]+)\"", attrs_block)
-            path = ("/" + route.group(1).lstrip("~/")) if route else f"{prefix}/{name}"
+            sub_route = route.group(1) if route else (http_route.group(1) if http_route else None)
+            if sub_route:
+                if sub_route.startswith("~/") or sub_route.startswith("/"):
+                    path = "/" + sub_route.lstrip("~/")
+                else:
+                    path = f"{prefix.rstrip('/')}/{sub_route.lstrip('/')}"
+            else:
+                path = prefix if api else f"{prefix}/{name}"
             params = m.group(2)
-            line = line_of(text, s)
+            line = line_of(text, cm.end() + s)
             idps = []
             for pn in re.findall(r"(?:\b(\w+)\s+As\s+[\w.?]+)|(?:[\w<>?.\[\]]+\s+(\w+)\s*(?:=|,|$))", params):
                 n = pn[0] or pn[1]
                 if n and n not in ("ByVal", "ByRef", "Optional"):
                     idps.append({"name": n, "source": "any", "line": line, "is_id_like": is_id_name(n, c.idp)})
-            body = text[s:e]
+            body = ctrl_body[s:e]
             c.add(stack="dotnet-webapi" if api else "dotnet-mvc", kind="declared_route", method=[v.upper() for v in verbs],
                   path=path, handler={"file": rel, "line": line, "symbol": f"{ctrl}Controller.{name}"},
                   id_params=idps + c.inputs("dotnet", body, line),
                   guard_hints=c.guards(attrs_block, max(1, line - attrs_block.count("\n"))) + c.guards(text[: cm.end()], 1)[:2] + c.guards(body, line),
-                  data_hints=c.data_ops(body, line), notes="" if route else "path is convention-based")
+                  data_hints=c.data_ops(body, line), notes="" if (route or http_route) else ("path is convention-based" if not api else ""))
             found = True
     for m in WEBMETHOD.finditer(text):
         line = line_of(text, m.start())
