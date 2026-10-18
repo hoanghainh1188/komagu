@@ -1,10 +1,11 @@
 services:
   kong:
-    image: kong:3.6-alpine
+    image: kong:3.6
     container_name: komainu-kong-gateway
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_HEADERS: "off"
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
@@ -20,7 +21,9 @@ services:
     restart: unless-stopped
 
   coraza-waf:
-    image: ghcr.io/corazawaf/coraza-caddy:latest
+    build:
+      context: ./coraza
+    image: komainu-coraza-caddy:local
     container_name: komainu-coraza-waf
     volumes:
       - ./coraza/Caddyfile:/etc/caddy/Caddyfile:ro
