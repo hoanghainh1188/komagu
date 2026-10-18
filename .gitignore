@@ -9,6 +9,7 @@ l sa-eval*/
 bin/
 !/bin/
 !/bin/komainu
+!/bin/komainu.js
 obj/
 *.user
 *.suo
