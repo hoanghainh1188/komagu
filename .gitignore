@@ -7,6 +7,8 @@ l sa-eval*/
 
 # .NET
 bin/
+!/bin/
+!/bin/komainu
 obj/
 *.user
 *.suo
