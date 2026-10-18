@@ -12,6 +12,7 @@
     "operate/",
     "remediate/",
     "contracts/",
+    "examples/",
     "README.md"
   ],
   "scripts": {

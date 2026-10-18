@@ -27,6 +27,7 @@ class TestDockerPackaging(unittest.TestCase):
         self.assertIn('ENTRYPOINT ["/app/bin/komainu"]', content)
         self.assertIn('CMD ["--help"]', content)
         self.assertIn("PYTHONPATH=/app", content)
+        self.assertIn("COPY examples/ /app/examples/", content)
 
     def test_dockerignore_excludes_unnecessary_files(self) -> None:
         """.dockerignore must exclude git history, pycache, and temporary outputs."""

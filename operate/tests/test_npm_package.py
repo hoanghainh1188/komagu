@@ -32,7 +32,7 @@ class TestNPMPackage(unittest.TestCase):
 
         # Whitelisted files must include platform modules
         files = data.get("files", [])
-        for req_dir in ("bin/", "assess/", "operate/", "remediate/", "contracts/"):
+        for req_dir in ("bin/", "assess/", "operate/", "remediate/", "contracts/", "examples/"):
             self.assertIn(req_dir, files, f"Missing required directory {req_dir} in files array")
 
     def test_bin_komainu_js_permissions_and_shebang(self) -> None:
