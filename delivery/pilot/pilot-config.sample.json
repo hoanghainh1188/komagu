@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "pilotId": "PILOT-AMS-2026Q4",
+  "system": {
+    "name": "AMS Legacy Order & Customer API",
+    "primaryStack": "php",
+    "targetDirectory": "/path/to/read-only-target-repo",
+    "outDirectory": "./pilot-out",
+    "estimatedEndpoints": 50
+  },
+  "governance": {
+    "writtenConsentApproved": true,
+    "consentDocumentRef": "docs/pilot-client-ai-approval-consent.md",
+    "approvalDate": "2026-10-25",
+    "humanSignOffAuthority": "Harry Nguyen (Principal Architect / Person B)",
+    "fallbackTriggerDeadline": "End of Week 6",
+    "fallbackActive": false,
+    "fallbackSystem": {
+      "name": "Deliverable D6 Member Portal + Internal Web API",
+      "endpointCount": 42,
+      "referenceNote": "Internal System Reference Metrics"
+    }
+  },
+  "computeAndHosting": {
+    "mode": "local-qwen",
+    "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "localInferenceUrl": "http://127.0.0.1:8000/v1",
+    "alternativeCloudEndpoint": {
+      "provider": "Azure OpenAI Service",
+      "region": "japaneast",
+      "enterpriseZeroDataRetention": true,
+      "noModelTraining": true
+    }
+  },
+  "securityControls": {
+    "readOnlyTargetEnforced": true,
+    "secretRedactionEnabled": true,
+    "noProductionDbAccess": true,
+    "noPiiCollection": true,
+    "secretPatterns": [
+      "(?i)(api[_-]?key|secret|password|token|bearer|private[_-]?key)\\s*[:=]\\s*['\"][^'\"]+['\"]",
+      "(?i)(mongodb|postgres|mysql|mssql)://[^\\s'\"]+"
+    ]
+  },
+  "effortTracking": {
+    "framework": "ADR-0005 Dual-Baseline",
+    "industryBaselinePersonDays": 46.0,
+    "empiricalD6ScratchPersonDays": 18.5,
+    "targetSavingsPercentage": 50.0,
+    "timesheetPath": "delivery/pilot/timesheet-template.csv"
+  }
+}
