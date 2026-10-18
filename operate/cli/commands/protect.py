@@ -38,6 +38,24 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         "protect",
         help="Configure and deploy Kong Gateway & Coraza WAF perimeter protection",
         description="Generates declarative Kong routing and Coraza WAF virtual patching rules.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Validate perimeter configurations (dry-run)
+  komainu protect --dry-run
+
+  # Launch the perimeter Kong + Coraza container stack
+  komainu protect --up
+
+  # Point perimeter gateway to a specific upstream service
+  komainu protect --target http://host.docker.internal:5001 --up
+
+  # Check perimeter container status
+  komainu protect --status
+
+  # Stop perimeter containers
+  komainu protect --down
+""",
     )
     parser.add_argument(
         "--target",

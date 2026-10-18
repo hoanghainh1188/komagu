@@ -17,6 +17,17 @@ def build_parser() -> argparse.ArgumentParser:
         prog="komainu",
         description="Komainu — Security-First Legacy Modernization Platform CLI.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Quick Start Workflow:
+  1. Audit a legacy codebase:   komainu scan ./legacy-app --lang ja --format html
+  2. Launch perimeter edge:     komainu protect --up
+  3. Verify BOLA invariant:     komainu test --url http://localhost:8000
+  4. Explore reference demo:    komainu demo --up
+
+Learn more about a specific command:
+  komainu help <command>
+  komainu <command> --help
+""",
     )
     parser.add_argument(
         "--version",
@@ -41,6 +52,18 @@ def build_parser() -> argparse.ArgumentParser:
     test.register_subcommand(subparsers)
     demo.register_subcommand(subparsers)
 
+    help_parser = subparsers.add_parser(
+        "help",
+        help="Show help and usage examples for Komainu or a specific subcommand",
+        description="Displays help information, workflow guide, and command examples.",
+    )
+    help_parser.add_argument(
+        "topic",
+        nargs="?",
+        choices=["scan", "protect", "test", "demo"],
+        help="Subcommand topic to display help for (scan, protect, test, demo)",
+    )
+
     return parser
 
 
@@ -54,6 +77,16 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if getattr(args, "subcommand", None) is None:
         print_banner()
+        parser.print_help()
+        return 0
+
+    if getattr(args, "subcommand", None) == "help":
+        topic = getattr(args, "topic", None)
+        if topic:
+            sub_actions = [a for a in parser._subparsers._actions if isinstance(a, argparse._SubParsersAction)]
+            if sub_actions and topic in sub_actions[0].choices:
+                sub_actions[0].choices[topic].print_help()
+                return 0
         parser.print_help()
         return 0
 

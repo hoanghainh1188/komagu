@@ -35,6 +35,21 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         "demo",
         help="Manage the reference Member Portal demo application (Docker Compose)",
         description="Spins up the full-stack modernization reference demo (PostgreSQL, .NET / Spring Boot, React).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Start the Member Portal demo with .NET Core 8 backend
+  komainu demo --backend dotnet --up
+
+  # Start the Member Portal demo with Spring Boot 3 backend
+  komainu demo --backend spring --up
+
+  # Check status of running demo containers
+  komainu demo --status
+
+  # Stop and clean up demo containers
+  komainu demo --down
+""",
     )
     parser.add_argument(
         "--backend",
