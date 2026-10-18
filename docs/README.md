@@ -10,6 +10,7 @@ Business and planning documents that sit around the LSA kit. They are **internal
 | [ADR-0003 — WAF Engine Selection for D4](adr/0003-waf-engine-coraza.md) | OWASP Coraza WAF (pure Go, CRS v4, proxy-wasm / Kong sidecar) for D4 | Accepted (2026-10-17) |
 | [ADR-0004 — B1 Design Review](adr/0004-b1-design-review-d1-threat-model-demo-app.md) | B1 design review: D1 public interface (.NET & Spring), request path threat model, D6 demo app scope | Accepted (2026-10-17) |
 | [Boilerplate 1 — Secure API & IAM: Delivery Plan](boilerplate-1-delivery-plan.md) | 12-week plan: scope, architecture, deliverables D1–D6, timeline, roles, pilot, acceptance criteria, risks. | Updated v0.2; Milestone M1 Design Review approved |
+| [Pitching Deck & Sales Enablement Kit](pitching-deck-sales-enablement-kit.md) | Comprehensive 12-slide pitch deck with speaker notes, 3-minute live demo script, executive one-pager, and Japanese enterprise FAQ. | Ready for BOD and client presentations |
 
 ## How these files are maintained
 
