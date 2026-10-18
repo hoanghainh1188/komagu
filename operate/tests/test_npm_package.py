@@ -25,9 +25,10 @@ class TestNPMPackage(unittest.TestCase):
         self.assertTrue(PACKAGE_JSON.is_file(), f"package.json not found at {PACKAGE_JSON}")
         data = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
 
-        self.assertEqual(data.get("name"), "komainu")
+        self.assertEqual(data.get("name"), "komainu-guard")
         self.assertIn("version", data)
         self.assertEqual(data.get("bin", {}).get("komainu"), "./bin/komainu.js")
+        self.assertEqual(data.get("bin", {}).get("komainu-guard"), "./bin/komainu.js")
         self.assertEqual(data.get("license"), "Apache-2.0")
 
         # Whitelisted files must include platform modules

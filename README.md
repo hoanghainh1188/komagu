@@ -123,6 +123,22 @@ komainu/
 
 ## Quick Start
 
+### 🚀 One-Liner Zero-Install Execution
+
+Run Komainu instantly without manual environment setup:
+
+```bash
+# Zero-install via npmjs (Node.js 16+ & Python 3.8+)
+npx komainu-guard scan --target /path/to/legacy/repo --out /path/to/audit-out
+
+# Zero-install via Docker (Self-contained, zero host dependencies)
+docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komainu:latest scan --target /workspace/legacy-repo --out /workspace/audit-out
+
+# Or install globally via npm:
+npm install -g komainu-guard
+komainu help
+```
+
 ### 1. Run the LSA Kit Self-Test
 Verify that the LSA pre-scan engine and rule inventory pass across all 10 legacy fixture stacks:
 ```bash
