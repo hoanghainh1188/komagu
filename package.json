@@ -1,6 +1,6 @@
 {
   "name": "komainu-guard",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Security-First Legacy Modernization Platform CLI (LSA Kit, IAM Perimeter, Cross-User Testing)",
   "main": "bin/komainu.js",
   "bin": {
