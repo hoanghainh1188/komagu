@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Komainu Security Audit Dashboard — Komainu Pilot (D6 Member Portal)</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #475569;
+    --primary: #1e293b;
+    --accent: #2563eb;
+    --crit: #dc2626;
+    --crit-bg: #fef2f2;
+    --high: #ea580c;
+    --high-bg: #fff7ed;
+    --med: #d97706;
+    --med-bg: #fffbeb;
+    --low: #2563eb;
+    --low-bg: #eff6ff;
+    --ok: #16a34a;
+    --ok-bg: #f0fdf4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .exec-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .brand-kicker {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  .exec-title {
+    margin: 0 0 8px 0;
+    font-size: 26px;
+    font-weight: 700;
+  }
+  .conf-banner {
+    display: inline-block;
+    background: rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    color: #fecaca;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .risk-pill {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+  }
+  .risk-critical { background: #dc2626; color: #fff; }
+  .risk-high { background: #ea580c; color: #fff; }
+  .risk-medium { background: #d97706; color: #fff; }
+  .risk-low { background: #2563eb; color: #fff; }
+  .risk-info { background: #475569; color: #fff; }
+  .btn-ctrl {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .btn-ctrl:hover { background: rgba(255, 255, 255, 0.22); }
+  .meta-bar {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .stack-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.14);
+    color: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    margin-right: 4px;
+  }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .kpi-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .kpi-val {
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+  }
+  .card-title {
+    margin: 0 0 16px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .donut-svg { width: 155px; height: 155px; flex-shrink: 0; }
+  .donut-total { font-size: 26px; font-weight: 800; fill: #0f172a; }
+  .donut-sub { font-size: 11px; font-weight: 600; fill: #64748b; text-transform: uppercase; }
+  .legend-list { flex: 1; min-width: 180px; }
+  .legend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px dashed #f1f5f9;
+    font-size: 13px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+  }
+  .legend-name { flex: 1; font-weight: 500; }
+  .legend-val { font-weight: 700; }
+  .bar-svg { width: 100%; max-width: 440px; height: auto; }
+  .bar-label { font-size: 12px; font-weight: 600; fill: #1e293b; }
+  .bar-count { font-size: 12px; font-weight: 700; fill: #475569; }
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .filter-input, .filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    background: #fff;
+    color: var(--text);
+  }
+  .filter-input { flex: 1; min-width: 220px; }
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    padding: 11px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #334155;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .finding-row { cursor: pointer; transition: background 0.12s; }
+  .finding-row:hover { background: #f1f5f9; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .font-semibold { font-weight: 600; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .sev-critical { background: var(--crit-bg); color: var(--crit); border: 1px solid #fecaca; }
+  .sev-high { background: var(--high-bg); color: var(--high); border: 1px solid #fed7aa; }
+  .sev-medium { background: var(--med-bg); color: var(--med); border: 1px solid #fde68a; }
+  .sev-low { background: var(--low-bg); color: var(--low); border: 1px solid #bfdbfe; }
+  .sev-info { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #334155;
+  }
+  .status-confirmed { background: #dcfce7; color: #15803d; }
+  .status-needs_review { background: #fef9c3; color: #854d0e; }
+  .cwe-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .method-tag {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #0f172a;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .btn-inspect {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-inspect:hover { background: #dbeafe; }
+  .drawer-row td { background: #f8fafc; padding: 0; }
+  .drawer-panel {
+    padding: 18px 22px;
+    border-left: 4px solid var(--accent);
+    background: #f8fafc;
+  }
+  .drawer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 20px;
+  }
+  .drawer-col h4 { margin: 0 0 8px 0; font-size: 14px; color: #0f172a; }
+  .drawer-col p { margin: 0 0 10px 0; font-size: 13px; color: #334155; }
+  .remediation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .btn-copy {
+    background: #0f172a;
+    color: #fff;
+    border: none;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-copy:hover { background: #334155; }
+  .code-block {
+    margin: 6px 0 12px 0;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .vuln-code { background: #fef2f2; border: 1px solid #fecaca; color: #7f1d1d; }
+  .fix-code { background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; }
+  .verifier-box {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #475569;
+  }
+  @media print {
+    body { background: #fff; }
+    .btn-ctrl, .filter-bar, .btn-inspect, .btn-copy { display: none !important; }
+    .drawer-row { display: table-row !important; }
+    .card, .kpi-card, .exec-header { box-shadow: none !important; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="exec-header">
+    <div class="header-top">
+      <div>
+        <div class="brand-kicker">Komainu Legacy Security Assessment (LSA v0.2.1)</div>
+        <h1 class="exec-title" data-en="Security Audit Dashboard — Komainu Pilot (D6 Member Portal)" data-ja="セキュリティ監査ダッシュボード — Komainu Pilot (D6 Member Portal)">Security Audit Dashboard — Komainu Pilot (D6 Member Portal)</h1>
+        <span class="conf-banner" data-en="CONFIDENTIAL — HUMAN REVIEW REQUIRED BEFORE EXTERNAL SHARING" data-ja="社外秘 (CONFIDENTIAL) — 外部共有前に必ず人間によるレビュー・承認が必要">CONFIDENTIAL — HUMAN REVIEW REQUIRED BEFORE EXTERNAL SHARING</span>
+      </div>
+      <div class="header-controls">
+        <span class="risk-pill risk-critical" data-en="CRITICAL RISK" data-ja="総合リスク: 緊急 (CRITICAL)">CRITICAL RISK</span>
+        <button id="lang-toggle" type="button" class="btn-ctrl" onclick="toggleLanguage()" title="Switch Language / 言語切替">🌐 EN / 日本語</button>
+        <button type="button" class="btn-ctrl" onclick="expandAllDrawers()" data-en="Expand All" data-ja="すべて展開">Expand All</button>
+        <button type="button" class="btn-ctrl" onclick="window.print()" data-en="Print / PDF" data-ja="印刷 / PDF出力">Print / PDF</button>
+      </div>
+    </div>
+    <div class="meta-bar">
+      <div><strong data-en="Audit Date:" data-ja="診断実施日:">Audit Date:</strong> 2026-10-18</div>
+      <div><strong data-en="Scope:" data-ja="監査対象スコープ:">Scope:</strong> <span data-en="BOLA/IDOR (CWE-639) &amp; SQL/NoSQL Injection (CWE-89/CWE-943)" data-ja="BOLA/IDOR（認可不備）およびSQL/NoSQLインジェクション">BOLA/IDOR (CWE-639) &amp; SQL/NoSQL Injection (CWE-89/CWE-943)</span></div>
+      <div><strong data-en="Detected Stacks:" data-ja="検出技術スタック:">Detected Stacks:</strong> <span class="stack-badge">dotnet-webapi</span><span class="stack-badge">java-spring-mvc</span></div>
+    </div>
+  </header>
+
+  <section class="kpi-grid" aria-label="Executive Metrics">
+    <div class="kpi-card">
+      <div class="kpi-label" data-en="Total Active Findings" data-ja="有効検出事項総数">Total Active Findings</div>
+      <div class="kpi-val">8</div>
+      <div class="kpi-sub" data-en="Confirmed + Needs Review" data-ja="確定済 + 要確認">Confirmed + Needs Review</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" data-en="Critical Severity" data-ja="緊急 (Critical)">Critical Severity</div>
+      <div class="kpi-val" style="color:var(--crit)">6</div>
+      <div class="kpi-sub" data-en="Immediate remediation" data-ja="即時対応が必要">Immediate remediation</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" data-en="High Severity" data-ja="高 (High)">High Severity</div>
+      <div class="kpi-val" style="color:var(--high)">2</div>
+      <div class="kpi-sub" data-en="High business impact" data-ja="事業影響大">High business impact</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" data-en="Medium / Low" data-ja="中・低 (Medium / Low)">Medium / Low</div>
+      <div class="kpi-val" style="color:var(--med)">0</div>
+      <div class="kpi-sub">Medium: 0 / Low: 0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" data-en="Endpoints Inventoried" data-ja="登録エンドポイント数">Endpoints Inventoried</div>
+      <div class="kpi-val">24</div>
+      <div class="kpi-sub">BOLA Audited: 16 | Inj: 2</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" data-en="Refuted by Skeptic" data-ja="Skeptic検証により棄却">Refuted by Skeptic</div>
+      <div class="kpi-val" style="color:var(--ok)">0</div>
+      <div class="kpi-sub" data-en="False positives eliminated" data-ja="誤検知を自動排除">False positives eliminated</div>
+    </div>
+  </section>
+
+  <section class="charts-grid" aria-label="Visual Risk Analytics">
+    <div class="card" style="margin-bottom:0;">
+      <h2 class="card-title" data-en="Severity Distribution" data-ja="重要度別分布 (Severity Distribution)">Severity Distribution</h2>
+      <div class="donut-wrap">
+        <svg viewBox="0 0 160 160" class="donut-svg" role="img" aria-label="Severity Distribution Chart"><circle cx="80" cy="80" r="60" fill="none" stroke="#f1f5f9" stroke-width="20"/><circle cx="80" cy="80" r="60" fill="none" stroke="#dc2626" stroke-width="20" stroke-dasharray="282.74 376.99" stroke-dashoffset="-0.00" transform="rotate(-90 80 80)" /><circle cx="80" cy="80" r="60" fill="none" stroke="#ea580c" stroke-width="20" stroke-dasharray="94.25 376.99" stroke-dashoffset="-282.74" transform="rotate(-90 80 80)" /><text x="80" y="76" text-anchor="middle" class="donut-total">8</text><text x="80" y="96" text-anchor="middle" class="donut-sub" data-en="Active" data-ja="有効検出">Active</text></svg>
+        <div class="legend-list">
+          <div class="legend-row"><span class="legend-dot" style="background:#dc2626"></span><span class="legend-name" data-en="Critical" data-ja="緊急 (Critical)">Critical</span><span class="legend-val">6 <small>(75%)</small></span></div><div class="legend-row"><span class="legend-dot" style="background:#ea580c"></span><span class="legend-name" data-en="High" data-ja="高 (High)">High</span><span class="legend-val">2 <small>(25%)</small></span></div><div class="legend-row"><span class="legend-dot" style="background:#d97706"></span><span class="legend-name" data-en="Medium" data-ja="中 (Medium)">Medium</span><span class="legend-val">0 <small>(0%)</small></span></div><div class="legend-row"><span class="legend-dot" style="background:#2563eb"></span><span class="legend-name" data-en="Low" data-ja="低 (Low)">Low</span><span class="legend-val">0 <small>(0%)</small></span></div><div class="legend-row"><span class="legend-dot" style="background:#64748b"></span><span class="legend-name" data-en="Info" data-ja="情報 (Info)">Info</span><span class="legend-val">0 <small>(0%)</small></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <h2 class="card-title" data-en="Vulnerability Category &amp; CWE Breakdown" data-ja="脆弱性分類・CWE別内訳 (Category Breakdown)">Vulnerability Category &amp; CWE Breakdown</h2>
+      <svg viewBox="0 0 360 170" class="bar-svg" role="img" aria-label="Category Breakdown Chart"><g transform="translate(0, 20)"><text x="0" y="14" class="bar-label" data-en="BOLA / IDOR (CWE-639)" data-ja="認可不備 BOLA (CWE-639)">BOLA / IDOR (CWE-639)</text><text x="360" y="14" text-anchor="end" class="bar-count">6 (75%)</text><rect x="0" y="22" width="360" height="12" rx="6" fill="#f1f5f9" /><rect x="0" y="22" width="180" height="12" rx="6" fill="#7c3aed" /></g><g transform="translate(0, 70)"><text x="0" y="14" class="bar-label" data-en="SQL Injection (CWE-89)" data-ja="SQLインジェクション (CWE-89)">SQL Injection (CWE-89)</text><text x="360" y="14" text-anchor="end" class="bar-count">2 (25%)</text><rect x="0" y="22" width="360" height="12" rx="6" fill="#f1f5f9" /><rect x="0" y="22" width="60" height="12" rx="6" fill="#dc2626" /></g><g transform="translate(0, 120)"><text x="0" y="14" class="bar-label" data-en="NoSQL Injection (CWE-943)" data-ja="NoSQLインジェクション (CWE-943)">NoSQL Injection (CWE-943)</text><text x="360" y="14" text-anchor="end" class="bar-count">0 (0%)</text><rect x="0" y="22" width="360" height="12" rx="6" fill="#f1f5f9" /><rect x="0" y="22" width="0" height="12" rx="6" fill="#ea580c" /></g></svg>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Interactive Findings Table">
+    <h2 class="card-title" data-en="Interactive Findings Explorer" data-ja="検出事項一覧・インタラクティブ検索 (Findings Explorer)">Interactive Findings Explorer</h2>
+    <div class="filter-bar">
+      <input id="search-input" type="search" class="filter-input" placeholder="Search ID, endpoint, file, CWE, title... / キーワード検索" oninput="applyFilters()" />
+      <select id="sev-filter" class="filter-select" onchange="applyFilters()" aria-label="Filter by Severity">
+        <option value="all" data-en="All Severities" data-ja="すべての重要度">All Severities</option>
+        <option value="critical" data-en="Critical Only" data-ja="緊急 (Critical)">Critical Only</option>
+        <option value="high" data-en="High Only" data-ja="高 (High)">High Only</option>
+        <option value="medium" data-en="Medium Only" data-ja="中 (Medium)">Medium Only</option>
+        <option value="low" data-en="Low Only" data-ja="低 (Low)">Low Only</option>
+      </select>
+      <select id="cat-filter" class="filter-select" onchange="applyFilters()" aria-label="Filter by Category">
+        <option value="all" data-en="All Categories" data-ja="すべての脆弱性分類">All Categories</option>
+        <option value="bola" data-en="BOLA / IDOR (CWE-639)" data-ja="認可不備 BOLA (CWE-639)">BOLA / IDOR (CWE-639)</option>
+        <option value="sql_injection" data-en="SQL Injection (CWE-89)" data-ja="SQLインジェクション (CWE-89)">SQL Injection (CWE-89)</option>
+        <option value="nosql_injection" data-en="NoSQL Injection (CWE-943)" data-ja="NoSQLインジェクション (CWE-943)">NoSQL Injection (CWE-943)</option>
+      </select>
+      <select id="stack-filter" class="filter-select" onchange="applyFilters()" aria-label="Filter by Stack">
+        <option value="all" data-en="All Stacks / Modules" data-ja="すべての技術スタック">All Stacks / Modules</option>
+        <option value="backend-dotnet">backend-dotnet</option><option value="backend-spring">backend-spring</option>
+      </select>
+      <span id="visible-count" class="mono" style="color:var(--muted);">8 / 8</span>
+    </div>
+
+    <div class="table-wrap">
+      <table id="findings-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th data-en="Severity" data-ja="重要度">Severity</th>
+            <th data-en="Status" data-ja="ステータス">Status</th>
+            <th data-en="Category / CWE" data-ja="脆弱性分類 / CWE">Category / CWE</th>
+            <th data-en="Endpoint" data-ja="対象エンドポイント">Endpoint</th>
+            <th data-en="Location" data-ja="該当箇所">Location</th>
+            <th data-en="Title" data-ja="タイトル">Title</th>
+            <th data-en="Action" data-ja="操作">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="finding-row" data-idx="0" data-sev="critical" data-cat="bola" data-stack="backend-dotnet" data-search="bola-r-0005-1 critical bola missing_ownership_check put /api/v1/test/legacy-orders/{id} backend-dotnet/controllers/legacytestcontroller.cs:47 unauthenticated cross-tenant order modification via legacy test endpoint cwe-639, cwe-862 api1:2023" onclick="toggleDrawer(0)"><td class="mono font-semibold">BOLA-R-0005-1</td><td><span class="badge sev-critical" data-en="CRITICAL" data-ja="緊急 (Critical)">CRITICAL</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="bola" data-ja="オブジェクトレベルの認可不備 (BOLA/IDOR)">bola</div><div class="cwe-sub">CWE-639, CWE-862 API1:2023</div></td><td class="mono"><span class="method-tag">PUT</span> /api/v1/test/legacy-orders/{id}</td><td class="mono loc-cell">backend-dotnet/Controllers/LegacyTestController.cs:47</td><td class="title-cell">Unauthenticated cross-tenant order modification via legacy test endpoint</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(0)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-0" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An attacker sends PUT /api/v1/test/legacy-orders/{id} with another user&#x27;s order ID and payload to mutate order description and status without authentication.</p><p><strong>Impact:</strong> Unauthorized modification of customer orders across tenant boundaries, compromising data integrity.</p><p><strong>Data Flow:</strong> <code class="flow-code">id path parameter and UpdateOrderRequest body (LegacyTestController.cs:47) → FirstOrDefaultAsync(o =&gt; o.Id == id) (LegacyTestController.cs:55) → SaveChangesAsync() (LegacyTestController.cs:63)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:47</code> — Target order ID and update payload received from untrusted request body and route parameter</div><pre class="code-block vuln-code"><code>public async Task&lt;ActionResult&lt;Order&gt;&gt; UpdateLegacyOrder(string id, [FromBody] UpdateOrderRequest request)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:55</code> — Loads order by primary key without verifying caller identity or tenant</div><pre class="code-block vuln-code"><code>var order = await _dbContext.Orders.FirstOrDefaultAsync(o =&gt; o.Id == id);</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:63</code> — Persists status and description changes without checking caller authorization</div><pre class="code-block vuln-code"><code>await _dbContext.SaveChangesAsync();</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(0, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Verify caller identity and object ownership using _authzService.AuthorizeAsync with ResourceOperation.Update, returning 404 on authorization failure.</p><pre class="code-block fix-code"><code id="patch-code-0">var auth = await _authzService.AuthorizeAsync(User, order, ResourceOperation.Update);
+if (!auth.Succeeded) return NotFound();</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.UpdateLegacyOrder, PortalDbContext query filters, Program.cs authentication/authorization middleware, post-load ownership comparison</code>) — Verified. Endpoint allows unauthenticated cross-tenant modification of order description and status without ownership or tenant verification.</div></div></div></div></td></tr><tr class="finding-row" data-idx="1" data-sev="critical" data-cat="bola" data-stack="backend-dotnet" data-search="bola-r-0006-1 critical bola missing_ownership_check delete /api/v1/test/legacy-orders/{id} backend-dotnet/controllers/legacytestcontroller.cs:69 unauthenticated cross-tenant order deletion via legacy test endpoint cwe-639, cwe-862 api1:2023" onclick="toggleDrawer(1)"><td class="mono font-semibold">BOLA-R-0006-1</td><td><span class="badge sev-critical" data-en="CRITICAL" data-ja="緊急 (Critical)">CRITICAL</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="bola" data-ja="オブジェクトレベルの認可不備 (BOLA/IDOR)">bola</div><div class="cwe-sub">CWE-639, CWE-862 API1:2023</div></td><td class="mono"><span class="method-tag">DELETE</span> /api/v1/test/legacy-orders/{id}</td><td class="mono loc-cell">backend-dotnet/Controllers/LegacyTestController.cs:69</td><td class="title-cell">Unauthenticated cross-tenant order deletion via legacy test endpoint</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(1)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-1" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An attacker sends DELETE /api/v1/test/legacy-orders/{id} with any order ID to delete that order across tenants without authentication.</p><p><strong>Impact:</strong> Permanent deletion of order records belonging to any user or tenant, causing severe data loss.</p><p><strong>Data Flow:</strong> <code class="flow-code">id path parameter (LegacyTestController.cs:69) → FirstOrDefaultAsync(o =&gt; o.Id == id) (LegacyTestController.cs:77) → Orders.Remove(order) (LegacyTestController.cs:83)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:69</code> — Target order ID received from client via URL route parameter without validation</div><pre class="code-block vuln-code"><code>public async Task&lt;IActionResult&gt; DeleteLegacyOrder(string id)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:77</code> — Retrieves order to delete by ID alone with no ownership validation</div><pre class="code-block vuln-code"><code>var order = await _dbContext.Orders.FirstOrDefaultAsync(o =&gt; o.Id == id);</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:83</code> — Removes the order from database without verifying caller ownership</div><pre class="code-block vuln-code"><code>_dbContext.Orders.Remove(order);</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(1, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Require caller authentication and object-level deletion authorization using _authzService.AuthorizeAsync with ResourceOperation.Delete.</p><pre class="code-block fix-code"><code id="patch-code-1">var auth = await _authzService.AuthorizeAsync(User, order, ResourceOperation.Delete);
+if (!auth.Succeeded) return NotFound();
+_dbContext.Orders.Remove(order);</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.DeleteLegacyOrder, PortalDbContext query filters, Program.cs authentication/authorization middleware, post-load ownership comparison</code>) — Verified. Endpoint permits unauthenticated cross-tenant order deletion by ID alone with no authorization checks.</div></div></div></div></td></tr><tr class="finding-row" data-idx="2" data-sev="critical" data-cat="bola" data-stack="backend-spring" data-search="bola-r-0022-1 critical bola missing_ownership_check put /api/v1/test/legacy-orders/{id} backend-spring/src/main/kotlin/io/komainu/portal/controller/controllers.kt:185 unauthenticated cross-tenant order modification via spring legacy test endpoint cwe-639, cwe-862 api1:2023" onclick="toggleDrawer(2)"><td class="mono font-semibold">BOLA-R-0022-1</td><td><span class="badge sev-critical" data-en="CRITICAL" data-ja="緊急 (Critical)">CRITICAL</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="bola" data-ja="オブジェクトレベルの認可不備 (BOLA/IDOR)">bola</div><div class="cwe-sub">CWE-639, CWE-862 API1:2023</div></td><td class="mono"><span class="method-tag">PUT</span> /api/v1/test/legacy-orders/{id}</td><td class="mono loc-cell">backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:185</td><td class="title-cell">Unauthenticated cross-tenant order modification via Spring legacy test endpoint</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(2)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-2" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An attacker sends PUT /api/v1/test/legacy-orders/{id} with modified fields to alter any user&#x27;s order in any tenant.</p><p><strong>Impact:</strong> Unauthorized tampering and alteration of order status and descriptions across tenant boundaries.</p><p><strong>Data Flow:</strong> <code class="flow-code">id path variable and UpdateOrderRequest body (Controllers.kt:185) → orderRepository.findById(id) (Controllers.kt:195) → orderRepository.save(order) (Controllers.kt:200)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:185</code> — Target order ID and updated fields received from untrusted request without validation</div><pre class="code-block vuln-code"><code>fun updateLegacyOrder(@PathVariable id: String, @RequestBody request: UpdateOrderRequest): ResponseEntity&lt;Any&gt;</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:195</code> — Fetches order to mutate by ID alone without verifying ownership or tenant</div><pre class="code-block vuln-code"><code>val order = orderRepository.findById(id).orElse(null)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:200</code> — Saves modified order entity directly without ownership check</div><pre class="code-block vuln-code"><code>val updated = orderRepository.save(order)</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(2, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Enforce ownership check via securityManager.requireOwnership(order, ResourceOperation.UPDATE) prior to mutating and saving the entity.</p><pre class="code-block fix-code"><code id="patch-code-2">val order = orderRepository.findById(id).orElse(null)
+securityManager.requireOwnership(order, ResourceOperation.UPDATE)
+request.description?.let { order!!.description = it }
+...</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.updateLegacyOrder, OrderRepository.findById, Entities.kt Hibernate mappings, WebSecurityConfig filterChain permitAll</code>) — Verified. Endpoint allows unauthenticated caller to modify order description and status across tenant boundaries without ownership checks.</div></div></div></div></td></tr><tr class="finding-row" data-idx="3" data-sev="critical" data-cat="bola" data-stack="backend-spring" data-search="bola-r-0023-1 critical bola missing_ownership_check delete /api/v1/test/legacy-orders/{id} backend-spring/src/main/kotlin/io/komainu/portal/controller/controllers.kt:205 unauthenticated cross-tenant order deletion via spring legacy test endpoint cwe-639, cwe-862 api1:2023" onclick="toggleDrawer(3)"><td class="mono font-semibold">BOLA-R-0023-1</td><td><span class="badge sev-critical" data-en="CRITICAL" data-ja="緊急 (Critical)">CRITICAL</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="bola" data-ja="オブジェクトレベルの認可不備 (BOLA/IDOR)">bola</div><div class="cwe-sub">CWE-639, CWE-862 API1:2023</div></td><td class="mono"><span class="method-tag">DELETE</span> /api/v1/test/legacy-orders/{id}</td><td class="mono loc-cell">backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:205</td><td class="title-cell">Unauthenticated cross-tenant order deletion via Spring legacy test endpoint</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(3)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-3" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An attacker sends DELETE /api/v1/test/legacy-orders/{id} with any order id and permanently deletes the record without authorization.</p><p><strong>Impact:</strong> Unauthorized deletion of orders across tenants, resulting in permanent data loss.</p><p><strong>Data Flow:</strong> <code class="flow-code">id path variable (Controllers.kt:205) → orderRepository.findById(id) (Controllers.kt:212) → orderRepository.delete(order) (Controllers.kt:215)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:205</code> — Target order ID received from client via path variable without validation</div><pre class="code-block vuln-code"><code>fun deleteLegacyOrder(@PathVariable id: String): ResponseEntity&lt;Any&gt;</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:212</code> — Fetches order to delete without tenant or owner verification</div><pre class="code-block vuln-code"><code>val order = orderRepository.findById(id).orElse(null)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:215</code> — Deletes order row from database without verifying caller authorization or ownership</div><pre class="code-block vuln-code"><code>orderRepository.delete(order)</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(3, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Verify caller ownership via securityManager.requireOwnership(order, ResourceOperation.DELETE) before executing deletion.</p><pre class="code-block fix-code"><code id="patch-code-3">val order = orderRepository.findById(id).orElse(null)
+securityManager.requireOwnership(order, ResourceOperation.DELETE)
+orderRepository.delete(order!!)
+return ResponseEntity.noContent().build()</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.deleteLegacyOrder, OrderRepository.findById, Entities.kt Hibernate mappings, WebSecurityConfig filterChain permitAll</code>) — Verified. Endpoint allows unauthenticated deletion of orders across tenants by primary key alone with no ownership verification.</div></div></div></div></td></tr><tr class="finding-row" data-idx="4" data-sev="critical" data-cat="sql_injection" data-stack="backend-dotnet" data-search="inj-i-0001-1 critical sql_injection string_interpolation get /api/v1/test/legacy-search backend-dotnet/controllers/legacytestcontroller.cs:98 raw sql query uses string interpolation with unvalidated search query parameter cwe-89 a03:2021" onclick="toggleDrawer(4)"><td class="mono font-semibold">INJ-I-0001-1</td><td><span class="badge sev-critical" data-en="CRITICAL" data-ja="緊急 (Critical)">CRITICAL</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="sql_injection" data-ja="SQLインジェクション (SQLi)">sql_injection</div><div class="cwe-sub">CWE-89 A03:2021</div></td><td class="mono"><span class="method-tag">GET</span> /api/v1/test/legacy-search</td><td class="mono loc-cell">backend-dotnet/Controllers/LegacyTestController.cs:98</td><td class="title-cell">Raw SQL query uses string interpolation with unvalidated search query parameter</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(4)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-4" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An unauthenticated caller provides a crafted query parameter to escape the LIKE string literal and inject arbitrary SQL clauses or statements.</p><p><strong>Impact:</strong> Arbitrary SQL execution against the underlying database, allowing an attacker to read, modify, or delete orders across all tenants.</p><p><strong>Data Flow:</strong> <code class="flow-code">[FromQuery] string query (backend-dotnet/Controllers/LegacyTestController.cs:90) → rawSql (backend-dotnet/Controllers/LegacyTestController.cs:98) → _dbContext.Orders.FromSqlRaw(rawSql) (backend-dotnet/Controllers/LegacyTestController.cs:99)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:90</code> — source: unvalidated query parameter</div><pre class="code-block vuln-code"><code>public async Task&lt;ActionResult&lt;List&lt;Order&gt;&gt;&gt; SearchLegacy([FromQuery] string query)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:98</code> — string interpolation directly constructs SQL statement</div><pre class="code-block vuln-code"><code>var rawSql = $&quot;SELECT * FROM Orders WHERE Description LIKE &#x27;%{query}%&#x27;&quot;;</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:99</code> — sink: raw SQL execution without parameter binding</div><pre class="code-block vuln-code"><code>var results = await _dbContext.Orders.FromSqlRaw(rawSql).ToListAsync();</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(4, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Use parameterized queries with FromSqlInterpolated or bind parameters through FormattableString rather than passing interpolated strings to FromSqlRaw.</p><pre class="code-block fix-code"><code id="patch-code-4">var results = await _dbContext.Orders.FromSqlInterpolated($&quot;SELECT * FROM Orders WHERE Description LIKE {&#x27;%&#x27; + query + &#x27;%&#x27;}&quot;).ToListAsync();</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.SearchLegacy, FromSqlRaw parameter binding, query parameter sanitization/validation, Program.cs pipeline</code>) — Verified. Unvalidated query parameter is interpolated directly into raw SQL string executed via FromSqlRaw without parameter binding, reachable without authentication.</div></div></div></div></td></tr><tr class="finding-row" data-idx="5" data-sev="critical" data-cat="sql_injection" data-stack="backend-spring" data-search="inj-i-0002-1 critical sql_injection string_interpolation get /api/v1/test/legacy-search backend-spring/src/main/kotlin/io/komainu/portal/controller/controllers.kt:226 native sql query interpolates unvalidated search query parameter cwe-89 a03:2021" onclick="toggleDrawer(5)"><td class="mono font-semibold">INJ-I-0002-1</td><td><span class="badge sev-critical" data-en="CRITICAL" data-ja="緊急 (Critical)">CRITICAL</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="sql_injection" data-ja="SQLインジェクション (SQLi)">sql_injection</div><div class="cwe-sub">CWE-89 A03:2021</div></td><td class="mono"><span class="method-tag">GET</span> /api/v1/test/legacy-search</td><td class="mono loc-cell">backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:226</td><td class="title-cell">Native SQL query interpolates unvalidated search query parameter</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(5)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-5" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An unauthenticated caller provides a crafted query parameter containing SQL syntax to break out of the LIKE pattern and manipulate the query structure.</p><p><strong>Impact:</strong> Arbitrary SQL execution in the database, allowing an attacker to read or manipulate records across all tenants.</p><p><strong>Data Flow:</strong> <code class="flow-code">@RequestParam query (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:220) → sql (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:226) → entityManager.createNativeQuery(sql, ...) (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:227)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:220</code> — source: unvalidated request parameter</div><pre class="code-block vuln-code"><code>fun searchLegacy(@RequestParam query: String): ResponseEntity&lt;Any&gt;</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:226</code> — string template interpolation directly into SQL string</div><pre class="code-block vuln-code"><code>val sql = &quot;SELECT * FROM portal_orders WHERE description LIKE &#x27;%$query%&#x27;&quot;</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:227</code> — sink: native query execution without parameter binding</div><pre class="code-block vuln-code"><code>val queryResult = entityManager.createNativeQuery(sql, OrderEntity::class.java).resultList</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(5, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Use parameterized queries with named or positional parameters via Query.setParameter instead of string interpolation.</p><pre class="code-block fix-code"><code id="patch-code-5">val queryResult = entityManager.createNativeQuery(&quot;SELECT * FROM portal_orders WHERE description LIKE :query&quot;, OrderEntity::class.java).setParameter(&quot;query&quot;, &quot;%$query%&quot;).resultList</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.searchLegacy, entityManager.createNativeQuery parameter binding, query parameter validation, WebSecurityConfig filterChain permitAll</code>) — Verified. User-supplied query parameter is interpolated directly into a native SQL query executed via entityManager.createNativeQuery without parameterization or authentication.</div></div></div></div></td></tr><tr class="finding-row" data-idx="6" data-sev="high" data-cat="bola" data-stack="backend-dotnet" data-search="bola-r-0004-1 high bola missing_ownership_check get /api/v1/test/legacy-orders/{id} backend-dotnet/controllers/legacytestcontroller.cs:28 unauthenticated cross-tenant order retrieval via legacy test endpoint cwe-639, cwe-862 api1:2023" onclick="toggleDrawer(6)"><td class="mono font-semibold">BOLA-R-0004-1</td><td><span class="badge sev-high" data-en="HIGH" data-ja="高 (High)">HIGH</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="bola" data-ja="オブジェクトレベルの認可不備 (BOLA/IDOR)">bola</div><div class="cwe-sub">CWE-639, CWE-862 API1:2023</div></td><td class="mono"><span class="method-tag">GET</span> /api/v1/test/legacy-orders/{id}</td><td class="mono loc-cell">backend-dotnet/Controllers/LegacyTestController.cs:28</td><td class="title-cell">Unauthenticated cross-tenant order retrieval via legacy test endpoint</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(6)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-6" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An unauthenticated user sends GET /api/v1/test/legacy-orders/{id} with any order ID and receives the complete order entity belonging to another user or tenant.</p><p><strong>Impact:</strong> Cross-tenant data exposure disclosing customer orders, total amount, order description, and owner identity without authentication.</p><p><strong>Data Flow:</strong> <code class="flow-code">id path parameter (LegacyTestController.cs:28) → FirstOrDefaultAsync(o =&gt; o.Id == id) (LegacyTestController.cs:36) → Ok(order) (LegacyTestController.cs:43)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:28</code> — Order identifier supplied directly from URL route path without validation</div><pre class="code-block vuln-code"><code>public async Task&lt;ActionResult&lt;Order&gt;&gt; GetLegacyOrder(string id)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:36</code> — Direct query on Orders table by id alone without tenant or user ownership constraint</div><pre class="code-block vuln-code"><code>var order = await _dbContext.Orders.FirstOrDefaultAsync(o =&gt; o.Id == id);</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-dotnet/Controllers/LegacyTestController.cs:43</code> — Returns full order record without post-load owner verification or caller authorization</div><pre class="code-block vuln-code"><code>return Ok(order);</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(6, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Enforce authentication and verify caller ownership and tenant scope using _authzService.AuthorizeAsync before returning order data.</p><pre class="code-block fix-code"><code id="patch-code-6">var order = await _dbContext.Orders.FirstOrDefaultAsync(o =&gt; o.Id == id);
+if (order == null) return NotFound();
+var auth = await _authzService.AuthorizeAsync(User, order, ResourceOperation.Read);
+if (!auth.Succeeded) return NotFound();</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.GetLegacyOrder, PortalDbContext query filters, Program.cs authentication/authorization middleware, post-load ownership comparison</code>) — Verified. Endpoint retrieves and returns full order entity by ID without tenant or user ownership checks, and requires no authentication.</div></div></div></div></td></tr><tr class="finding-row" data-idx="7" data-sev="high" data-cat="bola" data-stack="backend-spring" data-search="bola-r-0021-1 high bola missing_ownership_check get /api/v1/test/legacy-orders/{id} backend-spring/src/main/kotlin/io/komainu/portal/controller/controllers.kt:172 unauthenticated cross-tenant order retrieval via spring legacy test endpoint cwe-639, cwe-862 api1:2023" onclick="toggleDrawer(7)"><td class="mono font-semibold">BOLA-R-0021-1</td><td><span class="badge sev-high" data-en="HIGH" data-ja="高 (High)">HIGH</span></td><td><span class="status-pill status-confirmed" data-en="confirmed" data-ja="確認済 (Confirmed)">confirmed</span></td><td><div class="cat-cell" data-en="bola" data-ja="オブジェクトレベルの認可不備 (BOLA/IDOR)">bola</div><div class="cwe-sub">CWE-639, CWE-862 API1:2023</div></td><td class="mono"><span class="method-tag">GET</span> /api/v1/test/legacy-orders/{id}</td><td class="mono loc-cell">backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:172</td><td class="title-cell">Unauthenticated cross-tenant order retrieval via Spring legacy test endpoint</td><td class="action-cell"><button type="button" class="btn-inspect" onclick="event.stopPropagation(); toggleDrawer(7)" data-en="Inspect &amp; Fix" data-ja="詳細・対策">Inspect &amp; Fix</button></td></tr><tr id="drawer-7" class="drawer-row" style="display:none;"><td colspan="8"><div class="drawer-panel"><div class="drawer-grid"><div class="drawer-col"><h4 data-en="Attack Scenario &amp; Business Impact" data-ja="攻撃シナリオ・事業影響 (Attack Scenario &amp; Impact)">Attack Scenario &amp; Business Impact</h4><p><strong>Scenario:</strong> An attacker sends GET /api/v1/test/legacy-orders/{id} and retrieves any order in the system across all tenants without authentication.</p><p><strong>Impact:</strong> Confidentiality breach exposing customer order records, tenant IDs, and user IDs across tenant boundaries.</p><p><strong>Data Flow:</strong> <code class="flow-code">id path variable (Controllers.kt:172) → orderRepository.findById(id) (Controllers.kt:179) → ResponseEntity.ok(order) (Controllers.kt:182)</code></p><h4 data-en="Vulnerable Code Evidence" data-ja="脆弱性の根拠コード (Evidence)">Vulnerable Code Evidence</h4><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:172</code> — Target order ID taken directly from request path variable without validation</div><pre class="code-block vuln-code"><code>fun getLegacyOrder(@PathVariable id: String): ResponseEntity&lt;Any&gt;</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:179</code> — Queries database by primary key alone using Spring Data repository without tenant or owner scoping</div><pre class="code-block vuln-code"><code>val order = orderRepository.findById(id).orElse(null)</code></pre></div><div class="ev-item"><div class="ev-meta"><code>backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:182</code> — Returns the fetched order entity without post-load ownership comparison</div><pre class="code-block vuln-code"><code>return ResponseEntity.ok(order)</code></pre></div></div><div class="drawer-col"><div class="remediation-header"><h4 data-en="Recommended Remediation &amp; Patch" data-ja="推奨対策・修正コード例 (Remediation)">Recommended Remediation &amp; Patch</h4><button type="button" class="btn-copy" onclick="copyPatch(7, this)" data-en="Copy Remediation Patch" data-ja="修正コードをコピー">Copy Remediation Patch</button></div><p class="rec-text">Enforce ownership verification via securityManager.requireOwnership(order, ResourceOperation.READ) before returning the order entity.</p><pre class="code-block fix-code"><code id="patch-code-7">val order = orderRepository.findById(id).orElse(null)
+securityManager.requireOwnership(order, ResourceOperation.READ)
+return ResponseEntity.ok(order!!)</code></pre><div class="verifier-box"><strong data-en="Skeptic Verifier Audit Trail:" data-ja="懐疑的AI検証エージェント判定履歴 (Verifier):">Skeptic Verifier Audit Trail:</strong> <span class="mono">confirmed</span> (Checked: <code>LegacyTestController.getLegacyOrder, OrderRepository.findById, Entities.kt Hibernate mappings, WebSecurityConfig filterChain permitAll</code>) — Verified. Endpoint retrieves and returns full order entity by primary key alone without tenant or user ownership checks, reachable without authentication.</div></div></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Rejected Findings Appendix">
+    <h2 class="card-title" data-en="Appendix A — Findings Refuted by Skeptic Verifier (0)" data-ja="付録A — 検証により棄却された検出事項 (0件)">Appendix A — Findings Refuted by Skeptic Verifier (0)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th data-en="Location" data-ja="該当箇所">Location</th>
+            <th data-en="Refutation Reason" data-ja="棄却理由">Refutation Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="3" data-en="None." data-ja="なし。">None.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+  let currentLang = "en";
+  let allExpanded = false;
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    const nodes = document.querySelectorAll("[data-en][data-ja]");
+    nodes.forEach(el => {
+      const val = el.getAttribute("data-" + lang);
+      if (val !== null) {
+        el.textContent = val;
+      }
+    });
+  }
+
+  function toggleLanguage() {
+    const next = currentLang === "en" ? "ja" : "en";
+    applyLanguage(next);
+  }
+
+  function toggleDrawer(idx) {
+    const row = document.getElementById("drawer-" + idx);
+    if (!row) return;
+    row.style.display = row.style.display === "none" ? "table-row" : "none";
+  }
+
+  function expandAllDrawers() {
+    allExpanded = !allExpanded;
+    document.querySelectorAll(".drawer-row").forEach(r => {
+      r.style.display = allExpanded ? "table-row" : "none";
+    });
+  }
+
+  function copyPatch(idx, btn) {
+    const codeEl = document.getElementById("patch-code-" + idx);
+    if (!codeEl) return;
+    const text = codeEl.textContent || "";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+    const orig = btn.textContent;
+    btn.textContent = currentLang === "ja" ? "コピー完了 ✓" : "Copied ✓";
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  }
+
+  function applyFilters() {
+    const q = (document.getElementById("search-input").value || "").toLowerCase().trim();
+    const sev = document.getElementById("sev-filter").value;
+    const cat = document.getElementById("cat-filter").value;
+    const st = document.getElementById("stack-filter").value;
+    const rows = document.querySelectorAll(".finding-row");
+    let shown = 0;
+
+    rows.forEach(row => {
+      const idx = row.getAttribute("data-idx");
+      const rSev = row.getAttribute("data-sev");
+      const rCat = row.getAttribute("data-cat");
+      const rStack = row.getAttribute("data-stack");
+      const rSearch = row.getAttribute("data-search") || "";
+
+      const matchSev = (sev === "all" || rSev === sev);
+      const matchCat = (cat === "all" || rCat === cat);
+      const matchStack = (st === "all" || rStack === st);
+      const matchQ = (!q || rSearch.indexOf(q) !== -1);
+
+      const visible = matchSev && matchCat && matchStack && matchQ;
+      row.style.display = visible ? "" : "none";
+      const drawer = document.getElementById("drawer-" + idx);
+      if (!visible && drawer) {
+        drawer.style.display = "none";
+      }
+      if (visible) shown += 1;
+    });
+
+    const countEl = document.getElementById("visible-count");
+    if (countEl) {
+      countEl.textContent = shown + " / " + rows.length;
+    }
+  }
+
+  if (currentLang === "ja") {
+    applyLanguage("ja");
+  }
+</script>
+</body>
+</html>

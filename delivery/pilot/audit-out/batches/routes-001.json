@@ -1,0 +1,340 @@
+{
+  "batch_id": "routes-001",
+  "files": [
+    "backend-dotnet/Controllers/AuthController.cs",
+    "backend-dotnet/Controllers/DocumentsController.cs",
+    "backend-dotnet/Controllers/LegacyTestController.cs",
+    "backend-dotnet/Controllers/OrdersController.cs"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/dotnet.md"
+  ],
+  "candidates": [
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/auth/personas",
+      "handler": {
+        "file": "backend-dotnet/Controllers/AuthController.cs",
+        "line": 39,
+        "symbol": "AuthController.GetPersonas"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0001",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/documents",
+      "handler": {
+        "file": "backend-dotnet/Controllers/DocumentsController.cs",
+        "line": 24,
+        "symbol": "DocumentsController.ListDocuments"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0002",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/documents/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/DocumentsController.cs",
+        "line": 38,
+        "symbol": "DocumentsController.GetDocument"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 38,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0003",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 28,
+        "symbol": "LegacyTestController.GetLegacyOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 28,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0004",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 47,
+        "symbol": "LegacyTestController.UpdateLegacyOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 47,
+          "is_id_like": true
+        },
+        {
+          "name": "request",
+          "source": "any",
+          "line": 47,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0005",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "DELETE"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 69,
+        "symbol": "LegacyTestController.DeleteLegacyOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 69,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0006",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/test/legacy-search",
+      "handler": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "line": 90,
+        "symbol": "LegacyTestController.SearchLegacy"
+      },
+      "id_params": [
+        {
+          "name": "query",
+          "source": "any",
+          "line": 90,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 98
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0007",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/orders",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 29,
+        "symbol": "OrdersController.ListOrders"
+      },
+      "id_params": [
+        {
+          "name": "sort",
+          "source": "any",
+          "line": 29,
+          "is_id_like": false
+        },
+        {
+          "name": "dir",
+          "source": "any",
+          "line": 29,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0008",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 59,
+        "symbol": "OrdersController.GetOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 59,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 67
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0009",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/api/v1/orders",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 79,
+        "symbol": "OrdersController.CreateOrder"
+      },
+      "id_params": [
+        {
+          "name": "request",
+          "source": "any",
+          "line": 79,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0010",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 101,
+        "symbol": "OrdersController.UpdateOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 101,
+          "is_id_like": true
+        },
+        {
+          "name": "request",
+          "source": "any",
+          "line": 101,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0011",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "dotnet-webapi",
+      "kind": "declared_route",
+      "method": [
+        "DELETE"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "handler": {
+        "file": "backend-dotnet/Controllers/OrdersController.cs",
+        "line": 123,
+        "symbol": "OrdersController.DeleteOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 123,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0012",
+      "needs_audit_hint": true
+    }
+  ]
+}

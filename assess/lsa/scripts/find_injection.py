@@ -72,6 +72,7 @@ CONCAT_OP = {"php": r"\.", "perl": r"\.", "java": r"\+", "cs": r"\+", "js": r"\+
 INTERP = {
     "php": re.compile(r"\$[A-Za-z_]|\{\$"), "perl": re.compile(r"[$@][A-Za-z_{]"), "ruby": re.compile(r"#\{"),
     "js": re.compile(r"\$\{"), "cs": re.compile(r"\{[^}\d][^}]*\}"), "python": re.compile(r"\{[^}]*\}"),
+    "java": re.compile(r"\$[A-Za-z_]|\$\{"),
 }
 FORMAT_CALL = re.compile(r"(?i)\b(String\.format|string\.Format|String\.Format|sprintf|MessageFormat\.format|AppendFormat)\s*\(")
 PY_PERCENT = re.compile(r"[\"']\s*%\s*[\w(]")
@@ -151,6 +152,8 @@ def has_interpolation(lit_text: str, lang: str) -> bool:
         return lit_text.startswith("$") and bool(INTERP["cs"].search(lit_text))
     if lang == "python":
         return lit_text[:2].lower().replace("r", "").startswith("f") and bool(INTERP["python"].search(lit_text))
+    if lang == "java":
+        return lit_text.startswith('"') and bool(INTERP["java"].search(lit_text))
     return False
 
 

@@ -1,0 +1,75 @@
+{
+  "scope": {
+    "include": [],
+    "exclude": [
+      "vendor/",
+      "node_modules/",
+      "bower_components/",
+      "packages/",
+      "bin/",
+      "obj/",
+      "target/",
+      "build/",
+      "dist/",
+      ".git/",
+      ".svn/",
+      ".hg/",
+      "test/",
+      "tests/",
+      "spec/",
+      "docs/",
+      "*.min.js",
+      "*jquery*.js"
+    ],
+    "web_roots": [],
+    "file_endpoints": "all",
+    "max_file_kb": 1024
+  },
+  "hints": {
+    "owner_columns": [
+      "user_id",
+      "owner_id",
+      "created_by",
+      "member_id",
+      "customer_id",
+      "company_id",
+      "tenant_id",
+      "shop_id",
+      "branch_id"
+    ],
+    "id_param_patterns": [
+      "^id$",
+      "_id$",
+      "Id$",
+      "ID$",
+      "^no$",
+      "_no$",
+      "^code$",
+      "^key$",
+      "^uid$",
+      "^oid$",
+      "^file(name)?$",
+      "^path$",
+      "^seq$"
+    ],
+    "known_auth_helpers": [],
+    "known_ownership_helpers": [],
+    "file_encodings": [
+      "utf-8",
+      "cp932",
+      "euc_jp",
+      "latin-1"
+    ]
+  },
+  "batch": {
+    "max_endpoints": 15,
+    "max_injection_candidates": 25
+  },
+  "parallel": {
+    "max_agents": 4
+  },
+  "report": {
+    "language": "en",
+    "min_severity": "low"
+  }
+}

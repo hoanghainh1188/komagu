@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "pilotId": "PILOT-D6-FALLBACK-2026Q4",
+  "system": {
+    "name": "Deliverable D6 Member Portal Reference System",
+    "primaryStack": "dotnet-webapi, java-spring-mvc",
+    "targetDirectory": "examples/member-portal",
+    "outDirectory": "delivery/pilot/audit-out",
+    "estimatedEndpoints": 24
+  },
+  "governance": {
+    "writtenConsentApproved": false,
+    "consentDocumentRef": "docs/pilot-client-ai-approval-consent.md",
+    "approvalDate": "2026-10-18",
+    "humanSignOffAuthority": "Harry Nguyen (Principal Architect / Person B)",
+    "fallbackTriggerDeadline": "End of Week 6",
+    "fallbackActive": true,
+    "fallbackSystem": {
+      "name": "Deliverable D6 Member Portal",
+      "endpointCount": 24,
+      "referenceNote": "Internal System Reference Metrics"
+    }
+  },
+  "computeAndHosting": {
+    "mode": "agent-orchestrated",
+    "model": "gemini-2.5-pro",
+    "localInferenceUrl": "http://127.0.0.1:8000/v1",
+    "enterpriseZeroDataRetention": true,
+    "noModelTraining": true
+  },
+  "securityControls": {
+    "readOnlyTargetEnforced": true,
+    "secretRedactionEnabled": true,
+    "noProductionDbAccess": true,
+    "noPiiCollection": true,
+    "secretPatterns": [
+      "(?i)(api[_-]?key|secret|password|token|bearer|private[_-]?key)\\s*[:=]\\s*['\"][^'\"]+['\"]",
+      "(?i)(mongodb|postgres|mysql|mssql)://[^\\s'\"]+"
+    ]
+  },
+  "effortTracking": {
+    "framework": "ADR-0005 Dual-Baseline",
+    "industryBaselinePersonDays": 22.0,
+    "modeledD6ScratchPersonDays": 18.5,
+    "targetSavingsPercentage": 50.0,
+    "timesheetPath": "delivery/pilot/timesheet-pilot.csv"
+  }
+}

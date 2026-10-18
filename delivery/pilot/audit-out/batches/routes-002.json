@@ -1,0 +1,464 @@
+{
+  "batch_id": "routes-002",
+  "files": [
+    "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/java.md"
+  ],
+  "candidates": [
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/auth/personas",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 59,
+        "symbol": "getPersonas"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0013",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/orders",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 71,
+        "symbol": "listOrders"
+      },
+      "id_params": [
+        {
+          "name": "sort",
+          "source": "query",
+          "line": 73,
+          "is_id_like": false
+        },
+        {
+          "name": "dir",
+          "source": "query",
+          "line": 74,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0014",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 94,
+        "symbol": "getOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 95,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 97
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 96
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0015",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/api/v1/orders",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 102,
+        "symbol": "createOrder"
+      },
+      "id_params": [],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 29
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0016",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 119,
+        "symbol": "updateOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 121,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 15
+        },
+        {
+          "hint": "Ownership",
+          "line": 125
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 124
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0017",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "DELETE"
+      ],
+      "path": "/api/v1/orders/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 133,
+        "symbol": "deleteOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 134,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 8
+        },
+        {
+          "hint": "Ownership",
+          "line": 136
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 135
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0018",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/documents",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 149,
+        "symbol": "listDocuments"
+      },
+      "id_params": [],
+      "guard_hints": [
+        {
+          "hint": "Ownership",
+          "line": 22
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0019",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/documents/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 156,
+        "symbol": "getDocument"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 157,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "Ownership",
+          "line": 15
+        },
+        {
+          "hint": "Ownership",
+          "line": 159
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 158
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0020",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 172,
+        "symbol": "getLegacyOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 173,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "Ownership",
+          "line": 10
+        },
+        {
+          "hint": "ownership",
+          "line": 178
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 179
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0021",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 185,
+        "symbol": "updateLegacyOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 187,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "Ownership",
+          "line": 16
+        },
+        {
+          "hint": "ownership",
+          "line": 194
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 195
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0022",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "DELETE"
+      ],
+      "path": "/api/v1/test/legacy-orders/{id}",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 205,
+        "symbol": "deleteLegacyOrder"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 206,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 12
+        },
+        {
+          "hint": "ownership",
+          "line": 211
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 212
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0023",
+      "needs_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/api/v1/test/legacy-search",
+      "handler": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "line": 219,
+        "symbol": "searchLegacy"
+      },
+      "id_params": [
+        {
+          "name": "query",
+          "source": "query",
+          "line": 220,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ownership",
+          "line": 15
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 226
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0024",
+      "needs_audit_hint": true
+    }
+  ]
+}

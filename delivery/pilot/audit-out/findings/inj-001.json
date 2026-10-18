@@ -1,0 +1,119 @@
+{
+  "batch_id": "inj-001",
+  "candidate_verdicts": [
+    {"candidate_id": "I-0001", "verdict": "vulnerable", "finding_ids": ["INJ-I-0001-1"]},
+    {"candidate_id": "I-0002", "verdict": "vulnerable", "finding_ids": ["INJ-I-0002-1"]}
+  ],
+  "findings": [
+    {
+      "finding_id": "INJ-I-0001-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "Raw SQL query uses string interpolation with unvalidated search query parameter",
+      "candidate_id": "I-0001",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "GET",
+        "path": "/api/v1/test/legacy-search"
+      },
+      "location": {
+        "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+        "start_line": 98,
+        "end_line": 99
+      },
+      "evidence": [
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 90,
+          "code": "public async Task<ActionResult<List<Order>>> SearchLegacy([FromQuery] string query)",
+          "why": "source: unvalidated query parameter"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 98,
+          "code": "var rawSql = $\"SELECT * FROM Orders WHERE Description LIKE '%{query}%'\";",
+          "why": "string interpolation directly constructs SQL statement"
+        },
+        {
+          "file": "backend-dotnet/Controllers/LegacyTestController.cs",
+          "line": 99,
+          "code": "var results = await _dbContext.Orders.FromSqlRaw(rawSql).ToListAsync();",
+          "why": "sink: raw SQL execution without parameter binding"
+        }
+      ],
+      "data_flow": [
+        "[FromQuery] string query (backend-dotnet/Controllers/LegacyTestController.cs:90)",
+        "rawSql (backend-dotnet/Controllers/LegacyTestController.cs:98)",
+        "_dbContext.Orders.FromSqlRaw(rawSql) (backend-dotnet/Controllers/LegacyTestController.cs:99)"
+      ],
+      "attack_scenario": "An unauthenticated caller provides a crafted query parameter to escape the LIKE string literal and inject arbitrary SQL clauses or statements.",
+      "impact": "Arbitrary SQL execution against the underlying database, allowing an attacker to read, modify, or delete orders across all tenants.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with FromSqlInterpolated or bind parameters through FormattableString rather than passing interpolated strings to FromSqlRaw.",
+      "fix_example": "var results = await _dbContext.Orders.FromSqlInterpolated($\"SELECT * FROM Orders WHERE Description LIKE {'%' + query + '%'}\").ToListAsync();",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0002-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "Native SQL query interpolates unvalidated search query parameter",
+      "candidate_id": "I-0002",
+      "route_id": "R-0024",
+      "endpoint": {
+        "method": "GET",
+        "path": "/api/v1/test/legacy-search"
+      },
+      "location": {
+        "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+        "start_line": 226,
+        "end_line": 227
+      },
+      "evidence": [
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 220,
+          "code": "fun searchLegacy(@RequestParam query: String): ResponseEntity<Any>",
+          "why": "source: unvalidated request parameter"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 226,
+          "code": "val sql = \"SELECT * FROM portal_orders WHERE description LIKE '%$query%'\"",
+          "why": "string template interpolation directly into SQL string"
+        },
+        {
+          "file": "backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt",
+          "line": 227,
+          "code": "val queryResult = entityManager.createNativeQuery(sql, OrderEntity::class.java).resultList",
+          "why": "sink: native query execution without parameter binding"
+        }
+      ],
+      "data_flow": [
+        "@RequestParam query (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:220)",
+        "sql (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:226)",
+        "entityManager.createNativeQuery(sql, ...) (backend-spring/src/main/kotlin/io/komainu/portal/controller/Controllers.kt:227)"
+      ],
+      "attack_scenario": "An unauthenticated caller provides a crafted query parameter containing SQL syntax to break out of the LIKE pattern and manipulate the query structure.",
+      "impact": "Arbitrary SQL execution in the database, allowing an attacker to read or manipulate records across all tenants.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with named or positional parameters via Query.setParameter instead of string interpolation.",
+      "fix_example": "val queryResult = entityManager.createNativeQuery(\"SELECT * FROM portal_orders WHERE description LIKE :query\", OrderEntity::class.java).setParameter(\"query\", \"%$query%\").resultList",
+      "status": "unverified"
+    }
+  ]
+}

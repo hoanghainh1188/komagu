@@ -1,0 +1,127 @@
+{
+  "batch_id": "verify-001",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0005-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.UpdateLegacyOrder",
+        "PortalDbContext query filters",
+        "Program.cs authentication/authorization middleware",
+        "post-load ownership comparison"
+      ],
+      "control_found": null,
+      "notes": "Verified. Endpoint allows unauthenticated cross-tenant modification of order description and status without ownership or tenant verification."
+    },
+    {
+      "finding_id": "BOLA-R-0006-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.DeleteLegacyOrder",
+        "PortalDbContext query filters",
+        "Program.cs authentication/authorization middleware",
+        "post-load ownership comparison"
+      ],
+      "control_found": null,
+      "notes": "Verified. Endpoint permits unauthenticated cross-tenant order deletion by ID alone with no authorization checks."
+    },
+    {
+      "finding_id": "INJ-I-0001-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.SearchLegacy",
+        "FromSqlRaw parameter binding",
+        "query parameter sanitization/validation",
+        "Program.cs pipeline"
+      ],
+      "control_found": null,
+      "notes": "Verified. Unvalidated query parameter is interpolated directly into raw SQL string executed via FromSqlRaw without parameter binding, reachable without authentication."
+    },
+    {
+      "finding_id": "BOLA-R-0004-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.GetLegacyOrder",
+        "PortalDbContext query filters",
+        "Program.cs authentication/authorization middleware",
+        "post-load ownership comparison"
+      ],
+      "control_found": null,
+      "notes": "Verified. Endpoint retrieves and returns full order entity by ID without tenant or user ownership checks, and requires no authentication."
+    },
+    {
+      "finding_id": "BOLA-R-0022-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.updateLegacyOrder",
+        "OrderRepository.findById",
+        "Entities.kt Hibernate mappings",
+        "WebSecurityConfig filterChain permitAll"
+      ],
+      "control_found": null,
+      "notes": "Verified. Endpoint allows unauthenticated caller to modify order description and status across tenant boundaries without ownership checks."
+    },
+    {
+      "finding_id": "BOLA-R-0023-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.deleteLegacyOrder",
+        "OrderRepository.findById",
+        "Entities.kt Hibernate mappings",
+        "WebSecurityConfig filterChain permitAll"
+      ],
+      "control_found": null,
+      "notes": "Verified. Endpoint allows unauthenticated deletion of orders across tenants by primary key alone with no ownership verification."
+    },
+    {
+      "finding_id": "INJ-I-0002-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.searchLegacy",
+        "entityManager.createNativeQuery parameter binding",
+        "query parameter validation",
+        "WebSecurityConfig filterChain permitAll"
+      ],
+      "control_found": null,
+      "notes": "Verified. User-supplied query parameter is interpolated directly into a native SQL query executed via entityManager.createNativeQuery without parameterization or authentication."
+    },
+    {
+      "finding_id": "BOLA-R-0021-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "LegacyTestController.getLegacyOrder",
+        "OrderRepository.findById",
+        "Entities.kt Hibernate mappings",
+        "WebSecurityConfig filterChain permitAll"
+      ],
+      "control_found": null,
+      "notes": "Verified. Endpoint retrieves and returns full order entity by primary key alone without tenant or user ownership checks, reachable without authentication."
+    }
+  ],
+  "new_issues": [],
+  "out_of_scope_notes": []
+}
