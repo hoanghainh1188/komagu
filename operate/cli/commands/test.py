@@ -40,6 +40,18 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         "test",
         help="Execute continuous cross-user authorization tests against an API",
         description="Enforces Komainu BOLA/IDOR security invariants (attacker access MUST return 404 Not Found).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Test auto-generated CRUD BOLA cases against local API
+  komainu test --url http://localhost:5001 --auto-crud /api/members
+
+  # Run custom test suite with strict 404 enforcement
+  komainu test --url http://staging.internal:8000 --suite ./test_suite.json --strict
+
+  # Run tests with custom attacker token and save report
+  komainu test --url http://localhost:5001 --token "jwt-persona-b" --output ./results.json
+""",
     )
     parser.add_argument(
         "--url",

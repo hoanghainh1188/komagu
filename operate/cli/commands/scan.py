@@ -35,6 +35,18 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         "scan",
         help="Run security audit on target legacy codebase (deterministic pre-scan & reports)",
         description="Executes stack detection, endpoint inventory, injection analysis, and report generation.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Scan current directory and generate bilingual HTML & Markdown reports
+  komainu scan .
+
+  # Scan a legacy codebase with Japanese reports and custom output folder
+  komainu scan /path/to/legacy-php --out ./audit-results --lang ja --format html
+
+  # Scan and generate all artifact formats (SARIF, Markdown, interactive HTML dashboard)
+  komainu scan /path/to/app --format all --project "Core Banking Migration"
+""",
     )
     parser.add_argument("target", help="Path to the target source code repository to audit")
     parser.add_argument(

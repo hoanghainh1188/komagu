@@ -39,6 +39,19 @@ class TestKomainuCLI(unittest.TestCase):
         self.assertIn("test", res_h.stdout)
         self.assertIn("demo", res_h.stdout)
 
+    def test_help_subcommand_and_topic_routing(self) -> None:
+        """komainu help and komainu help <topic> must output relevant help and examples."""
+        res_help = subprocess.run([sys.executable, str(BIN_KOMAINU), "help"], capture_output=True, text=True)
+        self.assertEqual(res_help.returncode, 0)
+        self.assertIn("Quick Start Workflow:", res_help.stdout)
+        self.assertIn("komainu help <command>", res_help.stdout)
+
+        for topic in ("scan", "protect", "test", "demo"):
+            res_topic = subprocess.run([sys.executable, str(BIN_KOMAINU), "help", topic], capture_output=True, text=True)
+            self.assertEqual(res_topic.returncode, 0)
+            self.assertIn(f"usage: komainu {topic}", res_topic.stdout)
+            self.assertIn("Examples:", res_topic.stdout)
+
     def test_python_module_entrypoint(self) -> None:
         """python3 -m operate.cli.main must work identically."""
         res = subprocess.run([sys.executable, "-m", "operate.cli.main", "--version"], capture_output=True, text=True)
