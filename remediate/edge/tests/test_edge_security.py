@@ -144,15 +144,51 @@ class TestLiveEdgeSecurity(unittest.TestCase):
         except urllib.error.HTTPError as e:
             self.assertEqual(e.code, 403)
 
-    def test_live_xss_payload_blocked_with_403(self):
-        xss_url = f"{self.BASE_URL}/api/v1/search?q=%3Cscript%3Ealert(1)%3C/script%3E"
-        req = urllib.request.Request(xss_url)
+    def test_live_sqli_pilot_finding_inj_0001_blocked_with_403(self):
+        """Tests that LSA finding INJ-I-0001-1 (' OR '1'='1 string interpolation) is blocked at edge."""
+        sqli_url = f"{self.BASE_URL}/api/v1/test/legacy-search?query=%27+OR+%271%27%3D%271"
+        req = urllib.request.Request(sqli_url)
         try:
             with urllib.request.urlopen(req, timeout=3) as resp:
                 self.fail(f"Expected 403 Forbidden but received {resp.status}")
         except urllib.error.HTTPError as e:
             self.assertEqual(e.code, 403)
 
+    def test_live_sqli_pilot_finding_inj_0002_blocked_with_403(self):
+        """Tests that LSA finding INJ-I-0002-1 (UNION SELECT string interpolation) is blocked at edge."""
+        sqli_url = f"{self.BASE_URL}/api/v1/test/legacy-search?query=%27+UNION+SELECT+1%2C2%2C3--"
+        req = urllib.request.Request(sqli_url)
+        try:
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                self.fail(f"Expected 403 Forbidden but received {resp.status}")
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 403)
+
+    def test_live_path_traversal_blocked_with_403(self):
+        """Tests that directory traversal attempts in query params are blocked at edge."""
+        traversal_url = f"{self.BASE_URL}/api/v1/documents?file=../../etc/passwd"
+        req = urllib.request.Request(traversal_url)
+        try:
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                self.fail(f"Expected 403 Forbidden but received {resp.status}")
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 403)
+
+    def test_live_rate_limiting_burst_returns_429(self):
+        """Tests that burst rate limiting (>10 req/s) triggers HTTP 429 Too Many Requests."""
+        time.sleep(1.2)  # Wait for prior 1-second burst bucket to clear
+        status_codes = []
+        for _ in range(15):
+            try:
+                req = urllib.request.Request(f"{self.BASE_URL}/api/v1/health")
+                with urllib.request.urlopen(req, timeout=1) as resp:
+                    status_codes.append(resp.status)
+            except urllib.error.HTTPError as e:
+                status_codes.append(e.code)
+        time.sleep(1.2)  # Cool down so subsequent tests don't hit 429
+        self.assertIn(429, status_codes, "Expected at least one HTTP 429 response during burst")
+
 
 if __name__ == "__main__":
     unittest.main()
+
