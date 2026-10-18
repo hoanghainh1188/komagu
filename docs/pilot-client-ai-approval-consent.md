@@ -169,9 +169,9 @@ Nhằm đảm bảo tiến độ bàn giao của [Delivery Plan §Pilot](boilerp
 - Nếu đến hết ngày làm việc cuối cùng của Tuần 6, khách hàng chưa cung cấp văn bản phê duyệt có chữ ký/dấu mộc (Written Approval), Trưởng dự án (Harry) sẽ ra quyết định chuyển đổi ngay sang Hệ thống Thay thế mà không chờ đợi thêm.
 
 ### 5.2 Đặc tả hệ thống thay thế (Fallback System Specification)
-1. **Ứng dụng Member Portal (Deliverable D6)** kết hợp cùng **Công cụ Quản lý Nội bộ (Internal Web API)**:
+1. **Ứng dụng Member Portal (Deliverable D6)**:
    - Kiến trúc: ASP.NET Core (.NET 8) và Spring Boot 3 (Kotlin) có backend cơ sở dữ liệu PostgreSQL.
-   - Quy mô: Đầy đủ các phân hệ quản lý người dùng, hồ sơ, giao dịch với tổng cộng **42 endpoints**.
+   - Quy mô: Đầy đủ các phân hệ quản lý người dùng, hồ sơ, giao dịch với tổng cộng **24 endpoints** (12 endpoints trên ASP.NET Core và 12 endpoints trên Spring Boot Kotlin).
    - Chứa đầy đủ các kịch bản BOLA/IDOR đa người dùng và lỗi truy vấn SQL truyền thống của các hệ thống legacy.
 2. **Quy định công bố số liệu (Reporting Disclosure):**
    - Mọi số liệu đo lường về thời gian rà soát, tỷ lệ phát hiện (recall/precision) và person-days tiết kiệm được sẽ ghi rõ trong báo cáo tuần 12 là **"Số liệu kiểm chuẩn nội bộ" (Internal System Reference Metrics)** thay vì số liệu môi trường khách hàng bên ngoài.

@@ -7,7 +7,7 @@ tags:
   - OpenSource
   - AI
 private: false
-updated_at: '2026-10-18T13:33:12+09:00'
+updated_at: '2026-10-18T23:04:05+09:00'
 id: da60f64f937b78440af0
 organization_url_name: null
 slide: false
@@ -41,37 +41,42 @@ npx --yes komainu-guard --version
 # Output: komainu-guard 0.2.1
 ```
 
-### ステップ 1：静的プリスキャン（オフライン・ミリ秒で完了）
-リポジトリの言語スタック検出、エンドポイントの洗い出し、SQLi・BOLA の潜在候補箇所を AST で高速スキャンします。
+### 基本的な使い方（ワンコマンドでスキャン＆レポート生成）
+リポジトリの言語スタック検出、エンドポイントの洗い出し、SQLi・BOLA の潜在候補箇所を AST で高速スキャンし、SARIF および HTML ダッシュボードを即座に生成します。
 
 ```bash
-npx --yes komainu-guard pre-scan ./path/to/legacy-repo
+# 対象リポジトリをスキャンして日本語 HTML & Markdown レポートを出力
+npx --yes komainu-guard scan ./path/to/legacy-repo --out ./audit-results --lang ja --format all
 ```
 
 **実行結果の例：**
 ```text
-Loaded 10 target stacks.
-Targets found: 1
-Target: ./path/to/legacy-repo
-  Stacks: php (confirmed)
-  Routes for BOLA: 6 routes
-  Injection candidates: 8 locations
-  Pre-scan completed in 0.12s.
+▶ Scanning target repository ./path/to/legacy-repo...
+  ℹ Audit output directory: ./audit-results
+▶ Executing Phase 1: Deterministic Pre-scan...
+  ✔ Pre-scan completed (stack profile, route candidates, injection candidates)
+▶ Generating SARIF v2.1.0 report...
+  ✔ Generated findings.sarif
+▶ Rendering bilingual Markdown & interactive HTML dashboard...
+  ✔ Generated security reports
+
+┌─ Komainu Security Audit Summary ─────────────────────────────────────────────┐
+│  Target Directory: ./path/to/legacy-repo                                     │
+│  Detected Stacks: PHP                                                        │
+│  Endpoints Inventoried: 6                                                    │
+│  Injection Candidates: 8                                                     │
+│  HTML Dashboard: ./audit-results/report.html                                 │
+│  Markdown Report: ./audit-results/report.ja.md                               │
+│  SARIF 2.1.0: ./audit-results/findings.sarif                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### ステップ 2：AIによる深層監査（Audit）
-プリスキャンで絞り込んだエンドポイントに対して、認可ロジックの欠落や文字列結合による SQL インジェクションを AI エージェントが精密に監査します。
+生成された `./audit-results/report.html` をブラウザで開くだけで、リポジトリ内の認可境界やクエリ候補をインタラクティブに確認できます。
 
-```bash
-npx --yes komainu-guard audit ./path/to/legacy-repo --out ./audit-result
-```
-
-### ステップ 3：インタラクティブな HTML レポートの閲覧
-診断結果は SARIF 形式だけでなく、モダンなスタンドアロン HTML レポートとしても出力されます。ブラウザでそのまま開いてチームに共有可能です。
-
-```bash
-npx --yes komainu-guard report ./audit-result
-```
+:::note info
+**CLI とマルチエージェント AI の連携について：**  
+`komainu-guard scan` は完全ローカルで動作し、高速な決定論的プリスキャン（Phase 1）、機密情報の自動マスキング、およびレポート生成を担当します。後述する深層AI監査（Auditor & Skeptic Verifier）は、このプリスキャン成果物（`routes.candidates.json` 等）を入力として段階的に実行されます。
+:::
 
 ---
 

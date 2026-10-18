@@ -30,7 +30,7 @@ We formally decide to adopt a **Dual-Baseline Measurement Framework (Khung tham 
 |  [Tier 1: Industry Benchmark]   -> IPA Japan Software Metrics & COCOMO II Maintenance Model     |
 |                                    (Standard baseline for 30–150 endpoint enterprise systems)   |
 |                                                                                                 |
-|  [Tier 2: Empirical Baseline]   -> Direct benchmark measured on Deliverable D6 (42 endpoints)   |
+|  [Tier 2: Reference Baseline]   -> Benchmark modeled on Deliverable D6 (24 endpoints)           |
 |                                    (Scratch Implementation vs. Komainu Boilerplate D1–D5)       |
 +-------------------------------------------------------------------------------------------------+
                                                 |
@@ -57,9 +57,9 @@ For enterprise client proposals and board-level reporting, we benchmark against 
 
 ---
 
-### 2. Tier 2: Empirical Baseline Measured on Deliverable D6 (Member Portal)
+### 2. Tier 2: Reference Baseline Modeled on Deliverable D6 (Member Portal)
 
-To provide an incontrovertible, reproducible ground truth, we measured the engineering effort required to implement the identical secure API scope on **Deliverable D6** (42 endpoints, .NET 8 & Kotlin/Spring Boot 3, PostgreSQL):
+To provide an initial engineering baseline hypothesis prior to live client execution, we modeled the effort required to implement the identical secure API scope on **Deliverable D6** (24 endpoints: 12 in ASP.NET Core .NET 8 and 12 in Kotlin Spring Boot 3, PostgreSQL):
 
 | Phase / Engineering Workstream | Manual Scratch Implementation (Person-Days) | Komainu Accelerated Implementation (Person-Days) | Komainu Components Leveraged |
 |---|:---:|:---:|---|
@@ -71,9 +71,10 @@ To provide an incontrovertible, reproducible ground truth, we measured the engin
 | **6. Automated Cross-User CI Tests (D5)** | 2.0 | **1.5** | Schemathesis CLI runner + planted BOLA verification pipeline |
 | **TOTAL PERSON-DAYS** | **18.5** | **4.5** | **14.0 Person-Days Saved** |
 
-$$\text{Empirical Effort Reduction Rate} = \frac{18.5 - 4.5}{18.5} \times 100\% = \mathbf{75.68\% \approx 75.7\%}$$
+$$\text{Modeled Effort Reduction Rate} = \frac{18.5 - 4.5}{18.5} \times 100\% = \mathbf{75.68\% \approx 75.7\%}$$
 
-- **Result:** Komainu achieves a **$4.1\times$ speedup** in delivering secure authorization and edge protection compared to manual implementation from scratch.
+> [!NOTE]
+> The figures above represent an engineering calibration and planning hypothesis based on D6 development sizing. The actual effort reduction rate and speedup will be empirically measured and verified in Weeks 9–12 during pilot execution using the tracking protocol below.
 
 ---
 

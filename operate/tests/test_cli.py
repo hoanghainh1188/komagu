@@ -109,6 +109,27 @@ class TestKomainuCLI(unittest.TestCase):
             self.assertTrue((out_dir / "report.html").is_file())
             self.assertIn("Komainu Security Audit Summary", res.stdout)
 
+    def test_scan_subcommand_default_out_preserves_target_read_only(self) -> None:
+        """komainu scan without --out must output to ./komainu-out in CWD, keeping target untouched."""
+        with tempfile.TemporaryDirectory() as work_dir:
+            res = subprocess.run(
+                [
+                    sys.executable,
+                    str(BIN_KOMAINU),
+                    "scan",
+                    str(FIXTURE_PATH),
+                ],
+                cwd=work_dir,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res.returncode, 0, f"Scan command failed: {res.stderr}\n{res.stdout}")
+            default_out = Path(work_dir) / "komainu-out"
+            self.assertTrue(default_out.is_dir(), "default komainu-out directory was not created in CWD")
+            self.assertTrue((default_out / "stack-profile.json").is_file())
+            # Ensure target directory was untouched
+            self.assertFalse((FIXTURE_PATH / ".komainu").exists(), "target directory was polluted with .komainu")
+
     def test_protect_subcommand_dry_run(self) -> None:
         """komainu protect --dry-run must validate assets without error."""
         res = subprocess.run(

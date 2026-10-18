@@ -31,7 +31,7 @@ RULES = [
     ("java-jsp", "java", "java.md", [("ext", {".jsp", ".jspf"})]),
     ("java-struts1", "java", "java.md", [("name", r"struts-config.*\.xml$"), ("text", r"extends\s+(Dispatch|LookupDispatch|MappingDispatch)?Action\b.*\{|org\.apache\.struts\.action")]),
     ("java-struts2", "java", "java.md", [("name", r"(^|/)struts\.xml$"), ("text", r"com\.opensymphony\.xwork2|org\.apache\.struts2")]),
-    ("java-spring-mvc", "java", "java.md", [("text", r"@(Controller|RestController)\b|@RequestMapping|org\.springframework\.web\.servlet")]),
+    ("java-spring-mvc", "java", "java.md", [("text", r"@(Controller|RestController)\b|@RequestMapping|org\.springframework\.web\.servlet|org\.springframework\.web\.bind\.annotation")]),
     ("java-jaxrs", "java", "java.md", [("text", r"javax\.ws\.rs\.|jakarta\.ws\.rs\.")]),
     ("java-mybatis", "java", "java.md", [("text", r"<mapper\s+namespace=|org\.apache\.ibatis")]),
     ("java-ibatis", "java", "java.md", [("text", r"<sqlMap\b|com\.ibatis\.")]),
@@ -39,8 +39,8 @@ RULES = [
     ("dotnet-webforms", "csharp/vbnet", "dotnet.md", [("ext", {".aspx", ".ascx"})]),
     ("dotnet-handlers", "csharp/vbnet", "dotnet.md", [("ext", {".ashx"})]),
     ("dotnet-asmx-wcf", "csharp/vbnet", "dotnet.md", [("ext", {".asmx", ".svc"})]),
-    ("dotnet-mvc", "csharp/vbnet", "dotnet.md", [("text", r":\s*Controller\b|Inherits\s+Controller\b|System\.Web\.Mvc")]),
-    ("dotnet-webapi", "csharp/vbnet", "dotnet.md", [("text", r":\s*ApiController\b|Inherits\s+ApiController\b|System\.Web\.Http")]),
+    ("dotnet-mvc", "csharp/vbnet", "dotnet.md", [("text", r":\s*(ControllerBase|Controller)\b|Inherits\s+Controller\b|System\.Web\.Mvc|Microsoft\.AspNetCore\.Mvc")]),
+    ("dotnet-webapi", "csharp/vbnet", "dotnet.md", [("text", r":\s*(ApiController|ControllerBase)\b|Inherits\s+ApiController\b|System\.Web\.Http|Microsoft\.AspNetCore\.Mvc")]),
     ("classic-asp", "vbscript", "classic-asp.md", [("ext", {".asp", ".asa"})]),
     ("perl-cgi", "perl", "perl-cgi.md", [("ext", {".cgi"}), ("text", r"use\s+CGI\b|CGI->new|use\s+DBI\b")]),
     ("coldfusion", "cfml", "coldfusion.md", [("ext", {".cfm", ".cfc", ".cfml"})]),
@@ -75,7 +75,7 @@ DB_HINTS = [
 ]
 
 TEXT_SAMPLE_EXTS = {".sql", ".php", ".inc", ".java", ".jsp", ".xml", ".cs", ".vb", ".aspx", ".asax", ".config", ".asp",
-                    ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".py", ".rb"}
+                    ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".py", ".rb", ".kt", ".kts"}
 
 
 def detect(target: Path, config: dict) -> dict:

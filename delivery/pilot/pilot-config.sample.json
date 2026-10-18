@@ -16,8 +16,8 @@
     "fallbackTriggerDeadline": "End of Week 6",
     "fallbackActive": false,
     "fallbackSystem": {
-      "name": "Deliverable D6 Member Portal + Internal Web API",
-      "endpointCount": 42,
+      "name": "Deliverable D6 Member Portal",
+      "endpointCount": 24,
       "referenceNote": "Internal System Reference Metrics"
     }
   },
