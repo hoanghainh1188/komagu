@@ -1,0 +1,36 @@
+# Git
+.git/
+.github/
+.githooks/
+
+# Python cache & build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Temporary audit outputs
+lsa-out/
+.lsa-out/
+lsa-eval*/
+tmp/
+
+# .NET / JVM / Node artifacts
+bin/obj/
+**/obj/
+.gradle/
+build/
+node_modules/
+dist/
+
+# Databases
+*.db
+*.db-journal
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
