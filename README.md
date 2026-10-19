@@ -1,13 +1,104 @@
-# Komainu (狛犬)
+# komainu-guard (狛犬)
 
-> **Security-First Modernization Platform for Legacy Enterprise Systems**  
-> *Assess what is vulnerable, protect immediately at the edge, remediate with reusable modules, and operate with continuous verification.*
+> **Security-First CLI & Framework for Enterprise Legacy Modernization**  
+> *Audit legacy vulnerabilities (BOLA/IDOR & SQLi), generate SBOMs, verify cross-user authorization in CI/CD, and deploy drop-in authorization guards.*
 
-[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v0.2.1%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
-[![npm](https://img.shields.io/badge/npm-komainu--guard%20v0.2.1-cb3837.svg)](https://www.npmjs.com/package/komainu-guard)
-[![Boilerplate 1](https://img.shields.io/badge/Boilerplate%201-D1--D6%20Complete-blue.svg)](examples/member-portal/)
+[![npm version](https://img.shields.io/npm/v/komainu-guard.svg)](https://www.npmjs.com/package/komainu-guard)
+[![License](https://img.shields.io/npm/l/komainu-guard.svg)](https://github.com/hoanghainh1188/komainu/blob/main/LICENSE)
+[![CI Tests](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions)
+[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.0.0%20(11%20Stacks)-brightgreen.svg)](assess/lsa/)
 [![SARIF v2.1.0](https://img.shields.io/badge/Standards-OASIS%20SARIF%20v2.1.0-orange.svg)](operate/lsa_sarif/)
 [![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%7C%20HTML-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
+
+---
+
+## ⚡ Quick Start (Zero-Install CLI with `npx`)
+
+Run immediately without installation (requires Node.js 16+ and Python 3.8+):
+
+```bash
+# 1. Audit a legacy codebase (Classic ASP, ColdFusion, PHP, Java, .NET, Node, etc.)
+npx komainu-guard scan ./path-to-repo --lang ja --format html
+
+# 2. Generate CycloneDX 1.5 & SPDX 2.3 SBOM
+npx komainu-guard devsecops sbom ./path-to-repo --format cyclonedx -o ./sbom.json
+
+# 3. Merge and deduplicate OASIS SARIF v2.1.0 reports
+npx komainu-guard devsecops merge-sarif ./reports/*.sarif -o ./merged.sarif
+
+# 4. Verify BOLA / IDOR defense against an active API in CI
+npx komainu-guard test --url http://localhost:8000 --auto-crud-path /api/v1/orders/{id}
+```
+
+Or install globally:
+
+```bash
+npm install -g komainu-guard
+komainu --help
+```
+
+---
+
+## 📦 Programmatic Usage in Node.js & NestJS
+
+`komainu-guard` is both a CLI and a TypeScript/JavaScript library providing drop-in BOLA defenses:
+
+```typescript
+import { Controller, Get, Param, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  RequireOwnership,
+  OwnershipGuard,
+  OwnershipInterceptor,
+  ResourceOperation,
+} from 'komainu-guard';
+
+@Controller('api/v1/orders')
+@UseGuards(OwnershipGuard)
+@UseInterceptors(OwnershipInterceptor)
+export class OrderController {
+  @Get(':id')
+  @RequireOwnership(ResourceOperation.READ, {
+    idParamName: 'id',
+    resourceLoader: async (id, req) => orderService.findById(id),
+  })
+  async getOrder(@Param('id') id: string) {
+    return this.orderService.findById(id);
+  }
+}
+```
+
+In Express.js:
+
+```javascript
+const { komainuOwnershipMiddleware, ResourceOperation } = require('komainu-guard');
+
+app.get('/api/v1/orders/:id',
+  komainuOwnershipMiddleware({
+    operation: ResourceOperation.READ,
+    idParamName: 'id',
+    resourceLoader: async (id, req) => db.orders.findById(id),
+  }),
+  (req, res) => res.json(req.komainuResource)
+);
+```
+
+---
+
+## 🛠️ CLI Command Reference
+
+| Command | Description | Example |
+| :--- | :--- | :--- |
+| `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQL injection across 11 stacks | `npx komainu-guard scan ./legacy-app --format html` |
+| `komainu devsecops sbom <target>` | Generates CycloneDX 1.5 / SPDX 2.3 SBOM across npm, PyPI, NuGet, Maven, Go | `npx komainu-guard devsecops sbom . --format cyclonedx` |
+| `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |
+| `komainu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx komainu-guard devsecops run .` |
+| `komainu test --url <base-url>` | Executes automated cross-user authorization tests against live APIs in CI | `npx komainu-guard test --url http://127.0.0.1:5000` |
+| `komainu protect --up` | Launches Kong API Gateway & Coraza WAF (OWASP CRS) perimeter | `npx komainu-guard protect --up` |
+| `komainu demo --up` | Launches the reference Member Portal demo environment | `npx komainu-guard demo --up` |
+
+---
+
+## The Platform Behind `komainu-guard`
 
 Komainu (狛犬) is named after the paired guardian lion-dogs at the entrance of a Shinto shrine. They stand as an **a–un (阿吽)** pair: one with an open mouth to assess and call out weaknesses, and one with a closed mouth to remediate and seal the perimeter. 
 

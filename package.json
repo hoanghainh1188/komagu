@@ -2,7 +2,8 @@
   "name": "komainu-guard",
   "version": "1.0.0",
   "description": "Security-First Legacy Modernization Platform CLI (LSA Kit, IAM Perimeter, Cross-User Testing)",
-  "main": "bin/komainu.js",
+  "main": "remediate/authz/nodejs/src/index.js",
+  "types": "remediate/authz/nodejs/src/index.d.ts",
   "bin": {
     "komainu": "./bin/komainu.js",
     "komainu-guard": "./bin/komainu.js"
@@ -14,7 +15,17 @@
     "remediate/",
     "contracts/",
     "examples/",
-    "README.md"
+    "README.md",
+    "!**/__pycache__/**",
+    "!**/.gradle/**",
+    "!**/build/**",
+    "!**/bin/Debug/**",
+    "!**/bin/Release/**",
+    "!**/obj/**",
+    "!**/.kotlin/**",
+    "!**/*.pyc",
+    "!**/*.db",
+    "!**/*.sqlite"
   ],
   "scripts": {
     "test": "node bin/komainu.js --version && python3 -m unittest discover -s operate/tests"
