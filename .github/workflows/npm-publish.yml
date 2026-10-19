@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -28,7 +27,9 @@ jobs:
           python-version: '3.11'
 
       - name: Upgrade npm to latest version for Trusted Publishing support
-        run: npm install -g npm@latest
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Verify CLI wrapper
         run: |
@@ -38,4 +39,6 @@ jobs:
           node bin/komainu.js demo --dry-run
 
       - name: Publish package to npmjs via Trusted Publishing (OIDC)
-        run: npm publish --access public --provenance
+        run: |
+          rm -f ~/.npmrc
+          npm publish --access public --provenance
