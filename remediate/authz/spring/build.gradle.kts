@@ -32,7 +32,7 @@ dependencies {
     compileOnly("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
     compileOnly("org.springframework.data:spring-data-commons:3.3.4")
     compileOnly("org.springframework:spring-aspects:6.1.13")
-    compileOnly("org.aspectj:aspectjweaver:1.9.22.1")
+    compileOnly("org.aspectj:aspectjweaver:1.9.25.1")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
 
     // Logging
@@ -49,7 +49,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
     testImplementation("org.springframework.data:spring-data-commons:3.3.4")
     testImplementation("org.springframework:spring-aspects:6.1.13")
-    testImplementation("org.aspectj:aspectjweaver:1.9.22.1")
+    testImplementation("org.aspectj:aspectjweaver:1.9.25.1")
 }
 
 tasks.test {
