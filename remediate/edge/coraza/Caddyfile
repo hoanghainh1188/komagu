@@ -12,7 +12,9 @@
         load_owasp_crs
         directives `
             Include /etc/coraza/coraza.conf
+            Include @crs-setup.conf.example
             Include /etc/coraza/rules/coraza-crs-custom.conf
+            Include @owasp_crs/*.conf
         `
     }
 
