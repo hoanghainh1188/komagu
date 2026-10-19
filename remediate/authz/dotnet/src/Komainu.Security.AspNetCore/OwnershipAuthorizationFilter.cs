@@ -31,37 +31,69 @@ public sealed class OwnershipAuthorizationFilter : IAsyncActionFilter
     {
         var user = context.HttpContext.User;
 
+        // Invariant: Anonymous callers must be denied with HTTP 404 immediately before execution
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            context.Result = new NotFoundResult();
+            return;
+        }
+
         // Try to find resource directly in action arguments (e.g. model bound entity or DTO)
         object? resource = context.ActionArguments.Values
             .FirstOrDefault(v => v != null && _resourceType.IsInstanceOfType(v));
 
         if (resource == null)
         {
-            // Try resolving via route parameter ID and registered IKomainuResourceResolver
-            if (context.RouteData.Values.TryGetValue(_idRouteParameter, out var rawId) && rawId != null)
+            // Try resolving via route parameter ID or action arguments and registered IKomainuResourceResolver
+            object? rawId = null;
+            if (context.RouteData.Values.TryGetValue(_idRouteParameter, out var routeId) && routeId != null)
+            {
+                rawId = routeId;
+            }
+            else if (context.ActionArguments.TryGetValue(_idRouteParameter, out var argId) && argId != null)
+            {
+                rawId = argId;
+            }
+
+            if (rawId != null)
             {
                 var resolver = context.HttpContext.RequestServices.GetService<IKomainuResourceResolver>();
-                if (resolver != null)
+                if (resolver == null)
                 {
-                    resource = await resolver.ResolveAsync(_resourceType, rawId.ToString()!, context.HttpContext.RequestAborted);
+                    // Fail-closed: No resolver registered to resolve the target resource
+                    context.Result = new NotFoundResult();
+                    return;
+                }
+
+                resource = await resolver.ResolveAsync(_resourceType, rawId.ToString()!, context.HttpContext.RequestAborted);
+                if (resource == null)
+                {
+                    // Fail-closed: Resolver returned null (resource does not exist or unauthorized)
+                    context.Result = new NotFoundResult();
+                    return;
                 }
             }
         }
 
-        if (resource != null)
+        // Fail-closed: If resource could not be resolved from arguments or resolver, deny with 404
+        if (resource == null)
         {
-            var authResult = await _authorizationService.AuthorizeAsync(
-                user,
-                resource,
-                _operation,
-                context.HttpContext.RequestAborted);
+            context.Result = new NotFoundResult();
+            return;
+        }
 
-            if (!authResult.Succeeded)
-            {
-                // Invariant: Deny by default with HTTP 404 Not Found to eliminate ID enumeration
-                context.Result = new NotFoundResult();
-                return;
-            }
+        // Authorize caller against resolved resource strictly before executing action
+        var authResult = await _authorizationService.AuthorizeAsync(
+            user,
+            resource,
+            _operation,
+            context.HttpContext.RequestAborted);
+
+        if (!authResult.Succeeded)
+        {
+            // Invariant: Deny by default with HTTP 404 Not Found to eliminate ID enumeration
+            context.Result = new NotFoundResult();
+            return;
         }
 
         // Proceed to execute the action
@@ -72,13 +104,13 @@ public sealed class OwnershipAuthorizationFilter : IAsyncActionFilter
         {
             if (_resourceType.IsInstanceOfType(objectResult.Value))
             {
-                var authResult = await _authorizationService.AuthorizeAsync(
+                var postAuthResult = await _authorizationService.AuthorizeAsync(
                     user,
                     objectResult.Value,
                     _operation,
                     context.HttpContext.RequestAborted);
 
-                if (!authResult.Succeeded)
+                if (!postAuthResult.Succeeded)
                 {
                     // Intercept and rewrite response to 404 Not Found
                     executedContext.Result = new NotFoundResult();
