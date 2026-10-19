@@ -1,48 +1,53 @@
-# Komainu — npmjs Publication Workflow
+# Komainu — Hardened npmjs Publication Workflow via Pure OIDC
 #
-# Release Pathways:
-# 1. CI Automated Publishing (OIDC / Token):
-#    - Pending resolution of upstream issue npm/cli#9969 (Immutable OIDC claims on GitHub repos).
-#    - npm registry currently restricts bypass-2FA granular tokens on 2FA-enforced personal accounts.
-# 2. Local Manual Publishing (Recommended & Verified):
-#    - Run locally with active 2FA OTP:
-#      npm login
-#      npm publish --access public
+# Release Security Gate Note:
+# - environment: npm-release is configured for deployment tracking and auditability.
+# - On GitHub Free with private repositories, environment protection rules (such as
+#   required reviewers) are not supported. Therefore, the effective release gate in
+#   this repository setup is restricted to collaborators with release-creation permissions.
+# - Provenance: --provenance is omitted because npm registry rejects build provenance
+#   from private GitHub repositories.
 
 name: Publish to npmjs
 
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   publish:
     name: Verify & Publish to npmjs
     runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
         with:
           node-version: '22.x'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: '3.11'
 
-      - name: Upgrade npm to latest version
+      - name: Pin npm version
         run: |
-          npm install -g npm@latest
+          npm install -g npm@11.5.1
           npm --version
+
+      - name: Run test suites before publish
+        run: |
+          npm test
+          python3 assess/lsa/tests/run_tests.py
 
       - name: Verify CLI wrapper
         run: |
@@ -51,14 +56,7 @@ jobs:
           node bin/komainu.js protect --dry-run
           node bin/komainu.js demo --dry-run
 
-      - name: Publish package to npmjs
+      - name: Publish package to npmjs via OIDC
         run: |
-          echo "Attempting publication to npmjs..."
-          if ! npm publish --access public; then
-            echo "::warning title=npm Publish Challenge::npm publish via CI encountered an authentication or 2FA challenge."
-            echo "::notice title=Release Instructions::If npm requires interactive 2FA/OTP or upstream OIDC #9969 is active, publish from local terminal:"
-            echo "::notice title=Release Instructions::  cd /path/to/komainu && npm login && npm publish --access public"
-            exit 1
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          echo "Publishing to npmjs via OIDC trusted publishing..."
+          npm publish --access public
