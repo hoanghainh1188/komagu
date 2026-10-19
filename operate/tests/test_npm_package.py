@@ -27,8 +27,8 @@ class TestNPMPackage(unittest.TestCase):
 
         self.assertEqual(data.get("name"), "komainu-guard")
         self.assertIn("version", data)
-        self.assertEqual(data.get("bin", {}).get("komainu"), "./bin/komainu.js")
-        self.assertEqual(data.get("bin", {}).get("komainu-guard"), "./bin/komainu.js")
+        self.assertEqual(data.get("bin", {}).get("komainu"), "bin/komainu.js")
+        self.assertEqual(data.get("bin", {}).get("komainu-guard"), "bin/komainu.js")
         self.assertEqual(data.get("license"), "Apache-2.0")
 
         # Whitelisted files must include platform modules
