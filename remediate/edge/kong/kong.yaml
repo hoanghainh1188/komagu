@@ -2,7 +2,7 @@ _format_version: "3.0"
 
 services:
   - name: komainu-api-service
-    url: http://coraza-waf:8080/api/v1
+    url: http://coraza-waf:8080
     connect_timeout: 5000
     read_timeout: 30000
     write_timeout: 30000
@@ -15,6 +15,14 @@ services:
           - http
           - https
         plugins:
+          - name: jwt
+            config:
+              claims_to_verify:
+                - exp
+              key_claim_name: iss
+              header_names:
+                - Authorization
+              run_on_preflight: false
           - name: rate-limiting
             config:
               minute: 120
@@ -24,6 +32,13 @@ services:
               hide_client_headers: false
               error_code: 429
               error_message: "API rate limit exceeded. Please back off and retry."
+
+consumers:
+  - username: komainu-api-consumer
+    jwt_secrets:
+      - key: https://auth.komainu.test/realms/komainu
+        algorithm: HS256
+        secret: komainu-default-test-jwt-secret-key-32chars
 
 plugins:
   - name: cors

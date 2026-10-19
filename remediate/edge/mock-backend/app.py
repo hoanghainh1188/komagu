@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
 Lightweight mock upstream backend for Komainu edge security test harness.
-Echoes received request headers and JSON payloads back to caller.
+Echoes received request headers and JSON payloads back to caller,
+with sensitive authorization headers strictly redacted.
 """
 
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
+
+SENSITIVE_HEADERS = {"authorization", "proxy-authorization", "cookie", "x-api-key"}
+
 
 class EchoHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -28,12 +32,20 @@ class EchoHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else None
 
+        # Redact sensitive authentication credentials
+        safe_headers = {}
+        for k, v in self.headers.items():
+            if k.lower() in SENSITIVE_HEADERS:
+                safe_headers[k] = "[REDACTED]"
+            else:
+                safe_headers[k] = v
+
         response_data = {
             "status": "success",
             "message": "Request successfully reached upstream backend",
             "method": self.command,
             "path": self.path,
-            "headers": dict(self.headers),
+            "headers": safe_headers,
             "body": body
         }
 
@@ -49,11 +61,13 @@ class EchoHandler(BaseHTTPRequestHandler):
         # Concise logging to stdout
         print(f"[MOCK-BACKEND] {self.command} {self.path} - {args[1]}")
 
+
 def run(server_class=HTTPServer, handler_class=EchoHandler, port=5000):
     server_address = ("0.0.0.0", port)
     httpd = server_class(server_address, handler_class)
     print(f"Mock upstream backend listening on port {port}...")
     httpd.serve_forever()
+
 
 if __name__ == "__main__":
     run()
