@@ -17,7 +17,7 @@ java {
     }
 }
 
-val detektVersion = "1.23.6"
+val detektVersion = "1.23.8"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
