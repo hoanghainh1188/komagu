@@ -4,10 +4,10 @@ import io.komainu.security.authorization.ResourceOperation
 import kotlin.reflect.KClass
 
 /**
- * Declarative annotation to enforce object ownership at controller or service method boundaries.
+ * Declarative annotation to enforce object ownership at controller or service method and class boundaries.
  * Invariant: Any mismatch throws ResourceNotFoundException mapped to HTTP 404 Not Found.
  */
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class RequireOwnership(

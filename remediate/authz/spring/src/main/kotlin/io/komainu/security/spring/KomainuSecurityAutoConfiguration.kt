@@ -28,7 +28,10 @@ class KomainuSecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(OwnershipAspect::class)
-    fun ownershipAspect(securityManager: KomainuSecurityManager): OwnershipAspect {
-        return OwnershipAspect(securityManager)
+    fun ownershipAspect(
+        securityManager: KomainuSecurityManager,
+        resolvers: List<ResourceOwnershipResolver<*>> = emptyList()
+    ): OwnershipAspect {
+        return OwnershipAspect(securityManager, resolvers)
     }
 }
