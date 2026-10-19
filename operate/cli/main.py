@@ -7,7 +7,7 @@ import sys
 from typing import List, Optional
 
 from operate.cli import __version__
-from operate.cli.commands import demo, protect, scan, test
+from operate.cli.commands import demo, devsecops, protect, scan, test
 from operate.cli.ui import print_banner
 
 
@@ -23,6 +23,7 @@ Quick Start Workflow:
   2. Launch perimeter edge:     komainu protect --up
   3. Verify BOLA invariant:     komainu test --url http://localhost:8000
   4. Explore reference demo:    komainu demo --up
+  5. Run DevSecOps & SBOM:      komainu devsecops run .
 
 Learn more about a specific command:
   komainu help <command>
@@ -51,6 +52,7 @@ Learn more about a specific command:
     protect.register_subcommand(subparsers)
     test.register_subcommand(subparsers)
     demo.register_subcommand(subparsers)
+    devsecops.register_subcommand(subparsers)
 
     help_parser = subparsers.add_parser(
         "help",
@@ -60,8 +62,8 @@ Learn more about a specific command:
     help_parser.add_argument(
         "topic",
         nargs="?",
-        choices=["scan", "protect", "test", "demo"],
-        help="Subcommand topic to display help for (scan, protect, test, demo)",
+        choices=["scan", "protect", "test", "demo", "devsecops"],
+        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops)",
     )
 
     return parser

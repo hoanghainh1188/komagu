@@ -1,0 +1,49 @@
+# Komainu DevSecOps, SCA & SBOM Supply Chain Security Pipeline for GitLab CI
+# Boilerplate 5 (Stage 2)
+
+stages:
+  - test
+  - compliance
+
+variables:
+  KOMAINU_TARGET_PATH: "."
+  KOMAINU_APP_NAME: "Application"
+  KOMAINU_APP_VERSION: "1.0.0"
+
+komainu:devsecops:scan:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates && rm -rf /var/lib/apt/lists/*
+    - python3 -m pip install --upgrade pip
+  script:
+    - python3 -m operate.cli.main devsecops run "${KOMAINU_TARGET_PATH}" --output-dir .komainu-devsecops --app-name "${KOMAINU_APP_NAME}" --app-version "${KOMAINU_APP_VERSION}"
+  artifacts:
+    name: "komainu-devsecops-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - .komainu-devsecops/komainu-devsecops.sarif
+      - .komainu-devsecops/pipeline-summary.json
+      - .komainu-devsecops/cyclonedx-sbom.json
+      - .komainu-devsecops/spdx-sbom.json
+    reports:
+      cyclonedx:
+        - .komainu-devsecops/cyclonedx-sbom.json
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+komainu:devsecops:sbom:
+  stage: compliance
+  image: python:3.11-slim
+  script:
+    - python3 -m operate.cli.main devsecops sbom "${KOMAINU_TARGET_PATH}" --format cyclonedx -o ./gl-sbom-cyclonedx.json --app-name "${KOMAINU_APP_NAME}"
+  artifacts:
+    name: "komainu-sbom-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - gl-sbom-cyclonedx.json
+    reports:
+      cyclonedx:
+        - gl-sbom-cyclonedx.json
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
