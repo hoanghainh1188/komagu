@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -31,6 +32,11 @@ jobs:
           npm install -g npm@latest
           npm --version
 
+      - name: Clear placeholder auth token from .npmrc for pure OIDC Trusted Publishing
+        run: |
+          npm config delete //registry.npmjs.org/:_authToken || true
+          rm -f ~/.npmrc
+
       - name: Verify CLI wrapper
         run: |
           node bin/komainu.js --version
@@ -39,6 +45,4 @@ jobs:
           node bin/komainu.js demo --dry-run
 
       - name: Publish package to npmjs via Trusted Publishing (OIDC)
-        run: |
-          rm -f ~/.npmrc
-          npm publish --access public --provenance
+        run: npm publish --access public --verbose
