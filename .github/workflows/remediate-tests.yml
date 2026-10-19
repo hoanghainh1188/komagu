@@ -50,6 +50,9 @@ jobs:
       - name: Run Multi-Region Resilience & WORM Backup unit tests
         run: python3 -m unittest discover -s remediate/resilience/tests -p "test_*.py"
 
+      - name: Run Tenant-Isolated SaaS & BYOK unit tests
+        run: python3 -m unittest discover -s remediate/tenancy/tests -p "test_*.py"
+
   dotnet-suites:
     name: .NET 8 Suites (D1 Authz, D2 Identity, D3 Query, D6 Demo)
     runs-on: ubuntu-latest
