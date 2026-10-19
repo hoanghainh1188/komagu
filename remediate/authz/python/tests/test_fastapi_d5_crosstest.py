@@ -40,7 +40,11 @@ class MockFastApiServer(http.server.BaseHTTPRequestHandler):
     """Simulates FastAPI routing and Komainu D1/D2 dependency injection."""
 
     authz_service = KomainuAuthorizationService(audit_sink=InMemorySecurityAuditSink())
-    validator = OidcTokenValidator()
+    validator = OidcTokenValidator(
+        issuer="https://auth.komainu.test",
+        audience="komainu-api",
+        allow_dev_tokens=True,
+    )
 
     # Pre-seeded test database
     orders: Dict[str, Order] = {

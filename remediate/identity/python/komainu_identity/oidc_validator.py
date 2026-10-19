@@ -1,17 +1,81 @@
 """Komainu OIDC Identity & Token Validation Adapter (Python).
 
-Validates Bearer tokens, validates issuer and audience, extracts verified
-claims (sub/uid and tenant_id), and constructs UserPrincipal.
+Validates OpenID Connect / OAuth2 JWT Bearer tokens with cryptographic
+signature verification against an HTTPS JWKS or static public key,
+enforces required claims (sub, tenant, exp, iss, aud), strictly bounds
+clock skew, and prohibits unsecured dev tokens outside verified test environments.
 """
 
 from __future__ import annotations
 
-import base64
-import json
-import time
-from typing import Any, Dict, List, Optional
+import math
+import os
+import sys
+from typing import Any, Dict, List, Optional, Union
 
-from remediate.authz.python.komainu_authz.models import UserPrincipal
+import jwt
+from jwt import PyJWKClient
+from jwt.exceptions import (
+    DecodeError,
+    ExpiredSignatureError,
+    ImmatureSignatureError,
+    InvalidAlgorithmError,
+    InvalidAudienceError,
+    InvalidIssuerError,
+    InvalidKeyError,
+    InvalidSignatureError,
+    InvalidTokenError,
+    MissingRequiredClaimError,
+)
+
+from .models import UserPrincipal
+
+# Standard test/dev personas matching Komainu cross-user test fixtures
+DEFAULT_DEV_TOKENS: Dict[str, Dict[str, Any]] = {
+    "token-user-a": {
+        "sub": "user-a",
+        "tenant_id": "tenant-komainu",
+        "name": "Alice (Owner)",
+        "roles": ["Member"],
+    },
+    "token-user-b": {
+        "sub": "user-b",
+        "tenant_id": "tenant-komainu",
+        "name": "Bob (Attacker)",
+        "roles": ["Member"],
+    },
+    "token-cross-tenant": {
+        "sub": "user-c",
+        "tenant_id": "tenant-other",
+        "name": "Charlie (Cross-Tenant)",
+        "roles": ["Member"],
+    },
+    "token-admin": {
+        "sub": "user-admin",
+        "tenant_id": "tenant-komainu",
+        "name": "Admin",
+        "roles": ["Admin"],
+    },
+}
+
+# Standard asymmetric signature algorithms permitted by default
+DEFAULT_ALLOWED_ALGORITHMS: List[str] = [
+    "RS256", "RS384", "RS512",
+    "ES256", "ES384", "ES512",
+    "PS256", "PS384", "PS512",
+]
+
+
+def _is_test_environment() -> bool:
+    """Determine whether the current process is executing under a test runner."""
+    if os.environ.get("KOMAINU_ENV") == "test":
+        return True
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        return True
+    if "unittest" in sys.modules:
+        if any("unittest" in arg or "pytest" in arg or "test" in arg for arg in sys.argv):
+            return True
+    return False
 
 
 class OidcTokenValidator:
@@ -19,39 +83,64 @@ class OidcTokenValidator:
 
     def __init__(
         self,
-        issuer: Optional[str] = None,
-        audience: Optional[str] = None,
-        allowed_dev_tokens: Optional[Dict[str, Dict[str, Any]]] = None,
+        issuer: str,
+        audience: str,
+        jwks_uri: Optional[str] = None,
+        public_key: Optional[Union[str, bytes, Any]] = None,
+        allowed_algorithms: Optional[List[str]] = None,
+        leeway: float = 60.0,
+        allow_dev_tokens: bool = False,
+        dev_tokens: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> None:
-        self.issuer = issuer
-        self.audience = audience
-        # Standard test/dev personas matching Komainu cross-user test fixtures
-        self.dev_tokens: Dict[str, Dict[str, Any]] = allowed_dev_tokens or {
-            "token-user-a": {
-                "sub": "user-a",
-                "tenant_id": "tenant-komainu",
-                "name": "Alice (Owner)",
-                "roles": ["Member"],
-            },
-            "token-user-b": {
-                "sub": "user-b",
-                "tenant_id": "tenant-komainu",
-                "name": "Bob (Attacker)",
-                "roles": ["Member"],
-            },
-            "token-cross-tenant": {
-                "sub": "user-c",
-                "tenant_id": "tenant-other",
-                "name": "Charlie (Cross-Tenant)",
-                "roles": ["Member"],
-            },
-            "token-admin": {
-                "sub": "user-admin",
-                "tenant_id": "tenant-komainu",
-                "name": "Admin",
-                "roles": ["Admin"],
-            },
-        }
+        if not issuer or not str(issuer).strip():
+            raise ValueError("OidcTokenValidator requires a non-empty 'issuer'")
+        if not audience or not str(audience).strip():
+            raise ValueError("OidcTokenValidator requires a non-empty 'audience'")
+
+        self.issuer = str(issuer)
+        self.audience = str(audience)
+
+        if leeway < 0.0 or leeway > 120.0:
+            raise ValueError("Clock skew leeway must be between 0 and 120 seconds")
+        self.leeway = float(leeway)
+
+        # Enforce pinned algorithm allowlist; never allow "none" or symmetric algorithms by default
+        self.allowed_algorithms = list(allowed_algorithms or DEFAULT_ALLOWED_ALGORITHMS)
+        if any(alg.lower() == "none" for alg in self.allowed_algorithms):
+            raise ValueError("Algorithm 'none' is strictly prohibited")
+
+        # Handle dev tokens with explicit test gate
+        self.allow_dev_tokens = allow_dev_tokens
+        if allow_dev_tokens:
+            if not _is_test_environment():
+                raise RuntimeError(
+                    "Dev tokens are only permitted in test environments. "
+                    "Set KOMAINU_ENV=test or run within a recognized test framework."
+                )
+            self.dev_tokens: Dict[str, Dict[str, Any]] = (
+                dict(dev_tokens) if dev_tokens is not None else dict(DEFAULT_DEV_TOKENS)
+            )
+        else:
+            if dev_tokens is not None:
+                raise ValueError("Cannot supply dev_tokens when allow_dev_tokens is False")
+            self.dev_tokens = {}
+
+        # Validate JWKS URI / public key configuration
+        self.jwks_uri = jwks_uri
+        self.public_key = public_key
+        self.jwks_client: Optional[PyJWKClient] = None
+
+        if jwks_uri:
+            # Enforce HTTPS protocol for JWKS endpoints
+            if not jwks_uri.startswith("https://"):
+                if not (self.allow_dev_tokens and _is_test_environment()):
+                    raise ValueError(f"JWKS URI must use HTTPS protocol: '{jwks_uri}'")
+            self.jwks_client = PyJWKClient(jwks_uri, cache_keys=True)
+
+        if not self.jwks_client and not self.public_key and not self.allow_dev_tokens:
+            raise ValueError(
+                "Either 'jwks_uri' or 'public_key' must be provided for cryptographic token verification."
+            )
 
     def validate_token(self, token: str) -> UserPrincipal:
         """Validates a bearer token string and returns an authenticated UserPrincipal."""
@@ -62,65 +151,100 @@ class OidcTokenValidator:
         if clean_token.lower().startswith("bearer "):
             clean_token = clean_token[7:].strip()
 
-        # Check dev tokens first (for automated test runners & local environments)
-        if clean_token in self.dev_tokens:
+        # Check dev tokens if explicitly allowed and configured
+        if self.allow_dev_tokens and clean_token in self.dev_tokens:
             meta = self.dev_tokens[clean_token]
+            tenant_id = meta.get("tenant_id") or meta.get("tid") or meta.get("org_id")
+            if not tenant_id:
+                raise PermissionError("Dev token missing required tenant claim")
+            sub = meta.get("sub") or meta.get("uid") or meta.get("userId")
+            if not sub:
+                raise PermissionError("Dev token missing required 'sub' claim")
+
             return UserPrincipal(
-                user_id=meta["sub"],
-                tenant_id=meta["tenant_id"],
+                user_id=str(sub),
+                tenant_id=str(tenant_id),
                 claims=dict(meta),
                 roles=meta.get("roles", []),
                 is_authenticated=True,
             )
 
-        # Standard JWT decoding (header.payload.signature)
-        parts = clean_token.split(".")
-        if len(parts) == 3:
+        # Resolve cryptographic signing key
+        key: Any = None
+        if self.public_key:
+            key = self.public_key
+        elif self.jwks_client:
             try:
-                payload_segment = parts[1]
-                # Pad base64 if necessary
-                padded = payload_segment + "=" * (-len(payload_segment) % 4)
-                decoded_bytes = base64.urlsafe_b64decode(padded.encode("ascii"))
-                claims = json.loads(decoded_bytes.decode("utf-8"))
-
-                # Expiration check
-                if "exp" in claims:
-                    exp = float(claims["exp"])
-                    if time.time() > exp:
-                        raise PermissionError("Token has expired")
-
-                # Issuer check
-                if self.issuer and claims.get("iss") != self.issuer:
-                    raise PermissionError(f"Token issuer '{claims.get('iss')}' does not match expected '{self.issuer}'")
-
-                # Audience check
-                if self.audience:
-                    aud = claims.get("aud")
-                    if isinstance(aud, list):
-                        if self.audience not in aud:
-                            raise PermissionError(f"Token audience list does not contain expected '{self.audience}'")
-                    elif aud != self.audience:
-                        raise PermissionError(f"Token audience '{aud}' does not match expected '{self.audience}'")
-
-                # Extract sub & tenant
-                sub = claims.get("sub") or claims.get("uid") or claims.get("userId")
-                tenant = claims.get("tenant_id") or claims.get("tid") or claims.get("org_id") or "default-tenant"
-
-                if not sub:
-                    raise PermissionError("JWT token missing 'sub' claim")
-
-                roles = claims.get("roles") or claims.get("realm_access", {}).get("roles", [])
-
-                return UserPrincipal(
-                    user_id=str(sub),
-                    tenant_id=str(tenant),
-                    claims=claims,
-                    roles=roles if isinstance(roles, list) else [str(roles)],
-                    is_authenticated=True,
-                )
+                signing_key = self.jwks_client.get_signing_key_from_jwt(clean_token)
+                key = signing_key.key
             except Exception as ex:
-                if isinstance(ex, PermissionError):
-                    raise
-                raise PermissionError(f"Invalid JWT token format or signature: {ex}") from ex
+                raise PermissionError(f"Failed to retrieve signing key for token: {ex}") from ex
+        else:
+            raise PermissionError("No signing key or JWKS provider available to verify token")
 
-        raise PermissionError(f"Unsupported or unverified token: {clean_token[:10]}...")
+        try:
+            # PyJWT verifies signature, exp, iss, aud, iat, nbf, and algorithm allowlist
+            payload = jwt.decode(
+                clean_token,
+                key=key,
+                algorithms=self.allowed_algorithms,
+                audience=self.audience,
+                issuer=self.issuer,
+                leeway=self.leeway,
+                options={
+                    "require": ["exp", "iss", "aud", "sub"],
+                    "verify_signature": True,
+                    "verify_exp": True,
+                    "verify_iss": True,
+                    "verify_aud": True,
+                    "verify_iat": True,
+                    "verify_nbf": True,
+                },
+            )
+        except ExpiredSignatureError as ex:
+            raise PermissionError(f"Token has expired: {ex}") from ex
+        except (InvalidSignatureError, DecodeError, InvalidKeyError) as ex:
+            raise PermissionError(f"Invalid token signature or formatting: {ex}") from ex
+        except InvalidAlgorithmError as ex:
+            raise PermissionError(f"Token uses disallowed or unverified algorithm: {ex}") from ex
+        except (InvalidAudienceError, InvalidIssuerError) as ex:
+            raise PermissionError(f"Token claim validation failed: {ex}") from ex
+        except (MissingRequiredClaimError, ImmatureSignatureError, InvalidTokenError) as ex:
+            raise PermissionError(f"Invalid token claims: {ex}") from ex
+        except Exception as ex:
+            raise PermissionError(f"Token validation failed: {ex}") from ex
+
+        # Strict validation of 'exp' claim against NaN or invalid numbers
+        exp_val = payload.get("exp")
+        if exp_val is None:
+            raise PermissionError("Token missing 'exp' claim")
+        try:
+            exp_float = float(exp_val)
+            if math.isnan(exp_float) or math.isinf(exp_float):
+                raise PermissionError("Token 'exp' claim is not a valid finite timestamp")
+        except (ValueError, TypeError):
+            raise PermissionError("Token 'exp' claim must be a numeric timestamp")
+
+        # Validate 'sub' claim
+        sub = payload.get("sub")
+        if not sub or not str(sub).strip():
+            raise PermissionError("Token 'sub' claim is empty or invalid")
+
+        # Validate tenant claim (never fallback to 'default-tenant')
+        tenant = payload.get("tenant_id") or payload.get("tid") or payload.get("org_id")
+        if not tenant or not str(tenant).strip():
+            raise PermissionError("Token missing required tenant claim ('tenant_id', 'tid', or 'org_id')")
+
+        roles = payload.get("roles") or payload.get("realm_access", {}).get("roles", [])
+        if isinstance(roles, str):
+            roles = [roles]
+        elif not isinstance(roles, list):
+            roles = []
+
+        return UserPrincipal(
+            user_id=str(sub),
+            tenant_id=str(tenant),
+            claims=payload,
+            roles=roles,
+            is_authenticated=True,
+        )

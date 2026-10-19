@@ -19,6 +19,9 @@ from remediate.authz.python.komainu_authz.models import (
 )
 from remediate.authz.python.komainu_authz.service import KomainuAuthorizationService
 from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+import jwt
 
 
 @dataclass
@@ -33,7 +36,11 @@ class TestPythonAuthz(unittest.TestCase):
     def setUp(self) -> None:
         self.audit_sink = InMemorySecurityAuditSink()
         self.authz_service = KomainuAuthorizationService(audit_sink=self.audit_sink)
-        self.validator = OidcTokenValidator()
+        self.validator = OidcTokenValidator(
+            issuer="https://auth.komainu.test",
+            audience="komainu-api",
+            allow_dev_tokens=True,
+        )
 
         self.alice_user = UserPrincipal(
             user_id="user-a",
@@ -162,18 +169,33 @@ class TestPythonAuthz(unittest.TestCase):
             self.validator.validate_token("Bearer token-unknown")
 
     def test_08_oidc_validator_jwt_claims(self) -> None:
-        """OidcTokenValidator decodes and verifies JWT payloads."""
-        header = base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').decode("ascii").rstrip("=")
+        """OidcTokenValidator decodes and cryptographically verifies JWT payloads."""
+        # Generate test RSA key pair
+        priv_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        pub_pem = priv_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        ).decode("utf-8")
+
+        jwt_validator = OidcTokenValidator(
+            issuer="https://auth.enterprise.test",
+            audience="enterprise-api",
+            public_key=pub_pem,
+        )
+
+        now = time.time()
         payload_data = {
             "sub": "user-jwt-123",
             "tenant_id": "tenant-enterprise",
-            "exp": time.time() + 3600,
+            "iss": "https://auth.enterprise.test",
+            "aud": "enterprise-api",
+            "exp": int(now + 3600),
+            "iat": int(now),
             "roles": ["Engineer"],
         }
-        payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode("utf-8")).decode("ascii").rstrip("=")
-        fake_jwt = f"{header}.{payload}.sig"
+        valid_jwt = jwt.encode(payload_data, key=priv_key, algorithm="RS256")
 
-        principal = self.validator.validate_token(f"Bearer {fake_jwt}")
+        principal = jwt_validator.validate_token(f"Bearer {valid_jwt}")
         self.assertEqual(principal.user_id, "user-jwt-123")
         self.assertEqual(principal.tenant_id, "tenant-enterprise")
         self.assertIn("Engineer", principal.roles)
@@ -182,13 +204,15 @@ class TestPythonAuthz(unittest.TestCase):
         expired_data = {
             "sub": "user-expired",
             "tenant_id": "tenant-enterprise",
-            "exp": time.time() - 3600,
+            "iss": "https://auth.enterprise.test",
+            "aud": "enterprise-api",
+            "exp": int(now - 3600),
+            "iat": int(now - 7200),
         }
-        expired_payload = base64.urlsafe_b64encode(json.dumps(expired_data).encode("utf-8")).decode("ascii").rstrip("=")
-        expired_jwt = f"{header}.{expired_payload}.sig"
+        expired_jwt = jwt.encode(expired_data, key=priv_key, algorithm="RS256")
 
         with self.assertRaises(PermissionError) as ctx:
-            self.validator.validate_token(expired_jwt)
+            jwt_validator.validate_token(expired_jwt)
         self.assertIn("expired", str(ctx.exception).lower())
 
 
