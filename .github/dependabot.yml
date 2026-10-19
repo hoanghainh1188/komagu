@@ -1,8 +1,61 @@
 version: 2
 updates:
-  # Add nuget / gradle / npm entries when remediate/ modules gain dependencies.
   - package-ecosystem: github-actions
     directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: npm
+    directory: /remediate/authz/nodejs
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: gomod
+    directory: /remediate/authz/golang
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: gradle
+    directory: /remediate/authz/spring
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: gradle
+    directory: /remediate/identity/spring
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: gradle
+    directory: /remediate/query/spring
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: nuget
+    directory: /remediate/authz/dotnet
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: nuget
+    directory: /remediate/identity/dotnet
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+
+  - package-ecosystem: nuget
+    directory: /remediate/query/dotnet
     schedule:
       interval: weekly
     labels: [dependencies]
