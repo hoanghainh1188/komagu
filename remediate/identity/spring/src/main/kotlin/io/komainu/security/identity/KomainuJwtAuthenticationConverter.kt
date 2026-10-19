@@ -2,6 +2,7 @@ package io.komainu.security.identity
 
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
@@ -9,6 +10,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 /**
  * Converts validated JWT into JwtAuthenticationToken with structured tenant details and authorities.
+ * Rejects tokens without a valid user subject identifier.
  */
 class KomainuJwtAuthenticationConverter(
     private val userClaimName: String = "sub",
@@ -24,7 +26,13 @@ class KomainuJwtAuthenticationConverter(
             authorities.add(SimpleGrantedAuthority("ROLE_$role"))
         }
 
-        val principalClaimValue = jwt.getClaimAsString(userClaimName) ?: jwt.subject ?: "unknown"
+        // Reject tokens without valid subject
+        val principalClaimValue = jwt.getClaimAsString(userClaimName) ?: jwt.subject
+        if (principalClaimValue.isNullOrBlank()) {
+            throw BadCredentialsException(
+                "JWT authentication failed: missing mandatory '$userClaimName' claim"
+            )
+        }
 
         val token = JwtAuthenticationToken(jwt, authorities, principalClaimValue)
 

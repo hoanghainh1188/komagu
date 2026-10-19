@@ -8,17 +8,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "komainu.security.oidc")
 data class KomainuOidcProperties(
     /**
-     * OIDC Issuer URL (e.g. "https://auth.komainu.test/realms/komainu").
+     * OIDC Issuer URL (e.g. "https://auth.komainu.test/realms/komainu"). Must not be blank.
      */
     var issuer: String = "",
 
     /**
-     * Expected resource server audience (default: "komainu-api").
+     * Expected resource server audience (default: "komainu-api"). Must not be blank.
      */
     var audience: String = "komainu-api",
 
     /**
-     * JSON Web Key Set (JWKS) endpoint URI.
+     * JSON Web Key Set (JWKS) endpoint URI. Must use HTTPS unless allowInsecureHttpJwks is true.
      */
     var jwkSetUri: String? = null,
 
@@ -26,6 +26,11 @@ data class KomainuOidcProperties(
      * Allowed clock drift in seconds for token expiration validation. Default is 0.
      */
     var clockSkewSeconds: Long = 0L,
+
+    /**
+     * Explicit flag to permit unencrypted http:// JWKS endpoints in isolated test environments.
+     */
+    var allowInsecureHttpJwks: Boolean = false,
 
     /**
      * Claim name containing the unique user subject identifier. Default is "sub".

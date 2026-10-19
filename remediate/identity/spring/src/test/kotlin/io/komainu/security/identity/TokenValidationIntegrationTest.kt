@@ -42,9 +42,10 @@ class TokenValidationIntegrationTest {
             val timestampValidator = JwtTimestampValidator(Duration.ZERO)
             val issuerValidator = JwtIssuerValidator(EXPECTED_ISSUER)
             val audienceValidator = KomainuAudienceValidator(EXPECTED_AUDIENCE)
+            val subjectValidator = KomainuSubjectValidator()
 
             decoder.setJwtValidator(
-                DelegatingOAuth2TokenValidator(timestampValidator, issuerValidator, audienceValidator)
+                DelegatingOAuth2TokenValidator(timestampValidator, issuerValidator, audienceValidator, subjectValidator)
             )
 
             return decoder
@@ -146,6 +147,53 @@ class TokenValidationIntegrationTest {
 
         mockMvc.get("/api/test/secure") {
             header("Authorization", "Bearer $badSigToken")
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `missing subject returns 401 Unauthorized`() {
+        val noSubToken = jwtFactory.createToken(
+            issuer = EXPECTED_ISSUER,
+            audience = EXPECTED_AUDIENCE,
+            subject = null
+        )
+
+        mockMvc.get("/api/test/secure") {
+            header("Authorization", "Bearer $noSubToken")
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `blank subject returns 401 Unauthorized`() {
+        val blankSubToken = jwtFactory.createToken(
+            issuer = EXPECTED_ISSUER,
+            audience = EXPECTED_AUDIENCE,
+            subject = "   "
+        )
+
+        mockMvc.get("/api/test/secure") {
+            header("Authorization", "Bearer $blankSubToken")
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `recently expired token with 0s clock skew returns 401 Unauthorized`() {
+        // Expired 5 seconds ago - would pass under default 60s skew, must fail under 0s skew
+        val recentlyExpiredToken = jwtFactory.createToken(
+            issuer = EXPECTED_ISSUER,
+            audience = EXPECTED_AUDIENCE,
+            issueTime = Instant.now().minusSeconds(300),
+            expirationTime = Instant.now().minusSeconds(5)
+        )
+
+        mockMvc.get("/api/test/secure") {
+            header("Authorization", "Bearer $recentlyExpiredToken")
         }.andExpect {
             status { isUnauthorized() }
         }
