@@ -1,3 +1,14 @@
+# Komainu — npmjs Publication Workflow
+#
+# Release Pathways:
+# 1. CI Automated Publishing (OIDC / Token):
+#    - Pending resolution of upstream issue npm/cli#9969 (Immutable OIDC claims on GitHub repos).
+#    - npm registry currently restricts bypass-2FA granular tokens on 2FA-enforced personal accounts.
+# 2. Local Manual Publishing (Recommended & Verified):
+#    - Run locally with active 2FA OTP:
+#      npm login
+#      npm publish --access public
+
 name: Publish to npmjs
 
 on:
@@ -11,6 +22,7 @@ permissions:
 
 jobs:
   publish:
+    name: Verify & Publish to npmjs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,7 +39,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Upgrade npm to latest version for Trusted Publishing support
+      - name: Upgrade npm to latest version
         run: |
           npm install -g npm@latest
           npm --version
@@ -40,6 +52,13 @@ jobs:
           node bin/komainu.js demo --dry-run
 
       - name: Publish package to npmjs
-        run: npm publish --access public
+        run: |
+          echo "Attempting publication to npmjs..."
+          if ! npm publish --access public; then
+            echo "::warning title=npm Publish Challenge::npm publish via CI encountered an authentication or 2FA challenge."
+            echo "::notice title=Release Instructions::If npm requires interactive 2FA/OTP or upstream OIDC #9969 is active, publish from local terminal:"
+            echo "::notice title=Release Instructions::  cd /path/to/komainu && npm login && npm publish --access public"
+            exit 1
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
