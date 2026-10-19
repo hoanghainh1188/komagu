@@ -78,12 +78,12 @@ class TestNPMPackage(unittest.TestCase):
         self.assertIn("docker run", res.stderr)
 
     def test_npm_publish_workflow_configuration(self) -> None:
-        """Workflow .github/workflows/npm-publish.yml must exist with public access and OIDC trusted publishing."""
+        """Workflow .github/workflows/npm-publish.yml must exist with public access and token."""
         self.assertTrue(WORKFLOW_FILE.is_file(), f"Workflow not found at {WORKFLOW_FILE}")
         content = WORKFLOW_FILE.read_text(encoding="utf-8")
 
         self.assertIn("npm publish --access public", content)
-        self.assertIn("id-token: write", content)
+        self.assertIn("NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}", content)
         self.assertIn("registry-url: 'https://registry.npmjs.org'", content)
 
 
