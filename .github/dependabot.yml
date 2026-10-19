@@ -1,9 +1,12 @@
 version: 2
+# Monthly + capped open PRs: every Dependabot PR runs the full CI matrix
+# (6 jobs), which exhausted the Actions allowance when ~33 PRs opened at once.
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
     labels: [dependencies]
     groups:
       github-actions:
@@ -12,19 +15,22 @@ updates:
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
     labels: [dependencies]
 
   - package-ecosystem: npm
     directory: /remediate/authz/nodejs
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
     labels: [dependencies]
 
   - package-ecosystem: gomod
     directory: /remediate/authz/golang
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
     labels: [dependencies]
 
   # The D1/D2/D3 Spring modules target Spring Boot 3 for legacy clients:
@@ -36,7 +42,8 @@ updates:
       - /remediate/identity/spring
       - /remediate/query/spring
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 3
     labels: [dependencies]
     groups:
       kotlin:
@@ -60,7 +67,8 @@ updates:
       - /remediate/query/dotnet
       - /examples/member-portal/backend-dotnet
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
     labels: [dependencies]
     groups:
       dotnet-runtime:
