@@ -138,6 +138,111 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         with self.assertRaises(MissingTenantContextError):
             get_current_tenant()
 
+    def test_09_schema_per_tenant_slug_rejection(self) -> None:
+        """Verifies strict slug validation regex ^[a-z0-9_]{1,48}$ and rejection of injection attempts."""
+        import re
+
+        slug_pattern = re.compile(r"^[a-z0-9_]{1,48}$")
+
+        valid_slugs = ["acme_corp", "tenant1", "org_999", "a", "12345"]
+        for slug in valid_slugs:
+            self.assertTrue(slug_pattern.match(slug), f"Valid slug '{slug}' should match pattern")
+
+        invalid_slugs = [
+            "acme-corp",  # hyphens rejected
+            "ACME_CORP",  # upper-case rejected
+            "acme.corp",  # dots rejected
+            "tenant; DROP TABLE orders; --",  # SQL injection rejected
+            "x' OR '1'='1",  # quotes rejected
+            "",  # empty string rejected
+            "a" * 49,  # exceeds 48 characters
+        ]
+        for slug in invalid_slugs:
+            self.assertFalse(slug_pattern.match(slug), f"Invalid slug '{slug}' must be rejected")
+
+        # Verify SQL file explicitly declares this regex and raises exception
+        schema_file = os.path.join(MODULE_ROOT, "sql", "schema_per_tenant.sql")
+        with open(schema_file, "r", encoding="utf-8") as f:
+            sql_content = f.read()
+
+        self.assertIn("^[a-z0-9_]{1,48}$", sql_content)
+        self.assertIn("RAISE EXCEPTION 'Invalid tenant slug", sql_content)
+        # Ensure it does NOT use vulnerable regexp_replace rewrite
+        self.assertNotIn("regexp_replace(p_tenant_slug", sql_content)
+
+    def test_10_schema_per_tenant_sql_safety_and_no_public_fallback(self) -> None:
+        """Verifies schema_per_tenant uses %I throughout, avoids public fallback, and detects collisions."""
+        schema_file = os.path.join(MODULE_ROOT, "sql", "schema_per_tenant.sql")
+        with open(schema_file, "r", encoding="utf-8") as f:
+            sql_content = f.read()
+
+        # No vulnerable string injection in index or schema names
+        self.assertNotIn("idx_%s_orders_owner", sql_content)
+        self.assertIn("CREATE INDEX %I ON %I.orders(owner_user_id)", sql_content)
+        # Collision detection via tenant_registry table
+        self.assertIn("public.tenant_registry", sql_content)
+        self.assertIn("Schema collision detected", sql_content)
+        # No fallback to public in search_path
+        self.assertIn("SET LOCAL search_path TO %I", sql_content)
+        self.assertNotIn("search_path TO %I, public", sql_content)
+        # Permissions revoked from PUBLIC
+        self.assertIn("REVOKE ALL ON SCHEMA %I FROM PUBLIC", sql_content)
+        self.assertIn("REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC", sql_content)
+        self.assertIn("REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
+        self.assertIn("REVOKE ALL ON FUNCTION switch_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
+
+    def test_11_rls_sql_app_role_and_tenant_organizations_security(self) -> None:
+        """Verifies RLS template defines non-owner app role, protects tenant_organizations, and pins search_path."""
+        rls_file = os.path.join(MODULE_ROOT, "sql", "rls_isolation.sql")
+        with open(rls_file, "r", encoding="utf-8") as f:
+            sql_content = f.read()
+
+        # Dedicated non-owner role provisioned
+        self.assertIn("CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS", sql_content)
+        # tenant_organizations protected by RLS
+        self.assertIn("ALTER TABLE tenant_organizations ENABLE ROW LEVEL SECURITY", sql_content)
+        self.assertIn("ALTER TABLE tenant_organizations FORCE ROW LEVEL SECURITY", sql_content)
+        self.assertIn("CREATE POLICY tenant_org_isolation_policy ON tenant_organizations", sql_content)
+        # search_path pinned on SECURITY DEFINER functions
+        self.assertIn("SECURITY DEFINER\nSET search_path = pg_catalog, pg_temp", sql_content)
+        # Transaction requirement documented
+        self.assertIn("TRANSACTION REQUIREMENT", sql_content)
+        self.assertIn("BEGIN ... COMMIT", sql_content)
+        # Execution revoked from public
+        self.assertIn("REVOKE ALL ON FUNCTION set_current_tenant(VARCHAR) FROM PUBLIC", sql_content)
+        self.assertIn("GRANT EXECUTE ON FUNCTION set_current_tenant(VARCHAR) TO komainu_app", sql_content)
+
+    def test_12_rls_cross_tenant_isolation_logic_simulation(self) -> None:
+        """Simulates RLS policy evaluation: verifying cross-tenant records cannot be read."""
+        # Simulated database table records
+        mock_orders_table = [
+            {"id": "ord-1", "tenant_id": "tenant-a", "owner_user_id": "alice", "amount": 100.0},
+            {"id": "ord-2", "tenant_id": "tenant-a", "owner_user_id": "alice", "amount": 200.0},
+            {"id": "ord-3", "tenant_id": "tenant-b", "owner_user_id": "bob", "amount": 500.0},
+        ]
+
+        def evaluate_rls_query(session_tenant: str | None) -> list[dict]:
+            # Mirrors PostgreSQL: tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')
+            active_tenant = session_tenant if session_tenant else None
+            return [row for row in mock_orders_table if row["tenant_id"] == active_tenant]
+
+        # 1. Tenant A only sees Tenant A's orders
+        tenant_a_rows = evaluate_rls_query("tenant-a")
+        self.assertEqual(len(tenant_a_rows), 2)
+        self.assertTrue(all(r["tenant_id"] == "tenant-a" for r in tenant_a_rows))
+
+        # 2. Tenant B only sees Tenant B's orders
+        tenant_b_rows = evaluate_rls_query("tenant-b")
+        self.assertEqual(len(tenant_b_rows), 1)
+        self.assertEqual(tenant_b_rows[0]["id"], "ord-3")
+
+        # 3. Unauthenticated / missing transaction context sees 0 rows (fail-closed)
+        empty_rows = evaluate_rls_query(None)
+        self.assertEqual(len(empty_rows), 0)
+        empty_rows_blank = evaluate_rls_query("")
+        self.assertEqual(len(empty_rows_blank), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
+
