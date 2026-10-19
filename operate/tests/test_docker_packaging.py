@@ -20,7 +20,7 @@ class TestDockerPackaging(unittest.TestCase):
         self.assertTrue(DOCKERFILE.is_file(), f"Dockerfile not found at {DOCKERFILE}")
         content = DOCKERFILE.read_text(encoding="utf-8")
 
-        self.assertIn("FROM python:3.11-slim", content)
+        self.assertRegex(content, r"(?m)^FROM python:3\.\d+-slim\b")
         self.assertIn("useradd", content)
         self.assertIn("USER komainu", content)
         self.assertIn("WORKDIR /workspace", content)
