@@ -70,7 +70,16 @@ class DRManager:
         data_payload: bytes,
         retention_days: int = 365,
     ) -> DRBackupRecord:
-        """Create and store an immutable snapshot under WORM compliance mode."""
+        """Create and store an immutable snapshot under WORM compliance mode.
+
+        Rejects duplicate snapshot IDs to protect point-in-time immutable retention.
+        """
+        if snapshot_id in self.storage:
+            raise ValueError(
+                f"Snapshot with ID '{snapshot_id}' already exists and is immutable. "
+                "Overwriting an existing snapshot is prohibited under WORM compliance retention."
+            )
+
         record = DRBackupRecord(
             snapshot_id=snapshot_id,
             data_payload=data_payload,
@@ -112,7 +121,12 @@ class DRManager:
         snapshot_id: str,
         target_cluster: str = "standby-osaka",
     ) -> Dict[str, Any]:
-        """Execute automated DR restore to the secondary standby cluster."""
+        """Execute automated DR restore to the secondary standby cluster.
+
+        Note: RTO and RPO metrics in this orchestration manager represent simulated
+        synthetic benchmark measurements for automated test verification without
+        requiring multi-gigabyte storage transfers.
+        """
         start_time = time.time()
 
         valid, msg = self.verify_integrity(snapshot_id)
@@ -121,11 +135,11 @@ class DRManager:
 
         record = self.storage[snapshot_id]
 
-        # Simulate database & container state rehydration
-        time.sleep(0.01)  # Synthetic restore delay
+        # Simulate database & container state rehydration delay
+        time.sleep(0.01)
         elapsed_seconds = round(time.time() - start_time, 4)
 
-        # Compute RPO (time between snapshot creation and restore event)
+        # Compute simulated RPO (time between snapshot creation and restore event)
         now = datetime.datetime.now(datetime.timezone.utc)
         rpo_minutes = round((now - record.created_at).total_seconds() / 60.0, 2)
 
@@ -138,4 +152,6 @@ class DRManager:
             "recovery_time_objective_actual_seconds": elapsed_seconds,
             "recovery_point_objective_actual_minutes": rpo_minutes,
             "integrity_status": "VERIFIED_VALID",
+            "is_simulated": True,
+            "simulation_note": "Timing metrics are synthetic benchmark figures for test validation",
         }

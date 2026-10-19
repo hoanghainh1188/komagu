@@ -8,6 +8,9 @@
 - **Target RPO (Recovery Point Objective)**: < 60 minutes
 - **Compliance Standard**: S3 Object Lock (Compliance Mode WORM)
 
+> [!NOTE]
+> RTO and RPO metrics reported by `DRManager.execute_failover_restore()` are simulated synthetic benchmarks designed to validate automated orchestration logic without incurring multi-gigabyte data transfer overhead during automated testing.
+
 ---
 
 ## 1. Trigger Criteria for Disaster Declaration (発災・切替判断基準)
