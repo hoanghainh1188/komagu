@@ -149,6 +149,10 @@ def main() -> int:
         if fx.is_dir():
             fails += [f"[{fx.name}] {x}" for x in test_fixture(fx, cfg)]
     fails += test_pipeline(cfg)
+    res = subprocess.run([sys.executable, str(HERE / "test_merge_and_security.py")], capture_output=True, text=True)
+    if res.returncode != 0:
+        fails.append(f"test_merge_and_security.py failed:\n{res.stdout}\n{res.stderr}")
+    print(f"  merge & security {'OK' if res.returncode == 0 else 'FAIL'}")
     print()
     if fails:
         print(f"FAILED ({len(fails)})")
