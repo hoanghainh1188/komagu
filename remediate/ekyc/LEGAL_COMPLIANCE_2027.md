@@ -76,3 +76,17 @@ This document confirms that Komainu Boilerplate 2 satisfies:
 - Japan National Police Agency Order No. 5 (2024)
 - Digital Agency Guidelines for JPKI Integration (デジタル庁 公的個人認証サービス技術仕様)
 - Act on the Protection of Personal Information (個人情報の保護に関する法律 - APPI)
+
+---
+
+## 5. Scope & Production J-LIS Integration Notice
+
+> [!NOTE]
+> **Reference Architecture & Test Harness Scope**:
+> Komainu Boilerplate 2 provides the reference client-side Zero-PII tokenization patterns, ISO/IEC 7816-4 APDU sequences, and cryptographic verification contracts.
+> 
+> Direct connectivity to J-LIS (地方公共団体情報システム機構) in production requires:
+> 1. Formal accreditation under the Public Personal Authentication Act as a certified verification business (大臣認定事業者) or integration through an authorized JPKI platform operator.
+> 2. Dedicated leased-line / IPsec VPN connectivity or certified mTLS gateway to the J-LIS certificate validation endpoints.
+> 3. Production deployments must run in non-simulation mode with valid X.509 certificates and strict CRL/OCSP revocation checks.
+
