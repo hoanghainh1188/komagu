@@ -1,0 +1,17 @@
+**/__pycache__/
+**/*.pyc
+**/.gradle/
+**/build/
+**/bin/Debug/
+**/bin/Release/
+**/obj/
+**/.kotlin/
+**/.idea/
+**/.vscode/
+**/*.db
+**/*.sqlite
+**/node_modules/
+.github/
+delivery/
+docs/
+.git/
