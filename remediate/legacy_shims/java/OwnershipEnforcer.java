@@ -21,14 +21,16 @@ import java.util.regex.Pattern;
  * <p>Security invariants enforced:
  * <ul>
  *   <li>Identity is strictly read from the server-side session or principal.</li>
+ *   <li>Identifiers are normalized to canonical positive decimal numbers; empty, 0, negative and non-canonical IDs fail closed.</li>
  *   <li>Table and column identifiers are verified against an exact-match allow-list.</li>
  *   <li>Resource and owner keys are bound via JDBC {@link PreparedStatement}.</li>
- *   <li>Unauthorized access throws {@link ResourceNotFoundOrForbiddenException} (mapped to HTTP 404).</li>
+ *   <li>Unauthorized access or missing identifiers throw {@link ResourceNotFoundOrForbiddenException} (mapped to HTTP 404).</li>
  * </ul>
  */
 public final class OwnershipEnforcer {
 
     private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+    private static final Pattern CANONICAL_POSITIVE_INT = Pattern.compile("^[1-9][0-9]{0,18}$");
 
     private OwnershipEnforcer() {
         // Utility class
@@ -62,7 +64,7 @@ public final class OwnershipEnforcer {
     }
 
     /**
-     * Exception thrown when a resource does not exist or does not belong to the session user.
+     * Exception thrown when a resource does not exist, identifier is missing, or does not belong to the session user.
      * Callers in Servlet/Struts actions should catch this and return HTTP 404 Not Found.
      */
     public static final class ResourceNotFoundOrForbiddenException extends RuntimeException {
@@ -93,6 +95,36 @@ public final class OwnershipEnforcer {
     }
 
     /**
+     * Validate and normalize a candidate identifier to a positive 64-bit integer.
+     * Rejects null, empty strings, 0, negative values, hex/floating/scientific formats, and overflow.
+     *
+     * @param id Candidate identifier (String, Number, etc.)
+     * @return Normalized positive long value
+     * @throws IllegalArgumentException If identifier is null, empty, 0, negative, or non-canonical
+     */
+    public static long normalizeId(Object id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Identifier must not be null.");
+        }
+        String s = id.toString().trim();
+        if (s.isEmpty()) {
+            throw new IllegalArgumentException("Identifier must not be empty.");
+        }
+        if (!CANONICAL_POSITIVE_INT.matcher(s).matches()) {
+            throw new IllegalArgumentException("Identifier must be a positive canonical decimal integer: " + id);
+        }
+        try {
+            long val = Long.parseLong(s);
+            if (val <= 0) {
+                throw new IllegalArgumentException("Identifier must be positive: " + id);
+            }
+            return val;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Identifier numeric overflow: " + id, e);
+        }
+    }
+
+    /**
      * Verify two-way ownership between a target resource ID and the authenticated session user ID.
      *
      * @param conn          Active JDBC connection
@@ -112,7 +144,13 @@ public final class OwnershipEnforcer {
         Objects.requireNonNull(conn, "Connection must not be null");
         Objects.requireNonNull(registry, "Schema registry must not be null");
 
-        if (resourceId == null || sessionUserId == null) {
+        long validResourceId;
+        long validSessionUserId;
+        try {
+            validResourceId = normalizeId(resourceId);
+            validSessionUserId = normalizeId(sessionUserId);
+        } catch (IllegalArgumentException e) {
+            // Empty, 0, negative, or non-canonical IDs fail closed immediately
             return false;
         }
 
@@ -128,8 +166,8 @@ public final class OwnershipEnforcer {
                 schema.getOwnerColumn());
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, resourceId);
-            ps.setObject(2, sessionUserId);
+            ps.setLong(1, validResourceId);
+            ps.setLong(2, validSessionUserId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
@@ -138,16 +176,34 @@ public final class OwnershipEnforcer {
 
     /**
      * Enforce two-way ownership or throw {@link ResourceNotFoundOrForbiddenException} (HTTP 404).
+     *
+     * @return Normalized positive long resourceId for caller to safely use
      */
-    public static void requireOwnership(
+    public static long requireOwnership(
             Connection conn,
             String table,
             Object resourceId,
             Object sessionUserId,
             Map<String, TableOwnershipSchema> registry) throws SQLException {
-        if (!checkOwnership(conn, table, resourceId, sessionUserId, registry)) {
+        long validResourceId;
+        long validSessionUserId;
+        try {
+            validResourceId = normalizeId(resourceId);
+            validSessionUserId = normalizeId(sessionUserId);
+        } catch (IllegalArgumentException e) {
+            throw new ResourceNotFoundOrForbiddenException("Invalid resource or user identifier (HTTP 404)");
+        }
+
+        TableOwnershipSchema schema = registry.get(table);
+        if (schema == null) {
             throw new ResourceNotFoundOrForbiddenException("Resource not found or access denied (HTTP 404)");
         }
+
+        if (!checkOwnership(conn, table, validResourceId, validSessionUserId, registry)) {
+            throw new ResourceNotFoundOrForbiddenException("Resource not found or access denied (HTTP 404)");
+        }
+
+        return validResourceId;
     }
 
     /**
