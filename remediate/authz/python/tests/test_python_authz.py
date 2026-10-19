@@ -1,0 +1,196 @@
+"""Unit tests for Komainu Python Object-Level Authorization & OIDC Validation (D1/D2)."""
+
+from __future__ import annotations
+
+import base64
+import json
+import time
+import unittest
+from dataclasses import dataclass
+from typing import Any, Dict
+
+from remediate.authz.python.komainu_authz.models import (
+    InMemorySecurityAuditSink,
+    IOwnedResource,
+    OwnershipException,
+    ResourceOperation,
+    SecurityAuditEvent,
+    UserPrincipal,
+)
+from remediate.authz.python.komainu_authz.service import KomainuAuthorizationService
+from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+
+
+@dataclass
+class MockOrder:
+    id: str
+    owner_user_id: str
+    tenant_id: str
+    total_amount: float = 100.0
+
+
+class TestPythonAuthz(unittest.TestCase):
+    def setUp(self) -> None:
+        self.audit_sink = InMemorySecurityAuditSink()
+        self.authz_service = KomainuAuthorizationService(audit_sink=self.audit_sink)
+        self.validator = OidcTokenValidator()
+
+        self.alice_user = UserPrincipal(
+            user_id="user-a",
+            tenant_id="tenant-komainu",
+            claims={"sub": "user-a", "tenant_id": "tenant-komainu"},
+        )
+        self.bob_attacker = UserPrincipal(
+            user_id="user-b",
+            tenant_id="tenant-komainu",
+            claims={"sub": "user-b", "tenant_id": "tenant-komainu"},
+        )
+        self.charlie_cross_tenant = UserPrincipal(
+            user_id="user-c",
+            tenant_id="tenant-other",
+            claims={"sub": "user-c", "tenant_id": "tenant-other"},
+        )
+
+        self.alice_order = MockOrder(
+            id="ord-001",
+            owner_user_id="user-a",
+            tenant_id="tenant-komainu",
+            total_amount=150.0,
+        )
+
+    def test_01_owner_authorization_granted(self) -> None:
+        """Legitimate owner Alice is granted access to her order."""
+        result = self.authz_service.authorize(
+            user=self.alice_user,
+            resource=self.alice_order,
+            operation=ResourceOperation.READ,
+        )
+        self.assertTrue(result.succeeded)
+        self.assertIsNone(result.failure_reason)
+        self.assertEqual(len(self.audit_sink.events), 0)
+
+    def test_02_attacker_same_tenant_denied_with_audit(self) -> None:
+        """Attacker Bob (same tenant) is denied access; emits Komainu.Authorization.Denied event."""
+        result = self.authz_service.authorize(
+            user=self.bob_attacker,
+            resource=self.alice_order,
+            operation=ResourceOperation.READ,
+        )
+        self.assertFalse(result.succeeded)
+        self.assertIn("User ownership violation", result.failure_reason or "")
+
+        # Verify audit emission
+        self.assertEqual(len(self.audit_sink.events), 1)
+        event = self.audit_sink.events[0]
+        self.assertEqual(event.event_name, "Komainu.Authorization.Denied")
+        self.assertEqual(event.actor_user_id, "user-b")
+        self.assertEqual(event.actor_tenant_id, "tenant-komainu")
+        self.assertEqual(event.resource_id, "ord-001")
+        self.assertEqual(event.operation, ResourceOperation.READ)
+
+    def test_03_cross_tenant_attacker_denied(self) -> None:
+        """Cross-tenant user Charlie is denied due to tenant boundary violation."""
+        result = self.authz_service.authorize(
+            user=self.charlie_cross_tenant,
+            resource=self.alice_order,
+            operation=ResourceOperation.UPDATE,
+        )
+        self.assertFalse(result.succeeded)
+        self.assertIn("Tenant boundary violation", result.failure_reason or "")
+
+        self.assertEqual(len(self.audit_sink.events), 1)
+        event = self.audit_sink.events[0]
+        self.assertEqual(event.actor_tenant_id, "tenant-other")
+
+    def test_04_require_ownership_raises_404_ownership_exception(self) -> None:
+        """require_ownership raises OwnershipException with status 404 (never 403) on denial."""
+        # Owner succeeds without exception
+        self.authz_service.require_ownership(self.alice_user, self.alice_order, ResourceOperation.READ)
+
+        # Attacker raises OwnershipException with status_code=404
+        with self.assertRaises(OwnershipException) as ctx:
+            self.authz_service.require_ownership(self.bob_attacker, self.alice_order, ResourceOperation.DELETE)
+        self.assertEqual(ctx.exception.status_code, 404)
+        self.assertEqual(ctx.exception.detail, "Resource not found")
+
+    def test_05_unauthenticated_caller_denied(self) -> None:
+        """Unauthenticated caller (None or is_authenticated=False) is denied."""
+        result = self.authz_service.authorize(
+            user=None,
+            resource=self.alice_order,
+            operation=ResourceOperation.READ,
+        )
+        self.assertFalse(result.succeeded)
+        self.assertIn("unauthenticated", result.failure_reason or "")
+
+        unauth_user = UserPrincipal("anon", "none", is_authenticated=False)
+        result2 = self.authz_service.authorize(unauth_user, self.alice_order, ResourceOperation.READ)
+        self.assertFalse(result2.succeeded)
+
+    def test_06_dict_resource_and_custom_extractors(self) -> None:
+        """Supports dictionary resources and custom lambda extractors."""
+        dict_order = {
+            "id": "ord-dict-99",
+            "ownerUserId": "user-a",
+            "tenantId": "tenant-komainu",
+        }
+        res = self.authz_service.authorize(self.alice_user, dict_order)
+        self.assertTrue(res.succeeded)
+
+        # Custom extractor test
+        opaque_obj = ("ord-tuple", "user-a", "tenant-komainu")
+        res2 = self.authz_service.authorize(
+            user=self.alice_user,
+            resource=opaque_obj,
+            owner_id_extractor=lambda x: x[1],
+            tenant_id_extractor=lambda x: x[2],
+        )
+        self.assertTrue(res2.succeeded)
+
+    def test_07_oidc_validator_dev_tokens(self) -> None:
+        """OidcTokenValidator validates dev bearer tokens used across test harnesses."""
+        p_alice = self.validator.validate_token("Bearer token-user-a")
+        self.assertEqual(p_alice.user_id, "user-a")
+        self.assertEqual(p_alice.tenant_id, "tenant-komainu")
+        self.assertTrue(p_alice.is_authenticated)
+
+        p_bob = self.validator.validate_token("token-user-b")
+        self.assertEqual(p_bob.user_id, "user-b")
+        self.assertEqual(p_bob.tenant_id, "tenant-komainu")
+
+        with self.assertRaises(PermissionError):
+            self.validator.validate_token("Bearer token-unknown")
+
+    def test_08_oidc_validator_jwt_claims(self) -> None:
+        """OidcTokenValidator decodes and verifies JWT payloads."""
+        header = base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').decode("ascii").rstrip("=")
+        payload_data = {
+            "sub": "user-jwt-123",
+            "tenant_id": "tenant-enterprise",
+            "exp": time.time() + 3600,
+            "roles": ["Engineer"],
+        }
+        payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode("utf-8")).decode("ascii").rstrip("=")
+        fake_jwt = f"{header}.{payload}.sig"
+
+        principal = self.validator.validate_token(f"Bearer {fake_jwt}")
+        self.assertEqual(principal.user_id, "user-jwt-123")
+        self.assertEqual(principal.tenant_id, "tenant-enterprise")
+        self.assertIn("Engineer", principal.roles)
+
+        # Expired token test
+        expired_data = {
+            "sub": "user-expired",
+            "tenant_id": "tenant-enterprise",
+            "exp": time.time() - 3600,
+        }
+        expired_payload = base64.urlsafe_b64encode(json.dumps(expired_data).encode("utf-8")).decode("ascii").rstrip("=")
+        expired_jwt = f"{header}.{expired_payload}.sig"
+
+        with self.assertRaises(PermissionError) as ctx:
+            self.validator.validate_token(expired_jwt)
+        self.assertIn("expired", str(ctx.exception).lower())
+
+
+if __name__ == "__main__":
+    unittest.main()
