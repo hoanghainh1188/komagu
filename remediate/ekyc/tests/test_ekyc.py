@@ -15,6 +15,7 @@ from remediate.ekyc.client.nfc_reader import (
 )
 from remediate.ekyc.server.api import EKYCService
 from remediate.ekyc.server.jpki_verifier import (
+    HAS_CRYPTOGRAPHY,
     JPKIVerificationEngine,
     MockJPKIVerificationEngine,
 )
@@ -184,6 +185,7 @@ class TestZeroPIIeKYC(unittest.TestCase):
         self.assertEqual(v_resp["error"], "UNPROCESSABLE_ENTITY")
         self.assertIn("prohibited", v_resp["message"].lower())
 
+    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "Requires 'cryptography' library")
     def test_10_jpki_cryptographic_verification_with_x509_cert(self) -> None:
         """Verifies real asymmetric cryptographic signature verification with X.509 cert."""
         priv_pem, cert_pem = NFCReaderSession.generate_test_keypair(common_name="山田 太郎")
@@ -215,6 +217,7 @@ class TestZeroPIIeKYC(unittest.TestCase):
         )
         self.assertFalse(valid_forged)
 
+    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "Requires 'cryptography' library")
     def test_11_jpki_attribute_binding_mismatch_rejected(self) -> None:
         """Verifies that an attribute swap attack is rejected when cert CN does not match claimed name."""
         priv_pem, cert_pem = NFCReaderSession.generate_test_keypair(common_name="山田 太郎")

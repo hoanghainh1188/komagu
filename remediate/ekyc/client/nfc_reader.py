@@ -14,10 +14,14 @@ import hashlib
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
-from cryptography.x509.oid import NameOID
+try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+    from cryptography.x509.oid import NameOID
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 
 # Standard Application Identifiers (AIDs)
 AID_MY_NUMBER_JPKI = "D3921000310001010408"          # JPKI (User Auth & Digital Signature)
@@ -93,6 +97,9 @@ class NFCReaderSession:
         nonce_bytes = challenge_nonce.encode("utf-8")
 
         if private_key_pem:
+            if not HAS_CRYPTOGRAPHY:
+                raise RuntimeError("Cryptographic signing requires 'cryptography' library")
+
             # Cryptographic signing using real key pair
             key = serialization.load_pem_private_key(
                 private_key_pem.encode("utf-8"),
@@ -150,6 +157,9 @@ class NFCReaderSession:
     @staticmethod
     def generate_test_keypair(common_name: str = "山田 太郎") -> Tuple[str, str]:
         """Generate an RSA-2048 private key and self-signed X.509 cert for testing."""
+        if not HAS_CRYPTOGRAPHY:
+            raise RuntimeError("Test keypair generation requires 'cryptography' library")
+
         key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         subject = issuer = x509.Name([
             x509.NameAttribute(NameOID.COUNTRY_NAME, "JP"),

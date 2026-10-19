@@ -17,10 +17,14 @@ import sys
 import time
 from typing import Any, Dict, Optional, Tuple
 
-from cryptography import x509
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+try:
+    from cryptography import x509
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 
 MAX_ACTIVE_NONCES = 1000
 
@@ -115,6 +119,9 @@ class JPKIVerificationEngine:
 
         # Mode A: Cryptographic X.509 Verification with attribute binding
         if certificate_pem:
+            if not HAS_CRYPTOGRAPHY:
+                return False, "Cryptographic verification unavailable: 'cryptography' library required"
+
             try:
                 cert = x509.load_pem_x509_certificate(certificate_pem.encode("utf-8"))
             except Exception as e:
