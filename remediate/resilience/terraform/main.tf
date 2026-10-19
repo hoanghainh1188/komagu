@@ -21,7 +21,7 @@ provider "aws" {
   region = var.secondary_region
 }
 
-# 1. Primary VPC & Networking (Tokyo: Multi-AZ across 1a, 1c, 1d)
+# 1. Primary VPC & Networking (Tokyo: Multi-AZ across 1a, 1c)
 resource "aws_vpc" "primary" {
   provider             = aws.primary
   cidr_block           = "10.100.0.0/16"
@@ -35,11 +35,36 @@ resource "aws_vpc" "primary" {
   }
 }
 
+resource "aws_internet_gateway" "primary_igw" {
+  provider = aws.primary
+  vpc_id   = aws_vpc.primary.id
+
+  tags = {
+    Name        = "${var.project_name}-primary-igw"
+    Environment = var.environment
+  }
+}
+
+resource "aws_route_table" "primary_public_rt" {
+  provider = aws.primary
+  vpc_id   = aws_vpc.primary.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.primary_igw.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-primary-public-rt"
+  }
+}
+
 resource "aws_subnet" "primary_public_1a" {
-  provider          = aws.primary
-  vpc_id            = aws_vpc.primary.id
-  cidr_block        = "10.100.1.0/24"
-  availability_zone = "${var.primary_region}a"
+  provider                = aws.primary
+  vpc_id                  = aws_vpc.primary.id
+  cidr_block              = "10.100.1.0/24"
+  availability_zone       = "${var.primary_region}a"
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "${var.project_name}-primary-public-1a"
@@ -47,13 +72,44 @@ resource "aws_subnet" "primary_public_1a" {
 }
 
 resource "aws_subnet" "primary_public_1c" {
-  provider          = aws.primary
-  vpc_id            = aws_vpc.primary.id
-  cidr_block        = "10.100.2.0/24"
-  availability_zone = "${var.primary_region}c"
+  provider                = aws.primary
+  vpc_id                  = aws_vpc.primary.id
+  cidr_block              = "10.100.2.0/24"
+  availability_zone       = "${var.primary_region}c"
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "${var.project_name}-primary-public-1c"
+  }
+}
+
+resource "aws_route_table_association" "primary_public_1a" {
+  provider       = aws.primary
+  subnet_id      = aws_subnet.primary_public_1a.id
+  route_table_id = aws_route_table.primary_public_rt.id
+}
+
+resource "aws_route_table_association" "primary_public_1c" {
+  provider       = aws.primary
+  subnet_id      = aws_subnet.primary_public_1c.id
+  route_table_id = aws_route_table.primary_public_rt.id
+}
+
+resource "aws_security_group" "primary_default_sg" {
+  provider    = aws.primary
+  vpc_id      = aws_vpc.primary.id
+  name        = "${var.project_name}-primary-default-sg"
+  description = "Default egress-only security group for primary workloads"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-primary-default-sg"
   }
 }
 
