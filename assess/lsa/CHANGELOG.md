@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.2 — 2026-10-19
+
+Finding merge and security hardening (#115).
+
+- **Verification-First Deduplication:** Verification verdicts are applied before deduplication so confirmed findings are not shadowed by rejected duplicates. Deduplication key includes subtype and route, and dropped duplicate findings are excluded from `findings_without_verification`.
+- **Recursive Stdlib Validator:** Pure Python recursive schema validator for `finding.schema.json` and `route-inventory.schema.json` checking types, required fields, enums, patterns, minItems, maxLength, minimum, items, and `$ref`.
+- **Route Inventory Coverage Fix:** Missing/empty route inventory when candidates exist correctly flags missing candidates and exits with code 1; stale outputs (`routes.json`, `findings.json`, `coverage.json`) are cleared on re-run.
+- **Resilient Agent Output Handling:** Per-item error capture for malformed documents and items without crashing merge script.
+- **Symlink & Path Traversal Guard:** `iter_source_files` and code-behind resolver skip symlinks and paths resolving outside the target repository.
+
 ## 0.2.1 — 2026-10-18
 
 Platform release (v0.2.0 / v0.2.1).

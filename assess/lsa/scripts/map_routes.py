@@ -510,9 +510,14 @@ def js_py_rb_declared(c: Collector, rel: str, text: str, lang: str) -> bool:
 def file_endpoint(c: Collector, rel: str, text: str, lang: str, ext: str, target: Path, enc) -> None:
     handler_rel, body = rel, text
     if ext in (".aspx", ".ashx", ".asmx", ".svc"):
+        target_resolved = target.resolve()
         for cb in (rel + ".cs", rel + ".vb"):
             p = target / cb
-            if p.exists():
+            if p.exists() and not p.is_symlink():
+                try:
+                    p.resolve().relative_to(target_resolved)
+                except (ValueError, RuntimeError):
+                    continue
                 handler_rel, body = cb, read_text(p, enc) + "\n" + text
                 break
     inputs = c.inputs(lang, body)

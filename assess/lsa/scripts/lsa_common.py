@@ -92,13 +92,23 @@ def iter_source_files(root: Path, config: Dict, exts: Optional[set] = None) -> I
     excludes = config["scope"].get("exclude", [])
     includes = config["scope"].get("include", [])
     max_bytes = int(config["scope"].get("max_file_kb", 1024)) * 1024
+    root_resolved = root.resolve()
     for dirpath, dirnames, filenames in os.walk(root):
         rel_dir = os.path.relpath(dirpath, root)
         rel_dir = "" if rel_dir == "." else rel_dir.replace(os.sep, "/")
+        # Skip symlinked directories and excluded directories
         dirnames[:] = sorted(d for d in dirnames
-                             if not _excluded((rel_dir + "/" + d if rel_dir else d) + "/", excludes))
+                             if not (Path(dirpath) / d).is_symlink()
+                             and not _excluded((rel_dir + "/" + d if rel_dir else d) + "/", excludes))
         for name in sorted(filenames):
             p = Path(dirpath) / name
+            # Skip symlinks and ensure path resolves within root
+            if p.is_symlink():
+                continue
+            try:
+                p.resolve().relative_to(root_resolved)
+            except (ValueError, RuntimeError):
+                continue
             rel = (rel_dir + "/" + name) if rel_dir else name
             if p.suffix.lower() not in exts:
                 continue
