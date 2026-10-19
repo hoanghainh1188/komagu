@@ -84,7 +84,7 @@ class TestNPMPackage(unittest.TestCase):
 
         self.assertIn("npm publish --access public", content)
         self.assertIn("id-token: write", content)
-        self.assertIn("--provenance", content)
+        self.assertIn("registry-url: 'https://registry.npmjs.org'", content)
 
 
 if __name__ == "__main__":
