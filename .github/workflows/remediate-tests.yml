@@ -53,6 +53,21 @@ jobs:
       - name: Run Tenant-Isolated SaaS & BYOK unit tests
         run: python3 -m unittest discover -s remediate/tenancy/tests -p "test_*.py"
 
+      - name: Run Python D1/D2 Authz & D5 Continuous Verification tests
+        run: python3 -m unittest discover -s remediate/authz/python/tests -p "test_*.py"
+
+      - name: Run Node.js / NestJS D1/D2 Authz unit tests
+        run: node --test remediate/authz/nodejs/tests/test-authz.js
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run Go D1 Authz unit tests
+        working-directory: remediate/authz/golang
+        run: go test -v ./...
+
   dotnet-suites:
     name: .NET 8 Suites (D1 Authz, D2 Identity, D3 Query, D6 Demo)
     runs-on: ubuntu-latest

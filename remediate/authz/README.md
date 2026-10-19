@@ -165,9 +165,120 @@ interface OrderRepository : ScopedRepository<Order, UUID> {
 
 ---
 
-## 4. Test Verification
+## 4. Python (FastAPI) Usage
 
-Both test suites verify all BOLA invariants:
+### Domain Entity & Injections
+
+```python
+from dataclasses import dataclass
+from fastapi import FastAPI, Depends
+from remediate.authz.python.komainu_authz import (
+    KomainuAuthorizationService,
+    RequireOwnership,
+    ResourceOperation,
+    get_current_user,
+    UserPrincipal,
+    IOwnedResource,
+)
+
+@dataclass
+class Order(IOwnedResource):
+    id: str
+    owner_user_id: str
+    tenant_id: str
+    description: str
+
+app = FastAPI()
+
+def get_order_by_id(order_id: str) -> Order:
+    return db.find_order(order_id)
+
+@app.get("/api/v1/orders/{order_id}")
+def read_order(
+    order: Order = Depends(
+        RequireOwnership(
+            operation=ResourceOperation.READ,
+            id_param="order_id",
+            loader=get_order_by_id,
+        )
+    )
+):
+    return order
+```
+
+---
+
+## 5. Node.js (NestJS & Express) Usage
+
+### NestJS Declarative Guard & Interceptor
+
+```typescript
+import { Controller, Get, Param, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  RequireOwnership,
+  OwnershipGuard,
+  OwnershipInterceptor,
+  ResourceOperation,
+} from '@komainu/security-authz';
+
+@Controller('api/v1/orders')
+@UseGuards(OwnershipGuard)
+@UseInterceptors(OwnershipInterceptor)
+export class OrderController {
+  constructor(private readonly orderService: OrderService) {}
+
+  @Get(':id')
+  @RequireOwnership(ResourceOperation.READ, {
+    idParamName: 'id',
+    resourceLoader: (id, req) => orderService.findById(id),
+  })
+  async getOrder(@Param('id') id: string) {
+    return this.orderService.findById(id);
+  }
+}
+```
+
+### Express.js Middleware
+
+```javascript
+const { komainuOwnershipMiddleware, ResourceOperation } = require('@komainu/security-authz');
+
+app.get('/api/v1/orders/:id',
+  komainuOwnershipMiddleware({
+    operation: ResourceOperation.READ,
+    idParamName: 'id',
+    resourceLoader: async (id, req) => db.orders.findById(id),
+  }),
+  (req, res) => {
+    res.json(req.komainuResource);
+  }
+);
+```
+
+---
+
+## 6. Go Usage
+
+```go
+import (
+    "net/http"
+    authz "github.com/hoanghainh1188/komainu/remediate/authz/golang"
+)
+
+func RegisterOrderRoutes(mux *http.ServeMux, authorizer *authz.Authorizer) {
+    mux.Handle("/api/v1/orders", authorizer.Middleware(
+        extractClaims,
+        loadOrder,
+        authz.OpRead,
+    )(http.HandlerFunc(handleGetOrder)))
+}
+```
+
+---
+
+## 7. Test Verification & D5 Runner
+
+All multi-language adapters verify identical BOLA defense invariants:
 
 - **.NET 8:**
   ```bash
@@ -177,3 +288,16 @@ Both test suites verify all BOLA invariants:
   ```bash
   gradle -p remediate/authz/spring test
   ```
+- **Python (FastAPI & D5 Runner):**
+  ```bash
+  python3 -m unittest discover -s remediate/authz/python/tests -p "test_*.py"
+  ```
+- **Node.js (NestJS & Express):**
+  ```bash
+  node --test remediate/authz/nodejs/tests/test-authz.js
+  ```
+- **Go:**
+  ```bash
+  go test -v remediate/authz/golang/...
+  ```
+
