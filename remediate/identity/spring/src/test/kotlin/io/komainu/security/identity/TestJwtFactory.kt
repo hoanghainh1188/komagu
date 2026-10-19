@@ -27,21 +27,25 @@ class TestJwtFactory {
     fun createToken(
         issuer: String = "https://auth.komainu.test/realms/komainu",
         audience: String = "komainu-api",
-        subject: String = "alice-100",
+        subject: String? = "alice-100",
         tenantId: String = "tenant-alpha",
         issueTime: Instant = Instant.now(),
         expirationTime: Instant = Instant.now().plusSeconds(3600),
         customSignerPrivateKey: RSAPrivateKey? = null
     ): String {
-        val claimsSet = JWTClaimsSet.Builder()
+        val builder = JWTClaimsSet.Builder()
             .issuer(issuer)
             .audience(audience)
-            .subject(subject)
             .issueTime(Date.from(issueTime))
             .expirationTime(Date.from(expirationTime))
             .claim("tenant_id", tenantId)
             .claim("roles", listOf("Member"))
-            .build()
+
+        if (subject != null) {
+            builder.subject(subject)
+        }
+
+        val claimsSet = builder.build()
 
         val header = JWSHeader.Builder(JWSAlgorithm.RS256)
             .keyID("komainu-test-key-1")

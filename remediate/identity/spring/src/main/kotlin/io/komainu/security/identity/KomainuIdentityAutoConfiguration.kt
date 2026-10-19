@@ -11,6 +11,8 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtDecoders
+import org.springframework.security.oauth2.jwt.JwtIssuerValidator
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
@@ -37,16 +39,36 @@ class KomainuIdentityAutoConfiguration {
     @ConditionalOnProperty(prefix = "komainu.security.oidc", name = ["jwk-set-uri"])
     @ConditionalOnMissingBean
     fun jwkSetUriJwtDecoder(properties: KomainuOidcProperties): JwtDecoder {
-        val decoder = NimbusJwtDecoder.withJwkSetUri(properties.jwkSetUri!!).build()
-
-        val defaultValidators = if (properties.issuer.isNotBlank()) {
-            JwtValidators.createDefaultWithIssuer(properties.issuer)
-        } else {
-            JwtValidators.createDefault()
+        if (properties.issuer.isBlank()) {
+            throw IllegalStateException("komainu.security.oidc.issuer must not be blank")
+        }
+        if (properties.audience.isBlank()) {
+            throw IllegalStateException("komainu.security.oidc.audience must not be blank")
         }
 
+        val jwkUri = properties.jwkSetUri ?: throw IllegalStateException("komainu.security.oidc.jwk-set-uri must not be null")
+        if (!properties.allowInsecureHttpJwks && !jwkUri.lowercase().startsWith("https://")) {
+            throw IllegalStateException(
+                "komainu.security.oidc.jwk-set-uri must use HTTPS ($jwkUri). " +
+                "Set komainu.security.oidc.allow-insecure-http-jwks=true only for testing."
+            )
+        }
+
+        val decoder = NimbusJwtDecoder.withJwkSetUri(jwkUri).build()
+
+        val timestampValidator = JwtTimestampValidator(Duration.ofSeconds(properties.clockSkewSeconds))
+        val issuerValidator = org.springframework.security.oauth2.jwt.JwtIssuerValidator(properties.issuer)
         val audienceValidator = KomainuAudienceValidator(properties.audience)
-        decoder.setJwtValidator(DelegatingOAuth2TokenValidator(defaultValidators, audienceValidator))
+        val subjectValidator = KomainuSubjectValidator(properties.userClaimName)
+
+        decoder.setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                timestampValidator,
+                issuerValidator,
+                audienceValidator,
+                subjectValidator
+            )
+        )
         return decoder
     }
 
