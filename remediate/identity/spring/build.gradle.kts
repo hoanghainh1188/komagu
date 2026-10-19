@@ -35,7 +35,7 @@ dependencies {
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
 
     // Logging
-    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("org.slf4j:slf4j-api:2.0.20")
 
     // Test dependencies
     testImplementation(kotlin("test"))
