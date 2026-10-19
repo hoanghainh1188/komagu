@@ -36,7 +36,11 @@ class TestFastApiAdapter(unittest.TestCase):
     def setUp(self) -> None:
         self.audit_sink = InMemorySecurityAuditSink()
         self.authz_service = KomainuAuthorizationService(audit_sink=self.audit_sink)
-        self.validator = OidcTokenValidator()
+        self.validator = OidcTokenValidator(
+            issuer="https://auth.komainu.test",
+            audience="komainu-api",
+            allow_dev_tokens=True,
+        )
 
         # In-memory document store
         self.docs: Dict[str, Document] = {
@@ -150,6 +154,34 @@ class TestFastApiAdapter(unittest.TestCase):
         self.assertIsNotNone(user)
         self.assertEqual(user.user_id, "user-a")
 
+    def test_07_adapter_refuses_unconfigured_validator(self) -> None:
+        """FastAPI adapter components refuse to operate without a configured validator."""
+        # 1. get_current_user with None validator raises 500 HTTPException
+        req = Request(headers={"Authorization": "Bearer token-user-a"})
+        with self.assertRaises(HTTPException) as ctx:
+            get_current_user(req, validator=None)
+        self.assertEqual(ctx.exception.status_code, 500)
+        self.assertIn("must be configured", ctx.exception.detail)
+
+        # 2. RequireOwnership with None validator raises ValueError
+        with self.assertRaises(ValueError) as ctx_dep:
+            RequireOwnership(
+                operation=ResourceOperation.READ,
+                id_param="doc_id",
+                loader=self._loader,
+                validator=None,
+            )
+        self.assertIn("requires a configured OidcTokenValidator", str(ctx_dep.exception))
+
+        # 3. KomainuAuthMiddleware with None validator raises ValueError
+        async def dummy_app(scope: Any, receive: Any, send: Any) -> None:
+            pass
+
+        with self.assertRaises(ValueError) as ctx_mid:
+            KomainuAuthMiddleware(dummy_app, validator=None)
+        self.assertIn("requires a configured OidcTokenValidator", str(ctx_mid.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
+

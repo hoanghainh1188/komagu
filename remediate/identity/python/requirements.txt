@@ -1,0 +1,3 @@
+# Python dependencies for Komainu OIDC Identity Token Validation (D2)
+pyjwt>=2.8.0
+cryptography>=42.0.0

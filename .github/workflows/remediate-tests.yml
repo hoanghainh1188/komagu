@@ -53,8 +53,13 @@ jobs:
       - name: Run Tenant-Isolated SaaS & BYOK unit tests
         run: python3 -m unittest discover -s remediate/tenancy/tests -p "test_*.py"
 
+      - name: Install Python dependencies (Authz & Identity)
+        run: pip install -r remediate/identity/python/requirements.txt
+
       - name: Run Python D1/D2 Authz & D5 Continuous Verification tests
-        run: python3 -m unittest discover -s remediate/authz/python/tests -p "test_*.py"
+        run: |
+          python3 -m unittest discover -s remediate/identity/python/tests -p "test_*.py"
+          python3 -m unittest discover -s remediate/authz/python/tests -p "test_*.py"
 
       - name: Run Node.js / NestJS D1/D2 Authz unit tests
         run: node --test remediate/authz/nodejs/tests/test-authz.js

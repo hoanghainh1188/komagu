@@ -114,12 +114,6 @@ class OwnershipException(Exception):
         self.detail = detail
         self.status_code = status_code
 
+# Re-export UserPrincipal from identity package (Identity is Layer 2 principal source)
+from remediate.identity.python.komainu_identity.models import UserPrincipal
 
-@dataclass
-class UserPrincipal:
-    """Authenticated user identity extracted from verified token claims."""
-    user_id: str
-    tenant_id: str
-    claims: Dict[str, Any] = field(default_factory=dict)
-    roles: List[str] = field(default_factory=list)
-    is_authenticated: bool = True

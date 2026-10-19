@@ -57,7 +57,6 @@ except ImportError:
         return dependency
 
 
-_DEFAULT_VALIDATOR = OidcTokenValidator()
 _DEFAULT_AUTHZ_SERVICE = KomainuAuthorizationService()
 
 
@@ -66,7 +65,12 @@ def get_current_user(
     validator: Optional[OidcTokenValidator] = None,
 ) -> UserPrincipal:
     """FastAPI dependency extracting and validating the Bearer token from request headers."""
-    val = validator or _DEFAULT_VALIDATOR
+    if validator is None:
+        raise HTTPException(
+            status_code=500,
+            detail="OidcTokenValidator must be configured with issuer and audience",
+        )
+    val = validator
     headers = getattr(request, "headers", {})
     auth_header = None
 
@@ -122,7 +126,9 @@ class RequireOwnership:
         self.id_param = id_param
         self.loader = loader
         self.authz_service = authz_service or _DEFAULT_AUTHZ_SERVICE
-        self.validator = validator or _DEFAULT_VALIDATOR
+        if validator is None:
+            raise ValueError("RequireOwnership requires a configured OidcTokenValidator instance")
+        self.validator = validator
 
     async def __call__(self, request: Any) -> Any:
         # 1. Resolve user principal
@@ -171,8 +177,10 @@ class KomainuAuthMiddleware:
     """ASGI middleware for extracting Bearer tokens and attaching UserPrincipal to request scope."""
 
     def __init__(self, app: Any, validator: Optional[OidcTokenValidator] = None) -> None:
+        if validator is None:
+            raise ValueError("KomainuAuthMiddleware requires a configured OidcTokenValidator instance")
         self.app = app
-        self.validator = validator or _DEFAULT_VALIDATOR
+        self.validator = validator
 
     async def __call__(self, scope: Dict[str, Any], receive: Any, send: Any) -> None:
         if scope.get("type") == "http":
