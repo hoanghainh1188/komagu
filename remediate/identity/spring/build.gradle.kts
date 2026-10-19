@@ -18,7 +18,7 @@ java {
     }
 }
 
-val springBootVersion = "3.3.4"
+val springBootVersion = "4.1.1"
 val springSecurityVersion = "6.3.3"
 
 dependencies {
