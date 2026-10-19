@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import os
 import unittest
 
@@ -11,12 +12,16 @@ from remediate.tenancy.crypto.byok_manager import (
     BYOKKeyManager,
     CrossTenantKeyMismatchError,
     CryptoShreddedError,
+    TenantKeyRevokedError,
 )
 from remediate.tenancy.middleware.tenant_context import (
+    CrossTenantAccessDeniedError,
     MissingTenantContextError,
     TenantContextResolver,
     get_current_tenant,
+    set_current_tenant,
     tenant_scope,
+    validate_tenant_id_format,
 )
 
 MODULE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -102,7 +107,7 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         self.assertIn("Tampered audit record detected", tampered_msg)
 
     def test_07_tenant_context_resolution(self) -> None:
-        """Verifies tenant resolution from JWT claims, subdomain, and headers."""
+        """Verifies secure tenant resolution prioritizing verified JWT claims and internal auth."""
         # 1. From verified JWT claims
         tenant_jwt = TenantContextResolver.resolve_from_headers(
             headers={"host": "api.komainu.dev"},
@@ -110,19 +115,31 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         )
         self.assertEqual(tenant_jwt, "tenant-from-jwt")
 
-        # 2. From subdomain
+        # 2. Subdomain matching verified JWT claims passes
         tenant_sub = TenantContextResolver.resolve_from_headers(
-            headers={"host": "enterprise-corp.komainu.dev"}
+            headers={"host": "enterprise-corp.komainu.dev"},
+            jwt_claims={"tenant_id": "enterprise-corp"},
         )
         self.assertEqual(tenant_sub, "enterprise-corp")
 
-        # 3. From header
+        # 3. Direct header accepted ONLY from authenticated internal callers
         tenant_hdr = TenantContextResolver.resolve_from_headers(
-            headers={"host": "localhost", "x-tenant-id": "tenant-internal"}
+            headers={
+                "host": "localhost",
+                "x-tenant-id": "tenant-internal",
+                "x-internal-service-key": "valid-secret-token",
+            },
+            internal_service_secret="valid-secret-token",
         )
         self.assertEqual(tenant_hdr, "tenant-internal")
 
-        # 4. Missing context raises error
+        # 4. Unauthenticated X-Tenant-ID header rejected without claims
+        with self.assertRaises(CrossTenantAccessDeniedError):
+            TenantContextResolver.resolve_from_headers(
+                headers={"host": "localhost", "x-tenant-id": "victim-tenant"}
+            )
+
+        # 5. Missing context raises error
         with self.assertRaises(MissingTenantContextError):
             TenantContextResolver.resolve_from_headers(headers={"host": "localhost"})
 
@@ -160,14 +177,12 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         for slug in invalid_slugs:
             self.assertFalse(slug_pattern.match(slug), f"Invalid slug '{slug}' must be rejected")
 
-        # Verify SQL file explicitly declares this regex and raises exception
         schema_file = os.path.join(MODULE_ROOT, "sql", "schema_per_tenant.sql")
         with open(schema_file, "r", encoding="utf-8") as f:
             sql_content = f.read()
 
         self.assertIn("^[a-z0-9_]{1,48}$", sql_content)
         self.assertIn("RAISE EXCEPTION 'Invalid tenant slug", sql_content)
-        # Ensure it does NOT use vulnerable regexp_replace rewrite
         self.assertNotIn("regexp_replace(p_tenant_slug", sql_content)
 
     def test_10_schema_per_tenant_sql_safety_and_no_public_fallback(self) -> None:
@@ -176,16 +191,12 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         with open(schema_file, "r", encoding="utf-8") as f:
             sql_content = f.read()
 
-        # No vulnerable string injection in index or schema names
         self.assertNotIn("idx_%s_orders_owner", sql_content)
         self.assertIn("CREATE INDEX %I ON %I.orders(owner_user_id)", sql_content)
-        # Collision detection via tenant_registry table
         self.assertIn("public.tenant_registry", sql_content)
         self.assertIn("Schema collision detected", sql_content)
-        # No fallback to public in search_path
         self.assertIn("SET LOCAL search_path TO %I", sql_content)
         self.assertNotIn("search_path TO %I, public", sql_content)
-        # Permissions revoked from PUBLIC
         self.assertIn("REVOKE ALL ON SCHEMA %I FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
@@ -197,24 +208,18 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         with open(rls_file, "r", encoding="utf-8") as f:
             sql_content = f.read()
 
-        # Dedicated non-owner role provisioned
         self.assertIn("CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS", sql_content)
-        # tenant_organizations protected by RLS
         self.assertIn("ALTER TABLE tenant_organizations ENABLE ROW LEVEL SECURITY", sql_content)
         self.assertIn("ALTER TABLE tenant_organizations FORCE ROW LEVEL SECURITY", sql_content)
         self.assertIn("CREATE POLICY tenant_org_isolation_policy ON tenant_organizations", sql_content)
-        # search_path pinned on SECURITY DEFINER functions
         self.assertIn("SECURITY DEFINER\nSET search_path = pg_catalog, pg_temp", sql_content)
-        # Transaction requirement documented
         self.assertIn("TRANSACTION REQUIREMENT", sql_content)
         self.assertIn("BEGIN ... COMMIT", sql_content)
-        # Execution revoked from public
         self.assertIn("REVOKE ALL ON FUNCTION set_current_tenant(VARCHAR) FROM PUBLIC", sql_content)
         self.assertIn("GRANT EXECUTE ON FUNCTION set_current_tenant(VARCHAR) TO komainu_app", sql_content)
 
     def test_12_rls_cross_tenant_isolation_logic_simulation(self) -> None:
         """Simulates RLS policy evaluation: verifying cross-tenant records cannot be read."""
-        # Simulated database table records
         mock_orders_table = [
             {"id": "ord-1", "tenant_id": "tenant-a", "owner_user_id": "alice", "amount": 100.0},
             {"id": "ord-2", "tenant_id": "tenant-a", "owner_user_id": "alice", "amount": 200.0},
@@ -222,27 +227,200 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         ]
 
         def evaluate_rls_query(session_tenant: str | None) -> list[dict]:
-            # Mirrors PostgreSQL: tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')
             active_tenant = session_tenant if session_tenant else None
             return [row for row in mock_orders_table if row["tenant_id"] == active_tenant]
 
-        # 1. Tenant A only sees Tenant A's orders
         tenant_a_rows = evaluate_rls_query("tenant-a")
         self.assertEqual(len(tenant_a_rows), 2)
         self.assertTrue(all(r["tenant_id"] == "tenant-a" for r in tenant_a_rows))
 
-        # 2. Tenant B only sees Tenant B's orders
         tenant_b_rows = evaluate_rls_query("tenant-b")
         self.assertEqual(len(tenant_b_rows), 1)
         self.assertEqual(tenant_b_rows[0]["id"], "ord-3")
 
-        # 3. Unauthenticated / missing transaction context sees 0 rows (fail-closed)
         empty_rows = evaluate_rls_query(None)
         self.assertEqual(len(empty_rows), 0)
         empty_rows_blank = evaluate_rls_query("")
         self.assertEqual(len(empty_rows_blank), 0)
 
+    def test_13_tenant_resolution_header_spoofing_blocked(self) -> None:
+        """Verifies that client-supplied X-Tenant-ID header spoofing is strictly rejected."""
+        # Spoofed X-Tenant-ID without internal auth and without JWT
+        with self.assertRaises(CrossTenantAccessDeniedError):
+            TenantContextResolver.resolve_from_headers(
+                headers={"X-Tenant-ID": "victim_corp"}
+            )
+
+        # Host subdomain alone without JWT cannot establish tenant identity
+        with self.assertRaises(MissingTenantContextError):
+            TenantContextResolver.resolve_from_headers(
+                headers={"Host": "victim-corp.komainu-saas.com"}
+            )
+
+    def test_14_tenant_resolution_conflict_fails_closed(self) -> None:
+        """Verifies that any conflict between claims, subdomains, and headers fails closed."""
+        # 1. JWT claim vs Host subdomain mismatch
+        with self.assertRaises(CrossTenantAccessDeniedError):
+            TenantContextResolver.resolve_from_headers(
+                headers={"Host": "attacker.komainu.dev"},
+                jwt_claims={"tenant_id": "victim-tenant"},
+            )
+
+        # 2. JWT claim vs unauthenticated header mismatch
+        with self.assertRaises(CrossTenantAccessDeniedError):
+            TenantContextResolver.resolve_from_headers(
+                headers={"X-Tenant-ID": "different-tenant"},
+                jwt_claims={"tenant_id": "victim-tenant"},
+            )
+
+        # 3. JWT claim vs authenticated internal header mismatch
+        with self.assertRaises(CrossTenantAccessDeniedError):
+            TenantContextResolver.resolve_from_headers(
+                headers={
+                    "X-Tenant-ID": "internal-attacker",
+                    "X-Internal-Service-Key": "valid-secret",
+                },
+                jwt_claims={"tenant_id": "victim-tenant"},
+                internal_service_secret="valid-secret",
+            )
+
+    def test_15_tenant_resolution_invalid_format_blocked(self) -> None:
+        """Verifies that invalid or dangerous tenant ID formats are rejected."""
+        invalid_formats = [
+            "../etc/passwd",
+            "victim'; DROP TABLE users; --",
+            "VICTIM_UPPERCASE",
+            "-leading-hyphen",
+            "trailing-hyphen-",
+            "space in tenant",
+            "a" * 65,  # Exceeds 64 chars
+        ]
+        for bad_id in invalid_formats:
+            with self.assertRaises(ValueError):
+                validate_tenant_id_format(bad_id)
+
+            with self.assertRaises(ValueError):
+                TenantContextResolver.resolve_from_headers(
+                    headers={},
+                    jwt_claims={"tenant_id": bad_id},
+                )
+
+    def test_16_audit_trail_truncation_detection(self) -> None:
+        """Verifies that truncation of the audit trail tail is detected via committed anchor."""
+        trail = TenantAuditTrail()
+        trail.log_event("tenant-alpha", "actor-1", "LOGIN", "session-1")
+        trail.log_event("tenant-alpha", "actor-1", "MUTATION", "record-1")
+        trail.log_event("tenant-alpha", "actor-1", "MUTATION", "record-2")
+        trail.log_event("tenant-alpha", "actor-1", "LOGOUT", "session-1")
+
+        # Commit anchor of 4 records
+        anchor = trail.anchor_head("tenant-alpha")
+        self.assertEqual(anchor["count"], 4)
+
+        # Verify valid full chain
+        ok, msg = trail.verify_chain_integrity("tenant-alpha")
+        self.assertTrue(ok, msg)
+
+        # Truncate the chain: attacker cuts the last record
+        trail._chains["tenant-alpha"].pop()
+        self.assertEqual(len(trail._chains["tenant-alpha"]), 3)
+
+        # Verification must detect truncation against committed anchor
+        ok_trunc, msg_trunc = trail.verify_chain_integrity("tenant-alpha")
+        self.assertFalse(ok_trunc)
+        self.assertIn("Truncation detected", msg_trunc)
+
+    def test_17_audit_trail_sequence_break_detected(self) -> None:
+        """Verifies that non-monotonic sequence or record deletion is detected."""
+        trail = TenantAuditTrail()
+        trail.log_event("tenant-seq", "u1", "ACT1", "r1")
+        trail.log_event("tenant-seq", "u1", "ACT2", "r2")
+        trail.log_event("tenant-seq", "u1", "ACT3", "r3")
+
+        # Break sequence: tamper with record 2's sequence number
+        trail._chains["tenant-seq"][1].seq = 99
+        ok, msg = trail.verify_chain_integrity("tenant-seq")
+        self.assertFalse(ok)
+        self.assertIn("Sequence break", msg)
+
+    def test_18_audit_trail_thread_safety(self) -> None:
+        """Verifies concurrent append operations remain sequential and cryptographically sound."""
+        trail = TenantAuditTrail()
+        num_threads = 5
+        records_per_thread = 10
+        total_records = num_threads * records_per_thread
+
+        def append_batch(thread_idx: int) -> None:
+            for i in range(records_per_thread):
+                trail.log_event(
+                    "tenant-concurrent",
+                    f"worker-{thread_idx}",
+                    f"OP_{i}",
+                    f"res-{thread_idx}-{i}",
+                )
+
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(append_batch, t) for t in range(num_threads)]
+            for f in futures:
+                f.result()
+
+        chain = trail._chains.get("tenant-concurrent", [])
+        self.assertEqual(len(chain), total_records)
+
+        # Verify sequential order: 1..total_records
+        for idx, rec in enumerate(chain):
+            self.assertEqual(rec.seq, idx + 1)
+
+        ok, msg = trail.verify_chain_integrity("tenant-concurrent")
+        self.assertTrue(ok, msg)
+
+    def test_19_byok_invalid_key_length_rejected(self) -> None:
+        """Verifies that BYOK master keys must be strictly 32 bytes (256 bits)."""
+        byok = BYOKKeyManager()
+
+        invalid_keys = [
+            b"short-key",          # 9 bytes
+            b"0" * 16,             # 16 bytes (AES-128)
+            b"0" * 24,             # 24 bytes (AES-192)
+            b"0" * 64,             # 64 bytes (512 bits)
+        ]
+        for bad_key in invalid_keys:
+            with self.assertRaises(ValueError):
+                byok.register_tenant_key("tenant-len", custom_key=bad_key)
+
+        # Exactly 32 bytes succeeds
+        valid_32 = b"01234567890123456789012345678901"
+        self.assertEqual(len(valid_32), 32)
+        byok.register_tenant_key("tenant-len", custom_key=valid_32)
+        self.assertTrue(byok.is_key_active("tenant-len"))
+
+    def test_20_byok_reregister_revoked_tenant_rejected(self) -> None:
+        """Verifies that a permanently revoked/crypto-shredded tenant cannot be re-keyed."""
+        byok = BYOKKeyManager()
+        byok.register_tenant_key("tenant-shredded")
+        byok.revoke_tenant_key("tenant-shredded")
+
+        # Re-registering must raise TenantKeyRevokedError
+        with self.assertRaises(TenantKeyRevokedError):
+            byok.register_tenant_key("tenant-shredded")
+
+        # Even with custom key, must fail
+        with self.assertRaises(TenantKeyRevokedError):
+            byok.register_tenant_key("tenant-shredded", custom_key=b"1" * 32)
+
+    def test_21_byok_accidental_overwrite_guard(self) -> None:
+        """Verifies that active keys cannot be overwritten without explicit overwrite=True."""
+        byok = BYOKKeyManager()
+        byok.register_tenant_key("tenant-overwrite")
+
+        # Accidental overwrite blocked
+        with self.assertRaises(ValueError):
+            byok.register_tenant_key("tenant-overwrite")
+
+        # Explicit overwrite allowed
+        new_key = byok.register_tenant_key("tenant-overwrite", overwrite=True)
+        self.assertIsNotNone(new_key)
+
 
 if __name__ == "__main__":
     unittest.main()
-

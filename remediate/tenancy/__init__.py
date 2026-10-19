@@ -5,6 +5,7 @@ from remediate.tenancy.crypto.byok_manager import (
     BYOKKeyManager,
     CrossTenantKeyMismatchError,
     CryptoShreddedError,
+    TenantKeyRevokedError,
 )
 from remediate.tenancy.middleware.tenant_context import (
     CrossTenantAccessDeniedError,
@@ -13,12 +14,14 @@ from remediate.tenancy.middleware.tenant_context import (
     get_current_tenant,
     set_current_tenant,
     tenant_scope,
+    validate_tenant_id_format,
 )
 
 __all__ = [
     "BYOKKeyManager",
     "CrossTenantKeyMismatchError",
     "CryptoShreddedError",
+    "TenantKeyRevokedError",
     "TenantAuditTrail",
     "AuditRecord",
     "TenantContextResolver",
@@ -27,4 +30,5 @@ __all__ = [
     "get_current_tenant",
     "set_current_tenant",
     "tenant_scope",
+    "validate_tenant_id_format",
 ]
