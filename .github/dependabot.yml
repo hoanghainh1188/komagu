@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: weekly
     labels: [dependencies]
+    groups:
+      github-actions:
+        patterns: ["*"]
 
   - package-ecosystem: docker
     directory: /
@@ -24,38 +27,53 @@ updates:
       interval: weekly
     labels: [dependencies]
 
+  # The D1/D2/D3 Spring modules target Spring Boot 3 for legacy clients:
+  # majors that would force consumers onto Boot 4 / Security 7 are ignored.
+  # Kotlin plugins and stdlib move together (newer libraries need newer Kotlin metadata).
   - package-ecosystem: gradle
-    directory: /remediate/authz/spring
+    directories:
+      - /remediate/authz/spring
+      - /remediate/identity/spring
+      - /remediate/query/spring
     schedule:
       interval: weekly
     labels: [dependencies]
+    groups:
+      kotlin:
+        patterns: ["org.jetbrains.kotlin*", "jvm", "plugin.spring"]
+      spring:
+        patterns: ["org.springframework*"]
+      gradle-other:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "org.springframework*"
+        update-types: [version-update:semver-major]
 
-  - package-ecosystem: gradle
-    directory: /remediate/identity/spring
-    schedule:
-      interval: weekly
-    labels: [dependencies]
-
-  - package-ecosystem: gradle
-    directory: /remediate/query/spring
-    schedule:
-      interval: weekly
-    labels: [dependencies]
-
+  # The .NET modules target .NET 8 (LTS) for legacy clients: runtime-package
+  # majors (9.x/10.x) are ignored. The demo backend is included so shared
+  # packages (e.g. JwtBearer) move together and do not trip NU1605 downgrades.
   - package-ecosystem: nuget
-    directory: /remediate/authz/dotnet
+    directories:
+      - /remediate/authz/dotnet
+      - /remediate/identity/dotnet
+      - /remediate/query/dotnet
+      - /examples/member-portal/backend-dotnet
     schedule:
       interval: weekly
     labels: [dependencies]
-
-  - package-ecosystem: nuget
-    directory: /remediate/identity/dotnet
-    schedule:
-      interval: weekly
-    labels: [dependencies]
-
-  - package-ecosystem: nuget
-    directory: /remediate/query/dotnet
-    schedule:
-      interval: weekly
-    labels: [dependencies]
+    groups:
+      dotnet-runtime:
+        patterns: ["Microsoft.AspNetCore*", "Microsoft.EntityFrameworkCore*", "Microsoft.Extensions*"]
+      dotnet-test:
+        patterns: ["xunit*", "Microsoft.NET.Test.Sdk", "Moq", "coverlet*"]
+    ignore:
+      - dependency-name: "Microsoft.AspNetCore*"
+        update-types: [version-update:semver-major]
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: [version-update:semver-major]
+      - dependency-name: "Microsoft.Extensions*"
+        update-types: [version-update:semver-major]
+      # Roslyn analyzers must reference the lowest compiler they support,
+      # or they silently fail to load on older SDK/IDE hosts. Bump by hand.
+      - dependency-name: "Microsoft.CodeAnalysis*"
