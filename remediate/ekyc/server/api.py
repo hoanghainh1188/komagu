@@ -8,9 +8,12 @@ Japanese Criminal Proceeds Transfer Prevention Act regulations.
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-from remediate.ekyc.server.jpki_verifier import JPKIVerificationEngine
+from remediate.ekyc.server.jpki_verifier import (
+    JPKIVerificationEngine,
+    _is_test_environment,
+)
 from remediate.ekyc.server.tokenization import (
     RawImageRejectionError,
     ZeroPIITokenizer,
@@ -21,9 +24,20 @@ from remediate.ekyc.server.tokenization import (
 class EKYCService:
     """Core controller for Zero-PII remote identity verification."""
 
-    def __init__(self):
-        self.verifier = JPKIVerificationEngine()
-        self.tokenizer = ZeroPIITokenizer()
+    def __init__(
+        self,
+        verifier: Optional[JPKIVerificationEngine] = None,
+        tokenizer: Optional[ZeroPIITokenizer] = None,
+    ):
+        if verifier is None:
+            # Enable simulation only in test/development environments
+            self.verifier = JPKIVerificationEngine(
+                allow_simulation=_is_test_environment()
+            )
+        else:
+            self.verifier = verifier
+
+        self.tokenizer = tokenizer or ZeroPIITokenizer()
 
     def handle_request_challenge(self) -> Tuple[int, Dict[str, Any]]:
         """POST /api/v1/ekyc/challenge -> Issues single-use challenge nonce."""
@@ -49,6 +63,7 @@ class EKYCService:
 
         challenge_nonce = request_payload.get("challenge_nonce", "")
         signature_hex = request_payload.get("signature_hex", "")
+        certificate_pem = request_payload.get("certificate_pem")
         attributes = request_payload.get("attributes", {})
 
         if not challenge_nonce or not signature_hex:
@@ -62,6 +77,8 @@ class EKYCService:
             challenge_nonce=challenge_nonce,
             signature_hex=signature_hex,
             document_type="my_number",
+            certificate_pem=certificate_pem,
+            attributes=attributes,
         )
         if not valid:
             return 401, {
@@ -92,7 +109,14 @@ class EKYCService:
         if not sod_hex:
             return 400, {"error": "BAD_REQUEST", "message": "Missing sod_hex payload"}
 
-        sod_bytes = bytes.fromhex(sod_hex) if sod_hex else b""
+        try:
+            sod_bytes = bytes.fromhex(sod_hex)
+        except ValueError:
+            return 400, {
+                "error": "BAD_REQUEST",
+                "message": "Invalid sod_hex payload: must be valid hexadecimal string",
+            }
+
         valid, msg = self.verifier.verify_driver_license_sod(sod_bytes)
         if not valid:
             return 401, {"error": "VERIFICATION_FAILED", "message": msg}

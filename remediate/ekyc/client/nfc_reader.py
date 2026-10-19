@@ -9,10 +9,19 @@ Supports APDU command sequencing and cryptographic extraction for:
 
 from __future__ import annotations
 
-import base64
+import datetime
 import hashlib
 import os
 from typing import Any, Dict, List, Optional, Tuple
+
+try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+    from cryptography.x509.oid import NameOID
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 
 # Standard Application Identifiers (AIDs)
 AID_MY_NUMBER_JPKI = "D3921000310001010408"          # JPKI (User Auth & Digital Signature)
@@ -67,7 +76,6 @@ class NFCReaderSession:
     def select_application(self, aid_hex: str) -> Tuple[bool, str]:
         """Select an on-chip application by AID."""
         cmd = APDUCommand.select_application(aid_hex)
-        # Verify valid AID
         valid_aids = {AID_MY_NUMBER_JPKI, AID_MY_NUMBER_TEXT_INFO, AID_DRIVERS_LICENSE_MAIN, AID_EPASSPORT_ICAO}
         if aid_hex.upper() in valid_aids:
             self.selected_aid = aid_hex.upper()
@@ -87,7 +95,41 @@ class NFCReaderSession:
             raise PermissionError("NFC session not authenticated with PIN")
 
         nonce_bytes = challenge_nonce.encode("utf-8")
-        # In hardware, this executes COMPUTE DIGITAL SIGNATURE inside the Secure Element
+
+        if private_key_pem:
+            if not HAS_CRYPTOGRAPHY:
+                raise RuntimeError("Cryptographic signing requires 'cryptography' library")
+
+            # Cryptographic signing using real key pair
+            key = serialization.load_pem_private_key(
+                private_key_pem.encode("utf-8"),
+                password=None,
+            )
+            if isinstance(key, rsa.RSAPrivateKey):
+                sig_bytes = key.sign(
+                    nonce_bytes,
+                    padding.PKCS1v15(),
+                    hashes.SHA256(),
+                )
+                algorithm = "SHA256withRSA"
+            elif isinstance(key, ec.EllipticCurvePrivateKey):
+                sig_bytes = key.sign(
+                    nonce_bytes,
+                    ec.ECDSA(hashes.SHA256()),
+                )
+                algorithm = "SHA256withECDSA"
+            else:
+                raise ValueError("Unsupported private key type")
+
+            return {
+                "document_type": self.document_type,
+                "challenge_nonce": challenge_nonce,
+                "signature_hex": sig_bytes.hex(),
+                "algorithm": algorithm,
+                "cert_type": "JPKI-User-Auth",
+            }
+
+        # Simulated fallback for isolated test harnesses
         simulated_signature = hashlib.sha256(b"JPKI-SE-KEY:" + nonce_bytes).hexdigest()
 
         return {
@@ -111,3 +153,35 @@ class NFCReaderSession:
             "gender": "male",
             "document_issuer": "J-LIS / Local Authorities Systems",
         }
+
+    @staticmethod
+    def generate_test_keypair(common_name: str = "山田 太郎") -> Tuple[str, str]:
+        """Generate an RSA-2048 private key and self-signed X.509 cert for testing."""
+        if not HAS_CRYPTOGRAPHY:
+            raise RuntimeError("Test keypair generation requires 'cryptography' library")
+
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        subject = issuer = x509.Name([
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "JP"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "J-LIS Test Authority"),
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name),
+        ])
+        now = datetime.datetime.now(datetime.timezone.utc)
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - datetime.timedelta(minutes=5))
+            .not_valid_after(now + datetime.timedelta(days=365))
+            .sign(key, hashes.SHA256())
+        )
+
+        priv_pem = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode("utf-8")
+        cert_pem = cert.public_bytes(serialization.Encoding.PEM).decode("utf-8")
+        return priv_pem, cert_pem
