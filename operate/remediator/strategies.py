@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from remediate.authz.patcher import BOLAOwnershipPatcher
 from remediate.query.patcher import ParameterizedQueryPatcher
 
 
@@ -110,6 +111,12 @@ class BOLARemediationStrategy(BaseRemediationStrategy):
 
         if start_line < 0 or start_line >= len(lines):
             return content, "Target line number is out of bounds."
+
+        # Use intelligent BOLA ownership patcher
+        patcher = BOLAOwnershipPatcher()
+        patched_content, result = patcher.patch_file(target_file, start_line + 1, finding)
+        if result.changed:
+            return patched_content, result.explanation
 
         target_line = lines[start_line]
         indent = re.match(r"^(\s*)", target_line).group(1) if target_line else ""

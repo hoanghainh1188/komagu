@@ -177,7 +177,8 @@ class TestRemediationRunner(unittest.TestCase):
         self.assertIn("# [KOMAINU-FIX] Parameterized query protection applied", patched_sql)
 
         patched_ts = (self.target_path / "src" / "order_controller.ts").read_text(encoding="utf-8")
-        self.assertIn("// [KOMAINU-FIX] @RequireOwnership", patched_ts)
+        self.assertIn("@RequireOwnership(ResourceOperation.READ", patched_ts)
+        self.assertIn("OwnershipGuard", patched_ts)
 
     def test_export_patch_file(self) -> None:
         """RemediationRunner must write unified diffs to the requested patch file."""
