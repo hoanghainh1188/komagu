@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ekyc/verification.schema.json",
+  "title": "Komainu Zero-PII eKYC Verification Result and Token Assertion",
+  "type": "object",
+  "required": [
+    "verification_id",
+    "tenant_id",
+    "timestamp",
+    "status",
+    "verification_method",
+    "trust_framework",
+    "tokenized_identity",
+    "audit_trail"
+  ],
+  "properties": {
+    "verification_id": {
+      "type": "string",
+      "description": "Unique verification transaction identifier"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant or application context identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO 8601 UTC timestamp of verification"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["verified", "rejected", "expired"]
+    },
+    "verification_method": {
+      "type": "string",
+      "enum": ["jpki_nfc", "driver_license_ic_sod", "mock_simulation"]
+    },
+    "trust_framework": {
+      "type": "string",
+      "enum": ["jp_ekyc_2027", "jpki", "iso_18013_5"]
+    },
+    "tokenized_identity": {
+      "type": "object",
+      "required": ["blind_hash", "identity_token", "expires_at"],
+      "properties": {
+        "blind_hash": {
+          "type": "string",
+          "description": "Tenant-isolated salted HMAC-SHA256 blind deduplication hash"
+        },
+        "identity_token": {
+          "type": "string",
+          "description": "OpenID Connect compliant JWT string"
+        },
+        "expires_at": {
+          "type": "string",
+          "description": "ISO 8601 expiration timestamp"
+        },
+        "token_binding": {
+          "type": ["object", "null"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["dpop_jkt", "client_public_key"]
+            },
+            "thumbprint": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "audit_trail": {
+      "type": "object",
+      "required": [
+        "jlis_cert_serial_hash",
+        "crl_checked",
+        "raw_images_stored",
+        "individual_number_stored"
+      ],
+      "properties": {
+        "jlis_cert_serial_hash": {
+          "type": "string",
+          "description": "Cryptographic hash of the JPKI certificate serial number"
+        },
+        "crl_checked": {
+          "type": "boolean",
+          "description": "Whether Certificate Revocation List was verified"
+        },
+        "not_before": {
+          "type": ["string", "null"]
+        },
+        "not_after": {
+          "type": ["string", "null"]
+        },
+        "raw_images_stored": {
+          "type": "boolean",
+          "enum": [false],
+          "description": "Strict Zero-PII architectural guarantee: MUST be false"
+        },
+        "individual_number_stored": {
+          "type": "boolean",
+          "enum": [false],
+          "description": "Strict Zero-PII architectural guarantee: MUST be false"
+        }
+      }
+    },
+    "oidc_claims": {
+      "type": ["object", "null"],
+      "description": "OpenID Connect for Identity Assurance (OID4IDA) verified_claims payload",
+      "properties": {
+        "verification": {
+          "type": "object",
+          "required": ["trust_framework", "time", "verification_process"],
+          "properties": {
+            "trust_framework": {"type": "string"},
+            "time": {"type": "string"},
+            "verification_process": {"type": "string"},
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "method"],
+                "properties": {
+                  "type": {"type": "string"},
+                  "method": {"type": "string"},
+                  "document_details": {"type": "object"},
+                  "verifier": {"type": "object"}
+                }
+              }
+            }
+          }
+        },
+        "claims": {
+          "type": "object",
+          "description": "Verified personal attributes excluding raw images and Individual Number"
+        }
+      }
+    }
+  }
+}
