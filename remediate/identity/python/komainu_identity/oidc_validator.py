@@ -73,7 +73,12 @@ def _is_test_environment() -> bool:
     if "PYTEST_CURRENT_TEST" in os.environ:
         return True
     if "unittest" in sys.modules:
-        if any("unittest" in arg or "pytest" in arg or "test" in arg for arg in sys.argv):
+        argv_0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
+        if "pytest" in argv_0 or "unittest" in argv_0:
+            return True
+        if len(sys.argv) > 1 and sys.argv[1] in ("discover", "test"):
+            return True
+        if any(arg.endswith("test.py") or arg.startswith("test_") or "/tests/" in arg or "unittest" in arg for arg in sys.argv):
             return True
     return False
 
@@ -231,8 +236,14 @@ class OidcTokenValidator:
             raise PermissionError("Token 'sub' claim is empty or invalid")
 
         # Validate tenant claim (never fallback to 'default-tenant')
-        tenant = payload.get("tenant_id") or payload.get("tid") or payload.get("org_id")
-        if not tenant or not str(tenant).strip():
+        tenant = None
+        for claim_key in ("tenant_id", "tid", "org_id"):
+            if claim_key in payload and payload[claim_key] is not None:
+                val = str(payload[claim_key]).strip()
+                if val:
+                    tenant = val
+                    break
+        if not tenant:
             raise PermissionError("Token missing required tenant claim ('tenant_id', 'tid', or 'org_id')")
 
         roles = payload.get("roles") or payload.get("realm_access", {}).get("roles", [])

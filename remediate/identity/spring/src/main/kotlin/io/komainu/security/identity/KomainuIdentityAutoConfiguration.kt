@@ -56,6 +56,7 @@ class KomainuIdentityAutoConfiguration {
 
         val decoder = NimbusJwtDecoder.withJwkSetUri(jwkUri).build()
 
+        val expirationValidator = KomainuExpirationValidator()
         val timestampValidator = JwtTimestampValidator(Duration.ofSeconds(properties.clockSkewSeconds))
         val issuerValidator = org.springframework.security.oauth2.jwt.JwtIssuerValidator(properties.issuer)
         val audienceValidator = KomainuAudienceValidator(properties.audience)
@@ -63,6 +64,7 @@ class KomainuIdentityAutoConfiguration {
 
         decoder.setJwtValidator(
             DelegatingOAuth2TokenValidator(
+                expirationValidator,
                 timestampValidator,
                 issuerValidator,
                 audienceValidator,

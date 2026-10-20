@@ -39,13 +39,20 @@ class TokenValidationIntegrationTest {
         fun jwtDecoder(): JwtDecoder {
             val decoder = NimbusJwtDecoder.withPublicKey(jwtFactory.publicKey).build()
 
+            val expirationValidator = KomainuExpirationValidator()
             val timestampValidator = JwtTimestampValidator(Duration.ZERO)
             val issuerValidator = JwtIssuerValidator(EXPECTED_ISSUER)
             val audienceValidator = KomainuAudienceValidator(EXPECTED_AUDIENCE)
             val subjectValidator = KomainuSubjectValidator()
 
             decoder.setJwtValidator(
-                DelegatingOAuth2TokenValidator(timestampValidator, issuerValidator, audienceValidator, subjectValidator)
+                DelegatingOAuth2TokenValidator(
+                    expirationValidator,
+                    timestampValidator,
+                    issuerValidator,
+                    audienceValidator,
+                    subjectValidator
+                )
             )
 
             return decoder
@@ -194,6 +201,24 @@ class TokenValidationIntegrationTest {
 
         mockMvc.get("/api/test/secure") {
             header("Authorization", "Bearer $recentlyExpiredToken")
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `missing expiration claim returns 401 Unauthorized`() {
+        // Invariant from Issue #207:
+        // Tokens missing 'exp' claim must be rejected and never treated as indefinitely valid
+        val noExpToken = jwtFactory.createToken(
+            issuer = EXPECTED_ISSUER,
+            audience = EXPECTED_AUDIENCE,
+            subject = "alice-100",
+            expirationTime = null
+        )
+
+        mockMvc.get("/api/test/secure") {
+            header("Authorization", "Bearer $noExpToken")
         }.andExpect {
             status { isUnauthorized() }
         }

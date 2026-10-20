@@ -89,12 +89,12 @@ def get_current_user(
     try:
         principal = val.validate_token(auth_header)
         return principal
-    except PermissionError as ex:
+    except PermissionError:
         raise HTTPException(
             status_code=401,
-            detail=str(ex),
+            detail="Invalid or expired authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
-        ) from ex
+        )
 
 
 class RequireOwnership:

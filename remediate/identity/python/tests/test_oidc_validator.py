@@ -369,6 +369,49 @@ class TestOidcTokenValidator(unittest.TestCase):
         res = subprocess.run([sys.executable, "-c", snippet], capture_output=True, text=True, check=True)
         self.assertIn("IMPORT_OK", res.stdout)
 
+    def test_16_tenant_claim_precedence_and_zero_value(self) -> None:
+        """Tenant claim parsing must not treat falsy 0 as missing and fallback to evil secondary claim."""
+        validator = OidcTokenValidator(
+            issuer=self.issuer,
+            audience=self.audience,
+            public_key=self.public_pem,
+        )
+        now = time.time()
+        # Invariant from Issue #207: tenant_id=0, tid="evil" must yield tenant "0", never "evil"
+        claims = {
+            "sub": "user-legit",
+            "tenant_id": 0,
+            "tid": "evil",
+            "iss": self.issuer,
+            "aud": self.audience,
+            "exp": int(now + 3600),
+        }
+        token = self._create_token(claims)
+        principal = validator.validate_token(token)
+        self.assertEqual(principal.tenant_id, "0")
+        self.assertNotEqual(principal.tenant_id, "evil")
+
+    def test_17_is_test_environment_not_fooled_by_latest_flag(self) -> None:
+        """_is_test_environment must not treat flags like --latest as running tests."""
+        from remediate.identity.python.komainu_identity.oidc_validator import _is_test_environment
+
+        orig_argv = sys.argv
+        orig_env = os.environ.get("KOMAINU_ENV")
+        orig_pytest = os.environ.get("PYTEST_CURRENT_TEST")
+        try:
+            if "KOMAINU_ENV" in os.environ:
+                del os.environ["KOMAINU_ENV"]
+            if "PYTEST_CURRENT_TEST" in os.environ:
+                del os.environ["PYTEST_CURRENT_TEST"]
+            sys.argv = ["komainu", "--latest", "run"]
+            self.assertFalse(_is_test_environment())
+        finally:
+            sys.argv = orig_argv
+            if orig_env is not None:
+                os.environ["KOMAINU_ENV"] = orig_env
+            if orig_pytest is not None:
+                os.environ["PYTEST_CURRENT_TEST"] = orig_pytest
+
 
 if __name__ == "__main__":
     unittest.main()
