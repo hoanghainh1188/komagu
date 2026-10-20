@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from remediate.query.patcher import ParameterizedQueryPatcher
+
 
 class BaseRemediationStrategy:
     """Abstract base strategy for code remediation."""
@@ -55,6 +57,16 @@ class SQLInjectionRemediationStrategy(BaseRemediationStrategy):
             return content, "Target line number is out of bounds."
 
         target_line = lines[start_line]
+
+        # Use intelligent parameterized query patcher
+        patcher = ParameterizedQueryPatcher()
+        lang = patcher.detect_language(target_file)
+        rewritten = patcher.patch_code_line(target_line, lang)
+
+        if rewritten.changed:
+            lines[start_line] = rewritten.patched_line
+            return "".join(lines), rewritten.explanation
+
         indent = re.match(r"^(\s*)", target_line).group(1) if target_line else ""
 
         # Suffix / comment style depending on file extension
