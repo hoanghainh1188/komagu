@@ -27,8 +27,13 @@ services:
             config:
               minute: 120
               second: 10
-              policy: local
-              fault_tolerant: true
+              policy: redis
+              fault_tolerant: false
+              redis:
+                host: redis
+                port: 6379
+                timeout: 2000
+                database: 0
               hide_client_headers: false
               error_code: 429
               error_message: "API rate limit exceeded. Please back off and retry."
@@ -38,7 +43,7 @@ consumers:
     jwt_secrets:
       - key: https://auth.komainu.test/realms/komainu
         algorithm: HS256
-        secret: komainu-default-test-jwt-secret-key-32chars
+        secret: ${{ env "KOMAINU_JWT_SECRET" }}
 
 plugins:
   - name: cors
