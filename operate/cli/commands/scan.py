@@ -98,6 +98,10 @@ Examples:
         "--cache-dir",
         help="Custom directory to store scan cache (default: OUT/.cache)",
     )
+    parser.add_argument(
+        "--sarif-out",
+        help="Designated output path for SARIF 2.1.0 file (e.g. for GitHub code scanning upload)",
+    )
     parser.set_defaults(func=execute_scan)
 
 
@@ -217,11 +221,24 @@ def execute_scan(args: argparse.Namespace) -> int:
         findings_file.write_text(json.dumps(initial_findings, indent=2), encoding="utf-8")
 
     # 3. Export to SARIF if requested
-    sarif_file = out_dir / "findings.sarif"
-    if args.format in ("sarif", "all"):
+    sarif_file = (
+        Path(args.sarif_out).resolve()
+        if getattr(args, "sarif_out", None)
+        else (out_dir / "findings.sarif")
+    )
+    if getattr(args, "sarif_out", None) or args.format in ("sarif", "all"):
         step("Generating SARIF v2.1.0 report")
         sarif_script = LSA_SCRIPTS / "findings_to_sarif.py"
-        res_sarif = subprocess.run([sys.executable, str(sarif_script), str(out_dir)], capture_output=True, text=True)
+        sarif_cmd = [
+            sys.executable,
+            str(sarif_script),
+            str(out_dir),
+            "--target-dir",
+            str(target_path),
+            "--sarif-out",
+            str(sarif_file),
+        ]
+        res_sarif = subprocess.run(sarif_cmd, capture_output=True, text=True)
         if res_sarif.returncode == 0:
             step_ok(f"Generated {sarif_file.name}")
         else:

@@ -132,6 +132,32 @@ class TestKomainuCLI(unittest.TestCase):
             self.assertTrue((out_dir / "injection.candidates.json").is_file())
             self.assertTrue((out_dir / "report.html").is_file())
 
+    def test_scan_subcommand_sarif_out(self) -> None:
+        """komainu scan with --sarif-out must export enterprise SARIF 2.1.0 to designated path."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir) / "out"
+            custom_sarif = Path(tmp_dir) / "ci-artifacts" / "code-scanning.sarif"
+            res = subprocess.run(
+                [
+                    sys.executable,
+                    str(BIN_KOMAINU),
+                    "scan",
+                    str(FIXTURE_PATH),
+                    "--out",
+                    str(out_dir),
+                    "--sarif-out",
+                    str(custom_sarif),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res.returncode, 0, f"Scan command failed: {res.stderr}\n{res.stdout}")
+            self.assertTrue(custom_sarif.is_file(), "Designated SARIF file was not created")
+            data = json.loads(custom_sarif.read_text(encoding="utf-8"))
+            self.assertEqual(data["version"], "2.1.0")
+            self.assertIn("taxonomies", data["runs"][0])
+            self.assertIn("invocations", data["runs"][0])
+
     def test_scan_subcommand_default_out_preserves_target_read_only(self) -> None:
         """komainu scan without --out must output to ./komainu-out in CWD, keeping target untouched."""
         with tempfile.TemporaryDirectory() as work_dir:
