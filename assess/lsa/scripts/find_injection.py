@@ -10,11 +10,13 @@ whether the dynamic part is attacker-controlled and unsanitized.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
+import os
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import KIT_VERSION, iter_source_files, load_config, read_text, redact, snippet, write_json  # noqa: E402
@@ -335,10 +337,12 @@ class Finder:
                 self.add("sql", rel, i, lines, "proc-dynamic-sql", "stored_procedure_dynamic_sql", "sql")
 
 
-def find_injection(target: Path, config: Dict) -> Dict:
+def _scan_injection_file_batch(args: Tuple[List[Tuple[str, str]], Dict]) -> Tuple[List[Dict], List[Dict]]:
+    file_batch, config = args
     enc = config["hints"]["file_encodings"]
     f = Finder(config)
-    for p, rel in iter_source_files(target, config):
+    for p_str, rel in file_batch:
+        p = Path(p_str)
         lang = LANG_BY_EXT.get(p.suffix.lower())
         if not lang:
             continue
@@ -355,15 +359,49 @@ def find_injection(target: Path, config: Dict) -> Dict:
             if p.suffix.lower() in (".asp", ".asa") and re.search(r"LANGUAGE\s*=\s*\"?JScript", text, re.I):
                 lang = "js"
             f.scan_code(lang, rel, text)
+    return f.items, f.suppressed
+
+
+def find_injection(target: Path, config: Dict, workers: int = 0) -> Dict:
+    files = [(str(p), rel) for p, rel in iter_source_files(target, config)]
+    num_files = len(files)
+    effective_workers = workers if workers > 0 else (os.cpu_count() or 1)
+
+    items: List[Dict] = []
+    suppressed: List[Dict] = []
+
+    # If small number of files or single worker, run in-process without executor overhead
+    if effective_workers <= 1 or num_files < 20:
+        chunk_items, chunk_suppressed = _scan_injection_file_batch((files, config))
+        items = chunk_items
+        suppressed = chunk_suppressed
+    else:
+        chunk_size = max(1, (num_files + effective_workers - 1) // effective_workers)
+        chunks = [
+            (files[i : i + chunk_size], config)
+            for i in range(0, num_files, chunk_size)
+        ]
+        with concurrent.futures.ProcessPoolExecutor(max_workers=effective_workers) as executor:
+            for chunk_items, chunk_suppressed in executor.map(_scan_injection_file_batch, chunks):
+                items.extend(chunk_items)
+                suppressed.extend(chunk_suppressed)
+
     by_rule: Dict[str, int] = {}
-    for it in f.items:
+    for it in items:
         by_rule[it["rule"]] = by_rule.get(it["rule"], 0) + 1
-    return {"generated_by": f"lsa find_injection.py {KIT_VERSION}", "target": target.resolve().name,
-            "summary": {"total": len(f.items), "high_priority": sum(1 for i in f.items if i["priority"] == "high"),
-                        "suppressed_constant_only": len(f.suppressed),
-                        "by_rule": by_rule},
-            "candidates": f.items,
-            "suppressed": f.suppressed}
+
+    return {
+        "generated_by": f"lsa find_injection.py {KIT_VERSION}",
+        "target": target.resolve().name,
+        "summary": {
+            "total": len(items),
+            "high_priority": sum(1 for i in items if i["priority"] == "high"),
+            "suppressed_constant_only": len(suppressed),
+            "by_rule": by_rule,
+        },
+        "candidates": items,
+        "suppressed": suppressed,
+    }
 
 
 def main() -> int:
@@ -371,8 +409,10 @@ def main() -> int:
     ap.add_argument("target")
     ap.add_argument("--config")
     ap.add_argument("--out")
+    ap.add_argument("--workers", "-j", type=int, default=0,
+                    help="Number of worker processes for parallel scan (default: 0 = auto/cpu_count)")
     a = ap.parse_args()
-    res = find_injection(Path(a.target), load_config(a.config))
+    res = find_injection(Path(a.target), load_config(a.config), workers=a.workers)
     if a.out:
         write_json(Path(a.out), res)
     else:
