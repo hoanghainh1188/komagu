@@ -87,6 +87,18 @@ without a verdict, invalid JSON, …). Fix those before reporting.
 | `../../governance/` | Usage policy: roles, data protection, approval gates, metrics (shared, at the repository root) |
 | `tests/` | Fixture apps with known bugs, pre-scan self-test, agent evaluation tools |
 
+## Test fixtures and markers
+
+`tests/fixtures/<stack>/` are small vulnerable and safe apps across supported stacks. Expected outcomes are indicated with inline comments using `LSA-EXPECT:<TAG>` (parsed by `tests/lsa_markers.py`):
+
+- `SQLI` / `NOSQL` — pre-scan must flag; agents must report
+- `SAFE-SQL` — pre-scan may flag; agents must judge safe
+- `SAFE-SQL-NOFLAG` — parameterized; pre-scan must NOT flag
+- `BOLA` — route must be found; agents must report
+- `SAFE-BOLA` — ownership bound; agents must not report
+
+`python3 tests/run_tests.py` checks injection recall, NOFLAG precision, route coverage of BOLA markers, and an end-to-end prescan→merge→SARIF→report run. When changing a detection regex or rule, add or adjust a fixture line with the appropriate marker.
+
 ## Evaluating the agents (recommended before the first real audit)
 
 ```bash
