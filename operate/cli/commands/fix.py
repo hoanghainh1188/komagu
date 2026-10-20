@@ -122,7 +122,13 @@ def run_fix(args: argparse.Namespace) -> int:
     # Print itemized findings
     step_info("Remediated findings breakdown:")
     for plan in report.plans:
-        status_color = GREEN if plan.status in ("applied", "planned") else YELLOW if plan.status == "skipped" else RED
+        status_color = (
+            GREEN
+            if plan.status in ("applied", "planned")
+            else YELLOW
+            if plan.status in ("skipped", "needs manual fix")
+            else RED
+        )
         status_text = color(f"[{plan.status.upper()}]", status_color, BOLD)
         print(f"  • {status_text} {plan.finding_id} ({plan.category}) -> {plan.target_file}:{plan.start_line} - {plan.reason}")
 
@@ -130,16 +136,24 @@ def run_fix(args: argparse.Namespace) -> int:
     summary_rows = [
         ("Mode", mode_label),
         ("Total findings processed", str(report.total_findings)),
-        ("Patches planned/applied", str(report.applied_count)),
-        ("Skipped", str(report.skipped_count)),
-        ("Errors", str(report.error_count)),
     ]
+    if args.dry_run:
+        summary_rows.append(("Patches planned", str(report.planned_count)))
+        summary_rows.append(("Patches applied", "0 (dry-run)"))
+    else:
+        summary_rows.append(("Patches applied", str(report.applied_count)))
+
+    if report.manual_fix_count > 0:
+        summary_rows.append(("Needs manual fix", str(report.manual_fix_count)))
+    summary_rows.append(("Skipped", str(report.skipped_count)))
+    summary_rows.append(("Errors", str(report.error_count)))
+
     if report.patch_file:
         summary_rows.append(("Patch file exported", report.patch_file))
 
     print_summary_table(f"Komainu Remediation Summary", summary_rows)
 
-    if args.dry_run and report.applied_count > 0:
+    if args.dry_run and report.planned_count > 0:
         step_info("Run without --dry-run to apply changes directly to the codebase.")
 
     return 0 if report.error_count == 0 else 1

@@ -155,6 +155,23 @@ class ParameterizedQueryPatcher:
                     explanation="Converted Python string concatenation to parameterized query.",
                 )
 
+            # If variable assignment: query = "SELECT ... " + var
+            assign_match = re.search(r"""^(\s*[A-Za-z0-9_]+\s*=\s*)["']$""", prefix)
+            if assign_match:
+                assign_prefix = assign_match.group(1)
+                base_query = concat_match.group("query")
+                line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+                patched_line = f'{assign_prefix}("{base_query}?", ({var_name},)){suffix.rstrip()}{line_ending}'
+                return RewrittenQuery(
+                    original_line=line,
+                    patched_line=patched_line,
+                    placeholders=["?"],
+                    params=[var_name],
+                    pattern_type="python_concat_assign",
+                    changed=True,
+                    explanation="Converted Python query string concatenation to parameterized query tuple.",
+                )
+
         return self._rewrite_generic(line, lang="python")
 
     def _rewrite_javascript(self, line: str) -> RewrittenQuery:
@@ -364,23 +381,15 @@ class ParameterizedQueryPatcher:
         return self._rewrite_generic(line)
 
     def _rewrite_generic(self, line: str, lang: str = "generic") -> RewrittenQuery:
-        """Generic fallback safety annotation."""
-        indent = re.match(r"^(\s*)", line).group(1) if line else ""
-        if lang == "python":
-            comment = f"{indent}# [KOMAINU-FIX] Parameterized query protection applied (CWE-89)\n"
-        elif lang in ("sql",):
-            comment = f"{indent}-- [KOMAINU-FIX] Parameterized query protection applied (CWE-89)\n"
-        else:
-            comment = f"{indent}// [KOMAINU-FIX] Parameterized query protection applied (CWE-89)\n"
-
+        """Generic fallback when no automated AST/regex rewrite applies."""
         return RewrittenQuery(
             original_line=line,
-            patched_line=comment + line,
-            placeholders=["?"],
+            patched_line=line,
+            placeholders=[],
             params=[],
-            pattern_type="generic_barrier",
-            changed=True,
-            explanation="Added parameterized query protection annotation barrier.",
+            pattern_type="unsupported",
+            changed=False,
+            explanation="No automated parameterized query rewrite applicable; requires manual remediation.",
         )
 
     def patch_file(self, target_file: Path, line_number: int) -> Tuple[str, RewrittenQuery]:
