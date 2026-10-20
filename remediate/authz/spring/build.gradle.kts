@@ -33,7 +33,7 @@ dependencies {
     compileOnly("org.springframework.data:spring-data-commons:3.5.13")
     compileOnly("org.springframework:spring-aspects:6.2.19")
     compileOnly("org.aspectj:aspectjweaver:1.9.25.1")
-    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.20")
@@ -41,7 +41,7 @@ dependencies {
     // Test dependencies
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("io.mockk:mockk:1.14.11")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("org.springframework.security:spring-security-test:$springSecurityVersion")
     testImplementation("org.springframework.security:spring-security-core:$springSecurityVersion")
