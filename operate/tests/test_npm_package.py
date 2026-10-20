@@ -88,6 +88,23 @@ class TestNPMPackage(unittest.TestCase):
         self.assertIn("npm@11.5.1", content)
         self.assertNotIn("secrets.NPM_TOKEN", content)
 
+        # Issue #179: Verify fail-fast tag and package version consistency check step exists
+        self.assertIn("Verify release tag matches package version", content)
+        self.assertIn("${GITHUB_REF_NAME#v}", content)
+        self.assertIn("operate/cli/__init__.py", content)
+
+    def test_version_consistency_between_package_and_cli(self) -> None:
+        """package.json version must match operate/cli/__init__.py __version__."""
+        pkg_data = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
+        pkg_version = pkg_data.get("version")
+
+        cli_init = REPO_ROOT / "operate" / "cli" / "__init__.py"
+        self.assertTrue(cli_init.is_file())
+        import re
+        m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', cli_init.read_text(encoding="utf-8"))
+        self.assertIsNotNone(m, "Could not find __version__ in operate/cli/__init__.py")
+        self.assertEqual(pkg_version, m.group(1), "package.json version does not match operate/cli/__init__.py")
+
 
 if __name__ == "__main__":
     unittest.main()

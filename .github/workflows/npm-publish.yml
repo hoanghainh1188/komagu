@@ -1,12 +1,14 @@
 # Komainu — Hardened npmjs Publication Workflow via Pure OIDC
 #
-# Release Security Gate Note:
-# - environment: npm-release is configured for deployment tracking and auditability.
-# - On GitHub Free with private repositories, environment protection rules (such as
-#   required reviewers) are not supported. Therefore, the effective release gate in
-#   this repository setup is restricted to collaborators with release-creation permissions.
-# - Provenance: --provenance is omitted because npm registry rejects build provenance
-#   from private GitHub repositories.
+# Release Security Gate & Repository Visibility Note:
+# - environment: npm-release is configured for deployment tracking, protection rules, and auditability.
+# - Public repository mode: npm automatically generates SLSA build provenance via Pure OIDC trusted
+#   publishing, and the npm-release environment can enforce required reviewers or branch/tag deployment limits.
+# - Private repository mode: environment protection rules (such as required reviewers) are not supported
+#   on GitHub Free, and npm registry rejects build provenance from private repos; the effective gate is
+#   restricted to collaborators with release-creation permissions.
+# - Provenance: The explicit --provenance CLI flag is omitted so that npm publish succeeds smoothly
+#   in both public and private repository visibility modes.
 
 name: Publish to npmjs
 
@@ -28,6 +30,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify release tag matches package version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          CLI_VERSION=$(python3 -c "import re; print(re.search(r'__version__\s*=\s*[\"\\\']([^\"\\\']+)[\"\\\']', open('operate/cli/__init__.py').read()).group(1))")
+
+          echo "Release tag version:  ${TAG_VERSION}"
+          echo "package.json version: ${PKG_VERSION}"
+          echo "operate/cli version:  ${CLI_VERSION}"
+
+          if [ -z "${TAG_VERSION}" ]; then
+            echo "::error::GITHUB_REF_NAME is empty"
+            exit 1
+          fi
+
+          if [ "${TAG_VERSION}" != "${PKG_VERSION}" ]; then
+            echo "::error::Release tag '${GITHUB_REF_NAME}' (version '${TAG_VERSION}') does not match package.json version '${PKG_VERSION}'!"
+            exit 1
+          fi
+
+          if [ "${TAG_VERSION}" != "${CLI_VERSION}" ]; then
+            echo "::error::Release tag '${GITHUB_REF_NAME}' (version '${TAG_VERSION}') does not match operate/cli/__init__.py version '${CLI_VERSION}'!"
+            exit 1
+          fi
+
+          echo "Version consistency check passed: tag matches package.json and operate/cli."
 
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
