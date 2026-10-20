@@ -3,7 +3,7 @@
 # All-in-One Zero-Install Container Image
 # ==============================================================================
 
-FROM python:3.11-slim AS base
+FROM python:3.13-slim AS base
 
 LABEL org.opencontainers.image.title="Komainu Security-First Modernization Platform"
 LABEL org.opencontainers.image.description="All-in-one zero-install security audit and BOLA verification container"
