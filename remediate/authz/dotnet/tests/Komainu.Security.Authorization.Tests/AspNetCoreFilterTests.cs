@@ -247,4 +247,85 @@ public class AspNetCoreFilterTests
         nextDelegate.Verify(d => d(), Times.Once);
         Assert.Null(executingContext.Result);
     }
+
+    [Fact]
+    public async Task Filter_WhenRouteIdPresent_IgnoresAttackerOwnedBodyObject_AndFailsClosedOnVictimResource()
+    {
+        // Arrange: Invariant from Issue #206:
+        // Attacker calls PUT/POST /docs/{victimId} with body containing attacker's own document.
+        // The filter MUST resolve the route ID server-side and verify caller against the victim's resource,
+        // strictly ignoring the attacker-controlled body object as an authorization subject.
+        var victimDocId = Guid.NewGuid();
+        var attacker = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("sub", "attacker-user"),
+            new Claim("tenant_id", "tenant-1")
+        ], "TestAuth"));
+
+        var victimDoc = new SampleDocument(victimDocId, "victim-user", "tenant-1", "Victim Private Doc");
+        var attackerOwnedBodyDoc = new SampleDocument(Guid.NewGuid(), "attacker-user", "tenant-1", "Attacker Body Doc");
+
+        var resolverMock = new Mock<IKomainuResourceResolver>();
+        resolverMock.Setup(r => r.ResolveAsync(typeof(SampleDocument), victimDocId.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(victimDoc);
+
+        var spMock = new Mock<IServiceProvider>();
+        spMock.Setup(sp => sp.GetService(typeof(IKomainuResourceResolver))).Returns(resolverMock.Object);
+
+        var (executingContext, nextDelegate) = CreateActionContext(
+            attacker,
+            actionArgs: new Dictionary<string, object?> { ["doc"] = attackerOwnedBodyDoc },
+            routeValues: new Dictionary<string, object?> { ["id"] = victimDocId.ToString() },
+            serviceProvider: spMock.Object);
+
+        var authService = new DefaultKomainuAuthorizationService(Mock.Of<ISecurityAuditSink>());
+        var filter = new OwnershipAuthorizationFilter(typeof(SampleDocument), "id", ResourceOperation.Update, authService);
+
+        // Act
+        await filter.OnActionExecutionAsync(executingContext, nextDelegate.Object);
+
+        // Assert: Access denied with 404, next() handler MUST NOT be executed
+        nextDelegate.Verify(d => d(), Times.Never);
+        Assert.NotNull(executingContext.Result);
+        Assert.IsType<NotFoundResult>(executingContext.Result);
+        resolverMock.Verify(r => r.ResolveAsync(typeof(SampleDocument), victimDocId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Filter_WhenRouteIdPresent_ResolverReturnsNull_IgnoresAttackerOwnedBodyObject_AndReturnsNotFound()
+    {
+        // Arrange: Route ID points to non-existent or inaccessible resource, but body contains attacker's owned resource
+        var requestedDocId = Guid.NewGuid();
+        var attacker = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("sub", "attacker-user"),
+            new Claim("tenant_id", "tenant-1")
+        ], "TestAuth"));
+
+        var attackerOwnedBodyDoc = new SampleDocument(Guid.NewGuid(), "attacker-user", "tenant-1", "Attacker Body Doc");
+
+        var resolverMock = new Mock<IKomainuResourceResolver>();
+        resolverMock.Setup(r => r.ResolveAsync(typeof(SampleDocument), requestedDocId.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((object?)null);
+
+        var spMock = new Mock<IServiceProvider>();
+        spMock.Setup(sp => sp.GetService(typeof(IKomainuResourceResolver))).Returns(resolverMock.Object);
+
+        var (executingContext, nextDelegate) = CreateActionContext(
+            attacker,
+            actionArgs: new Dictionary<string, object?> { ["doc"] = attackerOwnedBodyDoc },
+            routeValues: new Dictionary<string, object?> { ["id"] = requestedDocId.ToString() },
+            serviceProvider: spMock.Object);
+
+        var authService = new DefaultKomainuAuthorizationService(Mock.Of<ISecurityAuditSink>());
+        var filter = new OwnershipAuthorizationFilter(typeof(SampleDocument), "id", ResourceOperation.Update, authService);
+
+        // Act
+        await filter.OnActionExecutionAsync(executingContext, nextDelegate.Object);
+
+        // Assert: Must fail-closed with 404 and NEVER invoke next()
+        nextDelegate.Verify(d => d(), Times.Never);
+        Assert.NotNull(executingContext.Result);
+        Assert.IsType<NotFoundResult>(executingContext.Result);
+    }
 }

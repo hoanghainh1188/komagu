@@ -42,6 +42,9 @@ class OwnershipAspectTest {
         @RequireOwnership(entityClass = SampleResource::class, idParam = "id", operation = ResourceOperation.DELETE)
         fun deleteById(id: String): String = "deleted-$id"
 
+        @RequireOwnership(entityClass = SampleResource::class, idParam = "id", operation = ResourceOperation.UPDATE)
+        fun updateWithBody(id: String, body: SampleResource): String = "updated-$id"
+
         @RequireOwnership(entityClass = SampleResource::class, operation = ResourceOperation.READ)
         fun getOptional(found: Boolean): Optional<SampleResource> =
             if (found) Optional.of(SampleResource("res-opt", "user-1", "tenant-1")) else Optional.empty()
@@ -302,5 +305,85 @@ class OwnershipAspectTest {
             aspect.enforceOwnership(joinPoint, annotation)
         }
         assertTrue(ex.message!!.contains("no resource was verified"))
+    }
+
+    @Test
+    fun `aspect resolves route id and ignores attacker-owned body object denying access on victim resource`() {
+        // Arrange: Invariant from Issue #206:
+        // Attacker calls updateWithBody(id = "res-victim", body = attackerOwnedResource)
+        // Aspect MUST resolve "res-victim" server-side and verify caller against the stored victim resource,
+        // ignoring the attacker-controlled body object as an authorization subject.
+        val victimResource = SampleResource("res-victim", "victim", "tenant-1")
+        val attackerBody = SampleResource("res-victim", "attacker", "tenant-1")
+        val resolver = SampleResourceResolver(mapOf("res-victim" to victimResource))
+
+        val securityManager = mockk<KomainuSecurityManager>()
+        every {
+            securityManager.requireOwnership(victimResource, ResourceOperation.UPDATE)
+        } throws ResourceNotFoundException("Resource of type SampleResource with id 'res-victim' not found")
+
+        val aspect = OwnershipAspect(securityManager, listOf(resolver))
+
+        val method = DummyService::class.java.getMethod(
+            "updateWithBody",
+            String::class.java,
+            SampleResource::class.java
+        )
+        val annotation = method.getAnnotation(RequireOwnership::class.java)
+
+        val signature = mockk<MethodSignature>()
+        every { signature.method } returns method
+        every { signature.parameterNames } returns arrayOf("id", "body")
+
+        val joinPoint = mockk<ProceedingJoinPoint>()
+        every { joinPoint.signature } returns signature
+        every { joinPoint.target } returns DummyService()
+        every { joinPoint.args } returns arrayOf("res-victim", attackerBody)
+
+        // Act & Assert
+        assertThrows<ResourceNotFoundException> {
+            aspect.enforceOwnership(joinPoint, annotation)
+        }
+
+        // Method handler MUST NEVER be invoked
+        verify(exactly = 0) { joinPoint.proceed() }
+        // Verify victim resource was checked for authorization
+        verify(exactly = 1) { securityManager.requireOwnership(victimResource, ResourceOperation.UPDATE) }
+        // Verify attacker body was NEVER used to satisfy authorization
+        verify(exactly = 0) { securityManager.requireOwnership(attackerBody, any()) }
+    }
+
+    @Test
+    fun `aspect fails closed when route id does not exist even if body contains attacker-owned resource`() {
+        // Resolver does not have "res-missing"
+        val resolver = SampleResourceResolver(emptyMap())
+        val attackerBody = SampleResource("res-missing", "attacker", "tenant-1")
+        val securityManager = mockk<KomainuSecurityManager>(relaxed = true)
+        val aspect = OwnershipAspect(securityManager, listOf(resolver))
+
+        val method = DummyService::class.java.getMethod(
+            "updateWithBody",
+            String::class.java,
+            SampleResource::class.java
+        )
+        val annotation = method.getAnnotation(RequireOwnership::class.java)
+
+        val signature = mockk<MethodSignature>()
+        every { signature.method } returns method
+        every { signature.parameterNames } returns arrayOf("id", "body")
+
+        val joinPoint = mockk<ProceedingJoinPoint>()
+        every { joinPoint.signature } returns signature
+        every { joinPoint.target } returns DummyService()
+        every { joinPoint.args } returns arrayOf("res-missing", attackerBody)
+
+        val ex = assertThrows<ResourceNotFoundException> {
+            aspect.enforceOwnership(joinPoint, annotation)
+        }
+        assertTrue(ex.message!!.contains("not found"))
+
+        // Critical: verify proceed() was NEVER invoked
+        verify(exactly = 0) { joinPoint.proceed() }
+        verify(exactly = 0) { securityManager.requireOwnership(attackerBody, any()) }
     }
 }

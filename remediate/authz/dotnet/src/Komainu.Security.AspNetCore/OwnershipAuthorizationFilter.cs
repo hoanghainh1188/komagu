@@ -38,41 +38,44 @@ public sealed class OwnershipAuthorizationFilter : IAsyncActionFilter
             return;
         }
 
-        // Try to find resource directly in action arguments (e.g. model bound entity or DTO)
-        object? resource = context.ActionArguments.Values
-            .FirstOrDefault(v => v != null && _resourceType.IsInstanceOfType(v));
-
-        if (resource == null)
+        // Check if an ID parameter is specified in RouteData or ActionArguments
+        object? rawId = null;
+        if (context.RouteData.Values.TryGetValue(_idRouteParameter, out var routeId) && routeId != null)
         {
-            // Try resolving via route parameter ID or action arguments and registered IKomainuResourceResolver
-            object? rawId = null;
-            if (context.RouteData.Values.TryGetValue(_idRouteParameter, out var routeId) && routeId != null)
+            rawId = routeId;
+        }
+        else if (context.ActionArguments.TryGetValue(_idRouteParameter, out var argId) && argId != null)
+        {
+            rawId = argId;
+        }
+
+        object? resource = null;
+
+        if (rawId != null)
+        {
+            // ID-addressed operation: Must resolve resource server-side via IKomainuResourceResolver.
+            // Client-supplied body/action objects MUST NOT be used as the authorization subject for an ID-addressed operation.
+            var resolver = context.HttpContext.RequestServices.GetService<IKomainuResourceResolver>();
+            if (resolver == null)
             {
-                rawId = routeId;
-            }
-            else if (context.ActionArguments.TryGetValue(_idRouteParameter, out var argId) && argId != null)
-            {
-                rawId = argId;
+                // Fail-closed: No resolver registered to resolve the target resource
+                context.Result = new NotFoundResult();
+                return;
             }
 
-            if (rawId != null)
+            resource = await resolver.ResolveAsync(_resourceType, rawId.ToString()!, context.HttpContext.RequestAborted);
+            if (resource == null)
             {
-                var resolver = context.HttpContext.RequestServices.GetService<IKomainuResourceResolver>();
-                if (resolver == null)
-                {
-                    // Fail-closed: No resolver registered to resolve the target resource
-                    context.Result = new NotFoundResult();
-                    return;
-                }
-
-                resource = await resolver.ResolveAsync(_resourceType, rawId.ToString()!, context.HttpContext.RequestAborted);
-                if (resource == null)
-                {
-                    // Fail-closed: Resolver returned null (resource does not exist or unauthorized)
-                    context.Result = new NotFoundResult();
-                    return;
-                }
+                // Fail-closed: Resolver returned null (resource does not exist or unauthorized)
+                context.Result = new NotFoundResult();
+                return;
             }
+        }
+        else
+        {
+            // Non-ID operation (e.g. creation or batch operations): Find resource directly in action arguments (e.g. model bound entity or DTO)
+            resource = context.ActionArguments.Values
+                .FirstOrDefault(v => v != null && _resourceType.IsInstanceOfType(v));
         }
 
         // Fail-closed: If resource could not be resolved from arguments or resolver, deny with 404

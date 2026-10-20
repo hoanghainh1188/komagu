@@ -58,29 +58,45 @@ class OwnershipAspect(
 
         var preInvocationChecked = false
 
-        // 1. Inspect input parameters
-        for (i in args.indices) {
-            val arg = args[i] ?: continue
+        // 1. Determine if an ID parameter is present for ID-based resolution
+        var idArg: Any? = null
+        val idParamIndex = paramNames.indexOf(requireOwnership.idParam)
+        if (idParamIndex != -1 && idParamIndex < args.size) {
+            idArg = args[idParamIndex]
+        } else if (args.size == 1 && (args[0] is Number || args[0] is String || args[0] is java.util.UUID)) {
+            idArg = args[0]
+        } else if (targetClass != null && paramNames.isEmpty()) {
+            // Fallback when parameter names are not preserved in bytecode:
+            // Find argument matching ID types (String, Number, UUID)
+            idArg = args.firstOrNull { it is Number || it is String || it is java.util.UUID }
+        }
 
-            // Direct OwnedResource or targetClass instance
-            if (arg is OwnedResource<*> || (targetClass != null && targetClass.isInstance(arg))) {
-                securityManager.requireOwnership(arg, requireOwnership.operation)
-                preInvocationChecked = true
-                continue
-            }
-
-            // ID-based resolution if resolver exists and param matches idParam
+        if (idArg != null) {
+            // ID-addressed operation: The resource MUST be resolved server-side from the ID.
+            // Client-supplied body objects MUST NEVER be used as the authorization subject.
             if (targetClass != null) {
-                val paramName = paramNames.getOrNull(i)
-                val matchesIdParam = paramName == requireOwnership.idParam || (args.size == 1 && (arg is Number || arg is String))
-                if (matchesIdParam) {
-                    val resolver = resolvers.find { it.supports(targetClass) }
-                    if (resolver != null) {
-                        val resolved = resolver.resolve(arg)
-                            ?: throw ResourceNotFoundException("Resource of type ${targetClass.simpleName} with id '$arg' not found")
-                        securityManager.requireOwnership(resolved, requireOwnership.operation)
-                        preInvocationChecked = true
-                    }
+                val resolver = resolvers.find { it.supports(targetClass) }
+                    ?: throw ResourceNotFoundException(
+                        "No ResourceOwnershipResolver found for entity ${targetClass.simpleName} to resolve id '$idArg'"
+                    )
+                val resolved = resolver.resolve(idArg)
+                    ?: throw ResourceNotFoundException("Resource of type ${targetClass.simpleName} with id '$idArg' not found")
+
+                securityManager.requireOwnership(resolved, requireOwnership.operation)
+                preInvocationChecked = true
+            } else {
+                // targetClass not specified but id is present: fail-closed
+                throw ResourceNotFoundException(
+                    "Cannot resolve resource by ID '$idArg' because entityClass is not specified on @RequireOwnership"
+                )
+            }
+        } else {
+            // Non-ID operation (e.g. creation or batch operations): inspect input parameters for OwnedResource / targetClass instances
+            for (i in args.indices) {
+                val arg = args[i] ?: continue
+                if (arg is OwnedResource<*> || (targetClass != null && targetClass.isInstance(arg))) {
+                    securityManager.requireOwnership(arg, requireOwnership.operation)
+                    preInvocationChecked = true
                 }
             }
         }
