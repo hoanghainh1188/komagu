@@ -32,6 +32,7 @@ from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenV
 class TestOidcTokenValidator(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        os.environ.setdefault("KOMAINU_ENV", "test")
         # Generate an RSA-2048 keypair for cryptographic testing
         cls.private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         cls.public_pem = cls.private_key.public_key().public_bytes(
@@ -409,6 +410,98 @@ class TestOidcTokenValidator(unittest.TestCase):
             sys.argv = orig_argv
             if orig_env is not None:
                 os.environ["KOMAINU_ENV"] = orig_env
+            if orig_pytest is not None:
+                os.environ["PYTEST_CURRENT_TEST"] = orig_pytest
+
+    def test_18_leeway_nan_and_out_of_bounds_rejected(self) -> None:
+        """Issue #223: Clock skew leeway must reject NaN, inf, negatives, and values > 120."""
+        invalid_leeways = [float("nan"), float("inf"), float("-inf"), -1.0, -0.01, 120.1, 315360000]
+        for bad_leeway in invalid_leeways:
+            with self.subTest(leeway=bad_leeway):
+                with self.assertRaises(ValueError) as ctx:
+                    OidcTokenValidator(
+                        issuer=self.issuer,
+                        audience=self.audience,
+                        public_key=self.public_pem,
+                        leeway=bad_leeway,
+                    )
+                self.assertIn("between 0 and 120", str(ctx.exception).lower())
+
+    def test_19_empty_or_blank_primary_tenant_id_fails_closed(self) -> None:
+        """Issue #223: Primary tenant_id='' or whitespace with tid='evil' must fail closed, never yield 'evil'."""
+        validator = OidcTokenValidator(
+            issuer=self.issuer,
+            audience=self.audience,
+            public_key=self.public_pem,
+        )
+        now = time.time()
+
+        for blank_val in ("", "   ", None):
+            with self.subTest(blank_tenant=blank_val):
+                claims = {
+                    "sub": "user-legit",
+                    "tenant_id": blank_val,
+                    "tid": "evil",
+                    "iss": self.issuer,
+                    "aud": self.audience,
+                    "exp": int(now + 3600),
+                }
+                token = self._create_token(claims)
+                with self.assertRaises(PermissionError) as ctx:
+                    validator.validate_token(token)
+                self.assertIn("tenant_id", str(ctx.exception))
+
+        # Dev token check as well
+        dev_tokens = {
+            "token-spoof": {
+                "sub": "attacker",
+                "tenant_id": "",
+                "tid": "evil",
+            }
+        }
+        dev_validator = OidcTokenValidator(
+            issuer=self.issuer,
+            audience=self.audience,
+            allow_dev_tokens=True,
+            dev_tokens=dev_tokens,
+        )
+        with self.assertRaises(PermissionError):
+            dev_validator.validate_token("token-spoof")
+
+    def test_20_is_test_environment_strictly_requires_explicit_opt_in(self) -> None:
+        """Issue #223: _is_test_environment must not be fooled by argv substrings when unittest is imported."""
+        from remediate.identity.python.komainu_identity.oidc_validator import _is_test_environment
+
+        orig_env = os.environ.get("KOMAINU_ENV")
+        orig_allow = os.environ.get("KOMAINU_ALLOW_DEV_TOKENS")
+        orig_pytest = os.environ.get("PYTEST_CURRENT_TEST")
+        orig_argv = sys.argv
+        try:
+            if "KOMAINU_ENV" in os.environ:
+                del os.environ["KOMAINU_ENV"]
+            if "KOMAINU_ALLOW_DEV_TOKENS" in os.environ:
+                del os.environ["KOMAINU_ALLOW_DEV_TOKENS"]
+            if "PYTEST_CURRENT_TEST" in os.environ:
+                del os.environ["PYTEST_CURRENT_TEST"]
+
+            # Even if argv contains '/tests/' or 'test_' or 'unittest', it must return False
+            sys.argv = ["python", "/app/tests/my_test_runner.py", "--unittest"]
+            self.assertFalse(_is_test_environment())
+
+            # Explicit opt-in KOMAINU_ENV=test
+            os.environ["KOMAINU_ENV"] = "test"
+            self.assertTrue(_is_test_environment())
+            del os.environ["KOMAINU_ENV"]
+
+            # Explicit opt-in KOMAINU_ALLOW_DEV_TOKENS=1
+            os.environ["KOMAINU_ALLOW_DEV_TOKENS"] = "1"
+            self.assertTrue(_is_test_environment())
+        finally:
+            sys.argv = orig_argv
+            if orig_env is not None:
+                os.environ["KOMAINU_ENV"] = orig_env
+            if orig_allow is not None:
+                os.environ["KOMAINU_ALLOW_DEV_TOKENS"] = orig_allow
             if orig_pytest is not None:
                 os.environ["PYTEST_CURRENT_TEST"] = orig_pytest
 

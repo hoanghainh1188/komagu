@@ -67,19 +67,13 @@ DEFAULT_ALLOWED_ALGORITHMS: List[str] = [
 
 
 def _is_test_environment() -> bool:
-    """Determine whether the current process is executing under a test runner."""
+    """Determine whether the current process is executing under explicit test mode."""
     if os.environ.get("KOMAINU_ENV") == "test":
+        return True
+    if os.environ.get("KOMAINU_ALLOW_DEV_TOKENS") == "1":
         return True
     if "PYTEST_CURRENT_TEST" in os.environ:
         return True
-    if "unittest" in sys.modules:
-        argv_0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
-        if "pytest" in argv_0 or "unittest" in argv_0:
-            return True
-        if len(sys.argv) > 1 and sys.argv[1] in ("discover", "test"):
-            return True
-        if any(arg.endswith("test.py") or arg.startswith("test_") or "/tests/" in arg or "unittest" in arg for arg in sys.argv):
-            return True
     return False
 
 
@@ -105,9 +99,13 @@ class OidcTokenValidator:
         self.issuer = str(issuer)
         self.audience = str(audience)
 
-        if leeway < 0.0 or leeway > 120.0:
+        try:
+            leeway_val = float(leeway)
+        except (ValueError, TypeError):
+            raise ValueError("Clock skew leeway must be a valid number")
+        if math.isnan(leeway_val) or math.isinf(leeway_val) or leeway_val < 0.0 or leeway_val > 120.0:
             raise ValueError("Clock skew leeway must be between 0 and 120 seconds")
-        self.leeway = float(leeway)
+        self.leeway = leeway_val
 
         # Enforce pinned algorithm allowlist; never allow "none" or symmetric algorithms by default
         self.allowed_algorithms = list(allowed_algorithms or DEFAULT_ALLOWED_ALGORITHMS)
@@ -159,9 +157,25 @@ class OidcTokenValidator:
         # Check dev tokens if explicitly allowed and configured
         if self.allow_dev_tokens and clean_token in self.dev_tokens:
             meta = self.dev_tokens[clean_token]
-            tenant_id = meta.get("tenant_id") or meta.get("tid") or meta.get("org_id")
-            if not tenant_id:
+            tenant_id = None
+            if "tenant_id" in meta:
+                t_val = meta["tenant_id"]
+                if t_val is None or not str(t_val).strip():
+                    raise PermissionError("Dev token has empty or invalid 'tenant_id' claim")
+                tenant_id = str(t_val).strip()
+            elif "tid" in meta:
+                t_val = meta["tid"]
+                if t_val is None or not str(t_val).strip():
+                    raise PermissionError("Dev token has empty or invalid 'tid' claim")
+                tenant_id = str(t_val).strip()
+            elif "org_id" in meta:
+                t_val = meta["org_id"]
+                if t_val is None or not str(t_val).strip():
+                    raise PermissionError("Dev token has empty or invalid 'org_id' claim")
+                tenant_id = str(t_val).strip()
+            else:
                 raise PermissionError("Dev token missing required tenant claim")
+
             sub = meta.get("sub") or meta.get("uid") or meta.get("userId")
             if not sub:
                 raise PermissionError("Dev token missing required 'sub' claim")
@@ -235,15 +249,24 @@ class OidcTokenValidator:
         if not sub or not str(sub).strip():
             raise PermissionError("Token 'sub' claim is empty or invalid")
 
-        # Validate tenant claim (never fallback to 'default-tenant')
+        # Validate tenant claim (never fallback to 'default-tenant' or ignore blank primary tenant)
         tenant = None
-        for claim_key in ("tenant_id", "tid", "org_id"):
-            if claim_key in payload and payload[claim_key] is not None:
-                val = str(payload[claim_key]).strip()
-                if val:
-                    tenant = val
-                    break
-        if not tenant:
+        if "tenant_id" in payload:
+            t_val = payload["tenant_id"]
+            if t_val is None or not str(t_val).strip():
+                raise PermissionError("Token 'tenant_id' claim is empty or invalid")
+            tenant = str(t_val).strip()
+        elif "tid" in payload:
+            t_val = payload["tid"]
+            if t_val is None or not str(t_val).strip():
+                raise PermissionError("Token 'tid' claim is empty or invalid")
+            tenant = str(t_val).strip()
+        elif "org_id" in payload:
+            t_val = payload["org_id"]
+            if t_val is None or not str(t_val).strip():
+                raise PermissionError("Token 'org_id' claim is empty or invalid")
+            tenant = str(t_val).strip()
+        else:
             raise PermissionError("Token missing required tenant claim ('tenant_id', 'tid', or 'org_id')")
 
         roles = payload.get("roles") or payload.get("realm_access", {}).get("roles", [])

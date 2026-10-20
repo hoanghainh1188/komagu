@@ -23,7 +23,7 @@ data class KomainuOidcProperties(
     var jwkSetUri: String? = null,
 
     /**
-     * Allowed clock drift in seconds for token expiration validation. Default is 0.
+     * Allowed clock drift in seconds for token expiration validation (must be between 0 and 120). Default is 0.
      */
     var clockSkewSeconds: Long = 0L,
 

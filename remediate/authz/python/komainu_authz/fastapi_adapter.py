@@ -37,10 +37,33 @@ except ImportError:
             self.headers = headers
 
     class Request:  # type: ignore
-        def __init__(self, scope: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, path_params: Optional[Dict[str, Any]] = None) -> None:
-            self.scope = scope or {}
-            self.headers = headers or {}
-            self.path_params = path_params or {}
+        def __init__(
+            self,
+            scope: Optional[Dict[str, Any]] = None,
+            headers: Optional[Dict[str, str]] = None,
+            path_params: Optional[Dict[str, Any]] = None,
+            receive: Any = None,
+            send: Any = None,
+        ) -> None:
+            self.scope = dict(scope) if scope else {}
+            if headers is not None:
+                self.headers = dict(headers)
+            elif "headers" in self.scope:
+                self.headers = {
+                    (k.decode("latin1") if isinstance(k, bytes) else str(k)): (
+                        v.decode("latin1") if isinstance(v, bytes) else str(v)
+                    )
+                    for k, v in self.scope.get("headers", [])
+                }
+            else:
+                self.headers = {}
+
+            if path_params is not None:
+                self.path_params = dict(path_params)
+            elif "path_params" in self.scope:
+                self.path_params = dict(self.scope["path_params"])
+            else:
+                self.path_params = {}
 
     class Response:  # type: ignore
         def __init__(self, content: Any = None, status_code: int = 200, media_type: str = "application/json") -> None:

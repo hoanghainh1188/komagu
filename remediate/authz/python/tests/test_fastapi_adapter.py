@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import unittest
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+os.environ.setdefault("KOMAINU_ENV", "test")
+
 from remediate.authz.python.komainu_authz.fastapi_adapter import (
+    HAS_FASTAPI,
     HTTPException,
     KomainuAuthMiddleware,
     Request,
@@ -32,6 +36,31 @@ class Document:
     title: str
 
 
+def _build_request(
+    headers: Optional[Dict[str, str]] = None,
+    path_params: Optional[Dict[str, Any]] = None,
+) -> Request:
+    headers_dict = headers or {}
+    path_params_dict = path_params or {}
+    raw_headers = [
+        (k.lower().encode("latin-1"), v.encode("latin-1"))
+        for k, v in headers_dict.items()
+    ]
+    scope: Dict[str, Any] = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "headers": raw_headers,
+        "path_params": path_params_dict,
+    }
+    if HAS_FASTAPI:
+        req = Request(scope)
+        req.scope["path_params"] = path_params_dict
+        return req
+    else:
+        return Request(scope=scope, headers=headers_dict, path_params=path_params_dict)
+
+
 class TestFastApiAdapter(unittest.TestCase):
     def setUp(self) -> None:
         self.audit_sink = InMemorySecurityAuditSink()
@@ -53,19 +82,19 @@ class TestFastApiAdapter(unittest.TestCase):
 
     def test_01_get_current_user_dependency(self) -> None:
         """get_current_user parses authorization header or raises 401."""
-        req_valid = Request(headers={"Authorization": "Bearer token-user-a"})
+        req_valid = _build_request(headers={"Authorization": "Bearer token-user-a"})
         user = get_current_user(req_valid, self.validator)
         self.assertEqual(user.user_id, "user-a")
         self.assertEqual(user.tenant_id, "tenant-komainu")
 
         # Missing header -> 401
-        req_missing = Request(headers={})
+        req_missing = _build_request(headers={})
         with self.assertRaises(HTTPException) as ctx_missing:
             get_current_user(req_missing, self.validator)
         self.assertEqual(ctx_missing.exception.status_code, 401)
 
         # Invalid token -> 401
-        req_invalid = Request(headers={"Authorization": "Bearer token-bad"})
+        req_invalid = _build_request(headers={"Authorization": "Bearer token-bad"})
         with self.assertRaises(HTTPException) as ctx_invalid:
             get_current_user(req_invalid, self.validator)
         self.assertEqual(ctx_invalid.exception.status_code, 401)
@@ -79,7 +108,7 @@ class TestFastApiAdapter(unittest.TestCase):
             authz_service=self.authz_service,
             validator=self.validator,
         )
-        req = Request(
+        req = _build_request(
             headers={"Authorization": "Bearer token-user-a"},
             path_params={"doc_id": "doc-1"},
         )
@@ -97,7 +126,7 @@ class TestFastApiAdapter(unittest.TestCase):
             authz_service=self.authz_service,
             validator=self.validator,
         )
-        req = Request(
+        req = _build_request(
             headers={"Authorization": "Bearer token-user-b"},
             path_params={"doc_id": "doc-1"},
         )
@@ -120,7 +149,7 @@ class TestFastApiAdapter(unittest.TestCase):
             authz_service=self.authz_service,
             validator=self.validator,
         )
-        req = Request(
+        req = _build_request(
             headers={"Authorization": "Bearer token-user-a"},
             path_params={"doc_id": "doc-nonexistent"},
         )
@@ -157,7 +186,7 @@ class TestFastApiAdapter(unittest.TestCase):
     def test_07_adapter_refuses_unconfigured_validator(self) -> None:
         """FastAPI adapter components refuse to operate without a configured validator."""
         # 1. get_current_user with None validator raises 500 HTTPException
-        req = Request(headers={"Authorization": "Bearer token-user-a"})
+        req = _build_request(headers={"Authorization": "Bearer token-user-a"})
         with self.assertRaises(HTTPException) as ctx:
             get_current_user(req, validator=None)
         self.assertEqual(ctx.exception.status_code, 500)
@@ -183,7 +212,7 @@ class TestFastApiAdapter(unittest.TestCase):
 
     def test_06_get_current_user_does_not_leak_internal_exception(self) -> None:
         """Invalid token returns generic 401 error message without leaking internal details."""
-        req_invalid = Request(headers={"Authorization": "Bearer malformed.token.format"})
+        req_invalid = _build_request(headers={"Authorization": "Bearer malformed.token.format"})
         with self.assertRaises(HTTPException) as ctx:
             get_current_user(req_invalid, self.validator)
         self.assertEqual(ctx.exception.status_code, 401)

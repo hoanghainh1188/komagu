@@ -1,8 +1,9 @@
 package io.komainu.security.identity
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -10,10 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtDecoders
 import org.springframework.security.oauth2.jwt.JwtIssuerValidator
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator
-import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
 import java.time.Duration
@@ -22,6 +21,7 @@ import java.time.Duration
  * Spring Boot AutoConfiguration for Komainu OIDC / JWT Resource Server.
  */
 @AutoConfiguration
+@AutoConfigureBefore(name = ["org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"])
 @EnableWebSecurity
 @EnableConfigurationProperties(KomainuOidcProperties::class)
 class KomainuIdentityAutoConfiguration {
@@ -36,29 +36,61 @@ class KomainuIdentityAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "komainu.security.oidc", name = ["jwk-set-uri"])
-    @ConditionalOnMissingBean
-    fun jwkSetUriJwtDecoder(properties: KomainuOidcProperties): JwtDecoder {
-        if (properties.issuer.isBlank()) {
-            throw IllegalStateException("komainu.security.oidc.issuer must not be blank")
+    @ConditionalOnMissingBean(JwtDecoder::class)
+    fun komainuJwtDecoder(
+        properties: KomainuOidcProperties,
+        @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") bootIssuerUri: String = ""
+    ): JwtDecoder {
+        val effectiveIssuer = when {
+            properties.issuer.isNotBlank() -> properties.issuer.trim()
+            bootIssuerUri.isNotBlank() -> bootIssuerUri.trim()
+            else -> ""
         }
+
         if (properties.audience.isBlank()) {
             throw IllegalStateException("komainu.security.oidc.audience must not be blank")
         }
 
-        val jwkUri = properties.jwkSetUri ?: throw IllegalStateException("komainu.security.oidc.jwk-set-uri must not be null")
-        if (!properties.allowInsecureHttpJwks && !jwkUri.lowercase().startsWith("https://")) {
+        if (properties.clockSkewSeconds < 0L || properties.clockSkewSeconds > 120L) {
             throw IllegalStateException(
-                "komainu.security.oidc.jwk-set-uri must use HTTPS ($jwkUri). " +
-                "Set komainu.security.oidc.allow-insecure-http-jwks=true only for testing."
+                "komainu.security.oidc.clock-skew-seconds must be between 0 and 120 (got ${properties.clockSkewSeconds})"
             )
         }
 
-        val decoder = NimbusJwtDecoder.withJwkSetUri(jwkUri).build()
+        val jwkUri = properties.jwkSetUri?.trim()
+        val decoder: NimbusJwtDecoder = when {
+            !jwkUri.isNullOrBlank() -> {
+                if (effectiveIssuer.isBlank()) {
+                    throw IllegalStateException("komainu.security.oidc.issuer must not be blank")
+                }
+                if (!properties.allowInsecureHttpJwks && !jwkUri.lowercase().startsWith("https://")) {
+                    throw IllegalStateException(
+                        "komainu.security.oidc.jwk-set-uri must use HTTPS ($jwkUri). " +
+                        "Set komainu.security.oidc.allow-insecure-http-jwks=true only for testing."
+                    )
+                }
+                NimbusJwtDecoder.withJwkSetUri(jwkUri).build()
+            }
+            effectiveIssuer.isNotBlank() -> {
+                if (!properties.allowInsecureHttpJwks && !effectiveIssuer.lowercase().startsWith("https://")) {
+                    throw IllegalStateException(
+                        "OIDC issuer URI must use HTTPS ($effectiveIssuer). " +
+                        "Set komainu.security.oidc.allow-insecure-http-jwks=true only for testing."
+                    )
+                }
+                NimbusJwtDecoder.withIssuerLocation(effectiveIssuer).build()
+            }
+            else -> {
+                throw IllegalStateException(
+                    "Either komainu.security.oidc.jwk-set-uri or komainu.security.oidc.issuer " +
+                    "(or spring.security.oauth2.resourceserver.jwt.issuer-uri) must be configured"
+                )
+            }
+        }
 
         val expirationValidator = KomainuExpirationValidator()
         val timestampValidator = JwtTimestampValidator(Duration.ofSeconds(properties.clockSkewSeconds))
-        val issuerValidator = org.springframework.security.oauth2.jwt.JwtIssuerValidator(properties.issuer)
+        val issuerValidator = JwtIssuerValidator(effectiveIssuer)
         val audienceValidator = KomainuAudienceValidator(properties.audience)
         val subjectValidator = KomainuSubjectValidator(properties.userClaimName)
 
