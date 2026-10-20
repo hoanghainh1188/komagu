@@ -84,6 +84,20 @@ Examples:
         default=0,
         help="Number of parallel worker processes for pre-scan (default: 0 = auto/cpu_count)",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable content-hash candidate caching",
+    )
+    parser.add_argument(
+        "--clean-cache",
+        action="store_true",
+        help="Clear existing candidate cache before scan",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        help="Custom directory to store scan cache (default: OUT/.cache)",
+    )
     parser.set_defaults(func=execute_scan)
 
 
@@ -108,6 +122,12 @@ def execute_scan(args: argparse.Namespace) -> int:
         cmd.extend(["--config", args.config])
     if getattr(args, "workers", 0):
         cmd.extend(["--workers", str(args.workers)])
+    if getattr(args, "no_cache", False):
+        cmd.append("--no-cache")
+    if getattr(args, "clean_cache", False):
+        cmd.append("--clean-cache")
+    if getattr(args, "cache_dir", None):
+        cmd.extend(["--cache-dir", str(args.cache_dir)])
 
     step("Executing Phase 1: Deterministic Pre-scan")
     res = subprocess.run(cmd, capture_output=True, text=True)

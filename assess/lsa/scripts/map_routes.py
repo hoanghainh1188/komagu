@@ -604,7 +604,7 @@ def _scan_route_file_batch(args: Tuple[List[Tuple[str, str]], Dict, set, str]) -
     return c.items, java_texts
 
 
-def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, workers: int = 0) -> Dict:
+def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, workers: int = 0, cache: Optional[Any] = None) -> Dict:
     enc = config["hints"]["file_encodings"]
     c = Collector(config)
     files = list(iter_source_files(target, config))
@@ -620,27 +620,66 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
             if "<servlet" in t or "<action" in t:
                 xml_declared(c, rel, t, class_index)
 
-    # 2. Source file processing (in-process or ProcessPoolExecutor)
+    xml_items = list(c.items)
+
+    # 2. Source file processing (with optional caching)
     non_xml_files = [(str(p), rel) for p, rel in files if p.suffix.lower() != ".xml"]
-    num_files = len(non_xml_files)
+    file_routes: Dict[str, List[Dict]] = {}
+    files_to_scan: List[Tuple[str, str]] = []
+
+    if cache and getattr(cache, "enabled", False):
+        for p_str, rel in non_xml_files:
+            hit = cache.get_routes(rel, Path(p_str))
+            if hit is not None:
+                rt_items, j_text = hit
+                file_routes[rel] = rt_items
+                if j_text:
+                    texts[rel] = j_text
+            else:
+                files_to_scan.append((p_str, rel))
+    else:
+        files_to_scan = non_xml_files
+
+    num_to_scan = len(files_to_scan)
     effective_workers = workers if workers > 0 else (os.cpu_count() or 1)
 
-    if effective_workers <= 1 or num_files < 20:
-        chunk_items, chunk_java_texts = _scan_route_file_batch(
-            (non_xml_files, config, stack_ids, str(target))
-        )
-        c.items.extend(chunk_items)
-        texts.update(chunk_java_texts)
-    else:
-        chunk_size = max(1, (num_files + effective_workers - 1) // effective_workers)
-        chunks = [
-            (non_xml_files[i : i + chunk_size], config, stack_ids, str(target))
-            for i in range(0, num_files, chunk_size)
-        ]
-        with concurrent.futures.ProcessPoolExecutor(max_workers=effective_workers) as executor:
-            for chunk_items, chunk_java_texts in executor.map(_scan_route_file_batch, chunks):
-                c.items.extend(chunk_items)
-                texts.update(chunk_java_texts)
+    if num_to_scan > 0:
+        new_items: List[Dict] = []
+        if effective_workers <= 1 or num_to_scan < 20:
+            chunk_items, chunk_java_texts = _scan_route_file_batch(
+                (files_to_scan, config, stack_ids, str(target))
+            )
+            new_items = chunk_items
+            texts.update(chunk_java_texts)
+        else:
+            chunk_size = max(1, (num_to_scan + effective_workers - 1) // effective_workers)
+            chunks = [
+                (files_to_scan[i : i + chunk_size], config, stack_ids, str(target))
+                for i in range(0, num_to_scan, chunk_size)
+            ]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=effective_workers) as executor:
+                for chunk_items, chunk_java_texts in executor.map(_scan_route_file_batch, chunks):
+                    new_items.extend(chunk_items)
+                    texts.update(chunk_java_texts)
+
+        for it in new_items:
+            handler_file = it["handler"]["file"]
+            file_routes.setdefault(handler_file, []).append(it)
+
+        if cache and getattr(cache, "enabled", False):
+            for p_str, rel in files_to_scan:
+                cache.put_routes(
+                    rel=rel,
+                    path=Path(p_str),
+                    route_items=file_routes.get(rel, []),
+                    java_text=texts.get(rel),
+                )
+
+    ordered_items = list(xml_items)
+    for p, rel in files:
+        if rel in file_routes:
+            ordered_items.extend(file_routes[rel])
+    c.items = ordered_items
 
     # post-pass 1: routes declared in XML -> enrich from the handler class file
     for it in c.items:
