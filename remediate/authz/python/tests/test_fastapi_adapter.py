@@ -181,6 +181,14 @@ class TestFastApiAdapter(unittest.TestCase):
             KomainuAuthMiddleware(dummy_app, validator=None)
         self.assertIn("requires a configured OidcTokenValidator", str(ctx_mid.exception))
 
+    def test_06_get_current_user_does_not_leak_internal_exception(self) -> None:
+        """Invalid token returns generic 401 error message without leaking internal details."""
+        req_invalid = Request(headers={"Authorization": "Bearer malformed.token.format"})
+        with self.assertRaises(HTTPException) as ctx:
+            get_current_user(req_invalid, self.validator)
+        self.assertEqual(ctx.exception.status_code, 401)
+        self.assertEqual(ctx.exception.detail, "Invalid or expired authentication credentials")
+
 
 if __name__ == "__main__":
     unittest.main()

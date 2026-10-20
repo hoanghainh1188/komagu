@@ -30,16 +30,19 @@ class TestJwtFactory {
         subject: String? = "alice-100",
         tenantId: String = "tenant-alpha",
         issueTime: Instant = Instant.now(),
-        expirationTime: Instant = Instant.now().plusSeconds(3600),
+        expirationTime: Instant? = Instant.now().plusSeconds(3600),
         customSignerPrivateKey: RSAPrivateKey? = null
     ): String {
         val builder = JWTClaimsSet.Builder()
             .issuer(issuer)
             .audience(audience)
             .issueTime(Date.from(issueTime))
-            .expirationTime(Date.from(expirationTime))
             .claim("tenant_id", tenantId)
             .claim("roles", listOf("Member"))
+
+        if (expirationTime != null) {
+            builder.expirationTime(Date.from(expirationTime))
+        }
 
         if (subject != null) {
             builder.subject(subject)
