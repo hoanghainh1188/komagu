@@ -157,6 +157,10 @@ def main() -> int:
     if res_sarif.returncode != 0:
         fails.append(f"test_sarif_export.py failed:\n{res_sarif.stdout}\n{res_sarif.stderr}")
     print(f"  sarif export     {'OK' if res_sarif.returncode == 0 else 'FAIL'}")
+    res_perf = subprocess.run([sys.executable, str(HERE / "test_performance.py")], capture_output=True, text=True)
+    if res_perf.returncode != 0:
+        fails.append(f"test_performance.py failed:\n{res_perf.stdout}\n{res_perf.stderr}")
+    print(f"  scale benchmark  {'OK' if res_perf.returncode == 0 else 'FAIL'}")
     print()
     if fails:
         print(f"FAILED ({len(fails)})")

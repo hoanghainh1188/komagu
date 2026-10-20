@@ -425,6 +425,10 @@ def find_injection(target: Path, config: Dict, workers: int = 0, cache: Optional
         if rel in file_suppressed:
             suppressed.extend(file_suppressed[rel])
 
+    # Re-index candidate_ids deterministically across sequential, parallel, and cached runs
+    for n, it in enumerate(items, 1):
+        it["candidate_id"] = f"I-{n:04d}"
+
     by_rule: Dict[str, int] = {}
     for it in items:
         by_rule[it["rule"]] = by_rule.get(it["rule"], 0) + 1
