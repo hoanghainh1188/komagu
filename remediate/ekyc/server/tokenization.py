@@ -20,6 +20,7 @@ import json
 import os
 import re
 import secrets
+import sys
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -66,6 +67,26 @@ PROHIBITED_IDENTIFIER_KEYS = {
 }
 
 MY_NUMBER_REGEX = re.compile(r"^\d{12}$")
+EMBEDDED_MY_NUMBER_REGEX = re.compile(r"(?:^|\D)(\d{12}|\d{4}[-\s]\d{4}[-\s]\d{4})(?:$|\D)")
+
+# Maximum permitted string lengths by field type to guard against ReDoS and memory exhaustion
+MAX_FIELD_LENGTHS: Dict[str, int] = {
+    "name": 255,
+    "date_of_birth": 32,
+    "birthdate": 32,
+    "address": 1024,
+    "gender": 32,
+    "document_issuer": 255,
+    "nationality": 64,
+    "challenge_nonce": 128,
+    "signature_hex": 4096,
+    "certificate_pem": 16384,
+    "sod_hex": 65536,
+    "document_type": 64,
+    "client_jkt": 128,
+    "tenant_id": 128,
+}
+GENERIC_MAX_FIELD_LENGTH = 65536
 
 
 class RawImageRejectionError(ValueError):
@@ -104,13 +125,16 @@ def reject_prohibited_identifiers(payload: Any) -> None:
                     f"Prohibited identifier field detected: '{k}'. Under 2027 eKYC rules, My Number (個人番号) must never be transmitted or stored."
                 )
 
-            # Check if value itself is a 12-digit My Number
+            # Check if value itself is or embeds a 12-digit My Number
             if isinstance(v, (str, int)):
-                str_val = str(v).strip().replace("-", "").replace(" ", "")
-                if MY_NUMBER_REGEX.match(str_val):
-                    raise ProhibitedIdentifierError(
-                        f"Prohibited 12-digit Individual Number (My Number) detected in field '{k}'. Storage of raw Individual Numbers is prohibited by the My Number Act."
-                    )
+                str_val = str(v).strip()
+                # Exclude high-entropy cryptographic signatures from naive embedded substring check
+                if lower_k not in {"signature_hex", "certificate_pem", "client_jkt", "challenge_nonce", "sod_hex"}:
+                    cleaned = str_val.replace("-", "").replace(" ", "")
+                    if MY_NUMBER_REGEX.match(cleaned) or EMBEDDED_MY_NUMBER_REGEX.search(str_val):
+                        raise ProhibitedIdentifierError(
+                            f"Prohibited 12-digit Individual Number (My Number) detected in field '{k}'. Storage of raw Individual Numbers is prohibited by the My Number Act."
+                        )
 
             if isinstance(v, (dict, list)):
                 reject_prohibited_identifiers(v)
@@ -120,8 +144,9 @@ def reject_prohibited_identifiers(payload: Any) -> None:
             reject_prohibited_identifiers(item)
 
     elif isinstance(payload, (str, int)):
-        str_val = str(payload).strip().replace("-", "").replace(" ", "")
-        if MY_NUMBER_REGEX.match(str_val):
+        str_val = str(payload).strip()
+        cleaned = str_val.replace("-", "").replace(" ", "")
+        if MY_NUMBER_REGEX.match(cleaned) or EMBEDDED_MY_NUMBER_REGEX.search(str_val):
             raise ProhibitedIdentifierError(
                 "Prohibited 12-digit Individual Number (My Number) detected in payload value."
             )
@@ -130,7 +155,8 @@ def reject_prohibited_identifiers(payload: Any) -> None:
 def reject_raw_images(payload: Any, is_top_level: bool = True) -> None:
     """Enforces Zero-PII Rule: Rejects payloads with unpermitted fields, raw images, or photo streams."""
     # First verify no prohibited Individual Numbers
-    reject_prohibited_identifiers(payload)
+    if is_top_level:
+        reject_prohibited_identifiers(payload)
 
     if isinstance(payload, dict):
         has_api_keys = any(k in ALLOWED_TOP_LEVEL_FIELDS for k in payload)
@@ -161,6 +187,27 @@ def reject_raw_images(payload: Any, is_top_level: bool = True) -> None:
                         f"Unpermitted attribute field: '{k}'. Only allow-listed identity attributes are accepted."
                     )
 
+            # Field length limits
+            limit = MAX_FIELD_LENGTHS.get(k, GENERIC_MAX_FIELD_LENGTH)
+            if isinstance(v, (str, bytes)) and len(v) > limit:
+                raise RawImageRejectionError(
+                    f"Field '{k}' exceeds maximum permitted length ({len(v)} > {limit})."
+                )
+
+            # Check sod_hex for hex-encoded raw image headers (JPEG, PNG, GIF, BMP, WEBP)
+            if k == "sod_hex" and isinstance(v, str):
+                sod_strip = v.strip().lower()
+                if (
+                    sod_strip.startswith("ffd8ff")
+                    or sod_strip.startswith("89504e47")
+                    or sod_strip.startswith("47494638")
+                    or sod_strip.startswith("424d")
+                    or sod_strip.startswith("52494646")
+                ):
+                    raise RawImageRejectionError(
+                        "Prohibited hex-encoded image data detected in sod_hex."
+                    )
+
             if k == "attributes" and isinstance(v, dict):
                 reject_raw_images(v, is_top_level=False)
             elif isinstance(v, (dict, list)):
@@ -175,17 +222,42 @@ def reject_raw_images(payload: Any, is_top_level: bool = True) -> None:
     elif isinstance(payload, str):
         stripped = payload.strip()
         lower_stripped = stripped.lower()
+
+        # Check for data:image anywhere in string or base64 image magic prefixes
         if (
-            lower_stripped.startswith("data:image/")
+            "data:image/" in lower_stripped
             or lower_stripped.startswith("/9j/")
             or lower_stripped.startswith("ivborw0kggo")
+            or lower_stripped.startswith("r0lg")
+            or lower_stripped.startswith("qk")
         ):
             raise RawImageRejectionError("Prohibited base64 image data stream detected in payload.")
+
+        # Additional inspection: attempt base64 decode of prefix to detect arbitrary image headers
+        if len(stripped) >= 16 and not stripped.startswith("-----BEGIN"):
+            try:
+                prefix_candidate = stripped[:32]
+                padded = prefix_candidate + "=" * (-len(prefix_candidate) % 4)
+                decoded_prefix = base64.b64decode(padded.encode("ascii"), validate=False)
+                for magic in IMAGE_MAGIC_BYTES:
+                    if decoded_prefix.startswith(magic):
+                        raise RawImageRejectionError("Prohibited base64 image data stream detected in payload.")
+            except Exception:
+                pass
 
     elif isinstance(payload, bytes):
         for magic in IMAGE_MAGIC_BYTES:
             if payload.startswith(magic):
                 raise RawImageRejectionError("Prohibited binary image stream detected in payload.")
+
+
+def _is_running_in_test() -> bool:
+    """Return True if running under a test runner or with explicit test opt-in."""
+    if "unittest" in sys.modules or "pytest" in sys.modules:
+        return True
+    if os.environ.get("KOMAINU_EKYC_ALLOW_EPHEMERAL_KEY") == "1":
+        return True
+    return False
 
 
 class ZeroPIITokenizer:
@@ -195,6 +267,7 @@ class ZeroPIITokenizer:
         self,
         hmac_key: Optional[bytes] = None,
         signing_key: Optional[bytes] = None,
+        allow_ephemeral_key: Optional[bool] = None,
     ):
         key = hmac_key or signing_key
         if key:
@@ -202,7 +275,15 @@ class ZeroPIITokenizer:
         elif "KOMAINU_EKYC_HMAC_KEY" in os.environ and os.environ["KOMAINU_EKYC_HMAC_KEY"]:
             self.hmac_key = os.environ["KOMAINU_EKYC_HMAC_KEY"].encode("utf-8")
         else:
-            self.hmac_key = secrets.token_bytes(32)
+            is_test = _is_running_in_test() if allow_ephemeral_key is None else allow_ephemeral_key
+            if is_test and os.environ.get("KOMAINU_EKYC_REQUIRE_HMAC_KEY") != "1":
+                self.hmac_key = secrets.token_bytes(32)
+            else:
+                raise RuntimeError(
+                    "KOMAINU_EKYC_HMAC_KEY environment variable is required to initialize ZeroPIITokenizer. "
+                    "Silent fallback to an ephemeral random key is prohibited outside test environments to prevent "
+                    "intermittent token verification failures across restarts and multi-replica deployments."
+                )
 
     def derive_tenant_key(self, tenant_id: str, context: str = "ekyc_dedup") -> bytes:
         """Derive a tenant-isolated cryptographic key to prevent cross-tenant identity correlation."""

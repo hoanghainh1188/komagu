@@ -6,11 +6,13 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
+import os
 import sys
 import time
 import unittest
 from pathlib import Path
 from typing import Any, Dict, List
+from unittest.mock import patch
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
@@ -307,6 +309,100 @@ class TestZeroPIITokenizationAndOIDC(unittest.TestCase):
 
         errs = self._validate_schema(record)
         self.assertEqual(errs, [])
+
+    def test_embedded_my_number_in_text_rejected(self) -> None:
+        """Issue #213: Embedded 12-digit My Number in text fields must be strictly rejected."""
+        payload_embedded = {
+            "name": "山田 太郎",
+            "address": "東京都千代田区1-1 (マイナンバー: 123456789012)",
+        }
+        with self.assertRaises(ProhibitedIdentifierError):
+            reject_prohibited_identifiers(payload_embedded)
+
+        payload_hyphenated = {
+            "name": "山田 太郎",
+            "memo": "Ref ID 1234-5678-9012 for user",
+        }
+        with self.assertRaises(ProhibitedIdentifierError):
+            reject_prohibited_identifiers(payload_hyphenated)
+
+        # Non-12-digit numbers (e.g. 10 or 11 digits) should not trigger false positives
+        payload_phone = {
+            "name": "山田 太郎",
+            "phone": "03-1234-5678",
+            "postal_code": "100-0001",
+        }
+        # Should not raise
+        reject_prohibited_identifiers(payload_phone)
+
+    def test_hex_image_in_sod_hex_rejected(self) -> None:
+        """Issue #213: Hex-encoded JPEG/PNG in sod_hex must be rejected as raw image smuggling."""
+        # JPEG header: ffd8ffe0
+        fake_jpeg_sod = "ffd8ffe000104a46494600010101006000600000" + "aa" * 30
+        payload_jpeg = {
+            "sod_hex": fake_jpeg_sod,
+            "document_type": "driver_license",
+        }
+        with self.assertRaises(RawImageRejectionError):
+            reject_raw_images(payload_jpeg)
+
+        # PNG header: 89504e47
+        fake_png_sod = "89504e470d0a1a0a0000000d49484452" + "bb" * 30
+        payload_png = {
+            "sod_hex": fake_png_sod,
+            "document_type": "driver_license",
+        }
+        with self.assertRaises(RawImageRejectionError):
+            reject_raw_images(payload_png)
+
+    def test_data_uri_and_base64_image_variants_rejected(self) -> None:
+        """Issue #213: Alternative image formats (WebP, BMP) and embedded data URIs must be rejected."""
+        payloads = [
+            {"avatar": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAA"},
+            {"scan": "data:image/bmp;base64,Qk02AAAAAAAAADYAAAAoAAAA"},
+            {"note": "User uploaded avatar: data:image/png;base64,iVBORw0KGgoAAA"},
+        ]
+        for p in payloads:
+            with self.subTest(payload=p):
+                with self.assertRaises(RawImageRejectionError):
+                    reject_raw_images(p)
+
+    def test_oversized_fields_and_payloads_rejected(self) -> None:
+        """Issue #213: Oversized string fields and aggregate payloads must be rejected."""
+        # Name field exceeds limit (255)
+        payload_long_name = {
+            "name": "A" * 256,
+        }
+        with self.assertRaises(RawImageRejectionError):
+            reject_raw_images(payload_long_name)
+
+        # Address field exceeds limit (1024)
+        payload_long_address = {
+            "address": "B" * 1025,
+        }
+        with self.assertRaises(RawImageRejectionError):
+            reject_raw_images(payload_long_address)
+
+        # Aggregate payload exceeds limit (65536)
+        oversized_payload = {
+            "notes": "C" * 70000,
+        }
+        with self.assertRaises(RawImageRejectionError):
+            reject_raw_images(oversized_payload)
+
+    def test_tokenizer_requires_hmac_key_in_production(self) -> None:
+        """Issue #213: ZeroPIITokenizer must reject missing HMAC key outside test environments."""
+        with patch.dict(os.environ, {"KOMAINU_EKYC_REQUIRE_HMAC_KEY": "1"}, clear=False):
+            # Ensure env var KOMAINU_EKYC_HMAC_KEY is removed
+            with patch.dict(os.environ, {"KOMAINU_EKYC_HMAC_KEY": ""}):
+                with self.assertRaises(RuntimeError) as ctx:
+                    ZeroPIITokenizer()
+                self.assertIn("KOMAINU_EKYC_HMAC_KEY", str(ctx.exception))
+
+        # Explicit allow_ephemeral_key=False must also fail when key is unset
+        with patch.dict(os.environ, {"KOMAINU_EKYC_HMAC_KEY": ""}):
+            with self.assertRaises(RuntimeError):
+                ZeroPIITokenizer(allow_ephemeral_key=False)
 
 
 if __name__ == "__main__":

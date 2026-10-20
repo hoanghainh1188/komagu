@@ -12,6 +12,8 @@ from typing import Any, Dict, Optional, Tuple
 
 from remediate.ekyc.server.jpki_verifier import (
     JPKIVerificationEngine,
+    NonceRateLimitExceededError,
+    NonceStoreCapacityExceededError,
     _check_attribute_binding,
     _simulation_opted_in,
 )
@@ -42,15 +44,26 @@ class EKYCService:
 
         self.tokenizer = tokenizer or ZeroPIITokenizer()
 
-    def handle_request_challenge(self) -> Tuple[int, Dict[str, Any]]:
+    def handle_request_challenge(self, client_ip: Optional[str] = None) -> Tuple[int, Dict[str, Any]]:
         """POST /api/v1/ekyc/challenge -> Issues single-use challenge nonce."""
-        nonce = self.verifier.generate_challenge(ttl_seconds=300)
-        return 200, {
-            "status": "success",
-            "challenge_nonce": nonce,
-            "ttl_seconds": 300,
-            "accepted_algorithms": ["SHA256withRSA", "SHA256withECDSA"],
-        }
+        try:
+            nonce = self.verifier.generate_challenge(ttl_seconds=300, client_id=client_ip)
+            return 200, {
+                "status": "success",
+                "challenge_nonce": nonce,
+                "ttl_seconds": 300,
+                "accepted_algorithms": ["SHA256withRSA", "SHA256withECDSA"],
+            }
+        except NonceRateLimitExceededError as e:
+            return 429, {
+                "error": "TOO_MANY_REQUESTS",
+                "message": str(e),
+            }
+        except NonceStoreCapacityExceededError as e:
+            return 503, {
+                "error": "SERVICE_UNAVAILABLE",
+                "message": str(e),
+            }
 
     def handle_verify_jpki(self, request_payload: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
         """POST /api/v1/ekyc/verify-jpki -> Validates JPKI signature & issues Zero-PII token."""

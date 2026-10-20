@@ -11,12 +11,19 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+from remediate.ekyc.server.api import EKYCService
 from remediate.ekyc.server.jpki_verifier import (
     HAS_CRYPTOGRAPHY,
+    InMemoryNonceStore,
     JPKIVerificationEngine,
     MockJPKIVerificationEngine,
+    NonceRateLimitExceededError,
+    NonceStoreCapacityExceededError,
 )
 try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
     from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
 except ImportError:
     MockJLISCertificateAuthority = None
@@ -188,6 +195,151 @@ class TestMockJLISAndVerifier(unittest.TestCase):
         self.assertTrue(ok)
         self.assertNotIn("image", cert_pem.lower())
         self.assertNotIn("photo", cert_pem.lower())
+
+    def test_reject_ca_certificate_as_leaf(self) -> None:
+        """Issue #213: Intermediate or Root CA certs (BasicConstraints ca=True) must be rejected as leaf."""
+        sub_ca_pem = self.ca.get_intermediate_ca_pem()
+        nonce = self.engine.generate_challenge()
+        fake_sig = "12" * 256
+        ok, msg = self.engine.verify_signature(
+            challenge_nonce=nonce,
+            signature_hex=fake_sig,
+            certificate_pem=sub_ca_pem,
+        )
+        self.assertFalse(ok)
+        self.assertIn("ca certificate cannot be presented as user leaf certificate", msg.lower())
+
+    def test_reject_cert_with_forbidden_key_usage(self) -> None:
+        """Issue #213: Certificates with CA key usages (key_cert_sign, crl_sign) or missing signing flags must be rejected."""
+        user_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        user_subject = x509.Name([
+            x509.NameAttribute(x509.NameOID.COUNTRY_NAME, "JP"),
+            x509.NameAttribute(x509.NameOID.COMMON_NAME, "ILLEGAL USAGE USER"),
+        ])
+        # 1. Missing digital_signature / content_commitment
+        cert_no_sig = (
+            x509.CertificateBuilder()
+            .subject_name(user_subject)
+            .issuer_name(self.ca.sub_cert.subject)
+            .public_key(user_key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - datetime.timedelta(days=1))
+            .not_valid_after(now + datetime.timedelta(days=30))
+            .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+            .add_extension(
+                x509.KeyUsage(
+                    digital_signature=False,
+                    content_commitment=False,
+                    key_encipherment=True,
+                    data_encipherment=False,
+                    key_agreement=False,
+                    key_cert_sign=False,
+                    crl_sign=False,
+                    encipher_only=False,
+                    decipher_only=False,
+                ),
+                critical=True,
+            )
+            .sign(self.ca.sub_private_key, hashes.SHA256())
+        )
+        cert_pem1 = cert_no_sig.public_bytes(serialization.Encoding.PEM).decode("utf-8")
+        nonce = self.engine.generate_challenge()
+        fake_sig = "34" * 256
+        ok1, msg1 = self.engine.verify_signature(
+            challenge_nonce=nonce,
+            signature_hex=fake_sig,
+            certificate_pem=cert_pem1,
+        )
+        self.assertFalse(ok1)
+        self.assertIn("key usage violation", msg1.lower())
+        self.assertIn("required", msg1.lower())
+
+        # 2. Has digital_signature but ALSO has prohibited key_cert_sign
+        cert_forbidden = (
+            x509.CertificateBuilder()
+            .subject_name(user_subject)
+            .issuer_name(self.ca.sub_cert.subject)
+            .public_key(user_key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - datetime.timedelta(days=1))
+            .not_valid_after(now + datetime.timedelta(days=30))
+            .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+            .add_extension(
+                x509.KeyUsage(
+                    digital_signature=True,
+                    content_commitment=False,
+                    key_encipherment=False,
+                    data_encipherment=False,
+                    key_agreement=False,
+                    key_cert_sign=True,  # Prohibited
+                    crl_sign=False,
+                    encipher_only=False,
+                    decipher_only=False,
+                ),
+                critical=True,
+            )
+            .sign(self.ca.sub_private_key, hashes.SHA256())
+        )
+        cert_pem2 = cert_forbidden.public_bytes(serialization.Encoding.PEM).decode("utf-8")
+        nonce2 = self.engine.generate_challenge()
+        ok2, msg2 = self.engine.verify_signature(
+            challenge_nonce=nonce2,
+            signature_hex=fake_sig,
+            certificate_pem=cert_pem2,
+        )
+        self.assertFalse(ok2)
+        self.assertIn("must not possess key_cert_sign", msg2.lower())
+
+    def test_nonce_rate_limiting_per_client(self) -> None:
+        """Issue #213: Clients exceeding challenge rate limit must be blocked."""
+        store = InMemoryNonceStore(rate_limit_per_client=3, rate_limit_window_seconds=60)
+        # 3 requests from client_a succeed
+        for _ in range(3):
+            store.generate_and_store(client_id="client_a")
+
+        # 4th request from client_a must fail with rate limit error
+        with self.assertRaises(NonceRateLimitExceededError):
+            store.generate_and_store(client_id="client_a")
+
+        # Different client (client_b) can still obtain challenges
+        nonce_b = store.generate_and_store(client_id="client_b")
+        self.assertIsNotNone(nonce_b)
+
+    def test_nonce_capacity_rejection_without_eviction(self) -> None:
+        """Issue #213: When eviction is disabled, store raises NonceStoreCapacityExceededError on full."""
+        store = InMemoryNonceStore(max_active_nonces=2, evict_on_capacity=False, rate_limit_per_client=10)
+        store.generate_and_store(client_id="user1")
+        store.generate_and_store(client_id="user2")
+
+        with self.assertRaises(NonceStoreCapacityExceededError):
+            store.generate_and_store(client_id="user3")
+
+    def test_api_status_codes_for_nonce_errors(self) -> None:
+        """Issue #213: API maps NonceRateLimitExceededError to 429 and NonceStoreCapacityExceededError to 503."""
+        # Rate limit mapping -> 429
+        store_rl = InMemoryNonceStore(rate_limit_per_client=1)
+        engine_rl = MockJPKIVerificationEngine(ca=self.ca, nonce_store=store_rl)
+        service_rl = EKYCService(verifier=engine_rl)
+
+        status, _ = service_rl.handle_request_challenge(client_ip="192.168.1.1")
+        self.assertEqual(status, 200)
+
+        status2, resp2 = service_rl.handle_request_challenge(client_ip="192.168.1.1")
+        self.assertEqual(status2, 429)
+        self.assertEqual(resp2["error"], "TOO_MANY_REQUESTS")
+
+        # Capacity limit mapping -> 503
+        store_cap = InMemoryNonceStore(max_active_nonces=1, evict_on_capacity=False, rate_limit_per_client=10)
+        engine_cap = MockJPKIVerificationEngine(ca=self.ca, nonce_store=store_cap)
+        service_cap = EKYCService(verifier=engine_cap)
+
+        status_cap1, _ = service_cap.handle_request_challenge(client_ip="10.0.0.1")
+        self.assertEqual(status_cap1, 200)
+
+        status_cap2, resp_cap2 = service_cap.handle_request_challenge(client_ip="10.0.0.2")
+        self.assertEqual(status_cap2, 503)
+        self.assertEqual(resp_cap2["error"], "SERVICE_UNAVAILABLE")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ import hashlib
 import hmac
 import os
 import secrets
+import threading
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -36,6 +37,149 @@ SIMULATION_ENV_FLAG = "KOMAINU_EKYC_SIMULATION"
 # Verifies a driver-licence SOD (CMS SignedData: DS certificate chain to the CSCA and
 # data-group hashes). Returns (ok, message, attributes read from the verified data groups).
 SODVerifier = Callable[[bytes], Tuple[bool, str, Dict[str, str]]]
+
+
+class NonceStoreCapacityExceededError(RuntimeError):
+    """Raised when active unexpired nonces reach capacity limit."""
+    pass
+
+
+class NonceRateLimitExceededError(PermissionError):
+    """Raised when a client exceeds challenge request rate limit."""
+    pass
+
+
+class BaseNonceStore:
+    """Abstract base class for challenge nonce storage."""
+
+    def generate_and_store(self, ttl_seconds: int = 300, client_id: Optional[str] = None) -> str:
+        raise NotImplementedError
+
+    def validate_and_consume(self, nonce: str) -> bool:
+        raise NotImplementedError
+
+
+class InMemoryNonceStore(BaseNonceStore):
+    """Thread-safe, capacity-guarded, rate-limited in-memory challenge nonce store."""
+
+    def __init__(
+        self,
+        max_active_nonces: int = 1000,
+        rate_limit_per_client: int = 20,
+        rate_limit_window_seconds: int = 60,
+        evict_on_capacity: bool = True,
+    ):
+        self.max_active_nonces = max_active_nonces
+        self.rate_limit_per_client = rate_limit_per_client
+        self.rate_limit_window_seconds = rate_limit_window_seconds
+        self.evict_on_capacity = evict_on_capacity
+        self._lock = threading.Lock()
+        self._nonces: collections.OrderedDict[str, float] = collections.OrderedDict()  # {nonce: expiry_timestamp}
+        self._client_requests: Dict[str, List[float]] = {}  # {client_id: [timestamps]}
+
+    def _clean_expired(self, now: float) -> None:
+        """Purge expired nonces and stale rate limit timestamps."""
+        expired = [n for n, exp in self._nonces.items() if exp <= now]
+        for n in expired:
+            del self._nonces[n]
+
+        cutoff = now - self.rate_limit_window_seconds
+        stale_clients = []
+        for cid, timestamps in self._client_requests.items():
+            valid_ts = [t for t in timestamps if t > cutoff]
+            if valid_ts:
+                self._client_requests[cid] = valid_ts
+            else:
+                stale_clients.append(cid)
+        for cid in stale_clients:
+            del self._client_requests[cid]
+
+    def generate_and_store(self, ttl_seconds: int = 300, client_id: Optional[str] = None) -> str:
+        with self._lock:
+            now = time.time()
+            self._clean_expired(now)
+
+            # Per-client rate limiting
+            cid = client_id or "anonymous"
+            client_history = self._client_requests.setdefault(cid, [])
+            if len(client_history) >= self.rate_limit_per_client:
+                raise NonceRateLimitExceededError(
+                    f"Rate limit exceeded: client '{cid}' has issued {len(client_history)} challenges "
+                    f"in the last {self.rate_limit_window_seconds}s (limit: {self.rate_limit_per_client})."
+                )
+
+            # Capacity limit handling
+            if len(self._nonces) >= self.max_active_nonces:
+                if self.evict_on_capacity:
+                    self._nonces.popitem(last=False)
+                else:
+                    raise NonceStoreCapacityExceededError(
+                        f"Nonce store capacity ({self.max_active_nonces}) reached with active unexpired nonces. "
+                        "Rejecting new challenges to protect pending verification sessions."
+                    )
+
+            nonce = secrets.token_hex(32)
+            self._nonces[nonce] = now + ttl_seconds
+            client_history.append(now)
+            return nonce
+
+    def validate_and_consume(self, nonce: str) -> bool:
+        with self._lock:
+            now = time.time()
+            self._clean_expired(now)
+            if nonce not in self._nonces:
+                return False
+            expiry = self._nonces.pop(nonce)
+            return now <= expiry
+
+
+class RedisNonceStore(BaseNonceStore):
+    """Shared Redis-backed challenge nonce store for multi-replica production deployments."""
+
+    def __init__(
+        self,
+        redis_client: Any,
+        key_prefix: str = "komainu:ekyc:nonce:",
+        rate_limit_per_client: int = 20,
+        rate_limit_window_seconds: int = 60,
+    ):
+        self.redis = redis_client
+        self.key_prefix = key_prefix
+        self.rate_limit_per_client = rate_limit_per_client
+        self.rate_limit_window_seconds = rate_limit_window_seconds
+
+    def generate_and_store(self, ttl_seconds: int = 300, client_id: Optional[str] = None) -> str:
+        cid = client_id or "anonymous"
+        rl_key = f"{self.key_prefix}rl:{cid}"
+        req_count = self.redis.incr(rl_key)
+        if req_count == 1:
+            self.redis.expire(rl_key, self.rate_limit_window_seconds)
+        if req_count > self.rate_limit_per_client:
+            raise NonceRateLimitExceededError(
+                f"Rate limit exceeded: client '{cid}' has exceeded {self.rate_limit_per_client} challenges."
+            )
+
+        nonce = secrets.token_hex(32)
+        key = f"{self.key_prefix}{nonce}"
+        self.redis.setex(key, ttl_seconds, "1")
+        return nonce
+
+    def validate_and_consume(self, nonce: str) -> bool:
+        key = f"{self.key_prefix}{nonce}"
+        if hasattr(self.redis, "getdel"):
+            val = self.redis.getdel(key)
+        else:
+            lua = """
+            local val = redis.call('GET', KEYS[1])
+            if val then
+                redis.call('DEL', KEYS[1])
+                return val
+            else
+                return nil
+            end
+            """
+            val = self.redis.eval(lua, 1, key)
+        return val is not None
 
 
 def _simulation_opted_in() -> bool:
@@ -86,6 +230,8 @@ class JPKIVerificationEngine:
         crl_checker: Optional[Callable[[int], bool]] = None,
         attribute_oids: Optional[Dict[str, str]] = None,
         sod_verifier: Optional[SODVerifier] = None,
+        nonce_store: Optional[BaseNonceStore] = None,
+        redis_client: Optional[Any] = None,
     ):
         """
         trusted_certs: J-LIS root / intermediate certificates. Required: certificates are
@@ -94,6 +240,8 @@ class JPKIVerificationEngine:
         attribute_oids: attribute name -> SubjectAltName otherName OID holding that
             attribute in the signing certificate (the CN is always read as "name").
         sod_verifier: real driver-licence SOD verification; without it SODs are rejected.
+        nonce_store: optional pluggable nonce store (Redis, in-memory, etc.).
+        redis_client: optional Redis connection for shared multi-replica nonce state.
         """
         self.trust_anchor = trust_anchor
         self.max_active_nonces = max_active_nonces
@@ -108,36 +256,28 @@ class JPKIVerificationEngine:
                 f"Simulation mode requires {SIMULATION_ENV_FLAG}=1; it is never enabled implicitly."
             )
 
-        # Bounded in-memory nonce store: {nonce: expiry_timestamp}
-        self._active_nonces: collections.OrderedDict[str, float] = collections.OrderedDict()
+        # Pluggable challenge nonce storage (thread-safe in-memory or Redis)
+        if nonce_store is not None:
+            self.nonce_store = nonce_store
+        elif redis_client is not None:
+            self.nonce_store = RedisNonceStore(redis_client=redis_client)
+        else:
+            self.nonce_store = InMemoryNonceStore(max_active_nonces=max_active_nonces)
 
-    def generate_challenge(self, ttl_seconds: int = 300) -> str:
+    @property
+    def _active_nonces(self) -> Dict[str, float]:
+        """Backward-compatible view of active nonces for in-memory storage."""
+        if isinstance(self.nonce_store, InMemoryNonceStore):
+            return self.nonce_store._nonces
+        return {}
+
+    def generate_challenge(self, ttl_seconds: int = 300, client_id: Optional[str] = None) -> str:
         """Issue a cryptographically secure, time-limited challenge nonce."""
-        self._clean_expired_nonces()
-
-        # Enforce bounded capacity with FIFO eviction to prevent memory exhaustion DoS
-        while len(self._active_nonces) >= self.max_active_nonces:
-            self._active_nonces.popitem(last=False)
-
-        nonce = secrets.token_hex(32)
-        expiry = time.time() + ttl_seconds
-        self._active_nonces[nonce] = expiry
-        return nonce
+        return self.nonce_store.generate_and_store(ttl_seconds=ttl_seconds, client_id=client_id)
 
     def validate_nonce(self, nonce: str) -> bool:
         """Validate and immediately consume single-use challenge nonce."""
-        self._clean_expired_nonces()
-        if nonce not in self._active_nonces:
-            return False
-        expiry = self._active_nonces.pop(nonce)
-        return time.time() <= expiry
-
-    def _clean_expired_nonces(self) -> None:
-        """Purge all expired nonces from active store."""
-        now = time.time()
-        expired = [n for n, exp in self._active_nonces.items() if exp <= now]
-        for n in expired:
-            self._active_nonces.pop(n, None)
+        return self.nonce_store.validate_and_consume(nonce)
 
     def verify_signature(
         self,
@@ -273,7 +413,24 @@ class JPKIVerificationEngine:
             if binding_error:
                 return False, binding_error, {}
 
-            # 5. Asymmetric Signature Verification
+            # 5. Leaf Certificate Constraints: BasicConstraints & KeyUsage (Issue #213)
+            try:
+                bc = cert.extensions.get_extension_for_class(x509.BasicConstraints).value
+                if bc.ca:
+                    return False, "Leaf certificate violation: CA certificate cannot be presented as user leaf certificate", {}
+            except x509.ExtensionNotFound:
+                pass
+
+            try:
+                ku = cert.extensions.get_extension_for_class(x509.KeyUsage).value
+                if not (ku.digital_signature or ku.content_commitment):
+                    return False, "Leaf certificate key usage violation: digital_signature or content_commitment required", {}
+                if ku.key_cert_sign or ku.crl_sign:
+                    return False, "Leaf certificate key usage violation: user leaf certificate must not possess key_cert_sign or crl_sign", {}
+            except x509.ExtensionNotFound:
+                return False, "Leaf certificate violation: KeyUsage extension is mandatory", {}
+
+            # 6. Asymmetric Signature Verification
             pub_key = cert.public_key()
             try:
                 if isinstance(pub_key, rsa.RSAPublicKey):
@@ -331,6 +488,7 @@ class MockJPKIVerificationEngine(JPKIVerificationEngine):
         trust_anchor: str = "Mock-J-LIS-Root-CA",
         max_active_nonces: int = MAX_ACTIVE_NONCES,
         ca: Optional[Any] = None,
+        nonce_store: Optional[BaseNonceStore] = None,
     ):
         trusted_certs = []
         crl_checker = None
@@ -357,4 +515,5 @@ class MockJPKIVerificationEngine(JPKIVerificationEngine):
             trusted_certs=trusted_certs,
             crl_checker=crl_checker,
             attribute_oids=attribute_oids,
+            nonce_store=nonce_store,
         )
