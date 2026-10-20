@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Unit & Acceptance Tests for Boilerplate 3: Multi-Region Resilience & WORM Backup (Issue #113)."""
+"""Unit & Acceptance Tests for Boilerplate 3: Multi-Region Resilience & WORM Backup (Issue #113 & #210)."""
 
 from __future__ import annotations
 
+import datetime
+import json
 import os
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from remediate.resilience.dr.dr_manager import (
@@ -121,6 +126,163 @@ class TestMultiRegionResilience(unittest.TestCase):
         self.assertIn("ap-northeast-1", content)
         self.assertIn("ap-northeast-3", content)
         self.assertIn("S3 Object Lock", content)
+
+    def test_09_terraform_iam_roles_and_kms_hardening(self) -> None:
+        """Verifies managed IAM roles, conditional replication handling, and KMS policy hardening (Issue #210)."""
+        worm_tf = os.path.join(MODULE_ROOT, "terraform", "backup_worm.tf")
+        outputs_tf = os.path.join(MODULE_ROOT, "terraform", "outputs.tf")
+        with open(worm_tf, "r", encoding="utf-8") as f:
+            content = f.read()
+        with open(outputs_tf, "r", encoding="utf-8") as f:
+            outputs = f.read()
+
+        # Invariant 1: Dedicated IAM roles exist
+        self.assertIn('resource "aws_iam_role" "backup_writer"', content)
+        self.assertIn('resource "aws_iam_role" "backup_restore"', content)
+        self.assertIn('resource "aws_iam_role" "security_officer"', content)
+
+        # Invariant 2: KMS Key policy grants explicit Decrypt to restore role
+        self.assertIn("AllowBackupRestoreKeyUsage", content)
+        self.assertIn("aws_iam_role.backup_restore.arn", content)
+
+        # Invariant 3: KMS key deletion deny statement uses managed security officer role
+        self.assertIn("aws_iam_role.security_officer.arn", content)
+        self.assertNotIn("role/KomainuSecurityOfficer", content)
+
+        # Invariant 4: No unguarded direct index on replication_role[0]
+        # Must be conditionally guarded when enable_cross_region_replication = false
+        self.assertIn("var.enable_cross_region_replication", content)
+
+        # Invariant 5: Outputs export new roles and log bucket
+        self.assertIn("backup_writer_role_arn", outputs)
+        self.assertIn("backup_restore_role_arn", outputs)
+        self.assertIn("security_officer_role_arn", outputs)
+        self.assertIn("worm_access_logs_bucket_arn", outputs)
+
+    def test_10_terraform_bucket_hardening_and_logging_policy(self) -> None:
+        """Verifies S3 access log delivery policy, bucket encryption, and public access blocks (Issue #210)."""
+        worm_tf = os.path.join(MODULE_ROOT, "terraform", "backup_worm.tf")
+        with open(worm_tf, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Invariant 1: Access log bucket policy allows logging.s3.amazonaws.com
+        self.assertIn("logging.s3.amazonaws.com", content)
+        self.assertIn("aws_s3_bucket_policy", content)
+        self.assertIn("worm_access_logs", content)
+
+        # Invariant 2: Primary backup bucket hardened with public access block and SSE
+        self.assertIn("aws_s3_bucket_public_access_block", content)
+        self.assertIn("aws_s3_bucket_server_side_encryption_configuration", content)
+        self.assertIn("primary_backup", content)
+
+    def test_11_dr_manager_retention_validation_and_immutability(self) -> None:
+        """Verifies DRManager rejects non-positive retention and prevents retention_until modification (Issue #210)."""
+        mgr = DRManager()
+
+        # Reject non-positive retention periods
+        with self.assertRaises(ValueError) as ctx:
+            mgr.create_snapshot("snap-invalid-1", b"data", retention_days=0)
+        self.assertIn("at least 1", str(ctx.exception))
+
+        with self.assertRaises(ValueError) as ctx:
+            mgr.create_snapshot("snap-invalid-2", b"data", retention_days=-5)
+        self.assertIn("at least 1", str(ctx.exception))
+
+        # Retention deadline is read-only property
+        record = mgr.create_snapshot("snap-valid-1", b"data", retention_days=30)
+        with self.assertRaises(AttributeError):
+            record.retention_until = datetime.datetime.now(datetime.timezone.utc)
+
+    def test_12_dr_manager_cli_and_runbook_command(self) -> None:
+        """Verifies DRManager CLI commands, including the exact runbook restore command (Issue #210)."""
+        env = dict(os.environ)
+
+        with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
+            env["KOMAINU_DR_METADATA_PATH"] = tmp.name
+
+            # CLI --create
+            create_cmd = [
+                sys.executable,
+                "-m",
+                "remediate.resilience.dr.dr_manager",
+                "--create",
+                "--snapshot-id",
+                "cli-test-01",
+                "--payload",
+                "test-data-cli",
+                "--retention-days",
+                "10",
+                "--storage-path",
+                tmp.name,
+            ]
+            res = subprocess.run(create_cmd, capture_output=True, text=True, check=True)
+            self.assertIn("cli-test-01", res.stdout)
+
+            # CLI --verify
+            verify_cmd = [
+                sys.executable,
+                "-m",
+                "remediate.resilience.dr.dr_manager",
+                "--verify",
+                "--snapshot-id",
+                "cli-test-01",
+                "--storage-path",
+                tmp.name,
+            ]
+            res = subprocess.run(verify_cmd, capture_output=True, text=True, check=True)
+            self.assertIn("OK: Cryptographic integrity verified", res.stdout)
+
+            # CLI --list
+            list_cmd = [
+                sys.executable,
+                "-m",
+                "remediate.resilience.dr.dr_manager",
+                "--list",
+                "--storage-path",
+                tmp.name,
+            ]
+            res = subprocess.run(list_cmd, capture_output=True, text=True, check=True)
+            self.assertIn("cli-test-01", res.stdout)
+
+            # CLI --restore from specific snapshot
+            restore_cmd = [
+                sys.executable,
+                "-m",
+                "remediate.resilience.dr.dr_manager",
+                "--restore",
+                "--snapshot-id",
+                "cli-test-01",
+                "--storage-path",
+                tmp.name,
+            ]
+            res = subprocess.run(restore_cmd, capture_output=True, text=True, check=True)
+            self.assertIn("RESTORE_SUCCESSFUL", res.stdout)
+
+        # Exact runbook command: python3 -m remediate.resilience.dr.dr_manager --restore --snapshot-id "latest-verified"
+        runbook_cmd = [
+            sys.executable,
+            "-m",
+            "remediate.resilience.dr.dr_manager",
+            "--restore",
+            "--snapshot-id",
+            "latest-verified",
+        ]
+        res = subprocess.run(runbook_cmd, capture_output=True, text=True, check=True)
+        self.assertIn("RESTORE_SUCCESSFUL", res.stdout)
+        self.assertIn("latest-verified", res.stdout)
+
+    def test_13_dr_manager_persistence(self) -> None:
+        """Verifies DRManager persists snapshot records to disk and reloads them."""
+        with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
+            mgr1 = DRManager(storage_path=tmp.name)
+            mgr1.create_snapshot("persisted-01", b"state-12345", retention_days=50)
+
+            # Re-instantiate in a new instance
+            mgr2 = DRManager(storage_path=tmp.name)
+            self.assertIn("persisted-01", mgr2.storage)
+            valid, msg = mgr2.verify_integrity("persisted-01")
+            self.assertTrue(valid)
+            self.assertEqual(mgr2.storage["persisted-01"].size_bytes, len(b"state-12345"))
 
 
 if __name__ == "__main__":
