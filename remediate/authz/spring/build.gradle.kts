@@ -18,8 +18,8 @@ java {
     }
 }
 
-val springBootVersion = "3.3.4"
-val springSecurityVersion = "6.3.3"
+val springBootVersion = "3.5.16"
+val springSecurityVersion = "6.5.11"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -30,8 +30,8 @@ dependencies {
     compileOnly("org.springframework.security:spring-security-core:$springSecurityVersion")
     compileOnly("org.springframework.security:spring-security-oauth2-jose:$springSecurityVersion")
     compileOnly("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
-    compileOnly("org.springframework.data:spring-data-commons:3.3.4")
-    compileOnly("org.springframework:spring-aspects:6.1.13")
+    compileOnly("org.springframework.data:spring-data-commons:3.5.13")
+    compileOnly("org.springframework:spring-aspects:6.2.19")
     compileOnly("org.aspectj:aspectjweaver:1.9.25.1")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
 
@@ -47,8 +47,8 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-core:$springSecurityVersion")
     testImplementation("org.springframework.security:spring-security-oauth2-jose:$springSecurityVersion")
     testImplementation("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
-    testImplementation("org.springframework.data:spring-data-commons:3.3.4")
-    testImplementation("org.springframework:spring-aspects:6.1.13")
+    testImplementation("org.springframework.data:spring-data-commons:3.5.13")
+    testImplementation("org.springframework:spring-aspects:6.2.19")
     testImplementation("org.aspectj:aspectjweaver:1.9.25.1")
 }
 
