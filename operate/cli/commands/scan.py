@@ -77,6 +77,13 @@ Examples:
         "-c",
         help="Optional custom audit configuration file (audit-config.json)",
     )
+    parser.add_argument(
+        "--workers",
+        "-j",
+        type=int,
+        default=0,
+        help="Number of parallel worker processes for pre-scan (default: 0 = auto/cpu_count)",
+    )
     parser.set_defaults(func=execute_scan)
 
 
@@ -99,6 +106,8 @@ def execute_scan(args: argparse.Namespace) -> int:
     cmd = [sys.executable, str(prescan_script), str(target_path), str(out_dir)]
     if args.config:
         cmd.extend(["--config", args.config])
+    if getattr(args, "workers", 0):
+        cmd.extend(["--workers", str(args.workers)])
 
     step("Executing Phase 1: Deterministic Pre-scan")
     res = subprocess.run(cmd, capture_output=True, text=True)

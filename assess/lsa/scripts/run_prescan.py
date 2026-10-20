@@ -11,6 +11,7 @@ OUT must not be inside TARGET (audit output never goes into the audited repo).
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -28,6 +29,8 @@ def main() -> int:
     ap.add_argument("target")
     ap.add_argument("out")
     ap.add_argument("--config")
+    ap.add_argument("--workers", "-j", type=int, default=0,
+                    help="Number of worker processes for parallel scan (default: 0 = auto/cpu_count)")
     a = ap.parse_args()
     target, out = Path(a.target).resolve(), Path(a.out).resolve()
     if not target.is_dir():
@@ -38,12 +41,13 @@ def main() -> int:
         return 2
     cfg = load_config(a.config)
     out.mkdir(parents=True, exist_ok=True)
+    effective_workers = a.workers if a.workers > 0 else (os.cpu_count() or 1)
     t0 = time.time()
     prof = detect(target, cfg)
     write_json(out / "stack-profile.json", prof)
-    routes = map_routes(target, cfg, {s["id"] for s in prof["stacks"]})
+    routes = map_routes(target, cfg, {s["id"] for s in prof["stacks"]}, workers=a.workers)
     write_json(out / "routes.candidates.json", routes)
-    inj = find_injection(target, cfg)
+    inj = find_injection(target, cfg, workers=a.workers)
     write_json(out / "injection.candidates.json", inj)
     idx = make_batches(out, cfg)
     write_json(out / "audit-config.effective.json", cfg)
@@ -51,6 +55,7 @@ def main() -> int:
     lines = [
         f"# Pre-scan summary — {target.name}", "",
         f"- Kit version: {KIT_VERSION}", f"- Duration: {dt:.1f}s",
+        f"- Workers: {effective_workers}",
         f"- Stacks: {', '.join(s['id'] for s in prof['stacks']) or 'none detected'}",
         f"- Data access: {', '.join(prof['data_access']) or 'unknown'}",
         f"- Route candidates: {routes['summary']['total']} (with id-like params: {routes['summary']['with_id_like_params']})",

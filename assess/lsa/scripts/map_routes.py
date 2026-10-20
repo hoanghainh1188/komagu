@@ -10,7 +10,9 @@ is an unaudited endpoint.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -559,26 +561,23 @@ def file_endpoint(c: Collector, rel: str, text: str, lang: str, ext: str, target
     c.add(**base)
 
 
-def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None) -> Dict:
+def _scan_route_file_batch(args: Tuple[List[Tuple[str, str]], Dict, set, str]) -> Tuple[List[Dict], Dict[str, str]]:
+    file_batch, config, stack_ids, target_str = args
+    target = Path(target_str)
     enc = config["hints"]["file_encodings"]
-    c = Collector(config)
-    files = list(iter_source_files(target, config))
-    stack_ids = stack_ids or set()
     framework_php = bool(stack_ids & {"php-codeigniter", "php-cakephp", "php-laravel", "php-zend1"})
-    class_index = {p.stem: rel for p, rel in files if p.suffix == ".java"}
-    texts = {}
-    for p, rel in files:
+    c = Collector(config)
+    java_texts: Dict[str, str] = {}
+
+    for p_str, rel in file_batch:
+        p = Path(p_str)
         ext = p.suffix.lower()
         lang = LANG_BY_EXT.get(ext)
-        if ext == ".xml":
-            t = read_text(p, enc)
-            if "<servlet" in t or "<action" in t:
-                xml_declared(c, rel, t, class_index)
-            continue
-        if not lang:
+        if not lang or ext == ".xml":
             continue
         t = read_text(p, enc)
-        texts[rel] = t
+        if lang == "java":
+            java_texts[rel] = t
         declared = False
         if lang == "php":
             declared = php_declared(c, rel, t, stack_ids)
@@ -602,6 +601,47 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None) -> D
         if lang == "perl" and ext == ".pm":
             continue
         file_endpoint(c, rel, t, lang, ext, target, enc)
+    return c.items, java_texts
+
+
+def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, workers: int = 0) -> Dict:
+    enc = config["hints"]["file_encodings"]
+    c = Collector(config)
+    files = list(iter_source_files(target, config))
+    stack_ids = stack_ids or set()
+    framework_php = bool(stack_ids & {"php-codeigniter", "php-cakephp", "php-laravel", "php-zend1"})
+    class_index = {p.stem: rel for p, rel in files if p.suffix == ".java"}
+    texts: Dict[str, str] = {}
+
+    # 1. XML pre-pass (web.xml / struts.xml declarative mappings)
+    for p, rel in files:
+        if p.suffix.lower() == ".xml":
+            t = read_text(p, enc)
+            if "<servlet" in t or "<action" in t:
+                xml_declared(c, rel, t, class_index)
+
+    # 2. Source file processing (in-process or ProcessPoolExecutor)
+    non_xml_files = [(str(p), rel) for p, rel in files if p.suffix.lower() != ".xml"]
+    num_files = len(non_xml_files)
+    effective_workers = workers if workers > 0 else (os.cpu_count() or 1)
+
+    if effective_workers <= 1 or num_files < 20:
+        chunk_items, chunk_java_texts = _scan_route_file_batch(
+            (non_xml_files, config, stack_ids, str(target))
+        )
+        c.items.extend(chunk_items)
+        texts.update(chunk_java_texts)
+    else:
+        chunk_size = max(1, (num_files + effective_workers - 1) // effective_workers)
+        chunks = [
+            (non_xml_files[i : i + chunk_size], config, stack_ids, str(target))
+            for i in range(0, num_files, chunk_size)
+        ]
+        with concurrent.futures.ProcessPoolExecutor(max_workers=effective_workers) as executor:
+            for chunk_items, chunk_java_texts in executor.map(_scan_route_file_batch, chunks):
+                c.items.extend(chunk_items)
+                texts.update(chunk_java_texts)
+
     # post-pass 1: routes declared in XML -> enrich from the handler class file
     for it in c.items:
         hf = it["handler"]["file"]
@@ -625,7 +665,7 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None) -> D
         it["route_id"] = f"R-{n:04d}"
     c.items = keep
     for it in c.items:
-        it["needs_audit_hint"] =bool(any(i.get("is_id_like") for i in it["id_params"]) or it["kind"] == "declared_route")
+        it["needs_audit_hint"] = bool(any(i.get("is_id_like") for i in it["id_params"]) or it["kind"] == "declared_route")
     by_stack: Dict[str, int] = {}
     for it in c.items:
         by_stack[it["stack"]] = by_stack.get(it["stack"], 0) + 1
@@ -641,12 +681,14 @@ def main() -> int:
     ap.add_argument("--config")
     ap.add_argument("--stack-profile", help="stack-profile.json from detect_stack.py")
     ap.add_argument("--out")
+    ap.add_argument("--workers", "-j", type=int, default=0,
+                    help="Number of worker processes for parallel scan (default: 0 = auto/cpu_count)")
     a = ap.parse_args()
     stacks = set()
     if a.stack_profile:
         with open(a.stack_profile, encoding="utf-8") as fh:
             stacks = {s["id"] for s in json.load(fh)["stacks"]}
-    res = map_routes(Path(a.target), load_config(a.config), stacks)
+    res = map_routes(Path(a.target), load_config(a.config), stacks, workers=a.workers)
     if a.out:
         write_json(Path(a.out), res)
     else:

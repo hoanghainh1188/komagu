@@ -109,6 +109,29 @@ class TestKomainuCLI(unittest.TestCase):
             self.assertTrue((out_dir / "report.html").is_file())
             self.assertIn("Komainu Security Audit Summary", res.stdout)
 
+    def test_scan_subcommand_parallel_workers(self) -> None:
+        """komainu scan with --workers / -j must execute cleanly and generate all artifacts."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir) / "out"
+            res = subprocess.run(
+                [
+                    sys.executable,
+                    str(BIN_KOMAINU),
+                    "scan",
+                    str(FIXTURE_PATH),
+                    "--out",
+                    str(out_dir),
+                    "--workers",
+                    "2",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res.returncode, 0, f"Scan command failed: {res.stderr}\n{res.stdout}")
+            self.assertTrue((out_dir / "routes.candidates.json").is_file())
+            self.assertTrue((out_dir / "injection.candidates.json").is_file())
+            self.assertTrue((out_dir / "report.html").is_file())
+
     def test_scan_subcommand_default_out_preserves_target_read_only(self) -> None:
         """komainu scan without --out must output to ./komainu-out in CWD, keeping target untouched."""
         with tempfile.TemporaryDirectory() as work_dir:
