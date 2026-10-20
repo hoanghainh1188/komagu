@@ -50,8 +50,8 @@ class TestRemediationRunner(unittest.TestCase):
         sql_content = (
             "import sqlite3\n"
             "def get_user(user_id):\n"
-            "    query = 'SELECT * FROM users WHERE id = ' + user_id\n"
-            "    return query\n"
+            "    cursor.execute('SELECT * FROM users WHERE id = ' + user_id)\n"
+            "    return cursor.fetchone()\n"
         )
         sql_file.write_text(sql_content, encoding="utf-8")
 
@@ -352,7 +352,7 @@ class TestRemediationRunner(unittest.TestCase):
     def test_crlf_line_ending_preservation(self) -> None:
         """Windows CRLF files must preserve \\r\\n line endings after patching."""
         crlf_file = self.target_path / "crlf_sample.py"
-        crlf_content = "def test():\r\n    query = 'SELECT * FROM x WHERE id = ' + uid\r\n    return query\r\n"
+        crlf_content = "def test():\r\n    cur.execute('SELECT * FROM x WHERE id = ' + uid)\r\n    return cur.fetchall()\r\n"
         crlf_file.write_bytes(crlf_content.encode("utf-8"))
 
         findings_file = self.target_path / "crlf_findings.json"

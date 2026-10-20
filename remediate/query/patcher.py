@@ -6,10 +6,13 @@ into safe parameterized queries conforming to language-specific standard APIs.
 
 from __future__ import annotations
 
+import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -140,11 +143,19 @@ class ParameterizedQueryPatcher:
             var_name = concat_match.group("var")
             suffix = concat_match.group("suffix")
 
-            # If inside execute(...)
-            if "execute" in prefix:
-                exec_prefix = re.sub(r"""["'].*""", "", prefix)
-                base_query = re.search(r"""["']([^"']+)""", prefix).group(1)
-                patched_line = f"{exec_prefix}\"{base_query}?\", ({var_name},)){suffix.rstrip(')')}"
+            # The var pattern also eats the call's closing ")": hand unbalanced ones back.
+            while var_name.endswith(")") and var_name.count(")") > var_name.count("("):
+                var_name, suffix = var_name[:-1], ")" + suffix
+
+            # cur.execute("SELECT ... = " + x): only when x is the last operand of the call
+            exec_match = re.fullmatch(r"""(?P<call>.*?\bexecute\s*\(\s*)["']""", prefix, re.DOTALL)
+            eol = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+            tail_match = re.fullmatch(r"""\s*\)(?P<after>[ \t]*(?:#.*)?)""", suffix.rstrip("\r\n"))
+            base_query = concat_match.group("query")
+            if exec_match and tail_match and not base_query.rstrip().endswith(("'", '"', "%")):
+                patched_line = (
+                    f'{exec_match.group("call")}"{base_query}?", ({var_name},)){tail_match.group("after")}{eol}'
+                )
                 return RewrittenQuery(
                     original_line=line,
                     patched_line=patched_line,
@@ -152,25 +163,11 @@ class ParameterizedQueryPatcher:
                     params=[var_name],
                     pattern_type="python_concat_execute",
                     changed=True,
-                    explanation="Converted Python string concatenation to parameterized query.",
+                    explanation="Converted Python string concatenation in execute() to a parameterized query.",
                 )
 
-            # If variable assignment: query = "SELECT ... " + var
-            assign_match = re.search(r"""^(\s*[A-Za-z0-9_]+\s*=\s*)["']$""", prefix)
-            if assign_match:
-                assign_prefix = assign_match.group(1)
-                base_query = concat_match.group("query")
-                line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
-                patched_line = f'{assign_prefix}("{base_query}?", ({var_name},)){suffix.rstrip()}{line_ending}'
-                return RewrittenQuery(
-                    original_line=line,
-                    patched_line=patched_line,
-                    placeholders=["?"],
-                    params=[var_name],
-                    pattern_type="python_concat_assign",
-                    changed=True,
-                    explanation="Converted Python query string concatenation to parameterized query tuple.",
-                )
+            # `q = "..." + x` is left for manual remediation: turning q into a tuple would
+            # break the later execute(q) call, which is outside this line.
 
         return self._rewrite_generic(line, lang="python")
 
@@ -251,134 +248,73 @@ class ParameterizedQueryPatcher:
         return self._rewrite_generic(line)
 
     def _rewrite_php(self, line: str) -> RewrittenQuery:
-        """Rewrite PHP dot concatenation or string interpolation."""
-        # Case A: mysql_query("SELECT ... " . $id)
-        dot_concat = re.search(
-            r"""(?P<prefix>.*?\bmysql_query\s*\(\s*)(?P<quote>["'])(?P<query>[^"']+)(?P=quote)\s*\.\s*(?P<var>\$[A-Za-z0-9_\[\]'"\->]+)(?P<suffix>.*)""",
-            line,
-        )
-        if dot_concat:
-            prefix = dot_concat.group("prefix")
-            query_str = dot_concat.group("query")
-            var_name = dot_concat.group("var")
-            suffix = dot_concat.group("suffix")
+        """PHP: no automated rewrite.
 
-            cleaned_query = query_str.rstrip(" =").strip() + " = ?"
-            indent = re.match(r"^(\s*)", line).group(1) if line else ""
-            comment = f"// [KOMAINU-FIX] Parameterized query protection (CWE-89)\n{indent}"
-            patched_line = f"{comment}{prefix}\"{cleaned_query}\", [{var_name}]{suffix}"
+        mysql_query() takes no parameter array (and was removed in PHP 7); a safe fix moves
+        to PDO/mysqli prepared statements, which spans several lines.
+        """
+        return self._rewrite_generic(line, lang="php")
 
-            return RewrittenQuery(
-                original_line=line,
-                patched_line=patched_line,
-                placeholders=["?"],
-                params=[var_name],
-                pattern_type="php_dot_concat",
-                changed=True,
-                explanation="Converted PHP string concatenation into parameterized query array.",
-            )
-
-        # Case B: mysql_query("DELETE FROM users WHERE id = $id")
-        interp_match = re.search(
-            r"""(?P<prefix>.*?\bmysql_query\s*\(\s*")(?P<query>[^"]*?)(?P<var>\$[A-Za-z0-9_]+)(?P<query_tail>[^"]*?)"(?P<suffix>.*)""",
-            line,
-        )
-        if interp_match:
-            prefix = interp_match.group("prefix")
-            query_head = interp_match.group("query")
-            var_name = interp_match.group("var")
-            query_tail = interp_match.group("query_tail")
-            suffix = interp_match.group("suffix")
-
-            cleaned_query = f"{query_head}?{query_tail}"
-            indent = re.match(r"^(\s*)", line).group(1) if line else ""
-            comment = f"// [KOMAINU-FIX] Parameterized query protection (CWE-89)\n{indent}"
-            patched_line = f"{comment}{prefix}{cleaned_query}\", [{var_name}]{suffix}"
-
-            return RewrittenQuery(
-                original_line=line,
-                patched_line=patched_line,
-                placeholders=["?"],
-                params=[var_name],
-                pattern_type="php_interp",
-                changed=True,
-                explanation="Converted PHP variable interpolation into parameterized query placeholder.",
-            )
-
-        return self._rewrite_generic(line)
+    _CS_IDENT = r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*"
+    _CS_SQLCOMMAND = re.compile(
+        r"^(?P<indent>[ \t]*)"
+        r"(?P<decl>(?:using\s+)?(?:var|SqlCommand)\s+(?P<cmd>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+SqlCommand\s*\(\s*)"
+        r"(?P<sql>.+?)\s*,\s*(?P<conn>[A-Za-z_][A-Za-z0-9_.]*)\s*\)\s*;[ \t]*(?P<eol>\r?\n?)$"
+    )
 
     def _rewrite_csharp(self, line: str) -> RewrittenQuery:
-        """Rewrite C# string interpolation or concatenation."""
-        indent = re.match(r"^(\s*)", line).group(1) if line else ""
+        """Rewrite `var cmd = new SqlCommand(<dynamic sql>, conn);` with one interpolated or
+        concatenated value into a placeholder plus a real `cmd.Parameters.AddWithValue` statement.
 
-        # Case A: $"SELECT ... {id}"
-        interp_match = re.search(r"""\$(?P<quote>["'])(?P<query>.*?)\{(?P<var>[^}]+)\}(?P<tail>.*?)(?P=quote)""", line)
-        if interp_match:
-            var_name = interp_match.group("var").strip()
-            query = interp_match.group("query")
-            tail = interp_match.group("tail")
-            param_name = f"@{var_name.lower().replace('.', '_')}"
-            cleaned_query = f"{query}{param_name}{tail}"
+        Anything else (a bare SQL string, several values, `using (...)` headers, LIKE patterns)
+        has no command object on the line to bind to and is left for manual remediation.
+        """
+        decl = self._CS_SQLCOMMAND.match(line)
+        if not decl:
+            return self._rewrite_generic(line, lang="csharp")
 
-            comment = f"{indent}// [KOMAINU-FIX] cmd.Parameters.AddWithValue(\"{param_name}\", {var_name});\n"
-            patched_line = comment + line.replace(interp_match.group(0), f'"{cleaned_query}"')
-
-            return RewrittenQuery(
-                original_line=line,
-                patched_line=patched_line,
-                placeholders=[param_name],
-                params=[var_name],
-                pattern_type="csharp_interp",
-                changed=True,
-                explanation=f"Replaced C# string interpolation with parameterized placeholder '{param_name}'.",
+        ident = self._CS_IDENT
+        sql = decl.group("sql")
+        parts = re.fullmatch(r'\$"(?P<head>[^"{}]*)\{\s*(?P<var>' + ident + r')\s*\}(?P<tail>[^"{}]*)"', sql)
+        if parts is None:
+            parts = re.fullmatch(
+                r'"(?P<head>[^"]*)"\s*\+\s*(?P<var>' + ident + r')(?:\s*\+\s*"(?P<tail>[^"]*)")?', sql
             )
+        if parts is None:
+            return self._rewrite_generic(line, lang="csharp")
 
-        # Case B: "SELECT ... " + id
-        concat_match = re.search(r"""(?P<query>["'][^"']+["'])\s*\+\s*(?P<var>[A-Za-z0-9_.]+)""", line)
-        if concat_match:
-            var_name = concat_match.group("var")
-            query = concat_match.group("query").strip("'\"")
-            param_name = f"@{var_name.lower().replace('.', '_')}"
-            cleaned_query = re.sub(r"""['"= ]+$""", "", query).strip() + f" = {param_name}"
+        head, var_name, tail = parts.group("head"), parts.group("var"), parts.group("tail") or ""
+        if head.endswith("'") != tail.startswith("'"):
+            return self._rewrite_generic(line, lang="csharp")
+        if head.endswith("'"):
+            head, tail = head[:-1], tail[1:]
+        if head.endswith("%") or tail.startswith("%"):
+            # LIKE '%x%' needs the wildcard moved into the parameter value.
+            return self._rewrite_generic(line, lang="csharp")
 
-            comment = f"{indent}// [KOMAINU-FIX] cmd.Parameters.AddWithValue(\"{param_name}\", {var_name});\n"
-            patched_line = comment + line.replace(concat_match.group(0), f'"{cleaned_query}"')
-
-            return RewrittenQuery(
-                original_line=line,
-                patched_line=patched_line,
-                placeholders=[param_name],
-                params=[var_name],
-                pattern_type="csharp_concat",
-                changed=True,
-                explanation=f"Replaced C# string concatenation with parameterized placeholder '{param_name}'.",
-            )
-
-        return self._rewrite_generic(line)
+        param_name = "@" + var_name.replace(".", "_")
+        indent, eol = decl.group("indent"), decl.group("eol")
+        patched_line = (
+            f'{indent}{decl.group("decl")}"{head}{param_name}{tail}", {decl.group("conn")});{eol or chr(10)}'
+            f'{indent}{decl.group("cmd")}.Parameters.AddWithValue("{param_name}", {var_name});{eol}'
+        )
+        return RewrittenQuery(
+            original_line=line,
+            patched_line=patched_line,
+            placeholders=[param_name],
+            params=[var_name],
+            pattern_type="csharp_sqlcommand",
+            changed=True,
+            explanation=f"Bound '{var_name}' to SqlCommand parameter '{param_name}' via Parameters.AddWithValue.",
+        )
 
     def _rewrite_java(self, line: str) -> RewrittenQuery:
-        """Rewrite Java string concatenation into PreparedStatement placeholder."""
-        indent = re.match(r"^(\s*)", line).group(1) if line else ""
-        concat_match = re.search(r"""(?P<query>["'][^"']+["'])\s*\+\s*(?P<var>[A-Za-z0-9_.]+)""", line)
-        if concat_match:
-            var_name = concat_match.group("var")
-            query = concat_match.group("query").strip("'\"")
-            cleaned_query = re.sub(r"""['"= ]+$""", "", query).strip() + " = ?"
+        """Java: no automated rewrite.
 
-            comment = f"{indent}// [KOMAINU-FIX] Use PreparedStatement with parameter: {var_name}\n"
-            patched_line = comment + line.replace(concat_match.group(0), f'"{cleaned_query}"')
-
-            return RewrittenQuery(
-                original_line=line,
-                patched_line=patched_line,
-                placeholders=["?"],
-                params=[var_name],
-                pattern_type="java_concat",
-                changed=True,
-                explanation="Replaced Java string concatenation with PreparedStatement '?' placeholder.",
-            )
-
-        return self._rewrite_generic(line)
+        A safe fix replaces the Statement with a PreparedStatement and adds setX() calls,
+        which spans several lines; a placeholder alone leaves nothing bound.
+        """
+        return self._rewrite_generic(line, lang="java")
 
     def _rewrite_generic(self, line: str, lang: str = "generic") -> RewrittenQuery:
         """Generic fallback when no automated AST/regex rewrite applies."""
@@ -416,32 +352,34 @@ class ParameterizedQueryPatcher:
         return content, rewrite_res
 
     def verify_fix(self, target_file: Path, line_number: int) -> bool:
-        """Verify that the patched line is no longer flagged by LSA find_injection.py."""
-        # Locate find_injection.py script in repo
+        """Return True only when LSA find_injection.py no longer flags `line_number` of `target_file`.
+
+        The file is scanned on its own (copied into a temporary directory) so project-level
+        excludes cannot hide it. Any failure to run the scan counts as not verified.
+        """
         repo_root = Path(__file__).resolve().parents[2]
         script_path = repo_root / "assess" / "lsa" / "scripts" / "find_injection.py"
-
         if not script_path.is_file():
-            # If running in isolated context, return True if line was rewritten
-            return True
+            return False
 
+        scan_dir = Path(tempfile.mkdtemp(prefix="komainu_verify_"))
         try:
+            shutil.copy2(target_file, scan_dir / target_file.name)
             res = subprocess.run(
-                [sys.executable, str(script_path), str(target_file)],
+                [sys.executable, str(script_path), str(scan_dir)],
                 capture_output=True,
                 text=True,
                 check=False,
+                timeout=120,
             )
-            # If candidate was found on target_file, parse candidates output
-            if res.returncode == 0:
-                try:
-                    data = json.loads(res.stdout)
-                    # Check if target line is present in candidates
-                    for c in data.get("candidates", []):
-                        if c.get("file") == str(target_file) and c.get("line") == line_number:
-                            return False  # Still flagged as candidate!
-                except Exception:
-                    pass
+            if res.returncode != 0:
+                return False
+            data = json.loads(res.stdout)
+            for c in data.get("candidates", []):
+                if c.get("file") == target_file.name and c.get("line") == line_number:
+                    return False
             return True
-        except Exception:
-            return True
+        except (OSError, ValueError, subprocess.SubprocessError):
+            return False
+        finally:
+            shutil.rmtree(scan_dir, ignore_errors=True)

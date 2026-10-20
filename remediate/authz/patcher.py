@@ -154,7 +154,14 @@ class BOLAOwnershipPatcher:
         if lang in ("typescript", "javascript"):
             # Check if this is an Express app.get / router.get line
             if re.search(r"\b(app|router)\.(get|post|put|delete|patch)\s*\(", target_line):
-                guard_lines.append(f"{indent}// [KOMAINU-FIX] Bound user identity from token to resource {resource}\n")
+                # Express handlers need the ownership middleware wired into the route call;
+                # a comment would be reported as a fix without changing behaviour.
+                return content, BOLARewriteResult(
+                    original_line=target_line,
+                    patched_line=target_line,
+                    changed=False,
+                    explanation="Express route needs requireOwnership middleware added manually; requires manual remediation.",
+                )
             else:
                 # NestJS / Declarative Controller
                 guard_lines.append(f"{indent}@UseGuards(OwnershipGuard)\n")
