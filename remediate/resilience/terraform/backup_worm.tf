@@ -3,6 +3,58 @@
 
 data "aws_caller_identity" "current" {}
 
+# 0. Dedicated Managed IAM Roles for Operational Separation
+resource "aws_iam_role" "backup_writer" {
+  name = "${var.project_name}-backup-writer-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "backup_restore" {
+  name = "${var.project_name}-backup-restore-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "security_officer" {
+  name = "${var.project_name}-security-officer-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+      }
+    ]
+  })
+}
+
 # 1. KMS CMK in Secondary Region (Osaka) with Strict Role Separation
 resource "aws_kms_key" "worm_backup_key" {
   provider                = aws.secondary
@@ -26,12 +78,27 @@ resource "aws_kms_key" "worm_backup_key" {
         Sid    = "AllowBackupWriterKeyUsage"
         Effect = "Allow"
         Principal = {
-          AWS = aws_iam_role.replication_role[0].arn
+          AWS = distinct(compact(concat(
+            [aws_iam_role.backup_writer.arn],
+            var.enable_cross_region_replication ? [aws_iam_role.replication_role[0].arn] : []
+          )))
         }
         Action = [
           "kms:Encrypt",
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowBackupRestoreKeyUsage"
+        Effect = "Allow"
+        Principal = {
+          AWS = [aws_iam_role.backup_restore.arn]
+        }
+        Action = [
+          "kms:Decrypt",
           "kms:DescribeKey"
         ]
         Resource = "*"
@@ -47,7 +114,7 @@ resource "aws_kms_key" "worm_backup_key" {
         Resource = "*"
         Condition = {
           StringNotEquals = {
-            "aws:PrincipalArn" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/KomainuSecurityOfficer"
+            "aws:PrincipalArn" = aws_iam_role.security_officer.arn
           }
         }
       }
@@ -72,6 +139,26 @@ resource "aws_s3_bucket" "worm_access_logs" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "logs_versioning" {
+  provider = aws.secondary
+  bucket   = aws_s3_bucket.worm_access_logs.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "logs_encryption" {
+  provider = aws.secondary
+  bucket   = aws_s3_bucket.worm_access_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "logs_public_block" {
   provider = aws.secondary
   bucket   = aws_s3_bucket.worm_access_logs.id
@@ -80,6 +167,49 @@ resource "aws_s3_bucket_public_access_block" "logs_public_block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "worm_access_logs_policy" {
+  provider = aws.secondary
+  bucket   = aws_s3_bucket.worm_access_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnforceTLSRequestsOnly"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.worm_access_logs.arn,
+          "${aws_s3_bucket.worm_access_logs.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      {
+        Sid    = "S3ServerAccessLogsDelivery"
+        Effect = "Allow"
+        Principal = {
+          Service = "logging.s3.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.worm_access_logs.arn}/*"
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = aws_s3_bucket.immutable_worm_backup.arn
+          }
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
 }
 
 # 3. Immutable WORM Storage Bucket (Secondary Region: Osaka)
@@ -180,7 +310,7 @@ resource "aws_s3_bucket_policy" "deny_destructive_actions" {
         }
       },
       {
-        Sid       = "DenyUnencryptedObjectUploads"
+        Sid       = "DenyIncorrectEncryptionHeader"
         Effect    = "Deny"
         Principal = "*"
         Action    = "s3:PutObject"
@@ -188,6 +318,24 @@ resource "aws_s3_bucket_policy" "deny_destructive_actions" {
         Condition = {
           StringNotEquals = {
             "s3:x-amz-server-side-encryption" = "aws:kms"
+          }
+          Null = {
+            "s3:x-amz-server-side-encryption" = "false"
+          }
+        }
+      },
+      {
+        Sid       = "DenyIncorrectKMSKey"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.immutable_worm_backup.arn}/*"
+        Condition = {
+          StringNotEquals = {
+            "s3:x-amz-server-side-encryption-aws-kms-key-id" = aws_kms_key.worm_backup_key.arn
+          }
+          Null = {
+            "s3:x-amz-server-side-encryption-aws-kms-key-id" = "false"
           }
         }
       }
@@ -215,6 +363,56 @@ resource "aws_s3_bucket_versioning" "primary_versioning" {
   versioning_configuration {
     status = "Enabled"
   }
+}
+
+resource "aws_s3_bucket_public_access_block" "primary_public_block" {
+  count    = var.enable_cross_region_replication ? 1 : 0
+  provider = aws.primary
+  bucket   = aws_s3_bucket.primary_backup[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "primary_encryption" {
+  count    = var.enable_cross_region_replication ? 1 : 0
+  provider = aws.primary
+  bucket   = aws_s3_bucket.primary_backup[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "primary_backup_policy" {
+  count    = var.enable_cross_region_replication ? 1 : 0
+  provider = aws.primary
+  bucket   = aws_s3_bucket.primary_backup[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnforceTLSRequestsOnly"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.primary_backup[0].arn,
+          "${aws_s3_bucket.primary_backup[0].arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role" "replication_role" {
