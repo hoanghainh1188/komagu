@@ -57,6 +57,8 @@ class OwnershipAspect(
         val args = joinPoint.args ?: emptyArray()
 
         var preInvocationChecked = false
+        val isMutation = requireOwnership.operation == ResourceOperation.UPDATE ||
+                requireOwnership.operation == ResourceOperation.DELETE
 
         // 1. Determine if an ID parameter is present for ID-based resolution
         var idArg: Any? = null
@@ -83,6 +85,20 @@ class OwnershipAspect(
                     ?: throw ResourceNotFoundException("Resource of type ${targetClass.simpleName} with id '$idArg' not found")
 
                 securityManager.requireOwnership(resolved, requireOwnership.operation)
+
+                // A bound object of the entity type must describe the same resource: same id when it
+                // carries one, and no change of owner or tenant (else the method could act on body.id).
+                for (arg in args) {
+                    if (arg == null || arg === idArg) continue
+                    if ((arg is OwnedResource<*> || targetClass.isInstance(arg)) &&
+                        !describesSameResource(arg, resolved, idArg)
+                    ) {
+                        throw ResourceNotFoundException(
+                            "Argument of type ${arg.javaClass.simpleName} does not match resolved ${targetClass.simpleName} '$idArg'"
+                        )
+                    }
+                }
+
                 preInvocationChecked = true
             } else {
                 // targetClass not specified but id is present: fail-closed
@@ -91,6 +107,13 @@ class OwnershipAspect(
                 )
             }
         } else {
+            // No id under the configured parameter name. Mutations are id-addressed by definition, so a
+            // missing id means a misconfigured idParam: never authorize a client-supplied object instead.
+            if (isMutation) {
+                throw ResourceNotFoundException(
+                    "Access denied: '${requireOwnership.operation}' requires the '${requireOwnership.idParam}' parameter to resolve the resource server-side"
+                )
+            }
             // Non-ID operation (e.g. creation or batch operations): inspect input parameters for OwnedResource / targetClass instances
             for (i in args.indices) {
                 val arg = args[i] ?: continue
@@ -102,8 +125,6 @@ class OwnershipAspect(
         }
 
         // 2. Pre-mutation gate: for UPDATE / DELETE, fail closed before proceed() if no resource was verified
-        val isMutation = requireOwnership.operation == ResourceOperation.UPDATE ||
-                requireOwnership.operation == ResourceOperation.DELETE
         if (isMutation && !preInvocationChecked) {
             throw ResourceNotFoundException(
                 "Access denied: mutating operation '${requireOwnership.operation}' requires pre-invocation ownership verification, but no valid resource could be resolved"
@@ -131,6 +152,37 @@ class OwnershipAspect(
         }
 
         return result
+    }
+
+    private fun describesSameResource(candidate: Any, resolved: Any, idArg: Any): Boolean {
+        val candidateId = readProperty(candidate, "id")
+        if (candidateId != null && candidateId.toString().isNotEmpty() && candidateId.toString() != idArg.toString()) {
+            return false
+        }
+        for (field in listOf("ownerUserId", "tenantId")) {
+            val claimed = readProperty(candidate, field)?.toString()
+            if (!claimed.isNullOrEmpty() && claimed != readProperty(resolved, field)?.toString()) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun readProperty(target: Any, name: String): Any? {
+        if (target is OwnedResource<*>) {
+            return when (name) {
+                "id" -> target.id
+                "ownerUserId" -> target.ownerUserId
+                "tenantId" -> target.tenantId
+                else -> null
+            }
+        }
+        val getter = "get" + name.replaceFirstChar { it.uppercase() }
+        return try {
+            target.javaClass.getMethod(getter).invoke(target)
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun unwrapValue(value: Any?): List<Any> {

@@ -38,18 +38,23 @@ public sealed class OwnershipAuthorizationFilter : IAsyncActionFilter
             return;
         }
 
-        // Check if an ID parameter is specified in RouteData or ActionArguments
-        object? rawId = null;
-        if (context.RouteData.Values.TryGetValue(_idRouteParameter, out var routeId) && routeId != null)
+        // Collect the id from the route and from bound arguments; disagreeing values are denied so the
+        // filter can never check one id while the action uses another (e.g. route {id} vs [FromQuery] id).
+        context.RouteData.Values.TryGetValue(_idRouteParameter, out var routeId);
+        context.ActionArguments.TryGetValue(_idRouteParameter, out var argId);
+        if (routeId != null && argId != null &&
+            !string.Equals(routeId.ToString(), argId.ToString(), StringComparison.Ordinal))
         {
-            rawId = routeId;
-        }
-        else if (context.ActionArguments.TryGetValue(_idRouteParameter, out var argId) && argId != null)
-        {
-            rawId = argId;
+            context.Result = new NotFoundResult();
+            return;
         }
 
-        object? resource = null;
+        var rawId = routeId ?? argId;
+        var subjectResources = context.ActionArguments.Values
+            .Where(v => v != null && _resourceType.IsInstanceOfType(v))
+            .Cast<object>()
+            .ToList();
+        var resourcesToAuthorize = new List<object>();
 
         if (rawId != null)
         {
@@ -63,40 +68,71 @@ public sealed class OwnershipAuthorizationFilter : IAsyncActionFilter
                 return;
             }
 
-            resource = await resolver.ResolveAsync(_resourceType, rawId.ToString()!, context.HttpContext.RequestAborted);
+            object? resource;
+            try
+            {
+                resource = await resolver.ResolveAsync(_resourceType, rawId.ToString()!, context.HttpContext.RequestAborted);
+            }
+            catch (Exception) when (!context.HttpContext.RequestAborted.IsCancellationRequested)
+            {
+                // Fail-closed with the same 404 as a missing resource (no 500 / no existence oracle)
+                resource = null;
+            }
+
             if (resource == null)
             {
                 // Fail-closed: Resolver returned null (resource does not exist or unauthorized)
                 context.Result = new NotFoundResult();
                 return;
             }
+
+            // A bound object of the resource type must describe the same resource: same id when it carries
+            // one, and no change of owner or tenant. Otherwise the action could act on body.Id or re-own data.
+            if (subjectResources.Any(arg => !DescribesSameResource(arg, resource, rawId)))
+            {
+                context.Result = new NotFoundResult();
+                return;
+            }
+
+            resourcesToAuthorize.Add(resource);
         }
         else
         {
-            // Non-ID operation (e.g. creation or batch operations): Find resource directly in action arguments (e.g. model bound entity or DTO)
-            resource = context.ActionArguments.Values
-                .FirstOrDefault(v => v != null && _resourceType.IsInstanceOfType(v));
+            // No id under the configured parameter name. Mutations are id-addressed by definition, so a
+            // missing id means a misconfigured idRouteParameter (e.g. route {docId}) — never fall back to
+            // authorizing a client-supplied object for Update/Delete.
+            if (_operation == ResourceOperation.Update || _operation == ResourceOperation.Delete)
+            {
+                context.Result = new NotFoundResult();
+                return;
+            }
+
+            // Create / non-id Read: every resource-typed argument must be authorized, not just the first.
+            resourcesToAuthorize.AddRange(subjectResources);
         }
 
         // Fail-closed: If resource could not be resolved from arguments or resolver, deny with 404
-        if (resource == null)
+        if (resourcesToAuthorize.Count == 0)
         {
             context.Result = new NotFoundResult();
             return;
         }
 
-        // Authorize caller against resolved resource strictly before executing action
-        var authResult = await _authorizationService.AuthorizeAsync(
-            user,
-            resource,
-            _operation,
-            context.HttpContext.RequestAborted);
-
-        if (!authResult.Succeeded)
+        // Authorize caller against every resolved resource strictly before executing action
+        foreach (var resource in resourcesToAuthorize)
         {
-            // Invariant: Deny by default with HTTP 404 Not Found to eliminate ID enumeration
-            context.Result = new NotFoundResult();
-            return;
+            var authResult = await _authorizationService.AuthorizeAsync(
+                user,
+                resource,
+                _operation,
+                context.HttpContext.RequestAborted);
+
+            if (!authResult.Succeeded)
+            {
+                // Invariant: Deny by default with HTTP 404 Not Found to eliminate ID enumeration
+                context.Result = new NotFoundResult();
+                return;
+            }
         }
 
         // Proceed to execute the action
@@ -121,4 +157,40 @@ public sealed class OwnershipAuthorizationFilter : IAsyncActionFilter
             }
         }
     }
+
+    private static bool DescribesSameResource(object candidate, object resolved, object routeId)
+    {
+        var candidateId = ReadId(candidate);
+        if (candidateId != null && !IsDefault(candidateId) &&
+            !string.Equals(candidateId.ToString(), routeId.ToString(), StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (candidate is IOwnedResource c && resolved is IOwnedResource r)
+        {
+            if (!string.IsNullOrEmpty(c.OwnerUserId) && !string.Equals(c.OwnerUserId, r.OwnerUserId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(c.TenantId) && !string.Equals(c.TenantId, r.TenantId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static object? ReadId(object value)
+    {
+        var ownedInterface = value.GetType().GetInterfaces()
+            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IOwnedResource<>));
+        var property = ownedInterface?.GetProperty("Id") ?? value.GetType().GetProperty("Id");
+        return property?.GetValue(value);
+    }
+
+    private static bool IsDefault(object value) =>
+        value.GetType().IsValueType && value.Equals(Activator.CreateInstance(value.GetType()));
 }
