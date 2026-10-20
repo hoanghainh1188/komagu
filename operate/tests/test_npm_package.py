@@ -87,6 +87,9 @@ class TestNPMPackage(unittest.TestCase):
         self.assertIn("environment: npm-release", content)
         self.assertIn("npm@11.5.1", content)
         self.assertNotIn("secrets.NPM_TOKEN", content)
+        self.assertNotIn("--provenance", content.split("name: Publish to npmjs", 1)[1])
+        self.assertIn("Check release tag matches package version", content)
+        self.assertIn("GITHUB_REF_NAME#v", content)
 
 
 if __name__ == "__main__":

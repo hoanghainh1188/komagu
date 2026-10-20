@@ -1,12 +1,16 @@
-# Komainu — Hardened npmjs Publication Workflow via Pure OIDC
+# Komainu — npmjs Publication Workflow via OIDC Trusted Publishing
 #
-# Release Security Gate Note:
-# - environment: npm-release is configured for deployment tracking and auditability.
-# - On GitHub Free with private repositories, environment protection rules (such as
-#   required reviewers) are not supported. Therefore, the effective release gate in
-#   this repository setup is restricted to collaborators with release-creation permissions.
-# - Provenance: --provenance is omitted because npm registry rejects build provenance
-#   from private GitHub repositories.
+# Works with the repository either public or private (no flag changes needed):
+# - Public repo: npm generates build provenance automatically for trusted
+#   publishing, and the npm-release environment can require reviewers
+#   (Settings → Environments) as a real release gate.
+# - Private repo (GitHub Free): npm does not generate provenance, and environment
+#   protection rules are unavailable, so the effective gate is who can create a
+#   release.
+# --provenance is deliberately not passed: npm rejects it from private repositories.
+#
+# The release tag (vX.Y.Z) must match package.json and operate/cli/__init__.py;
+# the first step fails fast otherwise.
 
 name: Publish to npmjs
 
@@ -28,6 +32,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check release tag matches package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          cli=$(python3 -c "import re, pathlib; print(re.search(r'__version__ = \"([^\"]+)\"', pathlib.Path('operate/cli/__init__.py').read_text()).group(1))")
+          echo "tag=${tag} package.json=${pkg} operate/cli=${cli}"
+          if [ "$tag" != "$pkg" ] || [ "$tag" != "$cli" ]; then
+            echo "::error title=Version mismatch::Release tag v${tag} must match package.json (${pkg}) and operate/cli/__init__.py (${cli})"
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
