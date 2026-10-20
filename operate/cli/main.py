@@ -7,7 +7,7 @@ import sys
 from typing import List, Optional
 
 from operate.cli import __version__
-from operate.cli.commands import demo, devsecops, protect, scan, test
+from operate.cli.commands import demo, devsecops, fix, protect, scan, test
 from operate.cli.ui import print_banner
 
 
@@ -24,6 +24,7 @@ Quick Start Workflow:
   3. Verify BOLA invariant:     komainu test --url http://localhost:8000
   4. Explore reference demo:    komainu demo --up
   5. Run DevSecOps & SBOM:      komainu devsecops run .
+  6. Remediate vulnerabilities: komainu fix ./legacy-app --dry-run
 
 Learn more about a specific command:
   komainu help <command>
@@ -53,6 +54,7 @@ Learn more about a specific command:
     test.register_subcommand(subparsers)
     demo.register_subcommand(subparsers)
     devsecops.register_subcommand(subparsers)
+    fix.register_subcommand(subparsers)
 
     help_parser = subparsers.add_parser(
         "help",
@@ -62,8 +64,8 @@ Learn more about a specific command:
     help_parser.add_argument(
         "topic",
         nargs="?",
-        choices=["scan", "protect", "test", "demo", "devsecops"],
-        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops)",
+        choices=["scan", "protect", "test", "demo", "devsecops", "fix"],
+        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops, fix)",
     )
 
     return parser
@@ -74,7 +76,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if not getattr(args, "no_banner", False) and getattr(args, "subcommand", None) is not None:
+    is_json = getattr(args, "format", "") == "json"
+    if not getattr(args, "no_banner", False) and getattr(args, "subcommand", None) is not None and not is_json:
         print_banner()
 
     if getattr(args, "subcommand", None) is None:
