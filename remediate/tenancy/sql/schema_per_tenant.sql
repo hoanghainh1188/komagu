@@ -57,13 +57,22 @@ BEGIN
     EXECUTE format('REVOKE ALL ON SCHEMA %I FROM PUBLIC', v_schema_name);
     EXECUTE format('REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC', v_schema_name);
 
+    -- Grant least-privilege tenant access to application role
+    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komainu_app') THEN
+        EXECUTE format('GRANT USAGE ON SCHEMA %I TO komainu_app', v_schema_name);
+        EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %I TO komainu_app', v_schema_name);
+        EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO komainu_app', v_schema_name);
+    END IF;
+
 END;
 $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp;
 
 -- 2. Session Routing Helper to Bind Tenant Search Path
--- NOTE: Never falls back to public schema to prevent accidental shared-schema leakage
+-- Configures transaction-local search_path to the isolated tenant schema.
+-- Note: Does NOT declare function-level 'SET search_path' so that set_config(..., true)
+-- successfully sets the caller's active search_path for the transaction scope.
 CREATE OR REPLACE FUNCTION switch_tenant_schema(p_tenant_slug VARCHAR(64))
 RETURNS void AS $$
 DECLARE
@@ -76,17 +85,27 @@ BEGIN
 
     v_schema_name := 'tenant_' || p_tenant_slug;
 
-    IF NOT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = v_schema_name) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = v_schema_name) THEN
         RAISE EXCEPTION 'Tenant schema "%" does not exist', v_schema_name;
     END IF;
 
     -- Dynamically route search_path to isolated tenant schema ONLY (no public fallback)
-    EXECUTE format('SET LOCAL search_path TO %I', v_schema_name);
+    -- is_local = true applies setting to current transaction block (matches SET LOCAL)
+    PERFORM pg_catalog.set_config('search_path', pg_catalog.quote_ident(v_schema_name), true);
 END;
-$$ LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, pg_temp;
+$$ LANGUAGE plpgsql;
 
--- 3. Restrict Execution Privileges
+-- 3. Execution Privileges & Grants for Application Role
 REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC;
 REVOKE ALL ON FUNCTION switch_tenant_schema(VARCHAR) FROM PUBLIC;
+REVOKE ALL ON TABLE public.tenant_registry FROM PUBLIC;
+
+-- Explicitly grant usage and execution to non-owner application role
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komainu_app') THEN
+        GRANT SELECT ON public.tenant_registry TO komainu_app;
+        GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komainu_app;
+    END IF;
+END;
+$$;
