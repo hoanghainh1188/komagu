@@ -362,29 +362,68 @@ def _scan_injection_file_batch(args: Tuple[List[Tuple[str, str]], Dict]) -> Tupl
     return f.items, f.suppressed
 
 
-def find_injection(target: Path, config: Dict, workers: int = 0) -> Dict:
+def find_injection(target: Path, config: Dict, workers: int = 0, cache: Optional[Any] = None) -> Dict:
     files = [(str(p), rel) for p, rel in iter_source_files(target, config)]
     num_files = len(files)
     effective_workers = workers if workers > 0 else (os.cpu_count() or 1)
 
+    file_items: Dict[str, List[Dict]] = {}
+    file_suppressed: Dict[str, List[Dict]] = {}
+    files_to_scan: List[Tuple[str, str]] = []
+
+    if cache and getattr(cache, "enabled", False):
+        for p_str, rel in files:
+            hit = cache.get_injection(rel, Path(p_str))
+            if hit is not None:
+                inj_items, sup_items = hit
+                file_items[rel] = inj_items
+                file_suppressed[rel] = sup_items
+            else:
+                files_to_scan.append((p_str, rel))
+    else:
+        files_to_scan = files
+
+    num_to_scan = len(files_to_scan)
+    scanned_items: List[Dict] = []
+    scanned_suppressed: List[Dict] = []
+
+    if num_to_scan > 0:
+        if effective_workers <= 1 or num_to_scan < 20:
+            chunk_items, chunk_suppressed = _scan_injection_file_batch((files_to_scan, config))
+            scanned_items = chunk_items
+            scanned_suppressed = chunk_suppressed
+        else:
+            chunk_size = max(1, (num_to_scan + effective_workers - 1) // effective_workers)
+            chunks = [
+                (files_to_scan[i : i + chunk_size], config)
+                for i in range(0, num_to_scan, chunk_size)
+            ]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=effective_workers) as executor:
+                for chunk_items, chunk_suppressed in executor.map(_scan_injection_file_batch, chunks):
+                    scanned_items.extend(chunk_items)
+                    scanned_suppressed.extend(chunk_suppressed)
+
+        for it in scanned_items:
+            file_items.setdefault(it["file"], []).append(it)
+        for sup in scanned_suppressed:
+            file_suppressed.setdefault(sup["file"], []).append(sup)
+
+        if cache and getattr(cache, "enabled", False):
+            for p_str, rel in files_to_scan:
+                cache.put_injection(
+                    rel=rel,
+                    path=Path(p_str),
+                    injection_items=file_items.get(rel, []),
+                    injection_suppressed=file_suppressed.get(rel, []),
+                )
+
     items: List[Dict] = []
     suppressed: List[Dict] = []
-
-    # If small number of files or single worker, run in-process without executor overhead
-    if effective_workers <= 1 or num_files < 20:
-        chunk_items, chunk_suppressed = _scan_injection_file_batch((files, config))
-        items = chunk_items
-        suppressed = chunk_suppressed
-    else:
-        chunk_size = max(1, (num_files + effective_workers - 1) // effective_workers)
-        chunks = [
-            (files[i : i + chunk_size], config)
-            for i in range(0, num_files, chunk_size)
-        ]
-        with concurrent.futures.ProcessPoolExecutor(max_workers=effective_workers) as executor:
-            for chunk_items, chunk_suppressed in executor.map(_scan_injection_file_batch, chunks):
-                items.extend(chunk_items)
-                suppressed.extend(chunk_suppressed)
+    for _, rel in files:
+        if rel in file_items:
+            items.extend(file_items[rel])
+        if rel in file_suppressed:
+            suppressed.extend(file_suppressed[rel])
 
     by_rule: Dict[str, int] = {}
     for it in items:
