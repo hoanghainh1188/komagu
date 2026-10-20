@@ -13,6 +13,8 @@ import unittest
 import urllib.request
 import urllib.error
 import json
+import shutil
+import subprocess
 import time
 import threading
 from http.server import HTTPServer
@@ -91,8 +93,8 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         # Invariant 2: Request body inspection
         self.assertIn("SecRequestBodyAccess On", content)
 
-        # Invariant 3: Deny status is 403 Forbidden
-        self.assertIn("deny,status:403", content)
+        # Invariant 3: No SecDefaultAction — CRS setup defines it, and a second one stops Coraza loading
+        self.assertNotRegex(content, r"(?m)^\s*SecDefaultAction")
 
         # Invariant 4: Paranoia Level 1
         self.assertIn("setvar:tx.paranoia_level=1", content)
@@ -250,6 +252,113 @@ class TestCorazaWafRulesBehavior(unittest.TestCase):
                 self.traversal_pattern.search(payload),
                 f"Path traversal payload should be detected by WAF rule: {payload}"
             )
+
+
+WAF_IMAGE = os.environ.get("KOMAINU_WAF_IMAGE", "komainu-coraza-caddy:local")
+# CI sets this so a missing Docker daemon fails the job instead of silently skipping.
+REQUIRE_WAF_TEST = os.environ.get("KOMAINU_REQUIRE_WAF_TEST") == "1"
+
+
+def _docker(*args, timeout=120):
+    return subprocess.run(["docker", *args], capture_output=True, text=True, timeout=timeout)
+
+
+def _docker_available():
+    if not shutil.which("docker"):
+        return False
+    try:
+        return _docker("info", timeout=20).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+class TestCorazaWafContainer(unittest.TestCase):
+    """
+    Loads the real Caddyfile, coraza.conf and custom rules into the WAF image and
+    sends traffic through it. String checks cannot catch directive conflicts such as
+    a duplicate SecDefaultAction, which stops Caddy from starting at all.
+    """
+
+    container = None
+    port = None
+
+    @classmethod
+    def setUpClass(cls):
+        if not _docker_available():
+            if REQUIRE_WAF_TEST:
+                raise RuntimeError("KOMAINU_REQUIRE_WAF_TEST=1 but Docker is not available")
+            raise unittest.SkipTest("Docker is not available")
+        if _docker("image", "inspect", WAF_IMAGE, timeout=30).returncode != 0:
+            build = _docker("build", "-t", WAF_IMAGE, os.path.join(EDGE_DIR, "coraza"), timeout=1200)
+            if build.returncode != 0:
+                raise RuntimeError(f"WAF image build failed:\n{build.stderr[-2000:]}")
+        coraza_dir = os.path.join(EDGE_DIR, "coraza")
+        cls.mounts = [
+            "-v", f"{os.path.join(coraza_dir, 'Caddyfile')}:/etc/caddy/Caddyfile:ro",
+            "-v", f"{os.path.join(coraza_dir, 'coraza.conf')}:/etc/coraza/coraza.conf:ro",
+            "-v", f"{os.path.join(coraza_dir, 'rules')}:/etc/coraza/rules:ro",
+        ]
+        cls.validate = _docker(
+            "run", "--rm", *cls.mounts, WAF_IMAGE,
+            "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile",
+        )
+        if cls.validate.returncode != 0:
+            return
+        run = _docker("run", "-d", "-p", "127.0.0.1::8080", *cls.mounts, WAF_IMAGE)
+        if run.returncode != 0:
+            raise RuntimeError(f"WAF container failed to start:\n{run.stderr}")
+        cls.container = run.stdout.strip()
+        cls.port = _docker("port", cls.container, "8080/tcp").stdout.strip().rsplit(":", 1)[-1]
+        deadline = time.time() + 30
+        while time.time() < deadline:
+            if cls._status("/") is not None:
+                return
+            time.sleep(0.5)
+        logs = _docker("logs", cls.container).stderr[-2000:]
+        raise RuntimeError(f"WAF container did not answer on port {cls.port}:\n{logs}")
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.container:
+            _docker("rm", "-f", cls.container)
+
+    @classmethod
+    def _status(cls, path, body=None):
+        headers = {"Content-Type": "application/json"} if body is not None else {}
+        data = json.dumps(body).encode("utf-8") if body is not None else None
+        req = urllib.request.Request(f"http://127.0.0.1:{cls.port}{path}", data=data, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return resp.status
+        except urllib.error.HTTPError as e:
+            return e.code
+        except (urllib.error.URLError, ConnectionError, OSError):
+            return None
+
+    def _require_running(self):
+        self.assertEqual(self.validate.returncode, 0, f"Caddy/Coraza config does not load:\n{self.validate.stderr[-2000:]}")
+        self.assertIsNotNone(self.container)
+
+    def test_waf_config_loads_with_crs(self):
+        self._require_running()
+
+    def test_query_string_sqli_blocked(self):
+        self._require_running()
+        self.assertEqual(self._status("/api/v1/orders?id=1%27+OR+1%3D1--"), 403)
+
+    def test_json_body_sqli_blocked(self):
+        self._require_running()
+        self.assertEqual(self._status("/api/v1/orders", {"q": "1' UNION SELECT password FROM users"}), 403)
+
+    def test_crs_rules_active(self):
+        self._require_running()
+        # Not matched by any Komainu custom rule: only CRS (930120 OS file access) blocks it.
+        self.assertEqual(self._status("/api/v1/files?name=/etc/passwd"), 403)
+
+    def test_benign_request_not_blocked(self):
+        self._require_running()
+        # No backend runs in this test, so an allowed request ends in 502 from the proxy.
+        self.assertNotEqual(self._status("/api/v1/orders?page=2"), 403)
 
 
 class TestLiveEdgeSecurity(unittest.TestCase):
