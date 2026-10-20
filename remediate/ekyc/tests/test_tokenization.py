@@ -260,6 +260,7 @@ class TestZeroPIITokenizationAndOIDC(unittest.TestCase):
         # 3. Client signs challenge nonce via Mock J-LIS CA user cert
         user_cert, user_key, cert_pem = verifier.ca.issue_user_certificate(
             subject_cn=client_attrs["name"],
+            attributes=client_attrs,
         )
         sig_hex = verifier.ca.sign_nonce(user_key, challenge_nonce)
 

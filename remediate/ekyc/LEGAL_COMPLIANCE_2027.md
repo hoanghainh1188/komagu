@@ -89,4 +89,10 @@ This document confirms that Komainu Boilerplate 2 satisfies:
 > 1. Formal accreditation under the Public Personal Authentication Act as a certified verification business (大臣認定事業者) or integration through an authorized JPKI platform operator.
 > 2. Dedicated leased-line / IPsec VPN connectivity or certified mTLS gateway to the J-LIS certificate validation endpoints.
 > 3. Production deployments must run in non-simulation mode with valid X.509 certificates and strict CRL/OCSP revocation checks.
+>
+> **What the code enforces (fail-closed defaults):**
+> - `JPKIVerificationEngine` rejects every certificate unless J-LIS trust anchors (`trusted_certs`) **and** a revocation checker (`crl_checker`) are configured; the chain check is never skipped, and only CA certificates with RSA/ECDSA keys are accepted as issuers.
+> - Token attributes come only from the verified credential: the certificate CN (`name`) plus SubjectAltName otherName values mapped via `attribute_oids` to the J-LIS certificate profile. A client-claimed attribute that the credential does not carry is rejected.
+> - Driver-licence SODs are rejected unless a real `sod_verifier` (DS certificate chain to the CSCA and data-group hashes) is injected; structural checks alone never pass.
+> - The sha256 simulation harness runs only when `KOMAINU_EKYC_SIMULATION=1` is set explicitly. It is never inferred from `CI`, `KOMAINU_ENV` or loaded test frameworks — do not set this variable in any deployed environment.
 

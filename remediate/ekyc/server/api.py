@@ -12,7 +12,8 @@ from typing import Any, Dict, Optional, Tuple
 
 from remediate.ekyc.server.jpki_verifier import (
     JPKIVerificationEngine,
-    _is_test_environment,
+    _check_attribute_binding,
+    _simulation_opted_in,
 )
 from remediate.ekyc.server.tokenization import (
     RawImageRejectionError,
@@ -30,9 +31,11 @@ class EKYCService:
         tokenizer: Optional[ZeroPIITokenizer] = None,
     ):
         if verifier is None:
-            # Enable simulation only in test/development environments
+            # No trust anchors, revocation checker or SOD verifier: every certificate and SOD
+            # is rejected until a configured verifier is passed in. Simulation needs an
+            # explicit opt-in (see SIMULATION_ENV_FLAG).
             self.verifier = JPKIVerificationEngine(
-                allow_simulation=_is_test_environment()
+                allow_simulation=_simulation_opted_in()
             )
         else:
             self.verifier = verifier
@@ -72,8 +75,8 @@ class EKYCService:
                 "message": "Missing required fields: challenge_nonce or signature_hex",
             }
 
-        # Step 2: Cryptographic Signature Verification
-        valid, msg = self.verifier.verify_signature(
+        # Step 2: Cryptographic Signature Verification (returns the certificate-bound attributes)
+        valid, msg, verified_attributes = self.verifier.verify_identity(
             challenge_nonce=challenge_nonce,
             signature_hex=signature_hex,
             document_type="my_number",
@@ -86,8 +89,11 @@ class EKYCService:
                 "message": msg,
             }
 
-        # Step 3: Zero-PII Tokenization
-        token_data = self.tokenizer.issue_identity_token(verified_attributes=attributes)
+        # Step 3: Zero-PII Tokenization from verified attributes only
+        token_data = self.tokenizer.issue_identity_token(
+            verified_attributes=verified_attributes,
+            verified_via="JPKI_NFC_CRYPTO",
+        )
 
         return 200, {
             "status": "success",
@@ -117,12 +123,18 @@ class EKYCService:
                 "message": "Invalid sod_hex payload: must be valid hexadecimal string",
             }
 
-        valid, msg = self.verifier.verify_driver_license_sod(sod_bytes)
+        valid, msg, verified_attributes = self.verifier.verify_driver_license(sod_bytes)
         if not valid:
             return 401, {"error": "VERIFICATION_FAILED", "message": msg}
 
-        attributes = request_payload.get("attributes", {})
-        token_data = self.tokenizer.issue_identity_token(verified_attributes=attributes)
+        binding_error = _check_attribute_binding(request_payload.get("attributes", {}), verified_attributes)
+        if binding_error:
+            return 401, {"error": "VERIFICATION_FAILED", "message": binding_error}
+
+        token_data = self.tokenizer.issue_identity_token(
+            verified_attributes=verified_attributes,
+            verified_via="DRIVER_LICENSE_IC_SOD",
+        )
 
         return 200, {
             "status": "success",

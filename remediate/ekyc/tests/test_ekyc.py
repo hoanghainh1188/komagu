@@ -16,9 +16,13 @@ from remediate.ekyc.client.nfc_reader import (
 from remediate.ekyc.server.api import EKYCService
 from remediate.ekyc.server.jpki_verifier import (
     HAS_CRYPTOGRAPHY,
+    SIMULATION_ENV_FLAG,
     JPKIVerificationEngine,
     MockJPKIVerificationEngine,
 )
+
+# Tests that exercise the sha256 simulation harness opt in explicitly.
+SIMULATION_ON = {SIMULATION_ENV_FLAG: "1"}
 from remediate.ekyc.server.tokenization import (
     RawImageRejectionError,
     ZeroPIITokenizer,
@@ -85,6 +89,7 @@ class TestZeroPIIeKYC(unittest.TestCase):
         # Second validation must fail (replay attack blocked)
         self.assertFalse(engine.validate_nonce(nonce))
 
+    @patch.dict(os.environ, SIMULATION_ON)
     def test_05_jpki_signature_verification(self) -> None:
         """Verifies client signature against server challenge in simulation harness."""
         engine = MockJPKIVerificationEngine()
@@ -142,6 +147,7 @@ class TestZeroPIIeKYC(unittest.TestCase):
         self.assertEqual(token_result["status"], "VERIFIED_ZERO_PII")
         self.assertEqual(token_result["blind_hash"], blind_1)
 
+    @patch.dict(os.environ, SIMULATION_ON)
     def test_08_api_end_to_end_flow(self) -> None:
         """Verifies end-to-end eKYC flow via EKYCService."""
         service = EKYCService()
@@ -187,20 +193,19 @@ class TestZeroPIIeKYC(unittest.TestCase):
 
     @unittest.skipUnless(HAS_CRYPTOGRAPHY, "Requires 'cryptography' library")
     def test_10_jpki_cryptographic_verification_with_x509_cert(self) -> None:
-        """Verifies real asymmetric cryptographic signature verification with X.509 cert."""
-        priv_pem, cert_pem = NFCReaderSession.generate_test_keypair(common_name="山田 太郎")
-        engine = JPKIVerificationEngine(allow_simulation=False)
-
-        nonce = engine.generate_challenge(ttl_seconds=300)
+        """Verifies real asymmetric cryptographic signature verification with a J-LIS-chained X.509 cert."""
+        engine = MockJPKIVerificationEngine()
         session = NFCReaderSession(document_type="my_number")
         session.verify_pin("1234")
-
-        sig_payload = session.sign_challenge(nonce, private_key_pem=priv_pem)
         attributes = session.read_verified_attributes()
+        _, user_key, cert_pem = engine.ca.issue_user_certificate(
+            subject_cn=attributes["name"], attributes=attributes
+        )
 
+        nonce = engine.generate_challenge(ttl_seconds=300)
         valid, msg = engine.verify_signature(
             challenge_nonce=nonce,
-            signature_hex=sig_payload["signature_hex"],
+            signature_hex=engine.ca.sign_nonce(user_key, nonce),
             certificate_pem=cert_pem,
             attributes=attributes,
         )
@@ -220,14 +225,12 @@ class TestZeroPIIeKYC(unittest.TestCase):
     @unittest.skipUnless(HAS_CRYPTOGRAPHY, "Requires 'cryptography' library")
     def test_11_jpki_attribute_binding_mismatch_rejected(self) -> None:
         """Verifies that an attribute swap attack is rejected when cert CN does not match claimed name."""
-        priv_pem, cert_pem = NFCReaderSession.generate_test_keypair(common_name="山田 太郎")
-        engine = JPKIVerificationEngine(allow_simulation=False)
-
+        engine = MockJPKIVerificationEngine()
+        _, user_key, cert_pem = engine.ca.issue_user_certificate(
+            subject_cn="山田 太郎", attributes={"date_of_birth": "1985-04-12"}
+        )
         nonce = engine.generate_challenge(ttl_seconds=300)
-        session = NFCReaderSession(document_type="my_number")
-        session.verify_pin("1234")
-
-        sig_payload = session.sign_challenge(nonce, private_key_pem=priv_pem)
+        sig_payload = {"signature_hex": engine.ca.sign_nonce(user_key, nonce)}
 
         # Attacker claims different name than cert Subject CN
         spoofed_attributes = {
@@ -246,10 +249,10 @@ class TestZeroPIIeKYC(unittest.TestCase):
 
     def test_12_simulation_blocked_in_production(self) -> None:
         """Verifies simulation mode cannot be activated in production environments."""
-        with patch.dict(os.environ, {"KOMAINU_ENV": "production", "CI": ""}), \
-             patch("remediate.ekyc.server.jpki_verifier._is_test_environment", return_value=False):
-            with self.assertRaises(RuntimeError):
-                JPKIVerificationEngine(allow_simulation=True)
+        for env in ({"KOMAINU_ENV": "production", "CI": ""}, {"KOMAINU_ENV": "dev", "CI": "true"}):
+            with patch.dict(os.environ, {**env, SIMULATION_ENV_FLAG: ""}):
+                with self.assertRaises(RuntimeError):
+                    JPKIVerificationEngine(allow_simulation=True)
 
     def test_13_sod_verification_hardening(self) -> None:
         """Verifies driver license SOD minimum size and ASN.1 DER sequence header requirements."""
@@ -267,10 +270,11 @@ class TestZeroPIIeKYC(unittest.TestCase):
         self.assertFalse(valid_tag)
         self.assertIn("ASN.1 DER sequence", msg)
 
-        # Valid mock SOD (tag 0x30, length >= 32)
+        # Structurally valid SOD: rejected unless a real SOD verifier is configured (#204)
         valid_sod = b"\x30\x20" + b"\x00" * 32
         valid_ok, msg = engine.verify_driver_license_sod(valid_sod)
-        self.assertTrue(valid_ok)
+        self.assertFalse(valid_ok)
+        self.assertIn("not configured", msg)
 
     def test_14_api_driver_license_invalid_hex_returns_400(self) -> None:
         """Verifies API returns 400 Bad Request on invalid sod_hex encoding instead of 500 error."""
@@ -284,6 +288,7 @@ class TestZeroPIIeKYC(unittest.TestCase):
         self.assertEqual(resp["error"], "BAD_REQUEST")
         self.assertIn("hex", resp["message"].lower())
 
+    @patch.dict(os.environ, SIMULATION_ON)
     def test_15_bounded_nonce_store_fifo_eviction(self) -> None:
         """Verifies nonce storage adheres to capacity limit and evicts oldest entries."""
         engine = JPKIVerificationEngine(max_active_nonces=3, allow_simulation=True)
