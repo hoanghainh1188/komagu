@@ -44,6 +44,9 @@ jobs:
           python3 -m operate.cli.main devsecops sbom examples/member-portal --format spdx -o /tmp/spdx.json
           python3 -m operate.cli.main devsecops run examples/member-portal -o /tmp/devsecops-output
 
+      - name: Install Python dependencies (eKYC)
+        run: pip install -r remediate/ekyc/requirements.txt
+
       - name: Run Zero-PII eKYC unit tests
         run: python3 -m unittest discover -s remediate/ekyc/tests -p "test_*.py"
 
