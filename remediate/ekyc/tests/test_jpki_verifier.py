@@ -12,16 +12,23 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 from remediate.ekyc.server.jpki_verifier import (
+    HAS_CRYPTOGRAPHY,
     JPKIVerificationEngine,
     MockJPKIVerificationEngine,
 )
-from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
+try:
+    from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
+except ImportError:
+    MockJLISCertificateAuthority = None
 
 
+@unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography library required for JPKI X.509 verification")
 class TestMockJLISAndVerifier(unittest.TestCase):
     """Test suite verifying Mock J-LIS CA, CRL verification, and JPKI signatures."""
 
     def setUp(self) -> None:
+        if MockJLISCertificateAuthority is None:
+            self.skipTest("MockJLISCertificateAuthority unavailable")
         self.ca = MockJLISCertificateAuthority()
         self.engine = MockJPKIVerificationEngine(ca=self.ca)
 

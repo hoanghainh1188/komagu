@@ -10,16 +10,24 @@ from __future__ import annotations
 import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
-from cryptography.x509.oid import NameOID
+try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+    from cryptography.x509.oid import NameOID
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 
 
 class MockJLISCertificateAuthority:
     """Simulates J-LIS Root CA, Intermediate Sub-CA, certificate issuance, and CRL generation."""
 
     def __init__(self, key_size: int = 2048) -> None:
+        if not HAS_CRYPTOGRAPHY:
+            raise RuntimeError(
+                "The 'cryptography' library is required to use MockJLISCertificateAuthority"
+            )
         self.key_size = key_size
         self._revoked_serials: Dict[int, datetime.datetime] = {}
 

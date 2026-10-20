@@ -245,13 +245,24 @@ class MockJPKIVerificationEngine(JPKIVerificationEngine):
         max_active_nonces: int = MAX_ACTIVE_NONCES,
         ca: Optional[Any] = None,
     ):
-        from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
+        trusted_certs = []
+        crl_checker = None
+        self.ca = ca
+        if self.ca is None and HAS_CRYPTOGRAPHY:
+            try:
+                from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
+                self.ca = MockJLISCertificateAuthority()
+            except Exception:
+                self.ca = None
 
-        self.ca = ca or MockJLISCertificateAuthority()
+        if self.ca is not None:
+            trusted_certs = [self.ca.root_cert, self.ca.sub_cert]
+            crl_checker = self.ca.is_revoked
+
         super().__init__(
             trust_anchor=trust_anchor,
             max_active_nonces=max_active_nonces,
             allow_simulation=True,
-            trusted_certs=[self.ca.root_cert, self.ca.sub_cert],
-            crl_checker=self.ca.is_revoked,
+            trusted_certs=trusted_certs,
+            crl_checker=crl_checker,
         )
