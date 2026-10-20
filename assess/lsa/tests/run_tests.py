@@ -153,6 +153,10 @@ def main() -> int:
     if res.returncode != 0:
         fails.append(f"test_merge_and_security.py failed:\n{res.stdout}\n{res.stderr}")
     print(f"  merge & security {'OK' if res.returncode == 0 else 'FAIL'}")
+    res_sarif = subprocess.run([sys.executable, str(HERE / "test_sarif_export.py")], capture_output=True, text=True)
+    if res_sarif.returncode != 0:
+        fails.append(f"test_sarif_export.py failed:\n{res_sarif.stdout}\n{res_sarif.stderr}")
+    print(f"  sarif export     {'OK' if res_sarif.returncode == 0 else 'FAIL'}")
     print()
     if fails:
         print(f"FAILED ({len(fails)})")
