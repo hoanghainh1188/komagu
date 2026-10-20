@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """JPKI (Japanese Public Key Infrastructure) Backend Verification Engine.
 
-Validates digital signatures and certificates issued by J-LIS (地方公共団体情報システム機構)
-under the Act on Public Personal Authentication Service (電子署名等に係る地方公共団体情報システム機構の認証業務に関する法律).
+Validates digital signatures, X.509 certificate chains, validity periods, and CRL revocations
+issued by J-LIS (地方公共団体情報システム機構) under the Act on Public Personal Authentication Service
+(電子署名等に係る地方公共団体情報システム機構の認証業務に関する法律).
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import os
 import secrets
 import sys
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 try:
     from cryptography import x509
@@ -49,10 +50,14 @@ class JPKIVerificationEngine:
         trust_anchor: str = "J-LIS-Root-CA",
         max_active_nonces: int = MAX_ACTIVE_NONCES,
         allow_simulation: bool = False,
+        trusted_certs: Optional[List[x509.Certificate]] = None,
+        crl_checker: Optional[Callable[[int], bool]] = None,
     ):
         self.trust_anchor = trust_anchor
         self.max_active_nonces = max_active_nonces
         self.allow_simulation = allow_simulation
+        self.trusted_certs = trusted_certs or []
+        self.crl_checker = crl_checker
 
         if self.allow_simulation and not _is_test_environment():
             raise RuntimeError(
@@ -98,11 +103,7 @@ class JPKIVerificationEngine:
         certificate_pem: Optional[str] = None,
         attributes: Optional[Dict[str, Any]] = None,
     ) -> Tuple[bool, str]:
-        """Verify the cryptographic signature against the active challenge nonce.
-
-        Supports true X.509 cryptographic validation with attribute binding, or
-        gated simulation in authorized test environments.
-        """
+        """Verify the cryptographic signature against the active challenge nonce."""
         # Replay prevention check
         if not self.validate_nonce(challenge_nonce):
             return False, "Invalid or expired challenge nonce (replay attack prevented)"
@@ -117,7 +118,7 @@ class JPKIVerificationEngine:
 
         nonce_data = challenge_nonce.encode("utf-8")
 
-        # Mode A: Cryptographic X.509 Verification with attribute binding
+        # Mode A: Cryptographic X.509 Verification with attribute binding & CRL check
         if certificate_pem:
             if not HAS_CRYPTOGRAPHY:
                 return False, "Cryptographic verification unavailable: 'cryptography' library required"
@@ -127,7 +128,52 @@ class JPKIVerificationEngine:
             except Exception as e:
                 return False, f"Invalid certificate format: {e}"
 
-            # Verify attribute binding (e.g., Common Name matches claimed name)
+            # 1. Certificate Validity Period Check
+            now = datetime.datetime.now(datetime.timezone.utc)
+            try:
+                nb = cert.not_valid_before_utc
+                na = cert.not_valid_after_utc
+            except AttributeError:
+                nb = cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
+                na = cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
+
+            if now < nb:
+                return False, "Certificate is not yet valid (validity date in future)"
+            if now > na:
+                return False, "Certificate has expired"
+
+            # 2. Revocation Check via CRL
+            if self.crl_checker and self.crl_checker(cert.serial_number):
+                return False, f"Certificate serial {cert.serial_number} has been revoked (CRL check failed)"
+
+            # 3. Chain of Trust Verification
+            if self.trusted_certs:
+                trusted = False
+                for parent in self.trusted_certs:
+                    if cert.issuer == parent.subject:
+                        parent_pub = parent.public_key()
+                        try:
+                            if isinstance(parent_pub, rsa.RSAPublicKey):
+                                parent_pub.verify(
+                                    cert.signature,
+                                    cert.tbs_certificate_bytes,
+                                    padding.PKCS1v15(),
+                                    cert.signature_hash_algorithm,
+                                )
+                            elif isinstance(parent_pub, ec.EllipticCurvePublicKey):
+                                parent_pub.verify(
+                                    cert.signature,
+                                    cert.tbs_certificate_bytes,
+                                    ec.ECDSA(cert.signature_hash_algorithm),
+                                )
+                            trusted = True
+                            break
+                        except Exception:
+                            continue
+                if not trusted:
+                    return False, "Untrusted certificate: issuer signature verification failed against trusted root"
+
+            # 4. Attribute Binding Check (e.g., Common Name matches claimed name)
             if attributes and "name" in attributes:
                 claimed_name = attributes["name"]
                 cn_attrs = cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
@@ -139,7 +185,7 @@ class JPKIVerificationEngine:
                             f"does not match claimed attribute name '{claimed_name}'"
                         )
 
-            # Asymmetric signature verification
+            # 5. Asymmetric Signature Verification
             pub_key = cert.public_key()
             if isinstance(pub_key, rsa.RSAPublicKey):
                 try:
@@ -191,15 +237,21 @@ class JPKIVerificationEngine:
 
 
 class MockJPKIVerificationEngine(JPKIVerificationEngine):
-    """Test double for JPKI verification engine with simulation enabled by default."""
+    """Test double for JPKI verification engine with mock J-LIS CA and CRL support."""
 
     def __init__(
         self,
-        trust_anchor: str = "Mock-Root-CA",
+        trust_anchor: str = "Mock-J-LIS-Root-CA",
         max_active_nonces: int = MAX_ACTIVE_NONCES,
+        ca: Optional[Any] = None,
     ):
+        from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
+
+        self.ca = ca or MockJLISCertificateAuthority()
         super().__init__(
             trust_anchor=trust_anchor,
             max_active_nonces=max_active_nonces,
             allow_simulation=True,
+            trusted_certs=[self.ca.root_cert, self.ca.sub_cert],
+            crl_checker=self.ca.is_revoked,
         )
