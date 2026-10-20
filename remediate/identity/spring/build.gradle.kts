@@ -18,8 +18,8 @@ java {
     }
 }
 
-val springBootVersion = "3.3.4"
-val springSecurityVersion = "6.3.3"
+val springBootVersion = "3.5.16"
+val springSecurityVersion = "6.5.11"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
