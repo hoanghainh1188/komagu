@@ -173,5 +173,22 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
         self.assertIn("already present", res.explanation)
 
 
+    def test_express_route_is_manual_not_comment(self) -> None:
+        """Express routes used to get only a `// [KOMAINU-FIX]` comment reported as a fix (#216)."""
+        route_file = self.test_dir / "routes.js"
+        original = (
+            "const express = require('express');\n"
+            "router.get('/orders/:id', async (req, res) => {\n"
+            "    res.json(await Order.findById(req.params.id));\n"
+            "});\n"
+        )
+        route_file.write_text(original, encoding="utf-8")
+        finding = {"finding_id": "BOLA-EXP-01", "category": "bola", "endpoint": {"method": "GET", "path": "/orders/:id"}}
+
+        patched_content, res = self.patcher.patch_file(route_file, 2, finding)
+        self.assertFalse(res.changed)
+        self.assertEqual(patched_content, original)
+        self.assertNotIn("KOMAINU-FIX", patched_content)
+
 if __name__ == "__main__":
     unittest.main()

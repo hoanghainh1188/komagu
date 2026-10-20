@@ -77,8 +77,12 @@ def read_source_file_safe(file_path: Path) -> Tuple[str, str, str]:
     else:
         newline = "\n"
 
-    # Try encodings in order: UTF-8 with BOM, standard UTF-8, Japanese legacy encodings, then latin-1 fallback
-    encodings_to_try = ["utf-8-sig", "utf-8", "cp932", "euc_jp", "iso2022_jp", "latin-1"]
+    # utf-8-sig only when the file really starts with a BOM: it also decodes BOM-less
+    # files, and writing back with it would prepend a BOM that was never there.
+    if raw_bytes.startswith(b"\xef\xbb\xbf"):
+        encodings_to_try = ["utf-8-sig"]
+    else:
+        encodings_to_try = ["utf-8", "cp932", "euc_jp", "iso2022_jp", "latin-1"]
     detected_encoding = "utf-8"
     content: Optional[str] = None
 
@@ -97,14 +101,30 @@ def read_source_file_safe(file_path: Path) -> Tuple[str, str, str]:
     return content, detected_encoding, newline
 
 
-def write_source_file_safe(file_path: Path, content: str, encoding: str, newline: str) -> None:
-    """Write patched source file preserving original encoding and line endings."""
+def encode_source(content: str, encoding: str, newline: str) -> bytes:
+    """Encode content the way write_source_file_safe stores it on disk."""
     normalized_content = content.replace("\r\n", "\n").replace("\r", "\n")
     if newline != "\n":
         normalized_content = normalized_content.replace("\n", newline)
+    return normalized_content.encode(encoding)
 
-    encoded_bytes = normalized_content.encode(encoding)
-    file_path.write_bytes(encoded_bytes)
+
+def roundtrips_exactly(file_path: Path, content: str, encoding: str, newline: str) -> bool:
+    """True when writing the unchanged content back would reproduce the file byte for byte.
+
+    Fails for mixed line endings and for encodings whose decode/encode is not an identity
+    (e.g. CP932 NEC/IBM duplicate code points); patching such files would alter lines
+    the fix never touched.
+    """
+    try:
+        return encode_source(content, encoding, newline) == file_path.read_bytes()
+    except (UnicodeEncodeError, LookupError, OSError):
+        return False
+
+
+def write_source_file_safe(file_path: Path, content: str, encoding: str, newline: str) -> None:
+    """Write patched source file preserving original encoding and line endings."""
+    file_path.write_bytes(encode_source(content, encoding, newline))
 
 
 class RemediationRunner:
@@ -231,6 +251,25 @@ class RemediationRunner:
 
         try:
             original_content, encoding, newline = read_source_file_safe(abs_file)
+            if not roundtrips_exactly(abs_file, original_content, encoding, newline):
+                return RemediationPlan(
+                    finding_id=finding_id,
+                    category=category,
+                    title=title,
+                    target_file=clean_rel,
+                    absolute_path=str(abs_file),
+                    start_line=start_line,
+                    end_line=end_line,
+                    original_content=original_content,
+                    patched_content=original_content,
+                    encoding=encoding,
+                    newline=newline,
+                    status="needs manual fix",
+                    reason=(
+                        f"File cannot be rewritten byte-for-byte as {encoding} with consistent line endings "
+                        "(mixed newlines or non-reversible characters); patch it manually"
+                    ),
+                )
             patched_content, explanation = strategy.generate_patch(abs_file, original_content, finding)
 
             if patched_content == original_content:
