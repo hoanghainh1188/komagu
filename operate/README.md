@@ -21,6 +21,10 @@ This directory provides CI/CD components for automated security verification, pr
    - `github/cross-user-authz.yml`: Reusable GitHub Actions workflow.
    - `gitlab/cross-user-authz.gitlab-ci.yml`: GitLab CI security template.
 
+4. **Automated Remediation Runner (`remediator/runner.py` / `komainu fix`)**:
+   - Parses audit findings (`findings.json` or SARIF) and generates automated code fixes for BOLA/IDOR and SQLi vulnerabilities.
+   - Supports dry-run simulation, unified patch export, and direct in-place remediation.
+
 ---
 
 ## Usage
@@ -54,4 +58,17 @@ python3 operate/cross-user-tester/runner.py \
 python3 operate/lsa-sarif/lsa_to_sarif.py \
   --input findings.json \
   --output komainu-lsa.sarif
+```
+
+### 4. Run Automated Remediation (`komainu fix`)
+
+```bash
+# Preview planned fixes without modifying code (dry-run)
+komainu fix . --dry-run
+
+# Apply fixes from audit report
+komainu fix /path/to/legacy-app --findings ./komainu-out/findings.json
+
+# Export fixes as a unified .patch file
+komainu fix . --findings findings.json --dry-run -p ./security-fixes.patch
 ```
