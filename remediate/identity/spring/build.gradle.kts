@@ -32,7 +32,7 @@ dependencies {
     compileOnly("org.springframework.security:spring-security-web:$springSecurityVersion")
     compileOnly("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
     compileOnly("org.springframework.security:spring-security-oauth2-jose:$springSecurityVersion")
-    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.20")
@@ -40,7 +40,7 @@ dependencies {
     // Test dependencies
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("io.mockk:mockk:1.14.11")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     testImplementation("org.springframework.security:spring-security-test:$springSecurityVersion")
