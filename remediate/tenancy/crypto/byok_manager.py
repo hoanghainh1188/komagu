@@ -31,8 +31,16 @@ def _is_test_environment() -> bool:
         return True
     if os.environ.get("CI", "").lower() in ("true", "1"):
         return True
-    if "unittest" in sys.modules or "pytest" in sys.modules:
+    if "PYTEST_CURRENT_TEST" in os.environ:
         return True
+    if "unittest" in sys.modules:
+        argv_0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
+        if "pytest" in argv_0 or "unittest" in argv_0:
+            return True
+        if len(sys.argv) > 1 and sys.argv[1] in ("discover", "test"):
+            return True
+        if any(arg.endswith("test.py") or arg.startswith("test_") or "/tests/" in arg or "unittest" in arg for arg in sys.argv):
+            return True
     return False
 
 
@@ -175,6 +183,14 @@ class BYOKKeyManager:
         if tenant_id in self._tenant_master_keys:
             del self._tenant_master_keys[tenant_id]
         self._revoked_keys[tenant_id] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    def export_revoked_tenants(self) -> Dict[str, str]:
+        """Export map of shredded/revoked tenants and their revocation timestamps."""
+        return dict(self._revoked_keys)
+
+    def import_revoked_tenants(self, revoked: Dict[str, str]) -> None:
+        """Import map of shredded/revoked tenants to synchronize revocation status across instances."""
+        self._revoked_keys.update(revoked)
 
     def is_key_active(self, tenant_id: str) -> bool:
         """Check if tenant master key is active and not shredded."""

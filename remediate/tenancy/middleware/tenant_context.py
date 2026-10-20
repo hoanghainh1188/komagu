@@ -20,7 +20,8 @@ _active_tenant: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
 )
 
 # Strict tenant ID pattern: lowercase alphanumeric, hyphens, and underscores, 1-64 chars
-TENANT_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,62}[a-z0-9]$|^[a-z0-9]$")
+# Uses \A and \Z to prevent accepting trailing newlines
+TENANT_ID_PATTERN = re.compile(r"\A(?:[a-z0-9][a-z0-9_-]{0,62}[a-z0-9]|[a-z0-9])\Z")
 
 
 class MissingTenantContextError(PermissionError):

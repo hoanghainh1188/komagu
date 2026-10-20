@@ -195,12 +195,15 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         self.assertIn("CREATE INDEX %I ON %I.orders(owner_user_id)", sql_content)
         self.assertIn("public.tenant_registry", sql_content)
         self.assertIn("Schema collision detected", sql_content)
-        self.assertIn("SET LOCAL search_path TO %I", sql_content)
+        # Search path set via set_config without function-level SET to propagate to caller session
+        self.assertIn("set_config('search_path'", sql_content)
         self.assertNotIn("search_path TO %I, public", sql_content)
         self.assertIn("REVOKE ALL ON SCHEMA %I FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON FUNCTION switch_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
+        self.assertIn("GRANT USAGE ON SCHEMA %I TO komainu_app", sql_content)
+        self.assertIn("GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komainu_app", sql_content)
 
     def test_11_rls_sql_app_role_and_tenant_organizations_security(self) -> None:
         """Verifies RLS template defines non-owner app role, protects tenant_organizations, and pins search_path."""
@@ -209,6 +212,8 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
             sql_content = f.read()
 
         self.assertIn("CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS", sql_content)
+        self.assertIn("NOLOGIN", sql_content)
+        self.assertNotIn("replace_with_secure_app_password", sql_content)
         self.assertIn("ALTER TABLE tenant_organizations ENABLE ROW LEVEL SECURITY", sql_content)
         self.assertIn("ALTER TABLE tenant_organizations FORCE ROW LEVEL SECURITY", sql_content)
         self.assertIn("CREATE POLICY tenant_org_isolation_policy ON tenant_organizations", sql_content)
@@ -420,6 +425,40 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         # Explicit overwrite allowed
         new_key = byok.register_tenant_key("tenant-overwrite", overwrite=True)
         self.assertIsNotNone(new_key)
+
+    def test_22_tenant_id_trailing_newline_rejected(self) -> None:
+        """Verifies that trailing newlines in tenant IDs are rejected (Issue #209)."""
+        invalid_trailing_newline = "valid-tenant\n"
+        with self.assertRaises(ValueError):
+            validate_tenant_id_format(invalid_trailing_newline)
+
+        with self.assertRaises(ValueError):
+            validate_tenant_id_format("\nvalid-tenant")
+
+    def test_23_audit_trail_short_key_rejected(self) -> None:
+        """Verifies that audit trail HMAC key must be at least 32 bytes."""
+        with self.assertRaises(ValueError):
+            TenantAuditTrail(hmac_key=b"short-key-16byte")
+
+        # 32-byte key succeeds
+        trail = TenantAuditTrail(hmac_key=b"0" * 32)
+        self.assertEqual(len(trail.hmac_key), 32)
+
+    def test_24_byok_revocations_export_and_import(self) -> None:
+        """Verifies that revoked/shredded tenant records can be synchronized across instances."""
+        mgr1 = BYOKKeyManager()
+        mgr1.register_tenant_key("tenant-shared")
+        mgr1.revoke_tenant_key("tenant-shared")
+
+        revoked_map = mgr1.export_revoked_tenants()
+        self.assertIn("tenant-shared", revoked_map)
+
+        # Fresh manager 2 imports revocations
+        mgr2 = BYOKKeyManager()
+        mgr2.import_revoked_tenants(revoked_map)
+
+        with self.assertRaises(TenantKeyRevokedError):
+            mgr2.register_tenant_key("tenant-shared")
 
 
 if __name__ == "__main__":

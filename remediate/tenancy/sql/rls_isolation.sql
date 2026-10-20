@@ -10,11 +10,14 @@
 --    and standard users, but NEVER applies to PostgreSQL superusers or roles with BYPASSRLS.
 --    Applications MUST connect using a non-owner, non-BYPASSRLS application role (komainu_app).
 
--- 0. Provision Dedicated Non-Owner Application Role
+-- 0. Provision Dedicated Non-Owner Application Role (without hard-coded password)
+-- NOTE: In production environments requiring LOGIN connections, configure passwords
+-- exclusively via deployment orchestration or vault parameters (ALTER ROLE komainu_app WITH LOGIN PASSWORD ...),
+-- NEVER hard-code credentials in committed migration scripts.
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'komainu_app') THEN
-        CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE LOGIN PASSWORD 'replace_with_secure_app_password';
+        CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOLOGIN;
     END IF;
 END;
 $$;
