@@ -46,13 +46,17 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         self.assertIn("paths:", content)
         self.assertIn("- /api/v1", content)
 
-        # Invariant 3: JWT Authentication plugin enabled
+        # Invariant 3: JWT Authentication plugin enabled with decK environment variable substitution
         self.assertIn("name: jwt", content)
         self.assertIn("consumers:", content)
         self.assertIn("jwt_secrets:", content)
+        self.assertIn('secret: ${{ env "KOMAINU_JWT_SECRET" }}', content)
+        self.assertNotIn("komainu-default-test-jwt-secret-key-32chars", content)
 
-        # Invariant 4: Rate limiting plugin enabled
+        # Invariant 4: Rate limiting plugin enabled with fail-closed redis policy
         self.assertIn("name: rate-limiting", content)
+        self.assertIn("policy: redis", content)
+        self.assertIn("fault_tolerant: false", content)
         self.assertIn("error_code: 429", content)
 
         # Invariant 5: CORS plugin enabled
@@ -102,6 +106,13 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         # Invariant 5: Inbound anomaly threshold = 5
         self.assertIn("setvar:tx.inbound_anomaly_score_threshold=5", content)
 
+        # Invariant 6: Audit logging omits headers (B) and request body (I) to prevent token/PII leakage
+        m_parts = re.search(r"SecAuditLogParts\s+([A-Z]+)", content)
+        self.assertIsNotNone(m_parts, "SecAuditLogParts must be declared")
+        parts = m_parts.group(1)
+        self.assertNotIn("B", parts, "Audit log parts must not include B (request headers)")
+        self.assertNotIn("I", parts, "Audit log parts must not include I (request body)")
+
     def test_coraza_crs_custom_rules(self):
         rules_path = os.path.join(EDGE_DIR, "coraza", "rules", "coraza-crs-custom.conf")
         self.assertTrue(os.path.exists(rules_path), "coraza-crs-custom.conf must exist")
@@ -112,8 +123,9 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         # Invariant 1: Must enable JSON body processor
         self.assertIn("ctl:requestBodyProcessor=JSON", content)
 
-        # Invariant 2: Must detect and block SQL injection (including union, comments, unquoted 1=1)
+        # Invariant 2: Must detect and block SQL injection across ARGS, URI, and REQUEST_HEADERS
         self.assertIn("Komainu WAF: SQL Injection Attack Detected", content)
+        self.assertIn("REQUEST_HEADERS", content)
         self.assertIn("\\bunion\\b", content)
         self.assertIn("\\bselect\\b", content)
 
@@ -138,10 +150,13 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         self.assertIn("coraza-waf:", content)
         self.assertIn("mock-backend:", content)
 
-        # Admin API must be bound to loopback 127.0.0.1 (not 0.0.0.0)
-        self.assertIn("KONG_ADMIN_LISTEN: 127.0.0.1:8001", content)
+        # Admin API must listen on 0.0.0.0 inside container and be published strictly to host loopback 127.0.0.1
+        self.assertIn("KONG_ADMIN_LISTEN: 0.0.0.0:8001", content)
         self.assertIn('"127.0.0.1:8001:8001"', content)
         self.assertNotIn('"8001:8001"', content)
+
+        # Must declare redis service for distributed rate limiting
+        self.assertIn("redis:", content)
 
 
 class TestMockBackendTraffic(unittest.TestCase):
@@ -191,10 +206,13 @@ class TestCorazaWafRulesBehavior(unittest.TestCase):
             content = f.read()
 
         # Extract SQLi regex pattern from rule 1000001
-        m_sqli = re.search(r'id:1000001[^\n]*\n.*?@rx\s+([^\n"]+)', content, re.DOTALL)
-        if not m_sqli:
-            m_sqli = re.search(r'@rx\s+([^\n"]+)[^\n]*\n\s*"id:1000001', content, re.DOTALL)
-        cls.sqli_pattern = re.compile(r"(?i)(?:(?:\bunion\b[\s\S]*?\bselect\b)|(?:\b(?:or|and)\b\s+(?:['\"]?\w+['\"]?\s*=\s*['\"]?\w+|true|false))|(?:;\s*drop\s+table)|(?:--|\/\*|\#))")
+        m_sqli = re.search(r'SecRule\s+[^\n]*"@rx\s+(.*?)"\s*\\\s*\n\s*"id:1000001', content)
+        if m_sqli:
+            cls.sqli_pattern = re.compile(m_sqli.group(1).strip())
+        else:
+            cls.sqli_pattern = re.compile(
+                r"(?i)(?:(?:\bunion\b[\s\S]*?\bselect\b)|(?:\b(?:or|and)\b\s+(?:(?:\d+\s*=\s*\d+)|(?:['\"][^'\"]+['\"]\s*=\s*['\"]?[^'\"\s]+)|true\b|false\b))|(?:;\s*(?:drop|alter|truncate|delete)\s+table\b)|(?:\-\-(?:[\s+\r\n\t]|$))|(?:\/\*[\s\S]*?\*\/)|(?:['\"`]\s*#|#\s+))"
+            )
 
         # Extract XSS regex pattern
         cls.xss_pattern = re.compile(r"(?i)(?:<script[^>]*>|javascript:[^\"']*|onerror\s*=|onload\s*=|eval\s*\(|alert\s*\()")
@@ -219,6 +237,36 @@ class TestCorazaWafRulesBehavior(unittest.TestCase):
             self.assertIsNotNone(
                 self.sqli_pattern.search(payload),
                 f"SQLi payload should be detected by WAF rule: {payload}"
+            )
+
+    def test_benign_patterns_not_flagged_as_sqli(self):
+        """Verifies that benign inputs like dashes, words, and programming terms are NOT falsely flagged as SQLi."""
+        benign_inputs = [
+            "a--b",
+            "salt and pepper=yes",
+            "C#",
+            "name=C#",
+            "page=2",
+            "black and white",
+            "sort=asc&order=name",
+        ]
+        for payload in benign_inputs:
+            self.assertIsNone(
+                self.sqli_pattern.search(payload),
+                f"Benign input should NOT trigger SQLi false positive: {payload}"
+            )
+
+    def test_header_sqli_patterns_detected(self):
+        """Verifies that SQLi payloads within HTTP headers are detected."""
+        header_payloads = [
+            "1' UNION SELECT 1, 2, 3",
+            "' OR 1=1--",
+            "admin' OR 'x'='x",
+        ]
+        for payload in header_payloads:
+            self.assertIsNotNone(
+                self.sqli_pattern.search(payload),
+                f"Header SQLi payload should be detected: {payload}"
             )
 
     def test_json_sqli_body_fields_detected(self):
@@ -359,6 +407,12 @@ class TestCorazaWafContainer(unittest.TestCase):
         self._require_running()
         # No backend runs in this test, so an allowed request ends in 502 from the proxy.
         self.assertNotEqual(self._status("/api/v1/orders?page=2"), 403)
+
+    def test_benign_queries_with_dashes_and_hash_not_blocked(self):
+        self._require_running()
+        self.assertNotEqual(self._status("/api/v1/orders?q=a--b"), 403)
+        self.assertNotEqual(self._status("/api/v1/orders?q=salt+and+pepper=yes"), 403)
+        self.assertNotEqual(self._status("/api/v1/orders?name=C%23"), 403)
 
 
 class TestLiveEdgeSecurity(unittest.TestCase):
