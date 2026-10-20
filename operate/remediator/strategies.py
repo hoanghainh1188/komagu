@@ -68,25 +68,8 @@ class SQLInjectionRemediationStrategy(BaseRemediationStrategy):
             lines[start_line] = rewritten.patched_line
             return "".join(lines), rewritten.explanation
 
-        indent = re.match(r"^(\s*)", target_line).group(1) if target_line else ""
-
-        # Suffix / comment style depending on file extension
-        ext = target_file.suffix.lower()
-        if ext in (".py",):
-            comment_prefix = f"{indent}# [KOMAINU-FIX] Parameterized query protection applied (CWE-89)\n"
-        elif ext in (".sql",):
-            comment_prefix = f"{indent}-- [KOMAINU-FIX] Parameterized query protection applied (CWE-89)\n"
-        else:
-            comment_prefix = f"{indent}// [KOMAINU-FIX] Parameterized query protection applied (CWE-89)\n"
-
-        # Check if already patched
-        if comment_prefix in content:
-            return content, "File already contains Komainu SQLi fix comment."
-
-        # Insert fix notification comment right above the vulnerable line
-        lines.insert(start_line, comment_prefix)
-        patched_content = "".join(lines)
-        return patched_content, f"Injected parameterized query safety barrier at line {start_line + 1}."
+        # Do NOT inject comment-only fake fixes. Require genuine code rewrite or manual fix.
+        return content, "No automated parameterized query rewrite applicable; requires manual remediation."
 
 
 class BOLARemediationStrategy(BaseRemediationStrategy):
@@ -118,25 +101,8 @@ class BOLARemediationStrategy(BaseRemediationStrategy):
         if result.changed:
             return patched_content, result.explanation
 
-        target_line = lines[start_line]
-        indent = re.match(r"^(\s*)", target_line).group(1) if target_line else ""
-
-        ext = target_file.suffix.lower()
-        if ext in (".py",):
-            guard_comment = f"{indent}# [KOMAINU-FIX] Enforce @require_ownership invariant (CWE-639)\n"
-        elif ext in (".ts", ".js"):
-            guard_comment = f"{indent}// [KOMAINU-FIX] @RequireOwnership(ResourceOperation.READ)\n"
-        elif ext in (".cs",):
-            guard_comment = f"{indent}// [KOMAINU-FIX] [Authorize(Policy = \"KomainuOwnership\")]\n"
-        else:
-            guard_comment = f"{indent}// [KOMAINU-FIX] Enforce ownership bound checks (CWE-639)\n"
-
-        if guard_comment in content:
-            return content, "File already contains Komainu BOLA ownership guard."
-
-        lines.insert(start_line, guard_comment)
-        patched_content = "".join(lines)
-        return patched_content, f"Injected object ownership guard at line {start_line + 1}."
+        # Do NOT inject comment-only fake fixes. Require genuine code rewrite or manual fix.
+        return content, "No automated BOLA ownership rewrite applicable; requires manual remediation."
 
 
 class StrategyRegistry:

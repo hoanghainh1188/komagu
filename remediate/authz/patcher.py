@@ -171,7 +171,12 @@ class BOLAOwnershipPatcher:
             guard_lines.append(f"{indent}@RequireOwnership(operation=ResourceOperation.{operation}, id_param=\"id\")\n")
 
         else:
-            guard_lines.append(f"{indent}// [KOMAINU-FIX] Enforce @RequireOwnership({operation}) on {resource} (CWE-639)\n")
+            return content, BOLARewriteResult(
+                original_line=target_line,
+                patched_line=target_line,
+                changed=False,
+                explanation=f"Automated BOLA ownership guard not supported for language '{lang}'; requires manual remediation.",
+            )
 
         guard_snippet = "".join(guard_lines)
         lines.insert(idx, guard_snippet)

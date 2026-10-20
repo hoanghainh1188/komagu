@@ -21,8 +21,10 @@ class RemediationPlan:
     original_content: str = ""
     patched_content: str = ""
     diff: str = ""
-    status: str = "planned"  # "planned", "applied", "skipped", "error"
+    status: str = "planned"  # "planned", "applied", "skipped", "needs manual fix", "error"
     reason: str = ""
+    encoding: str = "utf-8"
+    newline: str = "\n"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert plan to dictionary for serialization."""
@@ -36,6 +38,7 @@ class RemediationPlan:
             "status": self.status,
             "reason": self.reason,
             "has_diff": bool(self.diff.strip()),
+            "encoding": self.encoding,
         }
 
 
@@ -50,9 +53,19 @@ class RemediationReport:
     patch_file: Optional[str] = None
 
     @property
+    def planned_count(self) -> int:
+        """Count of patches planned but not yet applied (or planned in dry-run mode)."""
+        return sum(1 for p in self.plans if p.status == "planned")
+
+    @property
     def applied_count(self) -> int:
-        """Count of successfully applied or planned patches."""
-        return sum(1 for p in self.plans if p.status in ("planned", "applied"))
+        """Count of patches actually written to disk (0 in dry-run mode)."""
+        return sum(1 for p in self.plans if p.status == "applied")
+
+    @property
+    def manual_fix_count(self) -> int:
+        """Count of findings requiring manual remediation because no automated patch applies."""
+        return sum(1 for p in self.plans if p.status == "needs manual fix")
 
     @property
     def skipped_count(self) -> int:
@@ -70,7 +83,9 @@ class RemediationReport:
             "target_dir": self.target_dir,
             "dry_run": self.dry_run,
             "total_findings": self.total_findings,
+            "planned_count": self.planned_count,
             "applied_count": self.applied_count,
+            "manual_fix_count": self.manual_fix_count,
             "skipped_count": self.skipped_count,
             "error_count": self.error_count,
             "patch_file": self.patch_file,
