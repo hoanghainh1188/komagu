@@ -20,6 +20,28 @@ except ImportError:
     HAS_CRYPTOGRAPHY = False
 
 
+# Test-only OIDs (UUID arc 2.25) for identity attributes carried as SubjectAltName otherName
+# UTF8Strings. Production deployments map the J-LIS certificate profile's own OIDs through
+# JPKIVerificationEngine(attribute_oids=...).
+MOCK_ATTRIBUTE_OIDS: Dict[str, str] = {
+    "date_of_birth": "2.25.311982147064853722447019052310428930001",
+    "address": "2.25.311982147064853722447019052310428930002",
+    "gender": "2.25.311982147064853722447019052310428930003",
+    "document_issuer": "2.25.311982147064853722447019052310428930004",
+}
+
+
+def _der_utf8_string(value: str) -> bytes:
+    data = value.encode("utf-8")
+    n = len(data)
+    if n < 0x80:
+        length = bytes([n])
+    else:
+        nb = n.to_bytes((n.bit_length() + 7) // 8, "big")
+        length = bytes([0x80 | len(nb)]) + nb
+    return b"\x0c" + length + data
+
+
 class MockJLISCertificateAuthority:
     """Simulates J-LIS Root CA, Intermediate Sub-CA, certificate issuance, and CRL generation."""
 
@@ -126,8 +148,12 @@ class MockJLISCertificateAuthority:
         expired: bool = False,
         not_before: Optional[datetime.datetime] = None,
         not_after: Optional[datetime.datetime] = None,
+        attributes: Optional[Dict[str, str]] = None,
     ) -> Tuple[x509.Certificate, Any, str]:
         """Issue a user authentication certificate signed by J-LIS Sub-CA.
+
+        `attributes` (other than "name", which is the CN) are embedded as SubjectAltName
+        otherName values using MOCK_ATTRIBUTE_OIDS, so verifiers can bind them to the cert.
 
         Returns:
             Tuple[x509.Certificate, Any, str]: (Certificate, PrivateKey, PEM_String)
@@ -184,8 +210,15 @@ class MockJLISCertificateAuthority:
                 ),
                 critical=True,
             )
-            .sign(self.sub_private_key, hashes.SHA256())
         )
+        other_names = [
+            x509.OtherName(x509.ObjectIdentifier(MOCK_ATTRIBUTE_OIDS[k]), _der_utf8_string(v))
+            for k, v in (attributes or {}).items()
+            if k in MOCK_ATTRIBUTE_OIDS
+        ]
+        if other_names:
+            cert = cert.add_extension(x509.SubjectAlternativeName(other_names), critical=False)
+        cert = cert.sign(self.sub_private_key, hashes.SHA256())
 
         cert_pem = cert.public_bytes(serialization.Encoding.PEM).decode("utf-8")
         return cert, user_key, cert_pem

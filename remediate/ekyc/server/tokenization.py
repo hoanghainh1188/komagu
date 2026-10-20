@@ -252,8 +252,12 @@ class ZeroPIITokenizer:
         verified_attributes: Dict[str, str],
         issuer: str = "Komainu-eKYC-Gateway",
         ttl_minutes: int = 60,
+        verified_via: str = "JPKI_NFC_CRYPTO",
     ) -> Dict[str, Any]:
-        """Issue an ephemeral, tamper-proof Verified Identity Token without storing raw images."""
+        """Issue an ephemeral, tamper-proof Verified Identity Token without storing raw images.
+
+        `verified_attributes` must come from the verifier, never from the client request.
+        """
         # Strictly enforce no images, prohibited fields, or My Number present
         reject_raw_images(verified_attributes, is_top_level=False)
 
@@ -273,7 +277,7 @@ class ZeroPIITokenizer:
             "sub_blind_hash": blind_hash,
             "iat": int(now.timestamp()),
             "exp": int(exp.timestamp()),
-            "verified_via": "JPKI_NFC_CRYPTO",
+            "verified_via": verified_via,
             "regulatory_compliance": "JP_CRIMINAL_PROCEEDS_ACT_2027",
             "has_raw_images_stored": False,
         }
