@@ -55,6 +55,7 @@ BEGIN
 
     -- Security Boundaries: Revoke public privileges on tenant schema and tables
     EXECUTE format('REVOKE ALL ON SCHEMA %I FROM PUBLIC', v_schema_name);
+    EXECUTE format('REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC', v_schema_name);
 
 
     -- Grant least-privilege tenant access to application role
