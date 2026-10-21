@@ -28,6 +28,10 @@ MODULE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class TestTenantIsolationAndBYOK(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ["KOMAINU_ENV"] = "test"
+        os.environ["KOMAINU_ALLOW_BYOK_SIMULATION"] = "1"
     def test_01_sql_templates_exist(self) -> None:
         """Verifies PostgreSQL RLS and schema-per-tenant SQL scripts exist."""
         sql_dir = os.path.join(MODULE_ROOT, "sql")

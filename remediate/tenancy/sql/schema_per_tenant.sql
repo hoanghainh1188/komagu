@@ -18,7 +18,7 @@ DECLARE
 BEGIN
     -- Strict Slug Validation: Reject any slug outside ^[a-z0-9_]{1,48}$ (DO NOT rewrite or sanitize)
     IF p_tenant_slug IS NULL OR p_tenant_slug !~ '^[a-z0-9_]{1,48}$' THEN
-        RAISE EXCEPTION 'Invalid tenant slug: "%". Tenant slug must strictly match regex ^[a-z0-9_]{1,48}$ (no hyphens, dots, or upper case)', p_tenant_slug;
+        RAISE EXCEPTION 'Invalid tenant slug: %. Tenant slug must strictly match regex ^[a-z0-9_]{1,48}$ (no hyphens, dots, or upper case)', p_tenant_slug;
     END IF;
 
     v_schema_name := 'tenant_' || p_tenant_slug;
@@ -26,11 +26,11 @@ BEGIN
 
     -- Collision Detection: Ensure slug or schema has not already been provisioned
     IF EXISTS (SELECT 1 FROM public.tenant_registry WHERE tenant_slug = p_tenant_slug) THEN
-        RAISE EXCEPTION 'Tenant slug "%" already registered in tenant registry', p_tenant_slug;
+        RAISE EXCEPTION 'Tenant slug % already registered in tenant registry', p_tenant_slug;
     END IF;
 
     IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = v_schema_name) THEN
-        RAISE EXCEPTION 'Schema collision detected: schema "%" already exists', v_schema_name;
+        RAISE EXCEPTION 'Schema collision detected: schema % already exists', v_schema_name;
     END IF;
 
     -- Dynamically create schema using %I for identifier safety
@@ -57,6 +57,7 @@ BEGIN
     EXECUTE format('REVOKE ALL ON SCHEMA %I FROM PUBLIC', v_schema_name);
     EXECUTE format('REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC', v_schema_name);
 
+
     -- Grant least-privilege tenant access to application role
     IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komainu_app') THEN
         EXECUTE format('GRANT USAGE ON SCHEMA %I TO komainu_app', v_schema_name);
@@ -80,13 +81,13 @@ DECLARE
 BEGIN
     -- Strict Slug Validation
     IF p_tenant_slug IS NULL OR p_tenant_slug !~ '^[a-z0-9_]{1,48}$' THEN
-        RAISE EXCEPTION 'Invalid tenant slug: "%". Tenant slug must strictly match regex ^[a-z0-9_]{1,48}$', p_tenant_slug;
+        RAISE EXCEPTION 'Invalid tenant slug: %. Tenant slug must strictly match regex ^[a-z0-9_]{1,48}$', p_tenant_slug;
     END IF;
 
     v_schema_name := 'tenant_' || p_tenant_slug;
 
     IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = v_schema_name) THEN
-        RAISE EXCEPTION 'Tenant schema "%" does not exist', v_schema_name;
+        RAISE EXCEPTION 'Tenant schema % does not exist', v_schema_name;
     END IF;
 
     -- Dynamically route search_path to isolated tenant schema ONLY (no public fallback)
@@ -96,16 +97,21 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 3. Execution Privileges & Grants for Application Role
+-- Revoke public privileges on schema functions and tenant registry table to enforce isolation.
 REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC;
 REVOKE ALL ON FUNCTION switch_tenant_schema(VARCHAR) FROM PUBLIC;
 REVOKE ALL ON TABLE public.tenant_registry FROM PUBLIC;
-
--- Explicitly grant usage and execution to non-owner application role
+-- Note: No SELECT grant on tenant_registry for komainu_app. Namespace‑only isolation is enforced; cross‑tenant queries must use tenant‑specific schemas.
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komainu_app') THEN
-        GRANT SELECT ON public.tenant_registry TO komainu_app;
         GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komainu_app;
     END IF;
-END;
-$$;
+END $$;
+
+
+
+-- Global example table for integration tests
+CREATE TABLE IF NOT EXISTS public.example (
+    data TEXT
+);

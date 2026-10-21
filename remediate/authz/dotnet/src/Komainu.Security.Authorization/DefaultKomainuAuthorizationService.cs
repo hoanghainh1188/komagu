@@ -11,11 +11,15 @@ public sealed class DefaultKomainuAuthorizationService : IKomainuAuthorizationSe
 
     private static readonly string[] UserIdClaimTypes =
     [
+        // Prioritize the standard NameIdentifier claim, then common JWT subject claims.
+        // Trim any whitespace to avoid mismatched identifiers.
         ClaimTypes.NameIdentifier,
         "sub",
         "uid",
         "userId",
-        "user_id"
+        "user_id",
+        // Support generic "id" claim used by some services.
+        "id"
     ];
 
     private static readonly string[] TenantIdClaimTypes =
@@ -119,6 +123,9 @@ public sealed class DefaultKomainuAuthorizationService : IKomainuAuthorizationSe
             resourceIdString ??= idProp?.GetValue(resource)?.ToString();
         }
 
+        resourceOwnerUserId = resourceOwnerUserId?.Trim();
+        resourceTenantId = resourceTenantId?.Trim();
+
         if (string.IsNullOrEmpty(resourceOwnerUserId) || string.IsNullOrEmpty(resourceTenantId))
         {
             var msg = $"Resource of type {typeof(T).Name} does not expose OwnerUserId and TenantId";
@@ -172,7 +179,7 @@ public sealed class DefaultKomainuAuthorizationService : IKomainuAuthorizationSe
             var val = user.FindFirst(claimType)?.Value;
             if (!string.IsNullOrWhiteSpace(val))
             {
-                return val;
+                return val.Trim();
             }
         }
 
@@ -188,7 +195,7 @@ public sealed class DefaultKomainuAuthorizationService : IKomainuAuthorizationSe
             var val = user.FindFirst(claimType)?.Value;
             if (!string.IsNullOrWhiteSpace(val))
             {
-                return val;
+                return val.Trim();
             }
         }
 
@@ -236,7 +243,7 @@ public sealed class DefaultKomainuAuthorizationService : IKomainuAuthorizationSe
         foreach (var claimType in candidateClaimTypes)
         {
             var val = user.FindFirst(claimType)?.Value;
-            if (!string.IsNullOrWhiteSpace(val)) return val;
+            if (!string.IsNullOrWhiteSpace(val)) return val.Trim();
         }
         return null;
     }

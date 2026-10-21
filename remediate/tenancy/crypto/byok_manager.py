@@ -25,23 +25,17 @@ except ImportError:
 
 
 def _is_test_environment() -> bool:
-    """Detect if running under test execution."""
-    env = os.environ.get("KOMAINU_ENV", "").lower()
-    if env in ("test", "testing", "dev", "development"):
+    """Detect if running under test execution.
+    Returns True when opted in via environment variables or running under test runners.
+    """
+    if os.getenv("KOMAINU_ENV", "").lower() == "test":
         return True
-    if os.environ.get("CI", "").lower() in ("true", "1"):
+    if os.getenv("KOMAINU_ALLOW_BYOK_SIMULATION") == "1":
         return True
-    if "PYTEST_CURRENT_TEST" in os.environ:
+    if "unittest" in sys.modules or "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ:
         return True
-    if "unittest" in sys.modules:
-        argv_0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
-        if "pytest" in argv_0 or "unittest" in argv_0:
-            return True
-        if len(sys.argv) > 1 and sys.argv[1] in ("discover", "test"):
-            return True
-        if any(arg.endswith("test.py") or arg.startswith("test_") or "/tests/" in arg or "unittest" in arg for arg in sys.argv):
-            return True
     return False
+
 
 
 class CryptoShreddedError(PermissionError):

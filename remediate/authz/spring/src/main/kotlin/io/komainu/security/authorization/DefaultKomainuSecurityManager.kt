@@ -15,7 +15,7 @@ class DefaultKomainuSecurityManager(
 ) : KomainuSecurityManager {
 
     companion object {
-        private val USER_ID_CLAIMS = listOf("sub", "uid", "userId", "user_id")
+        private val USER_ID_CLAIMS = listOf("sub", "uid", "userId", "user_id", "id")
         private val TENANT_ID_CLAIMS = listOf("tenant_id", "tid", "tenant", "org_id", "organization_id")
     }
 
@@ -97,22 +97,25 @@ class DefaultKomainuSecurityManager(
             }
         }
 
-        if (resourceOwnerUserId == null || resourceTenantId == null) {
+        val trimmedOwner = resourceOwnerUserId?.trim()
+        val trimmedTenant = resourceTenantId?.trim()
+
+        if (trimmedOwner.isNullOrEmpty() || trimmedTenant.isNullOrEmpty()) {
             val reason = "Target resource does not expose ownerUserId and tenantId"
             emitDenialAudit(authentication, resource, operation, reason, resourceId)
             return AuthorizationDecision.denied(reason)
         }
 
         // 1. Tenant boundary check
-        if (resourceTenantId != currentTenantId) {
-            val reason = "Tenant boundary violation: current tenant '$currentTenantId' != resource tenant '$resourceTenantId'"
+        if (trimmedTenant != currentTenantId) {
+            val reason = "Tenant boundary violation: current tenant '$currentTenantId' != resource tenant '$trimmedTenant'"
             emitDenialAudit(authentication, resource, operation, reason, resourceId)
             return AuthorizationDecision.denied(reason)
         }
 
         // 2. User ownership check
-        if (resourceOwnerUserId != currentUserId) {
-            val reason = "User ownership violation: current user '$currentUserId' != resource owner '$resourceOwnerUserId'"
+        if (trimmedOwner != currentUserId) {
+            val reason = "User ownership violation: current user '$currentUserId' != resource owner '$trimmedOwner'"
             emitDenialAudit(authentication, resource, operation, reason, resourceId)
             return AuthorizationDecision.denied(reason)
         }
@@ -127,13 +130,13 @@ class DefaultKomainuSecurityManager(
         when (val principal = auth.principal) {
             is Jwt -> {
                 for (claim in USER_ID_CLAIMS) {
-                    val value = principal.getClaimAsString(claim)
+                    val value = principal.getClaimAsString(claim)?.trim()
                     if (!value.isNullOrBlank()) return value
                 }
             }
         }
 
-        val name = auth.name
+        val name = auth.name?.trim()
         if (!name.isNullOrBlank() && auth !is AnonymousAuthenticationToken) {
             return name
         }
@@ -148,7 +151,7 @@ class DefaultKomainuSecurityManager(
         when (val principal = auth.principal) {
             is Jwt -> {
                 for (claim in TENANT_ID_CLAIMS) {
-                    val value = principal.getClaimAsString(claim)
+                    val value = principal.getClaimAsString(claim)?.trim()
                     if (!value.isNullOrBlank()) return value
                 }
             }
@@ -158,7 +161,7 @@ class DefaultKomainuSecurityManager(
         val details = auth.details
         if (details is Map<*, *>) {
             for (claim in TENANT_ID_CLAIMS) {
-                val value = details[claim]?.toString()
+                val value = details[claim]?.toString()?.trim()
                 if (!value.isNullOrBlank()) return value
             }
         }

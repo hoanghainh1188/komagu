@@ -51,6 +51,9 @@ class OwnershipIdBindingTest {
         @RequireOwnership(entityClass = Order::class, idParam = "id", operation = ResourceOperation.DELETE)
         open fun deleteWithMismatchedIdName(orderId: String, body: Order): String { handlerRan = true; return "deleted" }
 
+        @RequireOwnership(entityClass = Order::class, idParam = "id", operation = ResourceOperation.DELETE)
+        open fun deleteSingleWithMismatchedId(orderId: String): String { handlerRan = true; return "deleted" }
+
         @RequireOwnership(entityClass = Order::class, idParam = "id", operation = ResourceOperation.UPDATE)
         open fun update(id: String, body: Order): String { handlerRan = true; return "updated" }
 
@@ -99,6 +102,13 @@ class OwnershipIdBindingTest {
     fun `delete with mismatched idParam name is denied`() {
         val target = OrderController()
         assertThrows<ResourceNotFoundException> { proxy(target).deleteWithMismatchedIdName("victim-order", attackerOrder) }
+        assertFalse(target.handlerRan)
+    }
+
+    @Test
+    fun `delete single argument with mismatched idParam name is denied`() {
+        val target = OrderController()
+        assertThrows<ResourceNotFoundException> { proxy(target).deleteSingleWithMismatchedId("victim-order") }
         assertFalse(target.handlerRan)
     }
 

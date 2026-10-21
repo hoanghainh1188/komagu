@@ -99,7 +99,8 @@ $$ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp;
 
--- 5. Automatic Tenant Injection Trigger
+-- Revoke public execution rights on tenant injection trigger function to prevent misuse.
+
 CREATE OR REPLACE FUNCTION trg_inject_current_tenant()
 RETURNS trigger AS $$
 BEGIN
@@ -124,6 +125,7 @@ CREATE TRIGGER trg_orders_tenant_injection
     EXECUTE FUNCTION trg_inject_current_tenant();
 
 -- 6. Grant Least-Privilege Access to Application Role & Revoke Public Execution
+REVOKE ALL ON FUNCTION trg_inject_current_tenant() FROM PUBLIC;
 GRANT USAGE ON SCHEMA public TO komainu_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON tenant_organizations TO komainu_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON orders TO komainu_app;

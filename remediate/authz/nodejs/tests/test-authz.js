@@ -224,3 +224,32 @@ test('Express komainuOwnershipMiddleware: enforces BOLA check', async () => {
   assert.strictEqual(responseStatus, 404);
   assert.strictEqual(responseData.message, 'Resource not found');
 });
+
+test('KomainuSecurityService: claim semantics and edge cases', async () => {
+  const service = new KomainuSecurityService();
+
+  // 1. Accepts generic "id" claim and trims whitespace
+  const userWithId = {
+    claims: {
+      id: '  user-trimmed  ',
+      tenant_id: '  tenant-trimmed  ',
+    },
+  };
+  assert.strictEqual(service.getCurrentUserId(userWithId), 'user-trimmed');
+  assert.strictEqual(service.getCurrentTenantId(userWithId), 'tenant-trimmed');
+
+  // 2. Rejects non-scalar claims (objects, arrays, booleans)
+  const nonScalarUser = {
+    claims: {
+      sub: { nested: 'obj' },
+      tenant_id: ['array-val'],
+    },
+  };
+  assert.throws(() => service.getCurrentUserId(nonScalarUser), UnauthorizedException);
+  assert.throws(() => service.getCurrentTenantId(nonScalarUser), UnauthorizedException);
+
+  // 3. Rejects resource with empty or whitespace owner
+  const emptyOwnerRes = { id: 'ord-01', ownerUserId: '   ', tenantId: 'tenant-trimmed' };
+  const decision = await service.authorize(userWithId, emptyOwnerRes, ResourceOperation.READ);
+  assert.strictEqual(decision.succeeded, false);
+});

@@ -128,4 +128,27 @@ public class AuthorizationServiceTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim("foo", "bar")], "Auth"));
         Assert.Throws<UnauthorizedAccessException>(() => _service.GetCurrentUserId(user));
     }
+
+    [Fact]
+    public void GetCurrentUserId_And_TenantId_TrimsWhitespace_And_SupportsIdClaim()
+    {
+        var identity = new ClaimsIdentity([
+            new Claim("id", "  user-id-trimmed  "),
+            new Claim("tenant_id", "  tenant-trimmed  ")
+        ], "Auth");
+        var user = new ClaimsPrincipal(identity);
+
+        Assert.Equal("user-id-trimmed", _service.GetCurrentUserId(user));
+        Assert.Equal("tenant-trimmed", _service.GetCurrentTenantId(user));
+    }
+
+    [Fact]
+    public async Task AuthorizeAsync_DeniesWhenResourceHasEmptyOwnerOrTenant()
+    {
+        var user = CreateUser("user-123", "tenant-alpha");
+        var emptyOwnerOrder = new TestOrder(Guid.NewGuid(), "   ", "tenant-alpha", 100m);
+
+        var result = await _service.AuthorizeAsync(user, emptyOwnerOrder, ResourceOperation.Read);
+        Assert.False(result.Succeeded);
+    }
 }
