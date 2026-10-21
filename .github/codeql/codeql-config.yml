@@ -1,0 +1,17 @@
+name: Komainu CodeQL config
+
+queries:
+  - uses: security-extended
+
+# Intentionally vulnerable code (LSA test fixtures, sample audit outputs and the
+# opt-in "planted vulnerability" controller of the D6 demo) is excluded so that
+# code scanning only reports real findings.
+paths-ignore:
+  - assess/lsa/tests/fixtures
+  - assess/lsa/examples
+  - delivery/pilot
+  - examples/member-portal/backend-dotnet/Controllers/LegacyTestController.cs
+  - "**/node_modules"
+  - "**/bin"
+  - "**/obj"
+  - "**/build"

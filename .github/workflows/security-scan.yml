@@ -1,0 +1,346 @@
+name: Security Scan
+
+# Phase 1 (report-only): findings never fail the build; they are published to
+# GitHub code scanning (Security tab) as SARIF. A scanner crash still fails its job.
+# See docs/security-scanning.md for the roadmap to gating.
+
+on:
+  pull_request:
+    paths:
+      - "**/*.py"
+      - "**/requirements*.txt"
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "**/*.kt"
+      - "**/*.kts"
+      - "**/*.js"
+      - "**/*.ts"
+      - "**/package*.json"
+      - "**/Dockerfile"
+      - "**/*.tf"
+      - "**/docker-compose*.yml"
+      - ".github/workflows/**"
+      - ".github/codeql/**"
+      - ".github/scripts/**"
+      - ".bandit.yml"
+      - "**/.golangci.yml"
+      - "config/detekt/**"
+  push:
+    branches: [main]
+  schedule:
+    # Weekly full scan (Monday 02:17 UTC) to catch newly published CVEs.
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-scan-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Fork and Dependabot PRs get a read-only token, so SARIF upload is skipped there.
+  CAN_UPLOAD: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
+
+jobs:
+  python:
+    name: Python (Bandit + pip-audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install scanners
+        run: python -m pip install --disable-pip-version-check "bandit[sarif]==1.9.4" "pip-audit==2.10.1"
+
+      - name: Bandit (medium and above)
+        run: bandit -r . -c .bandit.yml --severity-level medium --exit-zero -f sarif -o bandit.sarif
+
+      - name: Upload Bandit SARIF
+        if: env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
+
+      - name: pip-audit (job summary)
+        run: |
+          # requirements files use '>=' ranges, so pip-audit checks the versions resolved today.
+          echo "## pip-audit" >> "$GITHUB_STEP_SUMMARY"
+          git ls-files '*requirements*.txt' \
+            | grep -Ev '^(assess/lsa/tests/fixtures|assess/lsa/examples|delivery/pilot)/' \
+            | while read -r req; do
+                echo "### \`$req\`" >> "$GITHUB_STEP_SUMMARY"
+                pip-audit -r "$req" --progress-spinner off -f markdown >> "$GITHUB_STEP_SUMMARY" 2>&1 \
+                  || echo "::warning file=$req::pip-audit reported vulnerabilities or failed to resolve"
+              done
+
+  go:
+    name: Go (golangci-lint + govulncheck)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          # Scan with a supported toolchain so stdlib CVEs of EOL Go releases do not drown real findings.
+          go-version: stable
+          cache: false
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.15.0
+          working-directory: remediate/authz/golang
+          args: --issues-exit-code=0 --output.text.path=stdout --output.sarif.path=${{ github.workspace }}/golangci.sarif
+
+      - name: govulncheck
+        working-directory: remediate/authz/golang
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          # With -format sarif, govulncheck exits 0 even when vulnerabilities are found.
+          "$(go env GOPATH)/bin/govulncheck" -format sarif ./... > "$GITHUB_WORKSPACE/govulncheck.sarif"
+
+      - name: Upload golangci-lint SARIF
+        if: env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: golangci.sarif
+          category: golangci-lint
+
+      - name: Upload govulncheck SARIF
+        if: env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: govulncheck.sarif
+          category: govulncheck
+
+  dotnet:
+    name: .NET (Roslyn analyzers + NuGet audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build with Roslyn analyzers (security = all)
+        run: |
+          mkdir -p "$RUNNER_TEMP/roslyn"
+          git ls-files 'remediate/*/dotnet/src/*.csproj' 'examples/member-portal/backend-dotnet/*.csproj' \
+            | while read -r proj; do
+                name=$(basename "$proj" .csproj)
+                # '%2C' / '%3D' escape ',' and '=' so MSBuild does not split the property value.
+                dotnet build "$proj" -c Release --no-incremental \
+                  -p:EnableNETAnalyzers=true \
+                  -p:AnalysisLevel=latest-recommended \
+                  -p:AnalysisModeSecurity=All \
+                  "-p:ErrorLog=$RUNNER_TEMP/roslyn/$name.sarif%2Cversion%3D2.1"
+              done
+          # Code scanning rejects several runs of one tool under one category: merge into a single run.
+          python3 .github/scripts/merge_sarif.py roslyn.sarif "$RUNNER_TEMP"/roslyn/*.sarif
+
+      - name: Upload Roslyn SARIF
+        if: env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: roslyn.sarif
+          category: roslyn
+
+      - name: NuGet vulnerable packages (job summary)
+        run: |
+          echo "## NuGet vulnerable packages" >> "$GITHUB_STEP_SUMMARY"
+          git ls-files 'remediate/*/dotnet/src/*.csproj' 'examples/member-portal/backend-dotnet/*.csproj' \
+            | while read -r proj; do
+                {
+                  echo "### \`$proj\`"
+                  echo '```text'
+                  dotnet list "$proj" package --vulnerable --include-transitive 2>&1
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"
+              done
+
+  kotlin:
+    name: Kotlin (Detekt + Komainu rules)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      DETEKT_VERSION: "1.23.8"
+      DETEKT_SHA256: "2ce2ff952e150baf28a29cda70a363b0340b3e81a55f43e51ec5edffc3d066c1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Java 17
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Build Komainu Detekt rule set (StringBuiltSqlQuery)
+        working-directory: remediate/query/spring
+        run: gradle jar --no-daemon -q
+
+      - name: Download Detekt CLI (checksum verified)
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/detekt-cli.jar" \
+            "https://github.com/detekt/detekt/releases/download/v${DETEKT_VERSION}/detekt-cli-${DETEKT_VERSION}-all.jar"
+          echo "${DETEKT_SHA256}  $RUNNER_TEMP/detekt-cli.jar" | sha256sum -c -
+
+      - name: Detekt
+        run: |
+          # The CLI is used instead of the Gradle plugin: the modules build with Kotlin 2.4,
+          # which the Detekt 1.x Gradle plugin does not support. build.maxIssues=-1 keeps it report-only.
+          java -jar "$RUNNER_TEMP/detekt-cli.jar" \
+            --input "remediate/authz/spring/src/main/kotlin,remediate/identity/spring/src/main/kotlin,remediate/query/spring/src/main/kotlin,examples/member-portal/backend-spring/src/main/kotlin" \
+            --config config/detekt/detekt.yml \
+            --build-upon-default-config \
+            --plugins "$(find remediate/query/spring/build/libs -name '*.jar' | head -n 1)" \
+            --base-path "$GITHUB_WORKSPACE" \
+            --report sarif:detekt.sarif
+
+      - name: Upload Detekt SARIF
+        if: env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: detekt.sarif
+          category: detekt
+
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # Kotlin is intentionally absent: the modules use Kotlin 2.4, which CodeQL does not extract yet.
+        include:
+          - language: python
+            build-mode: none
+          - language: go
+            build-mode: autobuild
+          - language: csharp
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+          - language: actions
+            build-mode: none
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload: ${{ env.CAN_UPLOAD == 'true' && 'always' || 'never' }}
+
+  trivy:
+    name: Trivy (filesystem + image)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      TRIVY_VERSION: "0.76.0"
+      TRIVY_SHA256: "e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Trivy (checksum verified binary, no third-party action)
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/trivy.tgz" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  $RUNNER_TEMP/trivy.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/trivy.tgz" -C "$RUNNER_TEMP" trivy
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Trivy filesystem scan (deps, secrets, IaC/Dockerfile misconfig)
+        run: |
+          trivy fs . \
+            --scanners vuln,secret,misconfig \
+            --severity HIGH,CRITICAL \
+            --skip-dirs assess/lsa/tests/fixtures \
+            --skip-dirs assess/lsa/examples \
+            --skip-dirs delivery/pilot \
+            --skip-dirs '**/node_modules' \
+            --skip-dirs '**/bin' \
+            --skip-dirs '**/obj' \
+            --skip-dirs '**/build' \
+            --exit-code 0 \
+            --format sarif --output trivy-fs.sarif
+
+      - name: Upload Trivy filesystem SARIF
+        if: env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+      # Image CVEs mostly come from the base image and change over time, so the
+      # (slower) image scan runs on main and on the weekly schedule, not on every PR.
+      - name: Build Docker image
+        if: github.event_name != 'pull_request'
+        run: docker build -t komainu:scan .
+
+      - name: Trivy image scan
+        if: github.event_name != 'pull_request'
+        run: |
+          trivy image komainu:scan \
+            --scanners vuln,secret \
+            --severity HIGH,CRITICAL \
+            --exit-code 0 \
+            --format sarif --output trivy-image.sarif
+
+      - name: Upload Trivy image SARIF
+        if: github.event_name != 'pull_request' && env.CAN_UPLOAD == 'true'
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
