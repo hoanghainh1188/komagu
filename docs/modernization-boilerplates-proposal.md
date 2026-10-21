@@ -1,6 +1,6 @@
 # Modernization Boilerplates — Proposal
 
-Version 0.3 · 2026-10-21 · Owner: Harry · Status: approved by management (BOD) on 2026-10-17; all 5 boilerplates implemented & CI-verified in v1.0.1
+Version 0.3 · 2026-10-21 · Owner: Harry · Status: approved by management (BOD) on 2026-10-17; all 5 boilerplates implemented & CI-verified in v1.1.0
 
 ## Executive summary
 
@@ -9,7 +9,7 @@ We propose to offer Japanese clients a **security-first modernization package**:
 - **What we sell first:** a Legacy Security Assessment built on our LSA kit. It finds endpoints that leak other users' data (BOLA/IDOR) and hand-built SQL/NoSQL queries, with `file:line` evidence.
 - **What follows:** fix and modernization work, delivered faster because the fixes come from tested boilerplates instead of being designed from scratch.
 - **Why now:** Japanese companies carry large legacy estates, recent incidents and rule changes put data protection on the board agenda, and buyers want proof, not claims (see Context).
-- **What exists today:** the LSA kit (`v1.0.1`, tested on 10 legacy stacks with 100% recall and 0 false positives in Evaluation Run 3) **and all five modernization boilerplates**, implemented, security-hardened, and verified by automated CI suites across Python, Go, Node.js, .NET 8, and Kotlin / Spring Boot 3.
+- **What exists today:** the LSA kit (`v1.1.0`, tested on 10 legacy stacks with 100% recall and 0 false positives in Evaluation Run 3) **and all five modernization boilerplates**, implemented, security-hardened, and verified by automated CI suites across Python, Go, Node.js, .NET 8, and Kotlin / Spring Boot 3.
 - **What we ask management:** approve Boilerplate 1 and one pilot, decide the open-source vs closed IP question, and assign a small team (see Decisions needed).
 
 We make no time-saving claim to clients until the pilot has measured it.
@@ -52,7 +52,7 @@ Both the Legacy Security Assessment kit and all five modernization boilerplates 
 
 | Item | What exists today | What must be built | Readiness | Past project evidence (or explicit gap) |
 | --- | --- | --- | --- | --- |
-| Legacy Security Assessment | LSA kit v1.0.1: prompts, pre-scan scripts, SARIF v2.1.0, bilingual EN/JA reports, interactive HTML dashboard; 100% recall & 0 false positives on 10 stacks | Commercial pilot engagement | Ready for pilot | **Explicit gap:** No past client project timesheets cited. Capability demonstrated and benchmarked on 10 multi-stack fixtures and Evaluation Run 3. |
+| Legacy Security Assessment | LSA kit v1.1.0: prompts, pre-scan scripts, SARIF v2.1.0, bilingual EN/JA reports, interactive HTML dashboard; 100% recall & 0 false positives on 10 stacks | Commercial pilot engagement | Ready for pilot | **Explicit gap:** No past client project timesheets cited. Capability demonstrated and benchmarked on 10 multi-stack fixtures and Evaluation Run 3. |
 | 1. Secure API & IAM | D1 Authz (.NET 8, Spring Boot 3, Go, Node.js, Python), D2 OIDC (.NET 8, Spring Boot 3, Python), D3 Safe Query (Roslyn & Detekt), D4 Kong + Coraza WAF, Legacy Shims, D5 Cross-User Runner, D6 Member Portal demo | Client-specific integration in pilot | Implemented & CI-verified | **Explicit gap:** Greenfield implementation in Komainu; verified by D5 automated test pipeline and D6 Member Portal benchmark (75.7% effort savings in ADR-0005). |
 | 2. Zero-PII eKYC & NFC | `remediate/ekyc/`: JPKI (My Number Card) & IC chip SOD verification, replay-resistant nonces with rate limiting, strict raw-image rejection (`HTTP 422`), blind-index tokenization, legal review (`LEGAL_COMPLIANCE_2027.md`) | Production J-LIS leased-line / accredited operator hookup per client | Implemented & CI-verified | **Explicit gap:** Reference architecture & legal analysis complete; production J-LIS accreditation depends on client entity. |
 | 3. Immutable backup | `remediate/resilience/`: Terraform multi-region S3 Object Lock (`COMPLIANCE` mode), KMS CMK deny-delete policy, DR runbook & automated DR verification CLI (`dr_manager.py`) | Client AWS/cloud account provisioning | Implemented & CI-verified | **Explicit gap:** Verified by unit & Trivy IaC scans; no past client modernization reference cited. |
@@ -164,4 +164,4 @@ Pages opened on 2026-10-16:
 | --- | --- | --- |
 | 0.1 | 2026-10-16 | Rewrite of the original draft: sourced context, assessment-first offer, open/closed decision, measured claims only |
 | 0.2 | 2026-10-17 | Approved by BOD; Open Core model adopted (ADR-0002); AI staffing model established; explicit gaps recorded for past project evidence; original METI DX Report cited |
-| 0.3 | 2026-10-21 | Updated readiness table to reflect implementation, security hardening (#206–#232), and CI verification of all 5 boilerplates across 5 target languages (`v1.0.1`) |
+| 0.3 | 2026-10-21 | Updated readiness table to reflect implementation, security hardening (#206–#232), and CI verification of all 5 boilerplates across 5 target languages (`v1.1.0`) |

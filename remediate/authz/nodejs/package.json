@@ -1,6 +1,6 @@
 {
   "name": "@komainu/security-authz",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Komainu Object-Level Authorization & BOLA Defense Library for Node.js (NestJS & Express)",
   "main": "src/index.js",
   "types": "src/index.d.ts",
