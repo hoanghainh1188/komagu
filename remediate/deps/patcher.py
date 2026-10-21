@@ -48,6 +48,7 @@ class CVEAdvisoryEntry:
     severity: str
     summary: str
     cwe: str = "CWE-1395"
+    min_version: Optional[str] = None
 
 
 def normalize_package_name(name: str, ecosystem: str) -> str:
@@ -101,7 +102,8 @@ class CVEAdvisoryCatalog:
         CVEAdvisoryEntry("CVE-2022-23529", "npm", "jsonwebtoken", "9.0.0", "high", "Remote code execution via insecure key retrieval in jsonwebtoken"),
         CVEAdvisoryEntry("CVE-2021-44906", "npm", "minimist", "1.2.6", "critical", "Prototype Pollution in minimist"),
         CVEAdvisoryEntry("CVE-2024-37890", "npm", "ws", "8.17.1", "high", "DoS via uncaught TypeError in ws"),
-        CVEAdvisoryEntry("CVE-2022-25883", "npm", "semver", "7.5.2", "high", "Regular Expression Denial of Service (ReDoS) in semver"),
+        CVEAdvisoryEntry("CVE-2022-25883", "npm", "semver", "6.3.1", "high", "Regular Expression Denial of Service (ReDoS) in semver 6.x", min_version="6.0.0"),
+        CVEAdvisoryEntry("CVE-2022-25883", "npm", "semver", "7.5.2", "high", "Regular Expression Denial of Service (ReDoS) in semver 7.x", min_version="7.0.0"),
         CVEAdvisoryEntry("CVE-2024-28863", "npm", "tar", "6.2.1", "medium", "Denial of Service via deep folder nesting in node-tar"),
         CVEAdvisoryEntry("CVE-2023-26136", "npm", "tough-cookie", "4.1.3", "critical", "Prototype Pollution in tough-cookie"),
         CVEAdvisoryEntry("CVE-2023-0842", "npm", "xml2js", "0.5.0", "medium", "Prototype Pollution in xml2js"),
@@ -159,7 +161,11 @@ class CVEAdvisoryCatalog:
             pkg_match = adv_norm == norm_pkg or (
                 ecosystem == "maven" and ":" not in norm_pkg and adv_norm.endswith(f":{norm_pkg}")
             )
-            if pkg_match and is_version_older(installed_version, adv.fixed_version):
+            if not pkg_match:
+                continue
+            if adv.min_version and is_version_older(installed_version, adv.min_version):
+                continue
+            if is_version_older(installed_version, adv.fixed_version):
                 matches.append(adv)
 
         return matches
