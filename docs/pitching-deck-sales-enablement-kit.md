@@ -3,7 +3,7 @@
 **Tài liệu:** Bộ công cụ Thuyết trình & Hỗ trợ Kinh doanh (Sales Enablement Kit)  
 **Đối tượng mục tiêu:** Ban Giám đốc (BOD), CISO, CIO, Trưởng ban Chuyển đổi số (DX Division), và Giám đốc Quản lý Ứng dụng (AMS / SIers) tại thị trường Nhật Bản.  
 **Tác giả & Diễn giả:** Harry (Principal Architect / BrSE / Lead Oversight)  
-**Phiên bản nền tảng:** Komainu `v0.2.1` (`komainu-guard` trên npmjs & Docker Hub/GHCR)  
+**Phiên bản nền tảng:** Komainu `v1.0.1` (`komainu-guard` trên npmjs & Docker Hub/GHCR)  
 
 ---
 
@@ -95,8 +95,8 @@ flowchart LR
 flowchart LR
     A["1. ASSESS (LSA Kit)<br/><b>Đánh giá sâu</b><br/>• Quét 10 Stacks di sản<br/>• Zero False Positives<br/>• Báo cáo IPA/NISC & HTML"]
     P["2. PROTECT (Edge)<br/><b>Bảo vệ biên tức thì</b><br/>• Kong Gateway + Coraza WAF<br/>• Chặn SQLi/XSS/Bot<br/>• 0 dòng code thay đổi"]
-    R["3. REMEDIATE (Boilerplates)<br/><b>Khắc phục chuẩn hóa</b><br/>• Thư viện .NET 8 & Spring 3<br/>• Shims vá nhanh code cũ<br/>• Deny-by-default (404)"]
-    O["4. OPERATE (Verification)<br/><b>Vận hành liên tục</b><br/>• Kiểm thử chéo User A-B<br/>• Khóa chặn BOLA trên CI/CD<br/>• SARIF v2.1.0"]
+    R["3. REMEDIATE (5 Boilerplates)<br/><b>Khắc phục chuẩn hóa</b><br/>• 5 Ngôn ngữ (.NET, Spring, Go, Node, Py)<br/>• Zero-PII eKYC 2027, WORM & BYOK<br/>• Legacy Shims & Deny-by-default (404)"]
+    O["4. OPERATE (DevSecOps & CI)<br/><b>Vận hành liên tục</b><br/>• Kiểm thử chéo User A-B & Auto-Fix<br/>• SBOM CycloneDX/SPDX<br/>• 6-Job CI Security Scan (SARIF)"]
 
     A --> P --> R --> O
 ```
@@ -153,18 +153,21 @@ flowchart LR
 
 ---
 
-### SLIDE 8: Pillar 2 & 3 — Protect at the Edge & Drop-in Remediation
-- **Tiêu đề Slide:** **Trụ cột 2 & 3: Bảo vệ Biên Tức thì & Vá Lỗi Đa Thế Hệ**
+### SLIDE 8: Pillar 2 & 3 — Protect at the Edge & 5 Drop-in Modernization Boilerplates
+- **Tiêu đề Slide:** **Trụ cột 2 & 3: Bảo vệ Biên Tức thì & 5 Bộ Giải pháp Khắc phục Toàn diện**
 - **Nội dung 2 cột:**
   - **Cột Trái — Bảo vệ tức thì (Edge Shield - D4):**
-    - Cấu hình khai báo Kong Gateway (`kong.yaml` qua decK) + Coraza WAF (OWASP Core Rule Set v4).
+    - Cấu hình khai báo Kong Gateway (`kong.yaml` qua decK) + Coraza WAF (OWASP Core Rule Set v4), chống rò rỉ token trên log kiểm toán.
     - Chặn đứng SQLi, XSS, Path Traversal và áp đặt Rate Limiting theo Consumer/IP.
     - **Triển khai trong 10 phút, 0 thay đổi mã nguồn!**
-  - **Cột Phải — Vá lỗi chuẩn hóa (Modern Libraries & Legacy Shims):**
-    - *Kiến trúc mới:* Bộ thư viện song sinh **.NET 8** và **Kotlin / Spring Boot 3** (D1–D3), quy tắc *Deny-by-default (404 Not Found)*, OIDC RFC 9700 (OAuth 2.1), Roslyn & Detekt static rules.
-    - *Hệ thống cũ chưa kịp viết lại:* Drop-in shims nhúng trực tiếp vào **PHP, Java (Servlet/JDBC/MyBatis), ColdFusion và Classic ASP**.
+  - **Cột Phải — 5 Boilerplates Chuẩn hóa & Legacy Shims:**
+    - **BP1 — Secure API & IAM:** Bộ thư viện phân quyền cấp đối tượng (D1) & OIDC RFC 9700 (D2) trên **5 hệ sinh thái** (**.NET 8, Kotlin / Spring Boot 3, Go, Node.js / NestJS, Python / FastAPI**), quy tắc *Deny-by-default (404 Not Found)*, Roslyn & Detekt static rules (D3), kèm Drop-in Shims cho **PHP, Java, ColdFusion, Classic ASP**.
+    - **BP2 — Zero-PII eKYC & NFC (Tuân thủ Luật Nhật Bản 04/2027):** Xác thực chữ ký số JPKI (My Number Card) và chip IC bằng lái; từ chối 100% ảnh giấy tờ thô (`HTTP 422`), lưu trữ bằng Blind-Index Tokenization.
+    - **BP3 — Multi-Region Resilience & Immutable WORM Backup:** Terraform IaC thiết lập S3 Object Lock (`COMPLIANCE` mode) chống Ransomware, khóa KMS CMK chống xóa, và CLI kiểm thử phục hồi thảm họa (`dr_manager.py`).
+    - **BP4 — Tenant-Isolated SaaS & BYOK Encryption:** Cô lập PostgreSQL bằng RLS & Schema-per-tenant, mã hóa phong bì AES-256-GCM với khóa riêng từng khách hàng (BYOK & Crypto-shredding), và chuỗi nhật ký kiểm toán HMAC-SHA256 chống giả mạo.
+    - **BP5 — DevSecOps, SBOM & Auto-Remediator:** Xuất SBOM CycloneDX 1.5 / SPDX 2.3, tự động sinh bản vá (`komainu fix`), và pipeline 6-job CI Security Scan.
 - **Speaker Notes (Harry):**
-  > *"Điểm cốt lõi giúp Komainu thắng thầu là: Chúng tôi không bắt khách hàng phải ký hợp đồng viết lại cả hệ thống ngay từ đầu. Thay vào đó, chúng tôi đặt Kong và WAF chặn ở tầng biên ngay trong tuần đầu tiên để bảo đảm an toàn. Sau đó, với những module cần vá gấp trong code cũ, chúng tôi có sẵn các file Shim siêu nhẹ. Với những module viết mới, chúng tôi cung cấp sẵn bộ thư viện .NET 8 và Spring Boot 3 đã kiểm thử toàn diện."*
+  > *"Điểm cốt lõi giúp Komainu thắng thầu là: Chúng tôi không chỉ tìm ra lỗi mà đã xây dựng sẵn trọn bộ 5 Boilerplates giải quyết đúng các bài toán sống còn tại Nhật Bản: từ phân quyền BOLA trên 5 ngôn ngữ hiện đại và 4 ngôn ngữ cổ điển, cho đến eKYC không lưu ảnh giấy tờ theo luật tháng 4/2027, sao lưu bất biến WORM chống Ransomware, và cô lập đa khách hàng với khóa BYOK."*
 
 ---
 
@@ -209,10 +212,10 @@ flowchart LR
 
 | Gói Dịch vụ | Hình thức Chi phí | Giá trị Bàn giao cho Khách hàng | Thời gian |
 | :--- | :--- | :--- | :--- |
-| **Gói 1: Legacy Security Assessment (LSA)** | **Phí Cố định** (Fixed-fee per scope) | Báo cáo kiểm toán song ngữ IPA/NISC, Dashboard HTML, SARIF, danh sách lỗi `file:line` và đề xuất vá. | **1 – 2 Tuần** |
+| **Gói 1: Legacy Security Assessment (LSA)** | **Phí Cố định** (Fixed-fee per scope) | Báo cáo kiểm toán song ngữ IPA/NISC, Dashboard HTML, SARIF, danh sách lỗi `file:line` và đề xuất vá tự động (`komainu fix`). | **1 – 2 Tuần** |
 | **Gói 2: Edge Protection & Rapid Shim** | **Trọn gói** (Fixed-price project) | Triển khai Kong Gateway + Coraza WAF tầng biên và nhúng Shims vá ngay các lỗ hổng nghiêm trọng. | **2 – 4 Tuần** |
-| **Gói 3: Modernization by Boilerplates** | **Theo Gói Công việc** (Milestone-based) | Chuyển dịch toàn diện các module quan trọng sang .NET 8 / Spring Boot 3 dùng Boilerplate 1. | **6 – 12 Tuần** |
-| **Gói 4: Continuous DevSecOps Retainer** | **Duy trì Hàng tháng** (Monthly Retainer) | Tích hợp LSA & Cross-User Test vào CI/CD của khách, định kỳ rà soát chống hồi quy lỗi. | **Hàng tháng** |
+| **Gói 3: Modernization by 5 Boilerplates** | **Theo Gói Công việc** (Milestone-based) | Chuyển dịch sang 5 ngôn ngữ (.NET 8, Spring Boot 3, Go, Node.js, Python) với BP1 (Authz/OIDC), BP2 (Zero-PII eKYC 2027), BP3 (WORM Backup/DR), BP4 (Multi-Tenant RLS & BYOK). | **6 – 12 Tuần** |
+| **Gói 4: Continuous DevSecOps Retainer (BP5)** | **Duy trì Hàng tháng** (Monthly Retainer) | Tích hợp LSA, Cross-User Test, SBOM (CycloneDX/SPDX) & 6-job CI Security Scan, định kỳ rà soát chống hồi quy lỗi. | **Hàng tháng** |
 
 - **Speaker Notes (Harry):**
   > *"Mô hình hợp tác của chúng tôi rất linh hoạt và giảm thiểu tối đa rủi ro cho quý vị. Quý vị có thể bắt đầu với gói LSA Audit trong 1-2 tuần với chi phí cố định thấp để có được bức tranh chân thực về hệ thống của mình. Khi nhìn thấy bằng chứng rõ ràng, chúng ta mới quyết định triển khai các gói tiếp theo."*
@@ -294,8 +297,8 @@ GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAINU (A-UN LIFECYCLE):
 └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
 • Assess: Phân tích sâu 10 stack di sản; đạt 100% Recall và 0% False Positives (Run 3).
 • Protect: Đặt Kong Gateway + Coraza WAF che chắn tầng biên trong 10 phút, không sửa code cũ.
-• Remediate: Thư viện song sinh .NET 8 & Spring Boot 3 chuẩn OAuth 2.1; Shims vá nhanh code cũ.
-• Operate: Kiểm thử chéo liên tục User A-B trên CI/CD, ngăn chặn tái phát lỗ hổng 100%.
+• Remediate: 5 Boilerplates (.NET 8, Spring 3, Go, Node, Python; Zero-PII eKYC 2027; WORM Backup; Multi-Tenant BYOK; Legacy Shims).
+• Operate: Kiểm thử chéo User A-B, tự động vá lỗi (komainu fix), xuất SBOM & 6-job CI Security Scan.
 
 KẾT QUẢ ĐÃ ĐƯỢC CHỨNG MINH THỰC NGHIỆM:
 • Recall phát hiện BOLA/IDOR: 100% (25/25 vectors)

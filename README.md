@@ -5,8 +5,9 @@
 
 [![npm version](https://img.shields.io/npm/v/komainu-guard.svg)](https://www.npmjs.com/package/komainu-guard)
 [![License](https://img.shields.io/npm/l/komainu-guard.svg)](https://github.com/hoanghainh1188/komainu/blob/main/LICENSE)
-[![CI Tests](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions)
-[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.0.0%20(11%20Stacks)-brightgreen.svg)](assess/lsa/)
+[![CI Tests](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml)
+[![Security Scan](https://github.com/hoanghainh1188/komainu/actions/workflows/security-scan.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions/workflows/security-scan.yml)
+[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.0.1%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
 [![SARIF v2.1.0](https://img.shields.io/badge/Standards-OASIS%20SARIF%20v2.1.0-orange.svg)](operate/lsa_sarif/)
 [![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%7C%20HTML-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
 
@@ -88,7 +89,8 @@ app.get('/api/v1/orders/:id',
 
 | Command | Description | Example |
 | :--- | :--- | :--- |
-| `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQL injection across 11 stacks | `npx komainu-guard scan ./legacy-app --format html` |
+| `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQL injection across 10 stacks | `npx komainu-guard scan ./legacy-app --format html` |
+| `komainu fix <target>` | Generates or applies automated code fixes / unified `.patch` files for BOLA & SQLi findings | `npx komainu-guard fix ./legacy-app --dry-run` |
 | `komainu devsecops sbom <target>` | Generates CycloneDX 1.5 / SPDX 2.3 SBOM across npm, PyPI, NuGet, Maven, Go | `npx komainu-guard devsecops sbom . --format cyclonedx` |
 | `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |
 | `komainu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx komainu-guard devsecops run .` |
@@ -117,9 +119,9 @@ Komainu solves this through a **4-stage lifecycle**:
 
 ```mermaid
 flowchart LR
-    A["1. ASSESS<br/>(LSA Kit)"] --> B["2. PROTECT<br/>(Kong + WAF)"]
-    B --> C["3. REMEDIATE<br/>(Boilerplate 1)"]
-    C --> D["4. OPERATE<br/>(CI & Verification)"]
+    A["1. ASSESS<br/>(LSA Kit)"] --> B["2. PROTECT<br/>(Kong + Coraza WAF)"]
+    B --> C["3. REMEDIATE<br/>(5 Boilerplates)"]
+    C --> D["4. OPERATE<br/>(DevSecOps & CI)"]
     
     style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
@@ -127,10 +129,10 @@ flowchart LR
     style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
-1. **Assess (LSA):** High-precision AI-assisted security audit across 10 legacy stacks.
-2. **Protect (Edge):** Immediate zero-code-change perimeter shield using Kong Gateway and Coraza WAF.
-3. **Remediate (Boilerplate 1):** Drop-in, production-ready modules for .NET 8, Kotlin / Spring Boot 3, and legacy shims.
-4. **Operate (Verify):** Unified CLI and automated cross-user authorization tests in CI blocking pull requests that introduce BOLA.
+1. **Assess (LSA):** High-precision AI-assisted security audit across 10 legacy stacks with zero false positives.
+2. **Protect (Edge):** Immediate zero-code-change perimeter shield using Kong Gateway and Coraza WAF (OWASP CRS v4).
+3. **Remediate (5 Modernization Boilerplates):** Production-ready modules across **5 modern target runtimes** (.NET 8, Kotlin / Spring Boot 3, Node.js / NestJS & Express, Python / FastAPI, Go), legacy shims, Zero-PII eKYC (Japan 2027 compliance), Multi-Region WORM Backup & DR, and Multi-Tenant Isolation & BYOK.
+4. **Operate (DevSecOps & Continuous Verification):** Unified CLI, CycloneDX/SPDX SBOM generation, automated code remediation (`komainu fix`), cross-user authorization testing, and a 6-job CI security scanning pipeline.
 
 ---
 
@@ -162,24 +164,40 @@ Before touching a single line of fragile legacy backend code, Komainu deploys im
 - **Coraza WAF with OWASP Core Rule Set (CRS v4):** Automatically blocks SQL injection, cross-site scripting (XSS), path traversal, and scrapers at the edge.
 - **Granular Rate Limiting:** Enforces request quotas per Consumer ID, IP address, or API credential.
 
-### 3. Remediate — Reusable Security Modules (`remediate/`)
-Drop-in authorization, authentication, and safe query libraries for both modern target stacks and existing legacy codebases:
-- **Object-Level Authorization (`remediate/authz`):**
-  - Libraries for **ASP.NET Core (.NET 8)** and **Spring Security (Kotlin / Spring Boot 3)**.
+### 3. Remediate — 5 Modernization Boilerplates & Legacy Shims (`remediate/`)
+Drop-in authorization, authentication, safe query, eKYC, resilience, and multi-tenancy modules for both modern target stacks and existing legacy codebases:
+- **Boilerplate 1 (D1) — Object-Level Authorization (`remediate/authz`):**
+  - Unified libraries across **5 target ecosystems**: **ASP.NET Core (.NET 8)**, **Spring Security (Kotlin / Spring Boot 3)**, **Node.js (NestJS & Express)**, **Python (FastAPI)**, and **Go (`net/http`)**.
+  - **Unified Claim Semantics & Server-Side ID Resolution:** Extracts principal (`sub`, `uid`, `userId`, `user_id`, `id`) and tenant (`tenant_id`, `tid`, `tenant`, `org_id`, `organization_id`) strictly from verified token claims, resolving IDs server-side before trusting request body entities.
   - **Deny-by-default:** Missing ownership checks or unauthorized access strictly return **HTTP 404 Not Found** (preventing ID enumeration).
   - **Scoped Query Helpers:** Automatic owner-level database filtering via EF Core Global Query Filters and Spring Data JPA Specifications.
-- **Identity & Authentication (`remediate/identity`):**
-  - Standardized OpenID Connect (OIDC) integration (Entra ID, Keycloak, AWS Cognito).
-  - Enforces **RFC 9700 / OAuth 2.1 Best Current Practice** (Authorization Code + PKCE only, exact redirect URIs, strict token verification).
-- **Safe Query Analyzers (`remediate/query`):**
-  - Compile-time static analyzers (**C# Roslyn Analyzer** and **Kotlin Detekt Rule**) that flag raw string interpolation in SQL/JPQL at build time.
+- **Boilerplate 1 (D2) — Identity & Authentication (`remediate/identity`):**
+  - Standardized OpenID Connect (OIDC) integration across **.NET 8**, **Spring Boot 3**, and **Python** (Entra ID, Keycloak, AWS Cognito).
+  - Enforces **RFC 9700 / OAuth 2.1 Best Current Practice** (Authorization Code + PKCE only, strict `exp`/`nbf`/clock-skew, issuer, audience, and subject validation).
+- **Boilerplate 1 (D3) — Safe Query Analyzers (`remediate/query`):**
+  - Compile-time static analyzers (**C# Roslyn Analyzer** and **Kotlin Detekt Rule** `StringBuiltSqlQuery`) that flag raw string interpolation in SQL/JPQL at build time, paired with `SafeSortAllowList` for safe `ORDER BY` validation.
 - **Legacy Remediation Shims (`remediate/legacy_shims`):**
   - Lightweight, drop-in ownership verification and safe query helpers for **PHP**, **Java (Servlet/JDBC/MyBatis XML)**, **ColdFusion (`CFML`)**, and **Classic ASP (`VBScript`)** to patch vulnerabilities in-place before full migration.
+- **Boilerplate 2 — Zero-PII eKYC & NFC Verification (`remediate/ekyc`):**
+  - Compliant with **Japan's April 2027 Criminal Proceeds Act amendment** (警察庁 犯罪収益移転防止法施行規則改正 — [`LEGAL_COMPLIANCE_2027.md`](remediate/ekyc/LEGAL_COMPLIANCE_2027.md)), which abolishes photo-upload eKYC in favor of cryptographic IC-chip reading.
+  - Verifies **JPKI (My Number Card)** X.509 certificates (with J-LIS trust anchors and CRL/OCSP revocation checks) and Driver's License IC-chip SOD signatures.
+  - **Strict Zero-PII Invariant:** Rejects any payload containing raw images (`HTTP 422`), enforces replay-resistant nonces with rate limiting, and stores only blind-indexed HMAC-SHA256 tokens.
+- **Boilerplate 3 — Multi-Region Resilience & Immutable WORM Backup (`remediate/resilience`):**
+  - Ransomware-proof **Terraform IaC** provisioning cross-region S3 buckets with **Object Lock in `COMPLIANCE` mode** (Write-Once-Read-Many) and Customer Managed KMS keys (CMK) with explicit deny-delete guardrails.
+  - Includes an automated Disaster Recovery verification CLI and runbook (`dr_manager.py`).
+- **Boilerplate 4 — Tenant-Isolated SaaS & BYOK Encryption (`remediate/tenancy`):**
+  - **Database Isolation:** PostgreSQL Row-Level Security (`rls_isolation.sql`) and schema-per-tenant provisioning (`schema_per_tenant.sql`) with `REVOKE ALL FROM PUBLIC` and safe `search_path` switching.
+  - **Per-Tenant BYOK & Crypto-Shredding (`byok_manager.py`):** AES-256-GCM envelope encryption using per-tenant 256-bit master keys, supporting permanent crypto-shredding upon tenant offboarding.
+  - **Tamper-Evident Audit Trail (`audit_trail.py`):** Keyed HMAC-SHA256 hash-chained audit logs with monotonic sequence enforcement and head anchoring to detect record modification or truncation.
 
-### 4. Operate — Unified CLI & Continuous Verification (`operate/`)
+### 4. Operate — Unified CLI, DevSecOps & Continuous Verification (`operate/`)
 Ensures zero-friction developer experience and guarantees that fixed vulnerabilities never regress:
 - **Unified CLI (`bin/komainu` & `operate/cli`):**
-  - Single entrypoint (`komainu scan | protect | test | demo | help`) distributed via npmjs (`npx komainu-guard`) and Docker (`ghcr.io/hoanghainh1188/komainu`).
+  - Single entrypoint (`komainu scan | fix | devsecops | protect | test | demo | help`) distributed via npmjs (`npx komainu-guard`) and Docker (`ghcr.io/hoanghainh1188/komainu`).
+- **Boilerplate 5 — DevSecOps, SBOM & Automated Remediator (`operate/devsecops` & `operate/remediator`):**
+  - **SBOM Generator:** Produces **CycloneDX 1.5** and **SPDX 2.3** Software Bills of Materials across npm, PyPI, NuGet, Maven/Gradle, and Go modules.
+  - **Automated Code Remediator (`komainu fix`):** Generates dry-run previews, unified `.patch` files, or in-place fixes for BOLA and SQL injection findings.
+  - **Continuous Security Scan Workflow (`.github/workflows/security-scan.yml`):** Automated 6-job pipeline running **Bandit**, **pip-audit**, **golangci-lint (`gosec`)**, **govulncheck**, **Roslyn security analyzers**, **Detekt + Komainu rules**, **CodeQL**, and **Trivy** (filesystem + container image), publishing SARIF directly to GitHub Code Scanning ([`docs/security-scanning.md`](docs/security-scanning.md)).
 - **Cross-User Authorization Test Runner (`operate/cross_user_tester`):**
   - Automated CLI test suite simulating multi-tenant access (User A attempting to GET, PUT, or DELETE User B's resources).
   - Fails the build if an endpoint allows cross-user data leakage.
@@ -199,24 +217,30 @@ A complete reference system demonstrating all deliverables working end-to-end:
 ```text
 komainu/
 ├── bin/                  # Unified CLI entrypoints (komainu Python CLI & komainu.js npx bridge)
-├── assess/               # Finding vulnerabilities
+├── assess/               # Pillar 1: Finding vulnerabilities
 │   └── lsa/              # Legacy Security Assessment kit (pre-scan, agents, prompts, HTML/MD/SARIF reports)
 ├── contracts/            # JSON Schemas (finding, route-inventory, stack-profile, verification)
-├── remediate/            # Reusable remediation modules
-│   ├── authz/            # D1: Object-level authorization (.NET 8 & Spring Boot 3)
-│   ├── identity/         # D2: OpenID Connect authentication & token validation
-│   ├── query/            # D3: Safe query helpers, Roslyn analyzer & Detekt rule
-│   ├── edge/             # D4: Kong gateway declarative configuration & Coraza WAF
-│   └── legacy_shims/     # Drop-in ownership & safe-query shims (PHP, Java, ColdFusion, Classic ASP)
-├── operate/              # Continuous verification & operations
-│   ├── cli/              # Unified Komainu CLI implementation (scan, protect, test, demo, help)
-│   ├── cross_user_tester/# D5: Automated cross-user authorization CLI test runner
+├── remediate/            # Pillars 2 & 3: Reusable remediation modules (Boilerplates 1–4)
+│   ├── authz/            # BP1-D1: Object-level authorization (.NET 8, Spring Boot 3, Node.js, Python, Go)
+│   ├── identity/         # BP1-D2: OpenID Connect authentication & token validation (.NET 8, Spring Boot 3, Python)
+│   ├── query/            # BP1-D3: Safe query helpers, C# Roslyn analyzer & Kotlin Detekt rule
+│   ├── edge/             # BP1-D4: Kong gateway declarative configuration & Coraza WAF (OWASP CRS v4)
+│   ├── legacy_shims/     # Drop-in ownership & safe-query shims (PHP, Java, ColdFusion, Classic ASP)
+│   ├── ekyc/             # BP2: Zero-PII eKYC & NFC JPKI/IC-chip verification (Japan 2027 compliance)
+│   ├── resilience/       # BP3: Multi-region Terraform S3 WORM backup, KMS CMK & DR verification CLI
+│   └── tenancy/          # BP4: PostgreSQL RLS/schema isolation, BYOK AES-256-GCM & HMAC audit trail
+├── operate/              # Pillar 4: Continuous verification & DevSecOps (Boilerplate 5)
+│   ├── cli/              # Unified Komainu CLI implementation (scan, fix, devsecops, protect, test, demo)
+│   ├── devsecops/        # BP5: CycloneDX 1.5 / SPDX 2.3 SBOM generator, SARIF merger & SAST/SCA runner
+│   ├── remediator/       # Automated code patcher for BOLA/IDOR and SQL injection findings
+│   ├── cross_user_tester/# BP1-D5: Automated cross-user authorization CLI test runner
 │   ├── lsa_sarif/        # SARIF v2.1.0 converter for CI code scanning
 │   └── ci/               # GitHub Actions & GitLab CI workflow templates
 ├── examples/             # Reference systems & walkthroughs
-│   └── member-portal/    # D6: Full-stack demo app (React 18 + .NET 8 / Spring Boot 3 + Docker)
+│   └── member-portal/    # BP1-D6: Full-stack demo app (React 18 + .NET 8 / Spring Boot 3 + Docker)
+├── delivery/             # Pilot execution runbooks, verification scripts & sample deliverables
 ├── governance/           # AI usage policy, data privacy, and the Two-Person approval rule
-└── docs/                 # Strategy documents, delivery plans, and Architecture Decision Records (ADRs)
+└── docs/                 # Strategy documents, delivery plans, security scanning guide & ADRs
 ```
 
 ---
@@ -297,6 +321,6 @@ Komainu implements the **Two-Person Rule** described in [`governance/usage-polic
 
 ## License & Intellectual Property
 
-Komainu follows an **Open Core** architecture ([ADR-0002](docs/adr/0002-ip-open-core.md)):
+Komainu follows an **Open Core** architecture ([ADR-0002](docs/adr/0002-ip-position-open-core.md)):
 - The core LSA assessment kit, contracts, and remediation interfaces are open source under the MIT License.
 - Enterprise-specific integrations, bespoke legacy adapters, and managed audit playbooks are retained for proprietary customer engagements.
