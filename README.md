@@ -1,7 +1,7 @@
 # komainu-guard (狛犬)
 
 > **Security-First CLI & Framework for Enterprise Legacy Modernization**  
-> *Audit legacy vulnerabilities (BOLA/IDOR & SQLi), generate SBOMs, verify cross-user authorization in CI/CD, and deploy drop-in authorization guards.*
+> *Audit legacy vulnerabilities (BOLA/IDOR & SQLi), auto-generate code fixes, deploy instant edge shields, and continuously verify cross-user authorization in CI/CD.*
 
 [![npm version](https://img.shields.io/npm/v/komainu-guard.svg)](https://www.npmjs.com/package/komainu-guard)
 [![License](https://img.shields.io/npm/l/komainu-guard.svg)](https://github.com/hoanghainh1188/komainu/blob/main/LICENSE)
@@ -13,79 +13,101 @@
 
 ---
 
-## 🧭 The Modernization Problem
+## ⚡ The Autonomous Engine: Does Komainu Auto-Fix?
 
-Legacy enterprise systems (written in ASP.NET WebForms, Classic ASP, Java Struts/Servlet, PHP, ColdFusion, Perl CGI, or early Express/Node) carry critical architectural vulnerabilities that off-the-shelf SAST tools either miss or drown in hundreds of false alarms:
+**YES.** Unlike traditional SAST tools that dump thousands of unverified warnings on developers, Komainu is an **autonomous security operating system** that not only detects vulnerabilities with zero false alarms, but also **automatically patches code, deploys edge shields, and opens remediation Pull Requests**.
 
-1. **BOLA / IDOR (Broken Object Level Authorization):** Endpoints fail to verify whether the requesting user owns the requested resource ID (e.g., Changing `/api/orders/101` to `/api/orders/102` exposes another customer's data).
-2. **String-Built Dynamic Queries:** SQL, NoSQL, and HQL/JPQL statements constructed via string interpolation or concatenated parameters.
-3. **Fear of Modernization:** Engineering teams avoid refactoring legacy code out of fear of breaking undocumented production business logic.
+```mermaid
+flowchart LR
+    A["1. AUTO-DETECT<br/>(AI Multi-Agent Audit)"] --> B["2. AUTO-SHIELD<br/>(Kong + Coraza WAF)"]
+    B --> C["3. AUTO-FIX<br/>(In-Place AST Rewriter)"]
+    C --> D["4. AUTO-PR & CI<br/>(Continuous Verification)"]
+    
+    style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+```
 
-Komainu bridges the gap between static code scanning and modern secure architecture through an **end-to-end 4-stage lifecycle: Assess → Protect → Remediate → Operate**.
+### 1. 🔍 Auto-Detect (Zero False Positives)
+- Scans **10 legacy stacks** (Classic ASP, ColdFusion, Java Struts/Servlet, .NET WebForms, PHP, Node.js, Python Flask, Perl CGI, SQL Procedures).
+- Features an adversarial **Skeptic Verifier Agent** that actively cross-checks every finding against sanitizers, allow-lists, and existing owner checks — achieving an **empirically proven 1.000 precision** ([Evaluation Run 3](assess/lsa/tests/EVAL-RESULTS.md)).
+
+### 2. 🛡️ Auto-Shield (Immediate Perimeter Defense)
+- Commands like `npx komainu-guard protect --up` automatically provision **Kong API Gateway** and the **OWASP Coraza WAF engine** (OWASP CRS v4).
+- Blocks hostile SQL injection payloads, XSS probes, and automated scrapers at the edge **without changing a single line of legacy application code**.
+
+### 3. 🛠️ Auto-Fix (Self-Healing Code Rewriter)
+- Run `npx komainu-guard fix .` to automatically transform vulnerable source code in-place:
+  - **SQL Injection Auto-Rewrite (`remediate/query`):** Detects string concatenations (`"SELECT * FROM orders WHERE id = " + id`) and rewrites them into language-idiomatic **Parameterized Queries** across Python, JS/TS, PHP, C#, and Java.
+  - **BOLA/IDOR Guard Injection (`remediate/authz`):** Automatically injects `@RequireOwnership` decorators, action filters, or middleware into controllers across NestJS, Express, .NET 8, Spring Boot 3, and FastAPI.
+  - **CVE Dependency Bumping (`remediate/deps`):** Scans manifests (`package.json`, `pom.xml`, `requirements.txt`, `.csproj`, `go.mod`) and auto-upgrades vulnerable library versions.
+  - **Safe Mode:** Supports `--dry-run` and unified `.patch` export (`-p security-fixes.patch`) for manual peer review.
+
+### 4. 🤖 Auto-PR & Continuous CI/CD Verification
+- Integrates directly into GitHub Actions or GitLab CI.
+- **Simulated Attacker Gating:** Simulates **Persona A (Alice - owner)** and **Persona B (Bob - peer attacker)**. If Bob can read Alice's data (`2xx`), the build fails immediately.
+- **Automated Remediation PR Bot:** When vulnerabilities are detected, CI can trigger `komainu fix` and automatically open a ready-to-merge **Pull Request** containing the verified patch and audit report.
 
 ---
 
 ## 🚀 Real-World Scenario: End-to-End Modernization Walkthrough
 
-Imagine your organization runs an **Enterprise Member & Order Portal** built on legacy stacks (PHP / Java Struts / Classic ASP / Express). You suspect critical BOLA and SQLi vulnerabilities exist in production, but you cannot afford downtime or weeks of regression testing. 
+Consider an enterprise running an **Online Member & Order System** built on legacy stacks (PHP / Java Struts / Classic ASP / Express). The team fears that cross-user IDOR (changing order IDs in URLs) or SQL injection could lead to data breaches, but touching fragile legacy code risks breaking undocumented business rules.
 
-Here is how Komainu is deployed in practice:
+Here is how Komainu solves this step-by-step:
 
 ```mermaid
-flowchart TD
-    subgraph S1["Phase 1: Day 1 — Non-Invasive Audit"]
-        A1["npx komainu-guard scan ./legacy-app"] --> A2["Multi-Agent AI Engine<br/>(10 Stacks, Skeptic Verifier)"]
-        A2 --> A3["Output: Interactive report.html<br/>& OASIS SARIF v2.1.0<br/>(0 False Positives)"]
-    end
+sequenceDiagram
+    autonumber
+    actor Team as Engineering Team
+    participant Edge as Edge Layer (Kong + WAF)
+    participant Legacy as Legacy Application
+    participant Komainu as Komainu CLI & Engine
+    participant CI as CI/CD Pipeline
 
-    subgraph S2["Phase 2: Day 2 — Zero-Code Edge Shield"]
-        B1["npx komainu-guard protect --up"] --> B2["Kong Gateway + Coraza WAF<br/>(OWASP CRS v4 Ruleset)"]
-        B2 --> B3["Drops SQLi & XSS probes at network boundary<br/>without modifying 1 line of legacy code"]
-    end
+    Note over Team,Komainu: Phase 1: Day 1 — Non-Invasive Audit
+    Team->>Komainu: npx komainu-guard scan ./legacy-app --format html
+    Komainu-->>Team: Generates report.html (Exact vulnerable routes identified, 0 false alarms)
 
-    subgraph S3["Phase 3: Week 1-2 — Remediation & Modernization"]
-        C1["Quick Hotfix: komainu fix ./legacy-app"] --> C2["Auto-generates .patch or applies<br/>remediate/legacy_shims (PHP/Java/ASP)"]
-        C3["Modern Rewrite: komainu-guard SDK"] --> C4["Drop-in @RequireOwnership for<br/>NestJS, .NET 8, Spring Boot 3, FastAPI, Go"]
-    end
+    Note over Team,Edge: Phase 2: Day 2 — Zero-Code Perimeter Shield
+    Team->>Edge: npx komainu-guard protect --up
+    Edge-->>Legacy: Shields legacy monolith (Coraza WAF drops SQLi/XSS probes at boundary)
 
-    subgraph S4["Phase 4: Continuous — Autonomous CI/CD Operation"]
-        D1["GitHub Actions / GitLab CI Trigger"] --> D2["komainu test --url http://staging-api:8000"]
-        D2 --> D3["Simulates Persona A (Alice) vs Persona B (Bob)<br/>Auto-tests cross-user IDOR access"]
-        D3 -->|Leak Detected 2xx| D4["❌ Fail Build (Gating)"]
-        D3 -->|Safe 404 Not Found| D5["✅ Pass Build & Deploy"]
-    end
+    Note over Team,Legacy: Phase 3: Week 1–2 — In-Place Auto-Fix & Modernization
+    Team->>Komainu: npx komainu-guard fix ./legacy-app (or export .patch)
+    Komainu->>Legacy: Auto-rewrites dynamic SQL to Parameterized Queries & injects ownership guards
 
-    S1 --> S2 --> S3 --> S4
-    
-    style S1 fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
-    style S2 fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    style S3 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style S4 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    Note over CI,Komainu: Phase 4: Continuous — Autonomous CI Verification
+    CI->>Komainu: npx komainu-guard test --url http://staging-api:8000
+    Komainu-->>CI: Bob tests Alice's orders -> strictly returns 404 Not Found -> Build Passes!
 ```
 
-### Step 1: Day 1 — Non-Invasive Legacy Audit (`komainu scan`)
-Without touching running services, run an automated scan against your legacy source code:
+### Phase 1: Day 1 — Non-Invasive Legacy Audit (`komainu scan`)
+Scan without installing anything or disrupting production:
 ```bash
 npx komainu-guard scan ./path-to-legacy-repo --format html --out ./audit-output
 ```
-- **What happens:** Komainu's autonomous multi-agent audit detects server frameworks, catalogs all API routes, traces object-level ownership checks, and uses an adversarial *Skeptic Verifier* to eliminate false alarms.
-- **Output:** An offline interactive dashboard (`report.html`) and SARIF v2.1.0 report identifying the exact vulnerable endpoints (e.g., `GET /orders/:id` lacks ownership validation).
+- **Result:** You receive an offline, interactive visual dashboard (`report.html`) and an **OASIS SARIF v2.1.0** report. It flags the exact controller routes missing ownership checks and points to raw SQL string builders.
 
-### Step 2: Day 2 — Immediate Perimeter Defense (`komainu protect`)
-Before engineering teams begin rewriting fragile legacy logic, deploy an instant edge defense:
+### Phase 2: Day 2 — Immediate Perimeter Defense (`komainu protect`)
+Before refactoring fragile code, eliminate external exploit risk at the network boundary:
 ```bash
 npx komainu-guard protect --up
 ```
-- **What happens:** Launches a declarative Kong API Gateway paired with the OWASP Coraza WAF engine (`remediate/edge`).
-- **Result:** Hostile SQL injection payloads and automated exploit scanners are dropped at the network perimeter before reaching your legacy application. Zero code changes required.
+- **Result:** Kong API Gateway and Coraza WAF drop malicious SQLi and XSS probes immediately. Management and compliance teams gain peace of mind on Day 2.
 
-### Step 3: Week 1–2 — Remediation & Modernization (`komainu fix` & SDK)
-Choose between patching the legacy code in place or building new services:
-- **Option A (In-Place Legacy Hotfix):** Use `komainu fix` or drop-in shims (`remediate/legacy_shims` for PHP, Java Servlet, ColdFusion, Classic ASP) to enforce owner validation directly in legacy code:
+### Phase 3: Week 1–2 — Automated Remediation (`komainu fix`)
+Choose your modernization pace:
+- **Approach A (In-Place Legacy Fix):** Run `komainu fix` to automatically patch vulnerable routes and queries in-place, or export a patch file for human review:
   ```bash
+  # Preview planned code rewrites
   npx komainu-guard fix ./path-to-legacy-repo --dry-run -p ./security-fixes.patch
+
+  # Apply fixes directly to source code
+  npx komainu-guard fix ./path-to-legacy-repo
   ```
-- **Option B (Modern Target Services):** When modernizing to NestJS, Express, .NET 8, Spring Boot 3, FastAPI, or Go, import `komainu-guard` to enforce strict ownership guards:
+- **Approach B (Modern Target Services):** If rewriting services in NestJS, Express, .NET 8, Spring Boot 3, FastAPI, or Go, import `komainu-guard` to enforce strict ownership verification:
   ```typescript
   // NestJS Controller with Komainu Guard
   @Get(':id')
@@ -97,51 +119,24 @@ Choose between patching the legacy code in place or building new services:
     return this.orderService.findById(id);
   }
   ```
-  *(Unauthorized access or unverified resource owners strictly return **HTTP 404 Not Found** to prevent resource enumeration).*
+  *(All unauthorized or cross-user requests strictly return **HTTP 404 Not Found** to prevent resource enumeration).*
 
-### Step 4: Day 30+ — Autonomous CI/CD Operation (`komainu test`)
-Automate continuous verification so that no IDOR/BOLA regression ever merges into `main`:
+### Phase 4: Continuous Verification & Auto-PR Bot in CI/CD (`komainu test`)
+Add Komainu to your CI pipeline to guarantee zero authorization regressions:
 ```bash
 npx komainu-guard test --url http://127.0.0.1:8000 --auto-crud-path /api/v1/orders/{id}
 ```
-- **What happens:** Komainu simulates **Persona A (Alice - legitimate owner)** and **Persona B (Bob - peer attacker)**. Bob attempts to `GET`, `PUT`, and `DELETE` Alice's orders. If any endpoint returns `200 OK`, the pipeline fails immediately.
+- Komainu automatically sends requests using **Persona B's token** targeting **Persona A's resource IDs**.
+- If any endpoint returns `200 OK` (cross-user data leakage), the pipeline **fails the build immediately**.
 
 ---
 
-## 🤖 Automated Operation & Continuous CI/CD Verification
+## 🤖 CI/CD Automation & Remediation Bot
 
-Komainu is not just a static scanner or a standalone library; it functions as an **Autonomous Security Operating System** inside your CI/CD pipeline.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Dev as Developer
-    participant CI as GitHub Actions / GitLab CI
-    participant TestServer as Staging / Ephemeral Test Server
-    participant Komainu as Komainu Operate (cross_user_tester)
-    participant SecTab as GitHub Code Scanning (SARIF)
-
-    Dev->>CI: Push commit / Open Pull Request
-    CI->>CI: Run SAST & Generate CycloneDX SBOM
-    CI->>TestServer: Spin up test application
-    CI->>Komainu: komainu test --url http://test-server:8080 --attacker-token "bob-jwt"
-    Komainu->>TestServer: 1. GET /api/orders/ord-alice (Bob token)
-    TestServer-->>Komainu: Response: 404 Not Found (Denied)
-    Komainu->>TestServer: 2. PUT /api/orders/ord-alice (Bob token)
-    TestServer-->>Komainu: Response: 404 Not Found (Denied)
-    Komainu->>TestServer: 3. DELETE /api/orders/ord-alice (Bob token)
-    TestServer-->>Komainu: Response: 404 Not Found (Denied)
-    Komainu-->>CI: ✅ All Cross-User Access Blocked (0 BOLA Leaks)
-    CI->>SecTab: Upload Merged SARIF v2.1.0
-    CI-->>Dev: PR Status: All Security Checks Passed!
-```
-
-### Ready-to-Use GitHub Actions Workflow (`.github/workflows/komainu-ci.yml`)
-
-Add this workflow to your repository to automatically gate PRs against BOLA regressions:
+Add this complete GitHub Actions workflow (`.github/workflows/komainu-ci.yml`) to enforce cross-user BOLA gating and automated SARIF reporting on every Pull Request:
 
 ```yaml
-name: Komainu Automated Security Verification
+name: Komainu Continuous Security Verification
 
 on:
   pull_request:
@@ -149,7 +144,7 @@ on:
 
 jobs:
   verify-authorization:
-    name: Autonomous Cross-User BOLA/IDOR Gating
+    name: Cross-User BOLA/IDOR Gating
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -173,7 +168,7 @@ jobs:
             --resource-id "101" \
             --attacker-token "${{ secrets.ATTACKER_JWT_TOKEN }}"
 
-      - name: Generate SBOM & Scan Vulnerabilities
+      - name: Generate CycloneDX SBOM & Scan Vulnerabilities
         run: |
           npx komainu-guard devsecops sbom . --format cyclonedx -o ./cyclonedx.json
           npx komainu-guard devsecops run .
@@ -189,29 +184,51 @@ jobs:
 
 ## ⚡ Quick Start: Zero-Install Execution
 
-Run Komainu immediately without manual environment setup:
+Run Komainu commands immediately without local installation (requires Node.js 16+ or Docker):
 
 ```bash
 # 1. Audit a legacy codebase (Classic ASP, ColdFusion, PHP, Java, .NET, Node, etc.)
 npx komainu-guard scan ./path-to-repo --lang ja --format html
 
-# 2. Preview automated code fixes for discovered vulnerabilities
+# 2. Automatically fix code in-place (or preview with --dry-run -p patchfile)
 npx komainu-guard fix ./path-to-repo --dry-run -p ./fixes.patch
 
 # 3. Generate CycloneDX 1.5 & SPDX 2.3 SBOM
 npx komainu-guard devsecops sbom ./path-to-repo --format cyclonedx -o ./sbom.json
 
-# 4. Merge and deduplicate OASIS SARIF v2.1.0 reports
+# 4. Merge and deduplicate OASIS SARIF v2.1.0 scan results
 npx komainu-guard devsecops merge-sarif ./reports/*.sarif -o ./merged.sarif
 
 # 5. Verify BOLA / IDOR defense against an active API in CI
 npx komainu-guard test --url http://localhost:8000 --auto-crud-path /api/v1/orders/{id}
+
+# 6. Launch Edge Kong & Coraza WAF perimeter
+npx komainu-guard protect --up
+
+# 7. Launch interactive reference Demo app
+npx komainu-guard demo --up
 ```
 
 Or run via self-contained Docker:
 ```bash
 docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komainu:latest scan --target /workspace/legacy-repo --out /workspace/audit-out
 ```
+
+---
+
+## 🎮 Interactive Reference App: Member Portal (`examples/member-portal/`)
+
+Experience the difference between vulnerable legacy code and Komainu-protected services in under 60 seconds:
+
+```bash
+cd examples/member-portal
+docker compose up -d
+```
+Open `http://localhost:3000` in your browser:
+- **Scenario 1 — Alice (Legitimate Owner):** Alice requests her order `ord-001` → `HTTP 200 OK`.
+- **Scenario 2 — Bob (Attacker / Peer):** Switch persona to Bob and attempt to read Alice's `ord-001` via the Komainu-protected API → strictly returns `HTTP 404 Not Found` (preventing ID enumeration).
+- **Scenario 3 — Planted Legacy API:** Test the unhardened legacy route. Bob successfully extracts Alice's order data (`HTTP 200 OK`), demonstrating the vulnerability before Komainu remediation.
+- **Full Adoption Guide:** See [`examples/member-portal/README.md#4-adoption-guide-migrating-legacy-systems-behind-komainu`](examples/member-portal/README.md#4-adoption-guide-migrating-legacy-systems-behind-komainu).
 
 ---
 
@@ -264,8 +281,8 @@ app.get('/api/v1/orders/:id',
 
 | Command | Description | Example |
 | :--- | :--- | :--- |
-| `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQL injection across 10 stacks | `npx komainu-guard scan ./legacy-app --format html` |
-| `komainu fix <target>` | Generates or applies automated code fixes / unified `.patch` files for BOLA & SQLi findings | `npx komainu-guard fix ./legacy-app --dry-run` |
+| `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQLi across 10 stacks | `npx komainu-guard scan ./legacy-app --format html` |
+| `komainu fix <target>` | Automatically rewrites code in-place or exports `.patch` for BOLA, SQLi & CVEs | `npx komainu-guard fix ./legacy-app --dry-run -p fix.patch` |
 | `komainu devsecops sbom <target>` | Generates CycloneDX 1.5 / SPDX 2.3 SBOM across npm, PyPI, NuGet, Maven, Go | `npx komainu-guard devsecops sbom . --format cyclonedx` |
 | `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |
 | `komainu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx komainu-guard devsecops run .` |
@@ -275,50 +292,33 @@ app.get('/api/v1/orders/:id',
 
 ---
 
-## 🎮 Interactive Reference App: Member Portal (`examples/member-portal/`)
-
-To experience the real-world scenario interactively, spin up the included multi-tenant demo portal:
-
-```bash
-cd examples/member-portal
-docker compose up -d
-```
-Visit `http://localhost:3000` to access the interactive web interface:
-1. **Scenario 1 — Alice (Owner):** Select Alice in the persona switcher. Accessing `ord-001` returns `200 OK`.
-2. **Scenario 2 — Bob (Attacker):** Switch to Bob. Attempting to access Alice's `ord-001` via the Komainu-protected API strictly returns `404 Not Found` (preventing ID harvesting).
-3. **Scenario 3 — Planted Legacy API:** Test the planted unhardened legacy route. Bob extracts Alice's order data (`200 OK`), demonstrating the BOLA vulnerability in action.
-4. **Adoption Guide:** Step-by-step migration guide for enterprise engineering teams is available in [`examples/member-portal/README.md#4-adoption-guide-migrating-legacy-systems-behind-komainu`](examples/member-portal/README.md#4-adoption-guide-migrating-legacy-systems-behind-komainu).
-
----
-
 ## 🏛️ Platform Pillars & Capabilities
 
+Komainu is named after the paired guardian lion-dogs at Shinto shrine entrances. They stand as an **a–un (阿吽)** pair: one with an open mouth to assess and call out vulnerabilities, and one with a closed mouth to remediate and seal the perimeter.
+
 ### 1. Assess — Legacy Security Assessment (`assess/lsa/`)
-An autonomous multi-agent audit pipeline designed to inspect legacy repositories with strict read-only guarantees:
 - **10 Legacy Stacks Covered:** Classic ASP, ColdFusion, .NET Legacy (WebForms/MVC/Handlers), Java Legacy (Servlet/JSP/Struts1/Spring MVC/MyBatis/Hibernate), Node Express, Perl CGI, PHP Plain, PHP CodeIgniter, Python Flask, SQL Procedures.
-- **Multi-Agent Architecture:** `10-stack-detector`, `20-route-mapper`, `30-bola-auditor`, `40-injection-auditor`, `50-finding-verifier` (*Skeptic Mode* to refute false positives), and `60-reporter`.
-- **Empirical Benchmark ([Evaluation Run 3](assess/lsa/tests/EVAL-RESULTS.md)):** 100% Recall on BOLA & Injection, **0 False Positives**, Precision: **1.000**.
-- **Standards & Interactive Output:** OASIS SARIF v2.1.0, bilingual reports (EN/JA), and self-contained interactive HTML dashboards.
+- **Multi-Agent Pipeline:** Autonomous pre-scan, route mapper, BOLA auditor, injection auditor, Skeptic Verifier, and bilingual reporter.
+- **Benchmark:** 100% recall on BOLA & Injection, **0 False Positives**, Precision: **1.000**.
 
 ### 2. Protect — Edge Security (`remediate/edge/`)
-- **Kong Gateway (decK):** Declarative API gateway acting as a reverse proxy in front of legacy services.
-- **Coraza WAF with OWASP Core Rule Set (CRS v4):** Automatically blocks SQL injection, XSS, and scrapers at the edge.
-- **Granular Rate Limiting:** Enforces request quotas per Consumer ID, IP address, or API credential.
+- **Kong Gateway & Coraza WAF:** Declarative reverse proxy and OWASP CRS v4 WAF engine dropping SQLi, XSS, and scrapers at the edge.
+- **Rate Limiting:** Granular quotas per Consumer ID, IP address, or API credential.
 
 ### 3. Remediate — 5 Modernization Boilerplates & Legacy Shims (`remediate/`)
-- **Boilerplate 1 (D1) — Object-Level Authorization (`remediate/authz`):** Unified libraries across **.NET 8**, **Spring Boot 3**, **NestJS / Express**, **FastAPI**, and **Go**. Enforces claim-based principal resolution and **deny-by-default 404 Not Found**.
-- **Boilerplate 1 (D2) — Identity & Authentication (`remediate/identity`):** RFC 9700 / OAuth 2.1 OIDC integration (PKCE, strict token verification).
-- **Boilerplate 1 (D3) — Safe Query Analyzers (`remediate/query`):** Roslyn Analyzer & Detekt rules flagging string-built SQL at build time.
+- **Boilerplate 1 (D1) — Object-Level Authorization (`remediate/authz`):** Unified libraries across **.NET 8**, **Spring Boot 3**, **NestJS / Express**, **FastAPI**, and **Go**. Enforces server-side ID resolution and **deny-by-default 404 Not Found**.
+- **Boilerplate 1 (D2) — Identity & Authentication (`remediate/identity`):** RFC 9700 / OAuth 2.1 OIDC integration (PKCE, token validation).
+- **Boilerplate 1 (D3) — Safe Query Analyzers (`remediate/query`):** Roslyn Analyzer & Detekt rules flagging dynamic SQL at build time.
 - **Legacy Remediation Shims (`remediate/legacy_shims`):** Lightweight shims for PHP, Java, ColdFusion, and Classic ASP.
-- **Boilerplate 2 — Zero-PII eKYC & NFC Verification (`remediate/ekyc`):** Compliant with Japan's April 2027 Criminal Proceeds Act amendment for JPKI and IC-chip cryptographic verification.
+- **Boilerplate 2 — Zero-PII eKYC & NFC Verification (`remediate/ekyc`):** Compliant with Japan's April 2027 Criminal Proceeds Act amendment for JPKI and IC-chip reading.
 - **Boilerplate 3 — Multi-Region Resilience & Immutable WORM Backup (`remediate/resilience`):** Cross-region S3 Object Lock in COMPLIANCE mode and automated DR verification CLI (`dr_manager.py`).
 - **Boilerplate 4 — Tenant-Isolated SaaS & BYOK Encryption (`remediate/tenancy`):** PostgreSQL RLS/schema-per-tenant, AES-256-GCM BYOK envelope encryption, and HMAC-SHA256 tamper-evident audit trails.
 
-### 4. Operate — Unified CLI & Continuous DevSecOps (`operate/`)
-- **Unified CLI (`bin/komainu` & `operate/cli`):** Single binary distributed via npm (`npx komainu-guard`) and Docker (`ghcr.io/hoanghainh1188/komainu`).
-- **SBOM Generator:** Produces **CycloneDX 1.5** and **SPDX 2.3** across npm, PyPI, NuGet, Maven/Gradle, and Go.
-- **Automated Patcher (`komainu fix`):** Dry-run previews, unified `.patch` files, or in-place fixes for BOLA and SQLi.
-- **Cross-User Authorization Test Runner (`operate/cross_user_tester`):** Automated multi-method tests simulating cross-user access in CI/CD.
+### 4. Operate — Continuous DevSecOps & Remediation Engine (`operate/`)
+- **Automated Patcher (`komainu fix` / `operate/remediator`):** AST-based query rewriter and ownership injector.
+- **Cross-User Authorization Test Runner (`operate/cross_user_tester`):** Multi-method test suite verifying IDOR compliance in CI/CD.
+- **SBOM Generator (`operate/devsecops`):** CycloneDX 1.5 & SPDX 2.3 export.
+- **SARIF Converter & Merger (`operate/lsa_sarif`):** Full OASIS SARIF v2.1.0 compatibility for GitHub Security Code Scanning.
 
 ---
 
@@ -334,6 +334,7 @@ komainu/
 │   ├── authz/            # BP1-D1: Object-level authorization (.NET 8, Spring Boot 3, Node.js, Python, Go)
 │   ├── identity/         # BP1-D2: OpenID Connect authentication & token validation (.NET 8, Spring Boot 3, Python)
 │   ├── query/            # BP1-D3: Safe query helpers, C# Roslyn analyzer & Kotlin Detekt rule
+│   ├── deps/             # Automated CVE dependency manifest & lockfile patcher across 5 ecosystems
 │   ├── edge/             # BP1-D4: Kong gateway declarative configuration & Coraza WAF (OWASP CRS v4)
 │   ├── legacy_shims/     # Drop-in ownership & safe-query shims (PHP, Java, ColdFusion, Classic ASP)
 │   ├── ekyc/             # BP2: Zero-PII eKYC & NFC JPKI/IC-chip verification (Japan 2027 compliance)
@@ -358,8 +359,8 @@ komainu/
 ## 👥 Governance & The Two-Person Rule
 
 Komainu implements the **Two-Person Rule** described in [`governance/usage-policy.md`](governance/usage-policy.md):
-- **Auditor / Agent (Person A):** Runs the automated assessment tools and drafts findings.
-- **Reviewer / Architect (Person B):** A human security engineer or principal architect who independently verifies every finding against the codebase before releasing it to clients or stakeholders.
+- **Auditor / Agent (Person A):** Runs the automated assessment and remediation tools, drafting findings and patches.
+- **Reviewer / Architect (Person B):** A human security engineer or principal architect who independently verifies every finding and patch against the codebase before it is released to production.
 - **Privacy Assurance:** Source code is analyzed under strict zero-retention / local processing guidelines; no client proprietary logic is stored or used for model training.
 
 ---

@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from operate.remediator.models import RemediationPlan, RemediationReport
 from operate.remediator.strategies import BaseRemediationStrategy, StrategyRegistry
+from remediate.deps.patcher import CVEAdvisoryCatalog
 
 
 def safe_resolve_target_file(target_dir: Path, rel_file: str) -> Tuple[Optional[Path], str, Optional[str]]:
@@ -130,6 +131,32 @@ def write_source_file_safe(file_path: Path, content: str, encoding: str, newline
 class RemediationRunner:
     """Coordinates automated code patching based on security audit findings."""
 
+    MANIFEST_FILENAMES = {
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "requirements.txt",
+        "pyproject.toml",
+        "pipfile.lock",
+        "poetry.lock",
+        "packages.lock.json",
+        "pom.xml",
+        "build.gradle",
+        "build.gradle.kts",
+        "gradle.lockfile",
+        "go.mod",
+        "go.sum",
+    }
+
+    COMPANION_LOCKFILES: Dict[str, List[str]] = {
+        "package.json": ["package-lock.json", "yarn.lock"],
+        "requirements.txt": ["Pipfile.lock", "poetry.lock"],
+        "pyproject.toml": ["poetry.lock", "Pipfile.lock"],
+        "build.gradle": ["gradle.lockfile"],
+        "build.gradle.kts": ["gradle.lockfile"],
+        "go.mod": ["go.sum"],
+    }
+
     def __init__(
         self,
         target_dir: str | Path,
@@ -137,13 +164,20 @@ class RemediationRunner:
         dry_run: bool = False,
         output_patch: Optional[str | Path] = None,
         branch_prefix: str = "fix-sec-",
+        scan_sca: bool = False,
+        query_osv: bool = False,
+        sync_lockfiles: bool = True,
     ) -> None:
         self.target_dir = Path(target_dir).resolve()
         self.findings_path = Path(findings_path).resolve() if findings_path else None
         self.dry_run = dry_run
         self.output_patch = Path(output_patch).resolve() if output_patch else None
         self.branch_prefix = branch_prefix
+        self.scan_sca = scan_sca
+        self.query_osv = query_osv
+        self.sync_lockfiles = sync_lockfiles
         self.registry = StrategyRegistry()
+        self._virtual_contents: Dict[Path, str] = {}
 
     def discover_findings_file(self) -> Path:
         """Locate findings.json in default known output paths if not explicitly provided."""
@@ -155,6 +189,8 @@ class RemediationRunner:
             self.target_dir / "findings.json",
             self.target_dir / "audit-results" / "findings.json",
             self.target_dir / "out" / "findings.json",
+            self.target_dir / ".komainu-devsecops" / "sca.sarif",
+            self.target_dir / ".komainu-devsecops" / "komainu-devsecops.sarif",
         ]
         for candidate in candidates:
             if candidate.is_file():
@@ -162,30 +198,26 @@ class RemediationRunner:
 
         raise FileNotFoundError(
             f"Findings file not found. Checked default locations under {self.target_dir}. "
-            "Please specify --findings <path/to/findings.json>."
+            "Please specify --findings <path/to/findings.json> or use --sca to scan manifest dependencies."
         )
 
-    def load_findings(self) -> List[Dict[str, Any]]:
-        """Load and parse findings from JSON or SARIF report."""
-        findings_file = self.discover_findings_file()
-        with open(findings_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
+    def _parse_findings_data(self, data: Any) -> List[Dict[str, Any]]:
+        """Parse findings list from Komainu JSON dict, JSON array, or OASIS SARIF v2.1.0."""
         # 1. Format: { "findings": [...] }
         if isinstance(data, dict) and "findings" in data and isinstance(data["findings"], list):
-            return data["findings"]
+            return list(data["findings"])
 
         # 2. Format: [...]
         if isinstance(data, list):
-            return data
+            return list(data)
 
         # 3. Format: SARIF v2.1.0 { "runs": [{ "results": [...] }] }
         if isinstance(data, dict) and "runs" in data:
-            findings = []
+            findings: List[Dict[str, Any]] = []
             for run in data.get("runs", []):
+                driver_name = str(run.get("tool", {}).get("driver", {}).get("name", "")).lower()
                 for res in run.get("results", []):
-                    rule_id = res.get("ruleId", "UNKNOWN")
-                    category = "bola" if "BOLA" in rule_id else "sql_injection"
+                    rule_id = str(res.get("ruleId", "UNKNOWN"))
                     msg = res.get("message", {}).get("text", rule_id)
                     locs = res.get("locations", [])
                     file_uri = ""
@@ -195,7 +227,24 @@ class RemediationRunner:
                         file_uri = phys.get("artifactLocation", {}).get("uri", "")
                         start_line = phys.get("region", {}).get("startLine", 1)
 
-                    findings.append({
+                    base_name = Path(file_uri).name.lower() if file_uri else ""
+                    props = res.get("properties") or {}
+                    rule_upper = rule_id.upper()
+
+                    if (
+                        rule_upper.startswith(("CVE-", "GHSA-", "OSV-", "KOMAINU-SCA-", "DEP-"))
+                        or base_name in self.MANIFEST_FILENAMES
+                        or base_name.endswith(".csproj")
+                        or any(k in driver_name for k in ("trivy", "sca", "dependency", "osv", "pip-audit", "govulncheck"))
+                        or props.get("category") in ("dependency", "sca", "cve")
+                    ):
+                        category = "dependency"
+                    elif "BOLA" in rule_upper:
+                        category = "bola"
+                    else:
+                        category = "sql_injection"
+
+                    finding_entry: Dict[str, Any] = {
                         "finding_id": rule_id,
                         "category": category,
                         "title": msg,
@@ -204,10 +253,53 @@ class RemediationRunner:
                             "start_line": start_line,
                         },
                         "status": "confirmed",
-                    })
+                    }
+                    if props:
+                        finding_entry["properties"] = props
+                        for key in ("package", "package_name", "installed_version", "fixed_version", "ecosystem"):
+                            if key in props:
+                                finding_entry[key] = props[key]
+
+                    findings.append(finding_entry)
             return findings
 
         return []
+
+    def load_findings(self) -> List[Dict[str, Any]]:
+        """Load and parse findings from JSON/SARIF report and optional built-in SCA manifest scan."""
+        findings: List[Dict[str, Any]] = []
+
+        try:
+            findings_file = self.discover_findings_file()
+            with open(findings_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            findings.extend(self._parse_findings_data(data))
+        except FileNotFoundError:
+            if not self.scan_sca:
+                raise
+
+        if self.scan_sca:
+            catalog = CVEAdvisoryCatalog()
+            sca_findings = catalog.scan_target(self.target_dir, query_osv=self.query_osv)
+            seen = {
+                (
+                    str(item.get("finding_id", "")),
+                    str((item.get("location") or {}).get("file", "")),
+                    str(item.get("package", "")),
+                )
+                for item in findings
+            }
+            for sf in sca_findings:
+                key = (
+                    str(sf.get("finding_id", "")),
+                    str((sf.get("location") or {}).get("file", "")),
+                    str(sf.get("package", "")),
+                )
+                if key not in seen:
+                    seen.add(key)
+                    findings.append(sf)
+
+        return findings
 
     def create_plan(self, finding: Dict[str, Any]) -> RemediationPlan:
         """Create a planned remediation diff for a single finding."""
@@ -250,8 +342,10 @@ class RemediationRunner:
             )
 
         try:
-            original_content, encoding, newline = read_source_file_safe(abs_file)
-            if not roundtrips_exactly(abs_file, original_content, encoding, newline):
+            disk_content, encoding, newline = read_source_file_safe(abs_file)
+            if abs_file not in self._virtual_contents and not roundtrips_exactly(
+                abs_file, disk_content, encoding, newline
+            ):
                 return RemediationPlan(
                     finding_id=finding_id,
                     category=category,
@@ -260,8 +354,8 @@ class RemediationRunner:
                     absolute_path=str(abs_file),
                     start_line=start_line,
                     end_line=end_line,
-                    original_content=original_content,
-                    patched_content=original_content,
+                    original_content=disk_content,
+                    patched_content=disk_content,
                     encoding=encoding,
                     newline=newline,
                     status="needs manual fix",
@@ -270,6 +364,7 @@ class RemediationRunner:
                         "(mixed newlines or non-reversible characters); patch it manually"
                     ),
                 )
+            original_content = self._virtual_contents.get(abs_file, disk_content)
             patched_content, explanation = strategy.generate_patch(abs_file, original_content, finding)
 
             if patched_content == original_content:
@@ -288,6 +383,8 @@ class RemediationRunner:
                     status="needs manual fix",
                     reason=explanation or "No automated rewrite applicable; requires manual remediation",
                 )
+
+            self._virtual_contents[abs_file] = patched_content
 
             # Generate unified diff
             orig_lines = original_content.splitlines(keepends=True)
@@ -351,24 +448,81 @@ class RemediationRunner:
             plan.reason = f"Write error: {str(e)}"
             return False
 
+    def _get_companion_lockfiles(self, manifest_abs_path: Path) -> List[Path]:
+        """Return existing companion lockfile paths in the same directory as manifest_abs_path."""
+        fname = manifest_abs_path.name
+        fname_lower = fname.lower()
+        lock_names: List[str] = []
+        if fname_lower in self.COMPANION_LOCKFILES:
+            lock_names = self.COMPANION_LOCKFILES[fname_lower]
+        elif fname_lower.endswith(".csproj"):
+            lock_names = ["packages.lock.json"]
+
+        existing: List[Path] = []
+        parent = manifest_abs_path.parent
+        for lname in lock_names:
+            cand = parent / lname
+            if cand.is_file() and not cand.is_symlink():
+                existing.append(cand)
+        return existing
+
     def run(self) -> RemediationReport:
         """Execute the remediation workflow."""
+        self._virtual_contents.clear()
         findings = self.load_findings()
-        report = RemediationReport(
-            target_dir=str(self.target_dir),
-            total_findings=len(findings),
-            dry_run=self.dry_run,
-        )
+
+        # Track (relative_file, finding_id) already queued so companion lockfiles are not duplicated
+        queued_file_rules = {
+            (
+                str((f.get("location") or {}).get("file", "")).replace("\\", "/").lstrip("./"),
+                str(f.get("finding_id", "")),
+            )
+            for f in findings
+        }
 
         all_diffs: List[str] = []
+        plans: List[RemediationPlan] = []
 
         for finding in findings:
             plan = self.create_plan(finding)
-            if plan.status == "planned":
+            was_planned = plan.status == "planned"
+            if was_planned:
                 self.apply_plan(plan)
                 if plan.diff:
                     all_diffs.append(plan.diff)
-            report.plans.append(plan)
+            plans.append(plan)
+
+            # Synchronize companion lockfiles when a manifest dependency was patched
+            if was_planned and self.sync_lockfiles and plan.absolute_path:
+                manifest_abs = Path(plan.absolute_path)
+                for lock_abs in self._get_companion_lockfiles(manifest_abs):
+                    try:
+                        lock_rel = str(lock_abs.relative_to(self.target_dir)).replace("\\", "/")
+                    except ValueError:
+                        continue
+                    fid = str(finding.get("finding_id", "UNKNOWN"))
+                    if (lock_rel, fid) in queued_file_rules:
+                        continue
+                    queued_file_rules.add((lock_rel, fid))
+
+                    lock_finding = dict(finding)
+                    lock_finding["finding_id"] = f"{fid}-LOCK"
+                    lock_finding["category"] = "dependency"
+                    lock_finding["location"] = {"file": lock_rel, "start_line": 1, "end_line": 1}
+
+                    lock_plan = self.create_plan(lock_finding)
+                    if lock_plan.status == "planned":
+                        self.apply_plan(lock_plan)
+                        if lock_plan.diff:
+                            all_diffs.append(lock_plan.diff)
+                        plans.append(lock_plan)
+
+        report = RemediationReport(
+            target_dir=str(self.target_dir),
+            total_findings=len(plans),
+            plans=plans,
+            dry_run=self.dry_run,
+        )
 
         if self.output_patch and all_diffs:
             self.output_patch.parent.mkdir(parents=True, exist_ok=True)

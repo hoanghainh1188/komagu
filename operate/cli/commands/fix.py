@@ -29,22 +29,25 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     """Register the fix subcommand parser."""
     parser = subparsers.add_parser(
         "fix",
-        help="Apply automated code remediations and security guards from LSA findings",
-        description="Analyzes security findings (BOLA, SQLi) and generates or applies automated fixes.",
+        help="Apply automated code remediations, security guards, and CVE dependency patches",
+        description="Analyzes security findings (BOLA, SQLi, and SCA/CVE dependencies) and generates or applies automated fixes.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Dry-run remediation against current repository using default findings.json
   komainu fix . --dry-run
 
-  # Apply fixes from a specific findings report
+  # Automatically scan manifest files for vulnerable dependencies (CVEs) and patch versions
+  komainu fix . --sca
+
+  # Apply fixes from a specific findings report or SARIF file
   komainu fix /path/to/legacy-app --findings ./komainu-out/findings.json
 
   # Generate unified patch file without modifying source code directly
-  komainu fix . --findings findings.json --dry-run -p ./security-fixes.patch
+  komainu fix . --sca --dry-run -p ./security-fixes.patch
 
   # Output machine-readable JSON remediation report
-  komainu fix . --format json
+  komainu fix . --sca --format json
 """,
     )
     parser.add_argument(
@@ -58,6 +61,16 @@ Examples:
         "-f",
         dest="findings_path",
         help="Path to findings.json or SARIF report (default: auto-detected under target/komainu-out)",
+    )
+    parser.add_argument(
+        "--sca",
+        action="store_true",
+        help="Automatically scan manifest files (package.json, requirements.txt, pyproject.toml, .csproj, pom.xml, build.gradle, go.mod) for CVE vulnerabilities and upgrade versions",
+    )
+    parser.add_argument(
+        "--osv",
+        action="store_true",
+        help="Query the OSV.dev API in addition to the built-in offline CVE advisory catalog when --sca is enabled",
     )
     parser.add_argument(
         "--dry-run",
@@ -92,6 +105,8 @@ def run_fix(args: argparse.Namespace) -> int:
         findings_path=args.findings_path,
         dry_run=args.dry_run,
         output_patch=args.output_patch,
+        scan_sca=getattr(args, "sca", False),
+        query_osv=getattr(args, "osv", False),
     )
 
     mode_label = "DRY-RUN (Simulated)" if args.dry_run else "APPLY (In-place)"

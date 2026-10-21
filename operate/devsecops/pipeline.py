@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional
 
 from operate.devsecops.sarif_aggregator import SARIFReportAggregator
 from operate.devsecops.sbom import SBOMGenerator
+from remediate.deps.patcher import CVEAdvisoryCatalog
 
 SECRET_PATTERNS = [
     (r"(?i)(?:api_key|apikey|secret|token|password|passwd|private_key)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]", "Generic High-Entropy Secret / API Key"),
@@ -239,9 +240,46 @@ class DevSecOpsPipeline:
             except Exception:
                 pass
 
-        # Fallback manifest dependency review
+        # Fallback manifest dependency review with built-in CVE advisory catalog
         gen = SBOMGenerator(root_dir=self.target_dir)
         comps = gen.scan()
+        catalog = CVEAdvisoryCatalog()
+        cve_findings = catalog.scan_target(self.target_dir)
+
+        rules = []
+        seen_rules = set()
+        results = []
+        for cf in cve_findings:
+            rule_id = cf["finding_id"]
+            if rule_id not in seen_rules:
+                seen_rules.add(rule_id)
+                rules.append({
+                    "id": rule_id,
+                    "name": "VulnerableDependencyDetected",
+                    "shortDescription": {"text": cf["title"]},
+                    "defaultConfiguration": {"level": "error" if cf["severity"] in ("critical", "high") else "warning"},
+                })
+            results.append({
+                "ruleId": rule_id,
+                "level": "error" if cf["severity"] in ("critical", "high") else "warning",
+                "message": {"text": cf["title"]},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": cf["location"]["file"]},
+                            "region": {"startLine": cf["location"]["start_line"]},
+                        }
+                    }
+                ],
+                "properties": {
+                    "category": "dependency",
+                    "package": cf["package"],
+                    "ecosystem": cf["ecosystem"],
+                    "installed_version": cf["installed_version"],
+                    "fixed_version": cf["fixed_version"],
+                },
+            })
+
         sarif_data = {
             "version": "2.1.0",
             "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -251,10 +289,10 @@ class DevSecOpsPipeline:
                         "driver": {
                             "name": "Komainu Dependency Inspector",
                             "semanticVersion": "1.0.0",
-                            "rules": [],
+                            "rules": rules,
                         }
                     },
-                    "results": [],
+                    "results": results,
                 }
             ],
         }
