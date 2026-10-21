@@ -1,6 +1,6 @@
 # Modernization Boilerplates — Proposal
 
-Version 0.1 · 2026-10-17 · Owner: Harry · Status: approved by management (BOD) on 2026-10-17
+Version 0.3 · 2026-10-21 · Owner: Harry · Status: approved by management (BOD) on 2026-10-17; all 5 boilerplates implemented & CI-verified in v1.0.1
 
 ## Executive summary
 
@@ -9,7 +9,7 @@ We propose to offer Japanese clients a **security-first modernization package**:
 - **What we sell first:** a Legacy Security Assessment built on our LSA kit. It finds endpoints that leak other users' data (BOLA/IDOR) and hand-built SQL/NoSQL queries, with `file:line` evidence.
 - **What follows:** fix and modernization work, delivered faster because the fixes come from tested boilerplates instead of being designed from scratch.
 - **Why now:** Japanese companies carry large legacy estates, recent incidents and rule changes put data protection on the board agenda, and buyers want proof, not claims (see Context).
-- **What exists today:** the LSA kit (v0.1, tested on 10 sample apps). The five boilerplates do not exist yet.
+- **What exists today:** the LSA kit (`v1.0.1`, tested on 10 legacy stacks with 100% recall and 0 false positives in Evaluation Run 3) **and all five modernization boilerplates**, implemented, security-hardened, and verified by automated CI suites across Python, Go, Node.js, .NET 8, and Kotlin / Spring Boot 3.
 - **What we ask management:** approve Boilerplate 1 and one pilot, decide the open-source vs closed IP question, and assign a small team (see Decisions needed).
 
 We make no time-saving claim to clients until the pilot has measured it.
@@ -48,16 +48,16 @@ Tool and vendor names are examples. Each project picks what the client already r
 
 ## What we have and what we must build
 
-Only the assessment exists today. Boilerplate 1 has the closest fit with our skills and with the assessment; Boilerplate 2 needs skills we have not shown yet.
+Both the Legacy Security Assessment kit and all five modernization boilerplates are now implemented and verified in CI (`remediate-tests.yml`, `lsa-tests.yml`, `security-scan.yml`). Next step: execute the commercial pilot and record live client effort metrics.
 
 | Item | What exists today | What must be built | Readiness | Past project evidence (or explicit gap) |
 | --- | --- | --- | --- | --- |
-| Legacy Security Assessment | LSA kit v0.1: prompts, pre-scan scripts, SARIF and report output, governance policy; tested on 10 sample apps and 3 public vulnerable apps | A run on one real client system; Japanese report template | Ready for a pilot | **Explicit gap:** No past client project timesheets cited. Capability demonstrated and benchmarked on 10 multi-stack fixtures and 3 public apps. |
-| 1. Secure API & IAM | Team experience with Node.js, .NET, AWS; LSA finds the gaps this boilerplate fixes | Middleware libraries, gateway configs, CI test suite, demo app | Not started; best fit | **Explicit gap:** Greenfield implementation in Komainu MVP; verified by D5 automated test pipeline and D6 Member Portal demo. |
-| 2. Zero-PII eKYC & NFC | Flutter and native mobile skills | NFC reading for Japanese IDs, JPKI integration, legal review of the 2027 rules | Not started; new domain | **Explicit gap:** New domain; no past project. Requires legal review against 2027 National Police Agency rules before Stage 3. |
-| 3. Immutable backup | AWS experience | IaC templates, restore tests, DR runbook | Not started | **Explicit gap:** General cloud engineering skills; no past client modernization reference cited. |
-| 4. Tenant-isolated SaaS | Patterns from our own platform design: tenant ID on every table, Vault-compatible secret store | Extract the patterns as a reusable template | Not started; design know-how exists | Internal platform architecture know-how; no past client case study cited. |
-| 5. DevSecOps & SBOM | LSA SARIF output | CI templates for GitHub and GitLab | Not started; low effort | Internal CI/CD tooling experience; no formal client reference cited. |
+| Legacy Security Assessment | LSA kit v1.0.1: prompts, pre-scan scripts, SARIF v2.1.0, bilingual EN/JA reports, interactive HTML dashboard; 100% recall & 0 false positives on 10 stacks | Commercial pilot engagement | Ready for pilot | **Explicit gap:** No past client project timesheets cited. Capability demonstrated and benchmarked on 10 multi-stack fixtures and Evaluation Run 3. |
+| 1. Secure API & IAM | D1 Authz (.NET 8, Spring Boot 3, Go, Node.js, Python), D2 OIDC (.NET 8, Spring Boot 3, Python), D3 Safe Query (Roslyn & Detekt), D4 Kong + Coraza WAF, Legacy Shims, D5 Cross-User Runner, D6 Member Portal demo | Client-specific integration in pilot | Implemented & CI-verified | **Explicit gap:** Greenfield implementation in Komainu; verified by D5 automated test pipeline and D6 Member Portal benchmark (75.7% effort savings in ADR-0005). |
+| 2. Zero-PII eKYC & NFC | `remediate/ekyc/`: JPKI (My Number Card) & IC chip SOD verification, replay-resistant nonces with rate limiting, strict raw-image rejection (`HTTP 422`), blind-index tokenization, legal review (`LEGAL_COMPLIANCE_2027.md`) | Production J-LIS leased-line / accredited operator hookup per client | Implemented & CI-verified | **Explicit gap:** Reference architecture & legal analysis complete; production J-LIS accreditation depends on client entity. |
+| 3. Immutable backup | `remediate/resilience/`: Terraform multi-region S3 Object Lock (`COMPLIANCE` mode), KMS CMK deny-delete policy, DR runbook & automated DR verification CLI (`dr_manager.py`) | Client AWS/cloud account provisioning | Implemented & CI-verified | **Explicit gap:** Verified by unit & Trivy IaC scans; no past client modernization reference cited. |
+| 4. Tenant-isolated SaaS | `remediate/tenancy/`: PostgreSQL RLS & schema-per-tenant SQL (`REVOKE ALL FROM PUBLIC`, safe `search_path`), AES-256-GCM BYOK manager with crypto-shredding, HMAC-SHA256 tamper-evident audit trail | Client schema migration | Implemented & CI-verified | Verified against live PostgreSQL in CI (`test_sql_postgres.py`) and unit test suites; no past client case study cited. |
+| 5. DevSecOps & SBOM | `operate/devsecops/`, `operate/remediator/` (`komainu fix`), CycloneDX 1.5 / SPDX 2.3 SBOM generator, SARIF merger, and 6-job `.github/workflows/security-scan.yml` (Bandit, pip-audit, golangci-lint, govulncheck, Roslyn, Detekt, CodeQL, Trivy) | Client CI/CD onboarding | Implemented & CI-verified | Active on Komainu repository itself; no external client reference cited yet. |
 
 Open question answered (2026-10-17): Explicit gap acknowledged across all boilerplate rows. No past project timesheets or client references are currently cited. Client pitches must rely solely on measured numbers from the pilot and automated test suites, rather than historical claims.
 
@@ -164,3 +164,4 @@ Pages opened on 2026-10-16:
 | --- | --- | --- |
 | 0.1 | 2026-10-16 | Rewrite of the original draft: sourced context, assessment-first offer, open/closed decision, measured claims only |
 | 0.2 | 2026-10-17 | Approved by BOD; Open Core model adopted (ADR-0002); AI staffing model established; explicit gaps recorded for past project evidence; original METI DX Report cited |
+| 0.3 | 2026-10-21 | Updated readiness table to reflect implementation, security hardening (#206–#232), and CI verification of all 5 boilerplates across 5 target languages (`v1.0.1`) |

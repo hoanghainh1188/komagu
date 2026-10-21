@@ -14,6 +14,7 @@ Business and planning documents that sit around the LSA kit. They are **internal
 | [Pitching Deck & Sales Enablement Kit](pitching-deck-sales-enablement-kit.md) | Comprehensive 12-slide pitch deck with speaker notes, 3-minute live demo script, executive one-pager, and Japanese enterprise FAQ. | Ready for BOD and client presentations |
 | [Pilot: Client AI Processing Approval & Data Governance Protocol](pilot-client-ai-approval-consent.md) | AI code processing data governance, security guarantees (ZDR, no training), bilingual Japanese/English consent application form, and fallback system protocol for the AMS pilot. | Ready for client submission; Closes #5 |
 | [Pilot: 4-Week Execution Runbook (Weeks 9–12)](pilot-execution-runbook.md) | Comprehensive step-by-step operational runbook for Weeks 9–12: kickoff, consent gate, LSA audit, Person B sign-off, Kong WAF, D1-D3 fixes, D5 CI, and ROI measurement. | Ready for execution; Closes #75 |
+| [Security Scanning in CI](security-scanning.md) | Architecture, tool matrix (Bandit, pip-audit, golangci-lint, govulncheck, Roslyn, Detekt, CodeQL, Trivy), suppression conventions, and gating roadmap for `.github/workflows/security-scan.yml`. | Active on `main` (#232) |
 | [Developer Community Articles (Qiita & Zenn)](articles/README.md) | Japanese developer community articles: published Qiita hands-on quickstart and Zenn technical architecture deep-dive for `komainu-guard`. | Published & active; Closes #73 |
 
 ## How these files are maintained
