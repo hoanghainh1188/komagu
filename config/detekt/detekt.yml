@@ -1,0 +1,19 @@
+# Detekt configuration, applied on top of the default config (--build-upon-default-config).
+
+build:
+  # Report-only phase: never fail the build on the number of issues.
+  maxIssues: -1
+
+# Komainu custom rule set (remediate/query/spring). Third-party rule sets are
+# inactive unless they are enabled explicitly.
+komainu-security:
+  active: true
+  StringBuiltSqlQuery:
+    active: true
+
+# Pure formatting rules are noise for a security scan.
+style:
+  MaxLineLength:
+    active: false
+  MagicNumber:
+    active: false

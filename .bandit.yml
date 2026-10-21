@@ -1,0 +1,12 @@
+# Bandit configuration for the security-scan workflow.
+# Intentionally vulnerable fixtures and sample outputs are excluded.
+exclude_dirs:
+  - assess/lsa/tests/fixtures
+  - assess/lsa/examples
+  - delivery/pilot
+  - node_modules
+  - __pycache__
+
+# B101 (assert_used) only flags test assertions in this repository.
+skips:
+  - B101
