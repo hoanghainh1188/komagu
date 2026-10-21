@@ -3,7 +3,7 @@
 **Tài liệu:** Bộ công cụ Thuyết trình & Hỗ trợ Kinh doanh (Sales Enablement Kit)  
 **Đối tượng mục tiêu:** Ban Giám đốc (BOD), CISO, CIO, Trưởng ban Chuyển đổi số (DX Division), và Giám đốc Quản lý Ứng dụng (AMS / SIers) tại thị trường Nhật Bản.  
 **Tác giả & Diễn giả:** Harry (Principal Architect / BrSE / Lead Oversight)  
-**Phiên bản nền tảng:** Komainu `v1.1.0` (`komainu-guard` trên npmjs & Docker Hub/GHCR)  
+**Phiên bản nền tảng:** Komainu `v1.2.0` (`komainu-guard` trên npmjs & Docker Hub/GHCR)  
 
 ---
 
