@@ -93,6 +93,20 @@ class TestNPMPackage(unittest.TestCase):
         self.assertIn("${GITHUB_REF_NAME#v}", content)
         self.assertIn("operate/cli/__init__.py", content)
 
+        # Execute the shell snippet with matching and mismatching GITHUB_REF_NAME
+        bash_bin = shutil.which("bash")
+        if bash_bin:
+            pkg_version = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))["version"]
+            step_script = content.split("Verify release tag matches package version")[1].split("run: |")[1].split("- name:")[0]
+            env_ok = {**os.environ, "GITHUB_REF_NAME": f"v{pkg_version}"}
+            res_ok = subprocess.run([bash_bin, "-e", "-c", step_script], cwd=REPO_ROOT, env=env_ok, capture_output=True, text=True)
+            self.assertEqual(res_ok.returncode, 0, f"Version check script failed: {res_ok.stderr}")
+            self.assertIn("Version consistency check passed", res_ok.stdout)
+
+            env_bad = {**os.environ, "GITHUB_REF_NAME": "v0.0.0-mismatch"}
+            res_bad = subprocess.run([bash_bin, "-e", "-c", step_script], cwd=REPO_ROOT, env=env_bad, capture_output=True, text=True)
+            self.assertNotEqual(res_bad.returncode, 0)
+
     def test_version_consistency_between_package_and_cli(self) -> None:
         """package.json version must match operate/cli/__init__.py __version__."""
         pkg_data = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
