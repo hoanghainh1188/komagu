@@ -80,10 +80,11 @@ npx komainu-guard protect --up
 - **Result:** Hostile SQL injection payloads and automated exploit scanners are dropped at the network perimeter before reaching your legacy application. Zero code changes required.
 
 ### Step 3: Week 1–2 — Remediation & Modernization (`komainu fix` & SDK)
-Choose between patching the legacy code in place or building new services:
-- **Option A (In-Place Legacy Hotfix):** Use `komainu fix` or drop-in shims (`remediate/legacy_shims` for PHP, Java Servlet, ColdFusion, Classic ASP) to enforce owner validation directly in legacy code:
+Choose between patching the legacy code and vulnerable dependencies in place or building new services:
+- **Option A (In-Place Legacy Hotfix & CVE Dependency Patching):** Use `komainu fix` (with `--sca` for automated manifest & lockfile CVE upgrades across `package.json`/`package-lock.json`/`yarn.lock`, `requirements.txt`/`pyproject.toml`/`Pipfile.lock`/`poetry.lock`, `.csproj`/`packages.lock.json`, `pom.xml`/`build.gradle`/`gradle.lockfile`, and `go.mod`/`go.sum`) or drop-in shims (`remediate/legacy_shims` for PHP, Java Servlet, ColdFusion, Classic ASP):
   ```bash
-  npx komainu-guard fix ./path-to-legacy-repo --dry-run -p ./security-fixes.patch
+  # Preview BOLA, SQLi, and CVE dependency + lockfile patches
+  npx komainu-guard fix ./path-to-legacy-repo --sca --dry-run -p ./security-fixes.patch
   ```
 - **Option B (Modern Target Services):** When modernizing to NestJS, Express, .NET 8, Spring Boot 3, FastAPI, or Go, import `komainu-guard` to enforce strict ownership guards:
   ```typescript
@@ -195,8 +196,8 @@ Run Komainu immediately without manual environment setup:
 # 1. Audit a legacy codebase (Classic ASP, ColdFusion, PHP, Java, .NET, Node, etc.)
 npx komainu-guard scan ./path-to-repo --lang ja --format html
 
-# 2. Preview automated code fixes for discovered vulnerabilities
-npx komainu-guard fix ./path-to-repo --dry-run -p ./fixes.patch
+# 2. Preview automated code & CVE dependency/lockfile fixes
+npx komainu-guard fix ./path-to-repo --sca --dry-run -p ./fixes.patch
 
 # 3. Generate CycloneDX 1.5 & SPDX 2.3 SBOM
 npx komainu-guard devsecops sbom ./path-to-repo --format cyclonedx -o ./sbom.json
@@ -265,7 +266,7 @@ app.get('/api/v1/orders/:id',
 | Command | Description | Example |
 | :--- | :--- | :--- |
 | `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQL injection across 10 stacks | `npx komainu-guard scan ./legacy-app --format html` |
-| `komainu fix <target>` | Generates or applies automated code fixes / unified `.patch` files for BOLA & SQLi findings | `npx komainu-guard fix ./legacy-app --dry-run` |
+| `komainu fix <target>` | Generates or applies automated fixes / `.patch` files for BOLA, SQLi, and CVE dependencies + lockfiles | `npx komainu-guard fix ./legacy-app --sca --dry-run` |
 | `komainu devsecops sbom <target>` | Generates CycloneDX 1.5 / SPDX 2.3 SBOM across npm, PyPI, NuGet, Maven, Go | `npx komainu-guard devsecops sbom . --format cyclonedx` |
 | `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |
 | `komainu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx komainu-guard devsecops run .` |
@@ -317,7 +318,7 @@ An autonomous multi-agent audit pipeline designed to inspect legacy repositories
 ### 4. Operate — Unified CLI & Continuous DevSecOps (`operate/`)
 - **Unified CLI (`bin/komainu` & `operate/cli`):** Single binary distributed via npm (`npx komainu-guard`) and Docker (`ghcr.io/hoanghainh1188/komainu`).
 - **SBOM Generator:** Produces **CycloneDX 1.5** and **SPDX 2.3** across npm, PyPI, NuGet, Maven/Gradle, and Go.
-- **Automated Patcher (`komainu fix`):** Dry-run previews, unified `.patch` files, or in-place fixes for BOLA and SQLi.
+- **Automated Patcher (`komainu fix`):** Dry-run previews, unified `.patch` files, or in-place fixes for BOLA, SQLi, and vulnerable third-party dependencies (`--sca` / `--osv`) with automatic companion lockfile synchronization (`package-lock.json`, `yarn.lock`, `Pipfile.lock`, `poetry.lock`, `packages.lock.json`, `gradle.lockfile`, `go.sum`).
 - **Cross-User Authorization Test Runner (`operate/cross_user_tester`):** Automated multi-method tests simulating cross-user access in CI/CD.
 
 ---
@@ -334,6 +335,7 @@ komainu/
 │   ├── authz/            # BP1-D1: Object-level authorization (.NET 8, Spring Boot 3, Node.js, Python, Go)
 │   ├── identity/         # BP1-D2: OpenID Connect authentication & token validation (.NET 8, Spring Boot 3, Python)
 │   ├── query/            # BP1-D3: Safe query helpers, C# Roslyn analyzer & Kotlin Detekt rule
+│   ├── deps/             # Automated CVE dependency manifest & lockfile patcher across 5 ecosystems
 │   ├── edge/             # BP1-D4: Kong gateway declarative configuration & Coraza WAF (OWASP CRS v4)
 │   ├── legacy_shims/     # Drop-in ownership & safe-query shims (PHP, Java, ColdFusion, Classic ASP)
 │   ├── ekyc/             # BP2: Zero-PII eKYC & NFC JPKI/IC-chip verification (Japan 2027 compliance)
@@ -342,7 +344,7 @@ komainu/
 ├── operate/              # Pillar 4: Continuous verification & DevSecOps (Boilerplate 5)
 │   ├── cli/              # Unified Komainu CLI implementation (scan, fix, devsecops, protect, test, demo)
 │   ├── devsecops/        # BP5: CycloneDX 1.5 / SPDX 2.3 SBOM generator, SARIF merger & SAST/SCA runner
-│   ├── remediator/       # Automated code patcher for BOLA/IDOR and SQL injection findings
+│   ├── remediator/       # Automated code & CVE manifest/lockfile patcher for BOLA, SQLi, and SCA findings
 │   ├── cross_user_tester/# BP1-D5: Automated cross-user authorization CLI test runner
 │   ├── lsa_sarif/        # SARIF v2.1.0 converter for CI code scanning
 │   └── ci/               # GitHub Actions & GitLab CI workflow templates

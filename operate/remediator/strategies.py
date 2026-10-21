@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from remediate.authz.patcher import BOLAOwnershipPatcher
+from remediate.deps.patcher import DependencyManifestPatcher
 from remediate.query.patcher import ParameterizedQueryPatcher
 
 
@@ -105,11 +106,64 @@ class BOLARemediationStrategy(BaseRemediationStrategy):
         return content, "No automated BOLA ownership rewrite applicable; requires manual remediation."
 
 
+class DependencyVulnerabilityRemediationStrategy(BaseRemediationStrategy):
+    """Strategy for remediating vulnerable third-party dependencies (SCA / CVE, CWE-1395)."""
+
+    name: str = "dependency"
+
+    MANIFEST_FILES = {
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "requirements.txt",
+        "pyproject.toml",
+        "pipfile.lock",
+        "poetry.lock",
+        "packages.lock.json",
+        "pom.xml",
+        "build.gradle",
+        "build.gradle.kts",
+        "gradle.lockfile",
+        "go.mod",
+        "go.sum",
+    }
+
+    def can_handle(self, finding: Dict[str, Any]) -> bool:
+        category = str(finding.get("category", "")).lower()
+        cwe = str(finding.get("cwe", "")).upper()
+        finding_id = str(finding.get("finding_id", "")).upper()
+        loc_file = str((finding.get("location") or {}).get("file", "")).lower()
+        base_name = Path(loc_file).name if loc_file else ""
+
+        if category in ("dependency", "sca", "cve", "vulnerable_dependency", "supply_chain"):
+            return True
+        if any(code in cwe for code in ("CWE-1395", "CWE-1104", "CWE-937")):
+            return True
+        if finding_id.startswith(("CVE-", "GHSA-", "OSV-", "KOMAINU-SCA-", "DEP-")):
+            return True
+        if base_name in self.MANIFEST_FILES or base_name.endswith(".csproj"):
+            return True
+        return False
+
+    def generate_patch(
+        self,
+        target_file: Path,
+        content: str,
+        finding: Dict[str, Any],
+    ) -> Tuple[str, str]:
+        patcher = DependencyManifestPatcher()
+        patched_content, result = patcher.patch_manifest(target_file, content, finding)
+        if result.changed:
+            return patched_content, result.explanation
+        return content, result.explanation or "No automated dependency version upgrade applicable; requires manual remediation."
+
+
 class StrategyRegistry:
     """Registry coordinating available remediation strategies."""
 
     def __init__(self) -> None:
         self._strategies: List[BaseRemediationStrategy] = [
+            DependencyVulnerabilityRemediationStrategy(),
             SQLInjectionRemediationStrategy(),
             BOLARemediationStrategy(),
         ]
