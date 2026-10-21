@@ -215,6 +215,25 @@ class TestPythonAuthz(unittest.TestCase):
             jwt_validator.validate_token(expired_jwt)
         self.assertIn("expired", str(ctx.exception).lower())
 
+    def test_09_claim_semantics_and_edge_cases(self) -> None:
+        """Verifies generic id claim support, whitespace trimming, non-scalar claim rejection, and empty owner handling."""
+        # 1. Generic "id" claim and whitespace trimming
+        claims_with_id = {"id": "  user-id-trimmed  ", "tenant_id": "  tenant-trimmed  "}
+        self.assertEqual(self.authz_service.get_current_user_id(claims_with_id), "user-id-trimmed")
+        self.assertEqual(self.authz_service.get_current_tenant_id(claims_with_id), "tenant-trimmed")
+
+        # 2. Reject non-scalar claims
+        non_scalar_claims = {"sub": {"key": "val"}, "tenant_id": ["tenant-1"]}
+        with self.assertRaises(PermissionError):
+            self.authz_service.get_current_user_id(non_scalar_claims)
+        with self.assertRaises(PermissionError):
+            self.authz_service.get_current_tenant_id(non_scalar_claims)
+
+        # 3. Reject resource with empty or whitespace-only owner/tenant
+        empty_owner_res = {"id": "1", "owner_user_id": "   ", "tenant_id": "tenant-trimmed"}
+        res = self.authz_service.authorize(claims_with_id, empty_owner_res)
+        self.assertFalse(res.succeeded)
+
 
 if __name__ == "__main__":
     unittest.main()

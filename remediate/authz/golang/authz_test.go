@@ -150,3 +150,41 @@ func TestAuthorizer_HTTPMiddleware(t *testing.T) {
 		t.Fatalf("expected 404 for attacker, got %d", recAttacker.Code)
 	}
 }
+
+func TestAuthorizer_ClaimSemanticsAndEdgeCases(t *testing.T) {
+	sink := &InMemoryAuditSink{}
+	auth := NewAuthorizer(sink)
+
+	// 1. Supports generic "id" claim and trims whitespace
+	claimsWithId := map[string]interface{}{
+		"id":        "  user-trimmed  ",
+		"tenant_id": " tenant-trimmed ",
+	}
+	uid, err := auth.GetCurrentUserID(claimsWithId)
+	if err != nil || uid != "user-trimmed" {
+		t.Fatalf("expected user-trimmed, got %s (err: %v)", uid, err)
+	}
+	tid, err := auth.GetCurrentTenantID(claimsWithId)
+	if err != nil || tid != "tenant-trimmed" {
+		t.Fatalf("expected tenant-trimmed, got %s (err: %v)", tid, err)
+	}
+
+	// 2. Rejects non-scalar claims (map, slice)
+	nonScalarClaims := map[string]interface{}{
+		"sub":       map[string]string{"foo": "bar"},
+		"tenant_id": []string{"tenant-1"},
+	}
+	if _, err := auth.GetCurrentUserID(nonScalarClaims); err == nil {
+		t.Fatalf("expected error for non-scalar user claim, got nil")
+	}
+	if _, err := auth.GetCurrentTenantID(nonScalarClaims); err == nil {
+		t.Fatalf("expected error for non-scalar tenant claim, got nil")
+	}
+
+	// 3. Rejects empty/whitespace owner or tenant on resource
+	emptyOwnerOrder := &TestOrder{ID: "ord-1", OwnerUserID: "  ", TenantID: "tenant-komainu"}
+	allowed, _, _ := auth.Authorize(claimsWithId, emptyOwnerOrder, OpRead)
+	if allowed {
+		t.Fatalf("expected denial on resource with empty owner")
+	}
+}

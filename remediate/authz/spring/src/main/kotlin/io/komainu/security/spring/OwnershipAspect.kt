@@ -12,6 +12,12 @@ import org.aspectj.lang.reflect.MethodSignature
  * Spring AOP Aspect intercepting methods and classes annotated with @RequireOwnership.
  * Enforces pre-invocation ownership checks on arguments and ID resolvers,
  * pre-mutation gates on UPDATE/DELETE, and post-invocation checks on unwrapped return types.
+ *
+ * NOTE ON PROXY BYPASS (Self-Invocation):
+ * Spring AOP uses dynamic proxies or CGLIB proxies. Direct method calls within the same class
+ * (self-invocation, e.g., `this.deleteOrder(id)`) bypass the proxy and will NOT trigger
+ * this aspect. All protected invocations must cross the proxy boundary via injected bean references
+ * or application context lookups.
  */
 @Aspect
 class OwnershipAspect(
@@ -65,12 +71,13 @@ class OwnershipAspect(
         val idParamIndex = paramNames.indexOf(requireOwnership.idParam)
         if (idParamIndex != -1 && idParamIndex < args.size) {
             idArg = args[idParamIndex]
-        } else if (args.size == 1 && (args[0] is Number || args[0] is String || args[0] is java.util.UUID)) {
-            idArg = args[0]
-        } else if (targetClass != null && paramNames.isEmpty()) {
-            // Fallback when parameter names are not preserved in bytecode:
-            // Find argument matching ID types (String, Number, UUID)
-            idArg = args.firstOrNull { it is Number || it is String || it is java.util.UUID }
+        } else if (paramNames.isEmpty()) {
+            // Fallback ONLY when parameter names are not preserved in bytecode (no -parameters flag):
+            if (args.size == 1 && (args[0] is Number || args[0] is String || args[0] is java.util.UUID)) {
+                idArg = args[0]
+            } else if (targetClass != null) {
+                idArg = args.firstOrNull { it is Number || it is String || it is java.util.UUID }
+            }
         }
 
         if (idArg != null) {
@@ -187,18 +194,40 @@ class OwnershipAspect(
 
     private fun unwrapValue(value: Any?): List<Any> {
         if (value == null) return emptyList()
+        // Optional
         if (value is java.util.Optional<*>) {
             return if (value.isPresent) unwrapValue(value.get()) else emptyList()
         }
+        // Iterable (e.g., List, Set)
         if (value is Iterable<*>) {
             return value.filterNotNull().flatMap { unwrapValue(it) }
         }
+        // Array
         if (value is Array<*>) {
             return value.filterNotNull().flatMap { unwrapValue(it) }
         }
+        // Map values
+        if (value is Map<*, *>) {
+            return value.values.filterNotNull().flatMap { unwrapValue(it) }
+        }
+        // Java Stream
+        if (value is java.util.stream.Stream<*>) {
+            // Convert stream to a list first, then recursively unwrap each element.
+            return value.filter { it != null }.toList().flatMap { unwrapValue(it) }
+        }
+        // Reactor Mono (optional – requires Reactor on classpath)
+        // if (value is reactor.core.publisher.Mono<*>) {
+        //     val resolved = value.block()
+        //     return if (resolved != null) unwrapValue(resolved) else emptyList()
+        // }
 
+        // CompletableFuture
+        if (value is java.util.concurrent.CompletableFuture<*>) {
+            val resolved = value.get()
+            return if (resolved != null) unwrapValue(resolved) else emptyList()
+        }
+        // ResponseEntity
         val className = value.javaClass.name
-        // Unwrap org.springframework.http.ResponseEntity
         if (className == "org.springframework.http.ResponseEntity") {
             try {
                 val bodyMethod = value.javaClass.getMethod("getBody")
@@ -206,7 +235,7 @@ class OwnershipAspect(
                 return unwrapValue(body)
             } catch (_: Exception) {}
         }
-        // Unwrap Spring Data Page / Slice
+        // Spring Data Page / Slice
         if (className.endsWith("Page") || className.endsWith("Slice")) {
             try {
                 val contentMethod = value.javaClass.getMethod("getContent")
@@ -214,7 +243,7 @@ class OwnershipAspect(
                 return unwrapValue(content)
             } catch (_: Exception) {}
         }
-
+        // Default single value
         return listOf(value)
     }
 }

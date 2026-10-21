@@ -90,6 +90,26 @@ var (
 	tenantIdClaims = []string{"tenant_id", "tid", "tenant", "org_id", "organization_id"}
 )
 
+func extractScalarClaim(val interface{}) (string, bool) {
+	if val == nil {
+		return "", false
+	}
+	switch v := val.(type) {
+	case string:
+		str := strings.TrimSpace(v)
+		return str, str != ""
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return fmt.Sprintf("%d", v), true
+	case float32, float64:
+		// JSON numbers unmarshal as float64
+		str := strings.TrimSpace(fmt.Sprintf("%.0f", v))
+		return str, str != ""
+	default:
+		// Non-scalar claims (slices, maps, structs, bools) are rejected
+		return "", false
+	}
+}
+
 // GetCurrentUserID extracts verified user subject identifier from claims.
 func (a *Authorizer) GetCurrentUserID(claims map[string]interface{}) (string, error) {
 	if claims == nil {
@@ -97,8 +117,7 @@ func (a *Authorizer) GetCurrentUserID(claims map[string]interface{}) (string, er
 	}
 	for _, k := range userIdClaims {
 		if val, ok := claims[k]; ok {
-			str := strings.TrimSpace(fmt.Sprintf("%v", val))
-			if str != "" && str != "<nil>" {
+			if str, ok := extractScalarClaim(val); ok {
 				return str, nil
 			}
 		}
@@ -113,8 +132,7 @@ func (a *Authorizer) GetCurrentTenantID(claims map[string]interface{}) (string, 
 	}
 	for _, k := range tenantIdClaims {
 		if val, ok := claims[k]; ok {
-			str := strings.TrimSpace(fmt.Sprintf("%v", val))
-			if str != "" && str != "<nil>" {
+			if str, ok := extractScalarClaim(val); ok {
 				return str, nil
 			}
 		}
@@ -146,8 +164,14 @@ func (a *Authorizer) Authorize(claims map[string]interface{}, resource IOwnedRes
 		return false, "Resource is nil", nil
 	}
 
-	resOwner := resource.GetOwnerUserID()
-	resTenant := resource.GetTenantID()
+	resOwner := strings.TrimSpace(resource.GetOwnerUserID())
+	resTenant := strings.TrimSpace(resource.GetTenantID())
+
+	if resOwner == "" || resTenant == "" {
+		reason := "Target resource does not expose valid owner and tenant"
+		a.emitDenial(userId, tenantId, resource, op, reason)
+		return false, reason, nil
+	}
 
 	// 1. Tenant boundary enforcement
 	if resTenant != tenantId {

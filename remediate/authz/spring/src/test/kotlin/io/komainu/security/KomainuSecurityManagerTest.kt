@@ -122,4 +122,34 @@ class KomainuSecurityManagerTest {
         assertTrue(decision.failureReason!!.contains("unauthenticated"))
         verify(exactly = 1) { auditSink.emit(any()) }
     }
+
+    @Test
+    fun `getCurrentUserId and tenantId trims whitespace and accepts id claim`() {
+        val jwt = mockk<Jwt>()
+        every { jwt.getClaimAsString("sub") } returns null
+        every { jwt.getClaimAsString("uid") } returns null
+        every { jwt.getClaimAsString("userId") } returns null
+        every { jwt.getClaimAsString("user_id") } returns null
+        every { jwt.getClaimAsString("id") } returns "  user-id-trimmed  "
+        every { jwt.getClaimAsString("tenant_id") } returns "  tenant-trimmed  "
+
+        val auth = mockk<Authentication>()
+        every { auth.isAuthenticated } returns true
+        every { auth.principal } returns jwt
+        every { auth.name } returns "ignored"
+
+        val userId = securityManager.getCurrentUserId(auth)
+        val tenantId = securityManager.getCurrentTenantId(auth)
+
+        assertEquals("user-id-trimmed", userId)
+        assertEquals("tenant-trimmed", tenantId)
+    }
+
+    @Test
+    fun `checkOwnership denies when resource has blank owner`() {
+        setupSecurityContext("user-100", "tenant-alpha")
+        val blankOwnerDoc = TestDocument(UUID.randomUUID(), "   ", "tenant-alpha", "Invalid")
+        val decision = securityManager.checkOwnership(blankOwnerDoc, ResourceOperation.READ)
+        assertFalse(decision.granted)
+    }
 }
