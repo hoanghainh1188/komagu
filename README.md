@@ -1,3 +1,12 @@
+```text
+  _  __                       _             
+ | |/ /___  _ __ ___   __ _  (_)_ __  _   _ 
+ | ' // _ \| '_ ` _ \ / _` | | | '_ \| | | |
+ | . \ (_) | | | | | | (_| | | | | | | |_| |
+ |_|\_\___/|_| |_| |_|\__,_| |_|_| |_|\__,_|
+ Legacy Modernization & Security Platform  
+```
+
 # komainu-guard (狛犬)
 
 > **Security-First CLI & Framework for Enterprise Legacy Modernization**  
