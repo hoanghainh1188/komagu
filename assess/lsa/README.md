@@ -12,10 +12,11 @@ system** and finds:
    concatenation, interpolation, formatting or template placeholders with
    user input (CWE-89, CWE-564, CWE-943).
 
-The kit is **runtime-neutral**: prompts, knowledge and schemas are plain
-Markdown/JSON; scripts are Python 3.8+ with the standard library only.
-Adapters generate files for Claude Code, Cursor, or any platform that can call
-an LLM with a system prompt and file-read tools.
+The kit is **runtime-neutral** and uses a **Bring-Your-Own-LLM (BYO-LLM)** architecture:
+- Prompts, knowledge and schemas are plain Markdown/JSON.
+- Scripts are Python 3.8+ with the standard library only — **no hardcoded API keys or external LLM client SDKs**.
+- This protects customer confidentiality (no unintended code leakage to public APIs) and allows running with self-hosted models (Ollama, vLLM, private VPC endpoints) or enterprise assistants per [`governance/usage-policy.md`](../../governance/usage-policy.md).
+- Adapters generate native role definitions for Claude Code, Cursor, OpenHands, or any generic LLM API runner.
 
 ## Supported stacks
 
