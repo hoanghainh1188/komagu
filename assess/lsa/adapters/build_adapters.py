@@ -108,6 +108,7 @@ Scripts: `python3 {ref}/scripts/<script>.py` (Python 3.8+, standard library only
               "Never write into TARGET.\n\n")
         (agents / f"lsa-{r['id']}.md").write_text(fm + role_body(r, ref), encoding="utf-8")
     print(f"Claude Code: skill in {skill}, {len(ROLES)} subagents in {agents}")
+    print("Next step: In your Claude Code workspace, prompt: 'Run the legacy-security-audit skill. TARGET=src, OUT=lsa-out'")
 
 
 def build_cursor(dest: Path) -> None:
@@ -126,6 +127,7 @@ def build_cursor(dest: Path) -> None:
         (rules / f"lsa-{r['id']}.mdc").write_text(
             f"---\ndescription: {json.dumps(r['description'])}\nglobs:\nalwaysApply: false\n---\n\n" + role_body(r, ".lsa-kit"), encoding="utf-8")
     print(f"Cursor: kit in {kit_dir}, {len(ROLES) + 1} rules in {rules}")
+    print("Next step: In Cursor, open a new chat and invoke: '@lsa-orchestrator run security audit on TARGET=src, OUT=lsa-out'")
 
 
 def build_generic(dest: Path) -> None:
@@ -148,6 +150,7 @@ def build_generic(dest: Path) -> None:
     ]}
     (dest / "contract.json").write_text(json.dumps(contract, indent=2), encoding="utf-8")
     print(f"Generic: {len(ROLES) + 1} system prompts in {sp}, pipeline contract in {dest / 'contract.json'}")
+    print("Next step: Drive the pipeline contract with your preferred LLM runner (see assess/lsa/adapters/generic/README.md)")
 
 
 def main() -> int:

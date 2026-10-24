@@ -38,6 +38,19 @@ flowchart LR
     style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
+### 🧠 Architecture: Deterministic Engine vs. Cognitive AI Agents (BYO-LLM)
+
+A common question from engineers and security auditors is: **"Does Komainu connect to an external LLM API directly?"**
+
+**Answer:** Komainu has no hardcoded API keys and zero vendor lock-in. It operates on a **Bring-Your-Own-LLM (BYO-LLM)** and **runtime-neutral** design to comply with strict enterprise NDAs and confidential code requirements:
+
+| Tier | Engine | Execution | LLM Required? | Primary Role |
+|---|---|---|---|---|
+| **Tier 1** | **Deterministic Engine** (`komainu scan`, `fix`, `protect`) | Local Python 3.8+ stdlib CLI (Zero 3rd-party dependencies) | **No** (100% offline & local) | Blazing-fast regex/AST candidate extraction, WAF edge provisioning, AST code rewriting, and CI/CD cross-user gating. |
+| **Tier 2** | **Cognitive AI Multi-Agents** (`assess/lsa/`) | Executed by your AI runtime (Claude Code, Cursor, Antigravity, OpenHands, or Private LLM API) | **Yes** (via your chosen AI tool) | Deep semantic data-flow tracing, custom authorization model inference (`auth-model.md`), and adversarial verification (*Skeptic Verifier Agent*) for 0 false positives. |
+
+> **Enterprise Privacy Note:** Your sensitive legacy source code is never sent to any unapproved third-party API by Komainu. You retain full control over whether to run agents with self-hosted models (Ollama, vLLM) or approved enterprise subscriptions (see [`governance/usage-policy.md`](governance/usage-policy.md)).
+
 ### 1. 🔍 Auto-Detect (Zero False Positives)
 - Scans **10 legacy stacks** (Classic ASP, ColdFusion, Java Struts/Servlet, .NET WebForms, PHP, Node.js, Python Flask, Perl CGI, SQL Procedures).
 - Features an adversarial **Skeptic Verifier Agent** that actively cross-checks every finding against sanitizers, allow-lists, and existing owner checks — achieving an **empirically proven 1.000 precision** ([Evaluation Run 3](assess/lsa/tests/EVAL-RESULTS.md)).
@@ -97,7 +110,11 @@ Scan without installing anything or disrupting production:
 ```bash
 npx komainu-guard scan ./path-to-legacy-repo --format html --out ./audit-output
 ```
-- **Result:** You receive an offline, interactive visual dashboard (`report.html`) and an **OASIS SARIF v2.1.0** report. It flags the exact controller routes missing ownership checks and points to raw SQL string builders.
+- **Tier 1 (Deterministic Pre-scan):** Runs 100% locally with zero dependencies. Generates an offline, interactive visual dashboard (`report.html`) and an **OASIS SARIF v2.1.0** report. It flags candidate controller routes and raw dynamic query locations.
+- **Tier 2 (Cognitive AI Multi-Agent Audit — BYO-LLM):** To perform deep semantic BOLA verification and eliminate false alarms with the adversarial *Skeptic Verifier Agent*, dispatch the generated batches to your preferred AI environment:
+  - **Claude Code / Antigravity:** `python3 assess/lsa/adapters/build_adapters.py claude-code .`
+  - **Cursor:** `python3 assess/lsa/adapters/build_adapters.py cursor .`
+  - **Private / On-Premise LLM API:** See [`assess/lsa/adapters/generic/README.md`](assess/lsa/adapters/generic/README.md).
 
 ### Phase 2: Day 2 — Immediate Perimeter Defense (`komainu protect`)
 Before refactoring fragile code, eliminate external exploit risk at the network boundary:

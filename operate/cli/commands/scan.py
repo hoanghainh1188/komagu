@@ -34,7 +34,7 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "scan",
         help="Run security audit on target legacy codebase (deterministic pre-scan & reports)",
-        description="Executes stack detection, endpoint inventory, injection analysis, and report generation.",
+        description="Executes Tier 1 deterministic pre-scan, candidate discovery, and report generation (Zero-LLM mode). Tier 2 cognitive AI audit batches can be dispatched to your chosen AI runtime (Claude Code, Cursor, or private LLM API).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -133,7 +133,7 @@ def execute_scan(args: argparse.Namespace) -> int:
     if getattr(args, "cache_dir", None):
         cmd.extend(["--cache-dir", str(args.cache_dir)])
 
-    step("Executing Phase 1: Deterministic Pre-scan")
+    step("Executing Phase 1: Tier 1 Deterministic Pre-scan (Zero-LLM mode)")
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         step_fail("Pre-scan failed")
@@ -299,5 +299,12 @@ def execute_scan(args: argparse.Namespace) -> int:
         rows=summary_rows,
         footer="Open report.html in any browser for interactive charts & remediation patches.",
     )
+
+    # Clarify Two-Tier Architecture and BYO-LLM next steps for cognitive AI audit
+    print(f"  {color('💡 Mode: Tier 1 Deterministic Engine', CYAN, BOLD)} (Regex & AST candidate extraction, no LLM required)")
+    print("  To run Tier 2 Cognitive Multi-Agent Audit (BOLA semantic reasoning & Skeptic Verifier):")
+    print(f"    • Claude Code : {color('python3 assess/lsa/adapters/build_adapters.py claude-code .', BOLD)}")
+    print(f"    • Cursor      : {color('python3 assess/lsa/adapters/build_adapters.py cursor .', BOLD)}")
+    print(f"    • Custom LLM  : see {color('assess/lsa/adapters/generic/README.md', BOLD)} (BYO-LLM: OpenAI, Gemini, Ollama)\n")
 
     return 0
