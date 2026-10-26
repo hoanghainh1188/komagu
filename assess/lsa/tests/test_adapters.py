@@ -4,10 +4,12 @@
 Validates:
 1. Codex adapter: repo-scoped skill, .codex/agents/*.toml custom agents, managed AGENTS.md block.
 2. Claude Code, Cursor and generic adapters keep producing their files.
-3. build() API: runtime aliases, unknown runtimes, script exit codes.
+3. Generic adapter never overwrites a contract.json, kit/ or system-prompts/ it did not generate (Issue #246).
+4. build() API: runtime aliases, unknown runtimes, script exit codes.
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -169,6 +171,70 @@ class TestOtherAdapters(unittest.TestCase):
         build("generic", self.dest)
         self.assertTrue((self.dest / "contract.json").is_file())
         self.assertEqual(len(list((self.dest / "system-prompts").glob("*.md"))), len(ROLES) + 1)
+
+
+class TestGenericAdapterGuard(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dest = Path(self._tmp.name)
+        self.contract = self.dest / "contract.json"
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def assert_untouched(self, *names: str) -> None:
+        self.assertEqual(sorted(p.name for p in self.dest.iterdir()), sorted(names))
+
+    def test_contract_carries_generator_marker(self) -> None:
+        build("generic", self.dest)
+        self.assertEqual(json.loads(self.contract.read_text(encoding="utf-8"))["generator"], "komainu-lsa")
+
+    def test_rebuild_refreshes_generated_contract(self) -> None:
+        build("generic", self.dest)
+        data = json.loads(self.contract.read_text(encoding="utf-8"))
+        data["kit_version"] = "0.0.0"
+        self.contract.write_text(json.dumps(data), encoding="utf-8")
+        build("generic", self.dest)
+        self.assertEqual(json.loads(self.contract.read_text(encoding="utf-8"))["kit_version"], build_adapters.VERSION)
+
+    def test_foreign_contract_fails_before_touching_workspace(self) -> None:
+        self.contract.write_text('{"name": "my-project-contract"}', encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "contract.json"):
+            build("generic", self.dest)
+        self.assertEqual(self.contract.read_text(encoding="utf-8"), '{"name": "my-project-contract"}')
+        self.assert_untouched("contract.json")
+
+    def test_non_json_contract_fails(self) -> None:
+        self.contract.write_bytes(b"\xff not json")
+        with self.assertRaises(ValueError):
+            build("generic", self.dest)
+        self.assert_untouched("contract.json")
+
+    def test_non_object_contract_fails(self) -> None:
+        self.contract.write_text('["komainu-lsa"]', encoding="utf-8")
+        with self.assertRaises(ValueError):
+            build("generic", self.dest)
+
+    def test_foreign_kit_dir_without_contract_fails(self) -> None:
+        (self.dest / "kit" / "scripts").mkdir(parents=True)
+        (self.dest / "kit" / "scripts" / "mine.sh").write_text("echo hi\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "kit"):
+            build("generic", self.dest)
+        self.assertTrue((self.dest / "kit" / "scripts" / "mine.sh").is_file())
+        self.assert_untouched("kit")
+
+    def test_foreign_system_prompts_dir_without_contract_fails(self) -> None:
+        (self.dest / "system-prompts").mkdir()
+        with self.assertRaisesRegex(ValueError, "system-prompts"):
+            build("generic", self.dest)
+
+    def test_script_reports_foreign_contract(self) -> None:
+        self.contract.write_text("{}", encoding="utf-8")
+        res = subprocess.run([sys.executable, str(KIT / "adapters" / "build_adapters.py"), "generic", str(self.dest)],
+                             capture_output=True, text=True)
+        self.assertEqual(res.returncode, 2)
+        self.assertIn("contract.json", res.stdout)
+        self.assertEqual(self.contract.read_text(encoding="utf-8"), "{}")
 
 
 class TestBuildApi(unittest.TestCase):

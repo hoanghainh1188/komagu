@@ -44,6 +44,7 @@ Examples:
 
 DEST should be an audit workspace that contains or sits next to the code under
 audit, not the customer repository itself. Re-running refreshes the generated files.
+generic refuses a DEST whose contract.json, kit/ or system-prompts/ it did not generate.
 """,
     )
     parser.add_argument(
