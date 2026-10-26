@@ -15,6 +15,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_JSON = REPO_ROOT / "package.json"
 BIN_KOMAINU_JS = REPO_ROOT / "bin" / "komainu.js"
 WORKFLOW_FILE = REPO_ROOT / ".github" / "workflows" / "npm-publish.yml"
+RELEASE_PLEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release-please.yml"
+RELEASE_PLEASE_CONFIG = REPO_ROOT / "release-please-config.json"
+RELEASE_PLEASE_MANIFEST = REPO_ROOT / ".release-please-manifest.json"
+CHANGELOG = REPO_ROOT / "CHANGELOG.md"
+CLI_INIT = REPO_ROOT / "operate" / "cli" / "__init__.py"
 
 
 class TestNPMPackage(unittest.TestCase):
@@ -83,6 +88,8 @@ class TestNPMPackage(unittest.TestCase):
         content = WORKFLOW_FILE.read_text(encoding="utf-8")
 
         self.assertIn("npm publish --access public", content)
+        # release-please publishes the GitHub Release with RELEASE_PLEASE_TOKEN so this trigger fires
+        self.assertIn("release:\n    types: [published]", content)
         self.assertIn("id-token: write", content)
         self.assertIn("environment: npm-release", content)
         self.assertIn("npm@11.5.1", content)
@@ -129,6 +136,49 @@ class TestNPMPackage(unittest.TestCase):
         m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', cli_init.read_text(encoding="utf-8"))
         self.assertIsNotNone(m, "Could not find __version__ in operate/cli/__init__.py")
         self.assertEqual(pkg_version, m.group(1), "package.json version does not match operate/cli/__init__.py")
+
+    def test_release_please_configuration(self) -> None:
+        """release-please must bump package.json and the CLI version, keep vX.Y.Z tags, and hide chore/ci/test."""
+        config = json.loads(RELEASE_PLEASE_CONFIG.read_text(encoding="utf-8"))
+        manifest = json.loads(RELEASE_PLEASE_MANIFEST.read_text(encoding="utf-8"))
+        pkg_version = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))["version"]
+
+        self.assertEqual(manifest, {".": pkg_version})
+        self.assertTrue(config["include-v-in-tag"])
+        self.assertFalse(config["include-component-in-tag"])
+
+        root = config["packages"]["."]
+        self.assertEqual(root["release-type"], "node")
+        self.assertEqual(root["changelog-path"], "CHANGELOG.md")
+        self.assertIn({"type": "generic", "path": "operate/cli/__init__.py"}, root["extra-files"])
+
+        sections = {s["type"]: s.get("hidden", False) for s in config["changelog-sections"]}
+        self.assertEqual(set(sections), {"feat", "fix", "perf", "refactor", "docs", "chore", "ci", "test"})
+        self.assertEqual({t for t, hidden in sections.items() if hidden}, {"chore", "ci", "test"})
+
+        # The generic updater only rewrites lines carrying the annotation
+        version_lines = [ln for ln in CLI_INIT.read_text(encoding="utf-8").splitlines() if ln.startswith("__version__")]
+        self.assertEqual(version_lines, [f'__version__ = "{pkg_version}"  # x-release-please-version'])
+
+    def test_release_please_workflow_uses_triggering_token(self) -> None:
+        """GITHUB_TOKEN releases do not trigger npm-publish.yml, so the workflow must use RELEASE_PLEASE_TOKEN."""
+        content = RELEASE_PLEASE_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("branches: [main]", content)
+        self.assertRegex(content, r"googleapis/release-please-action@[0-9a-f]{40} # v\d")
+        self.assertIn("token: ${{ secrets.RELEASE_PLEASE_TOKEN }}", content)
+        self.assertNotIn("secrets.GITHUB_TOKEN", content)
+        self.assertIn("config-file: release-please-config.json", content)
+        self.assertIn("manifest-file: .release-please-manifest.json", content)
+        self.assertNotIn("npm publish --", content)
+        self.assertNotIn("id-token: write", content)
+
+    def test_changelog_ships_in_package(self) -> None:
+        """CHANGELOG.md must exist, cover the current version, and be whitelisted in package.json files."""
+        files = json.loads(PACKAGE_JSON.read_text(encoding="utf-8")).get("files", [])
+        self.assertIn("CHANGELOG.md", files)
+        pkg_version = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))["version"]
+        self.assertTrue(CHANGELOG.read_text(encoding="utf-8").startswith("# Changelog\n"))
+        self.assertIn(f"## [{pkg_version}](", CHANGELOG.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

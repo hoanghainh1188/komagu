@@ -1,0 +1,58 @@
+# Komainu — Automated Release PRs, Changelog & GitHub Releases via release-please
+#
+# Flow:
+# - Every push to main updates (or opens) a "chore(release): bump platform version to X" PR that
+#   bumps package.json, operate/cli/__init__.py (x-release-please-version) and CHANGELOG.md from
+#   the conventional commits merged since the last release.
+# - Squash-merging that PR makes release-please tag vX.Y.Z and publish the GitHub Release, whose
+#   notes match the new CHANGELOG.md entry.
+#
+# Why a dedicated token instead of GITHUB_TOKEN:
+# - Events created with GITHUB_TOKEN do not start other workflows. The release PR would get no CI
+#   runs (main requires 6 status checks), the published release would not start npm-publish.yml,
+#   and the pushed tag would not start docker-publish.yml.
+# - RELEASE_PLEASE_TOKEN is a fine-grained PAT scoped to this repository only, with
+#   Contents: read & write, Pull requests: read & write, Issues: read & write (release labels).
+# - npm publishing itself stays in npm-publish.yml (OIDC trusted publishing, npm-release
+#   environment); this workflow never touches npm credentials.
+
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release PR & GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require RELEASE_PLEASE_TOKEN
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          if [ -z "${RELEASE_PLEASE_TOKEN}" ]; then
+            echo "::error::Secret RELEASE_PLEASE_TOKEN is not set. GITHUB_TOKEN cannot be used: its releases do not trigger npm-publish.yml."
+            exit 1
+          fi
+
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Summarize release
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: echo "Published ${TAG_NAME}; npm-publish.yml and docker-publish.yml run from the release and tag events." >> "$GITHUB_STEP_SUMMARY"

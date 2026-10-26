@@ -20,6 +20,8 @@
 [![SARIF v2.1.0](https://img.shields.io/badge/Standards-OASIS%20SARIF%20v2.1.0-orange.svg)](operate/lsa_sarif/)
 [![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%7C%20HTML-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
 
+**[Changelog](https://github.com/hoanghainh1188/komainu/blob/main/CHANGELOG.md)** · [GitHub Releases](https://github.com/hoanghainh1188/komainu/releases)
+
 ---
 
 ## ⚡ The Autonomous Engine: Does Komainu Auto-Fix?
