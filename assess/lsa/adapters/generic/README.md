@@ -1,5 +1,20 @@
 # Adapter — Any LLM API
 
+Generate the bundle into its own folder:
+
+```
+komainu init --ai generic ./lsa-bundle
+# or: python3 assess/lsa/adapters/build_adapters.py generic ./lsa-bundle
+```
+
+It writes `system-prompts/`, `kit/` and `contract.json` into that folder.
+The contract carries `"generator": "komainu-lsa"`. Re-running refreshes a
+bundle that has this marker. The generator refuses, before writing anything,
+when the folder has a `contract.json` without the marker, or a `kit/` or
+`system-prompts/` folder but no `contract.json`. This keeps a project's own
+files safe. A bundle generated before the marker existed is refused too:
+delete its `contract.json` (or the whole folder) and generate it again.
+
 Minimum the runtime must provide to an agent role:
 
 | Capability | Why |

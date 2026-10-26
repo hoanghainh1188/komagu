@@ -73,6 +73,22 @@ class TestInitCommand(unittest.TestCase):
         self.assertNotIn("Traceback", res.stderr)
         self.assertIn("not UTF-8", res.stdout + res.stderr)
 
+    def test_generic_refuses_foreign_contract_without_traceback(self) -> None:
+        contract = self.dest / "contract.json"
+        contract.write_text('{"openapi": "3.0.0"}', encoding="utf-8")
+        res = subprocess.run([sys.executable, str(BIN_KOMAINU), "--no-banner", "init", "--ai", "generic", str(self.dest)],
+                             capture_output=True, text=True)
+        self.assertEqual(res.returncode, 1)
+        self.assertNotIn("Traceback", res.stderr)
+        self.assertIn("contract.json", res.stdout + res.stderr)
+        self.assertEqual(contract.read_text(encoding="utf-8"), '{"openapi": "3.0.0"}')
+        self.assertEqual([p.name for p in self.dest.iterdir()], ["contract.json"])
+
+    def test_generic_rerun_refreshes_own_bundle(self) -> None:
+        self.assertEqual(run_quiet(["--no-banner", "init", "--ai", "generic", str(self.dest)]), 0)
+        self.assertEqual(run_quiet(["--no-banner", "init", "--ai", "generic", str(self.dest)]), 0)
+        self.assertTrue((self.dest / "system-prompts" / "orchestrator.md").is_file())
+
     def test_help_topic_and_examples(self) -> None:
         res = subprocess.run([sys.executable, str(BIN_KOMAINU), "help", "init"], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0)
