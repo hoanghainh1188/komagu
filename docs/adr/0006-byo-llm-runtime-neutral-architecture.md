@@ -42,8 +42,9 @@ Komainu adopts a **Two-Tier Architecture** with a strictly **Runtime-Neutral** a
 
 ### 3. Integration via Standardized Adapters
 
-Instead of locking into one model provider, Komainu provides adapter generators (`assess/lsa/adapters/build_adapters.py`):
+Instead of locking into one model provider, Komainu provides adapter generators (`assess/lsa/adapters/build_adapters.py`, exposed in the CLI as `komainu init --ai <runtime> [DEST]`):
 - **Claude Code**: Produces `.claude/skills/` and `.claude/agents/` subagent files.
+- **OpenAI Codex**: Produces a repo-scoped skill in `.agents/skills/`, custom agents in `.codex/agents/*.toml`, and a managed section in `AGENTS.md`.
 - **Cursor**: Produces `.cursor/rules/` rule files.
 - **Generic LLM Runner / Private Cloud**: Produces system prompt bundles and pipeline contract JSON for private endpoints (e.g., vLLM, Ollama, self-hosted models, or custom API wrappers).
 
