@@ -27,6 +27,7 @@ COPY assess/ /app/assess/
 COPY operate/ /app/operate/
 COPY remediate/ /app/remediate/
 COPY contracts/ /app/contracts/
+COPY governance/ /app/governance/
 COPY examples/ /app/examples/
 
 # Ensure executable permissions on CLI entrypoints

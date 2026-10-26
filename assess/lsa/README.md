@@ -61,8 +61,9 @@ python3 tests/run_tests.py
 python3 scripts/run_prescan.py /path/to/legacy-repo /path/to/lsa-out/legacy-repo \
         --config templates/audit-config.json
 
-# 2. Generate files for your AI tool (pick one)
+# 2. Generate files for your AI tool (pick one; `komainu init --ai <tool> DEST` does the same)
 python3 adapters/build_adapters.py claude-code /path/to/audit-workspace
+python3 adapters/build_adapters.py codex       /path/to/audit-workspace
 python3 adapters/build_adapters.py cursor      /path/to/audit-workspace
 python3 adapters/build_adapters.py generic     /path/to/audit-workspace
 
@@ -84,7 +85,7 @@ without a verdict, invalid JSON, …). Fix those before reporting.
 | `../../contracts/schemas/` | JSON Schemas for the stack profile, route inventory, findings (shared, at the repository root) |
 | `scripts/` | Pre-scan, batching, merge/validation, SARIF export, report rendering |
 | `templates/` | `audit-config.json`, `review-log.md`, `fix-ticket.md` |
-| `adapters/` | Generators and notes for Claude Code, Cursor, OpenHands, generic LLM platforms |
+| `adapters/` | Generators and notes for Claude Code, Codex, Cursor, OpenHands, generic LLM platforms |
 | `../../governance/` | Usage policy: roles, data protection, approval gates, metrics (shared, at the repository root) |
 | `tests/` | Fixture apps with known bugs, pre-scan self-test, agent evaluation tools |
 

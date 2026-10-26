@@ -107,6 +107,17 @@ class TestNPMPackage(unittest.TestCase):
             res_bad = subprocess.run([bash_bin, "-e", "-c", step_script], cwd=REPO_ROOT, env=env_bad, capture_output=True, text=True)
             self.assertNotEqual(res_bad.returncode, 0)
 
+    def test_package_ships_every_folder_komainu_init_copies(self) -> None:
+        """`komainu init` copies kit folders from the repo; each top-level source must be in package.json files."""
+        files = json.loads(PACKAGE_JSON.read_text(encoding="utf-8")).get("files", [])
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("lsa_build_adapters", REPO_ROOT / "assess" / "lsa" / "adapters" / "build_adapters.py")
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+        for src in builder.COPY_DIRS.values():
+            top = Path(src).resolve().relative_to(REPO_ROOT).parts[0] + "/"
+            self.assertIn(top, files, f"{top} is copied by komainu init but missing from package.json files")
+
     def test_version_consistency_between_package_and_cli(self) -> None:
         """package.json version must match operate/cli/__init__.py __version__."""
         pkg_data = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))

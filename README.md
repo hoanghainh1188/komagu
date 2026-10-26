@@ -112,9 +112,10 @@ npx komainu-guard scan ./path-to-legacy-repo --format html --out ./audit-output
 ```
 - **Tier 1 (Deterministic Pre-scan):** Runs 100% locally with zero dependencies. Generates an offline, interactive visual dashboard (`report.html`) and an **OASIS SARIF v2.1.0** report. It flags candidate controller routes and raw dynamic query locations.
 - **Tier 2 (Cognitive AI Multi-Agent Audit — BYO-LLM):** To perform deep semantic BOLA verification and eliminate false alarms with the adversarial *Skeptic Verifier Agent*, dispatch the generated batches to your preferred AI environment:
-  - **Claude Code / Antigravity:** `python3 assess/lsa/adapters/build_adapters.py claude-code .`
-  - **Cursor:** `python3 assess/lsa/adapters/build_adapters.py cursor .`
-  - **Private / On-Premise LLM API:** See [`assess/lsa/adapters/generic/README.md`](assess/lsa/adapters/generic/README.md).
+  - **Claude Code / Antigravity:** `npx komainu-guard init --ai claude-code ./audit-workspace`
+  - **OpenAI Codex:** `npx komainu-guard init --ai codex ./audit-workspace` (see [`assess/lsa/adapters/codex/README.md`](assess/lsa/adapters/codex/README.md))
+  - **Cursor:** `npx komainu-guard init --ai cursor ./audit-workspace`
+  - **Private / On-Premise LLM API:** `npx komainu-guard init --ai generic ./lsa-bundle`, then see [`assess/lsa/adapters/generic/README.md`](assess/lsa/adapters/generic/README.md).
 
 ### Phase 2: Day 2 — Immediate Perimeter Defense (`komainu protect`)
 Before refactoring fragile code, eliminate external exploit risk at the network boundary:
@@ -308,6 +309,7 @@ app.get('/api/v1/orders/:id',
 | Command | Description | Example |
 | :--- | :--- | :--- |
 | `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQLi across 10 stacks | `npx komainu-guard scan ./legacy-app --format html` |
+| `komainu init --ai <runtime> [dest]` | Installs the Tier 2 audit skill and agents into your AI runtime (`claude-code`, `codex`, `cursor`, `generic`) — no LLM calls by Komainu | `npx komainu-guard init --ai codex ./audit-workspace` |
 | `komainu fix <target>` | Automatically rewrites code in-place or exports `.patch` for BOLA, SQLi & CVEs | `npx komainu-guard fix ./legacy-app --dry-run -p fix.patch` |
 | `komainu devsecops sbom <target>` | Generates CycloneDX 1.5 / SPDX 2.3 SBOM across npm, PyPI, NuGet, Maven, Go | `npx komainu-guard devsecops sbom . --format cyclonedx` |
 | `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |

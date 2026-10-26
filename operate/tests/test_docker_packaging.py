@@ -28,6 +28,7 @@ class TestDockerPackaging(unittest.TestCase):
         self.assertIn('CMD ["--help"]', content)
         self.assertIn("PYTHONPATH=/app", content)
         self.assertIn("COPY examples/ /app/examples/", content)
+        self.assertIn("COPY governance/ /app/governance/", content)
 
     def test_dockerignore_excludes_unnecessary_files(self) -> None:
         """.dockerignore must exclude git history, pycache, and temporary outputs."""
