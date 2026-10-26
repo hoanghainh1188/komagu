@@ -17,6 +17,7 @@
     "governance/",
     "examples/",
     "README.md",
+    "CHANGELOG.md",
     "!**/__pycache__/**",
     "!**/.gradle/**",
     "!**/build/**",
