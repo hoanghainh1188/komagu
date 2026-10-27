@@ -44,6 +44,12 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # Ingest LSA findings and verify only findings with >= 80% AI Consensus
+  komainu test --url http://staging.internal:8000 --from-scan ./findings.json --min-consensus 0.8
+
+  # Verify findings and export reproducible Python & cURL exploit PoC scripts
+  komainu test --url http://localhost:5001 --from-scan ./findings.json --export-poc ./pocs
+
   # Test auto-generated CRUD BOLA cases against local API
   komainu test --url http://localhost:5001 --auto-crud /api/members
 
@@ -52,6 +58,9 @@ Examples:
 
   # Run tests with custom attacker token and save report
   komainu test --url http://localhost:5001 --token "jwt-persona-b" --output ./results.json
+
+Documentation:
+  See docs/cli-guide.md#34-komainu-test--offensive-exploit-verification--bola-invariant-testing
 """,
     )
     parser.add_argument(
