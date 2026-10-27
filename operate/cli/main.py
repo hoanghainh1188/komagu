@@ -28,6 +28,9 @@ Quick Start Workflow:
   7. Install AI audit agents:   komainu init --ai codex ~/audits/acme
   8. Simulate breach scenarios: komainu simulate --scenario times-car-breach
 
+Documentation & Guides:
+  Comprehensive User Guide: docs/cli-guide.md
+
 Learn more about a specific command:
   komainu help <command>
   komainu <command> --help
