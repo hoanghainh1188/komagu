@@ -157,6 +157,10 @@ def main() -> int:
     if res_sarif.returncode != 0:
         fails.append(f"test_sarif_export.py failed:\n{res_sarif.stdout}\n{res_sarif.stderr}")
     print(f"  sarif export     {'OK' if res_sarif.returncode == 0 else 'FAIL'}")
+    res_mod = subprocess.run([sys.executable, str(HERE / "test_modern_stacks.py")], capture_output=True, text=True)
+    if res_mod.returncode != 0:
+        fails.append(f"test_modern_stacks.py failed:\n{res_mod.stdout}\n{res_mod.stderr}")
+    print(f"  modern stacks    {'OK' if res_mod.returncode == 0 else 'FAIL'}")
     res_perf = subprocess.run([sys.executable, str(HERE / "test_performance.py")], capture_output=True, text=True)
     if res_perf.returncode != 0:
         fails.append(f"test_performance.py failed:\n{res_perf.stdout}\n{res_perf.stderr}")

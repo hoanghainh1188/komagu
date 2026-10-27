@@ -42,6 +42,7 @@ SOURCE_EXTS = {
     ".pl", ".pm", ".cgi",
     ".cfm", ".cfc", ".cfml",
     ".js", ".mjs", ".ts", ".py", ".rb", ".erb", ".sql",
+    ".rs", ".go", ".toml", ".mod",
 }
 
 

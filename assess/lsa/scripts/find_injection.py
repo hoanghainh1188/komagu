@@ -29,6 +29,7 @@ LANG_BY_EXT = {
     ".pl": "perl", ".pm": "perl", ".cgi": "perl",
     ".cfm": "cfml", ".cfc": "cfml", ".cfml": "cfml",
     ".js": "js", ".mjs": "js", ".ts": "js", ".py": "python", ".rb": "ruby",
+    ".rs": "rust", ".go": "go",
     ".xml": "xml", ".sql": "sql",
 }
 
@@ -55,6 +56,7 @@ COMMENT_LINE = {
     "php": re.compile(r"^\s*(//|#|\*|/\*)"), "java": re.compile(r"^\s*(//|\*|/\*)"), "cs": re.compile(r"^\s*(//|\*|/\*)"),
     "js": re.compile(r"^\s*(//|\*|/\*)"), "vb": re.compile(r"^\s*('|REM\b)", re.I), "perl": re.compile(r"^\s*#"),
     "python": re.compile(r"^\s*#"), "ruby": re.compile(r"^\s*#"), "cfml": re.compile(r"^\s*(<!---|//)"),
+    "rust": re.compile(r"^\s*(//|\*|/\*)"), "go": re.compile(r"^\s*(//|\*|/\*)"),
     "xml": re.compile(r"^\s*<!--"), "sql": re.compile(r"^\s*--"),
 }
 LOG_LINE = re.compile(r"(?i)\b(log(ger)?\.(debug|info|warn|error|trace)|console\.log|System\.out\.print|Debug\.Write|Trace\.Write|error_log|syslog)\s*\(")
@@ -68,15 +70,15 @@ LIT = {
     "python": re.compile(r"[fFrRbBuU]{0,2}\"(?:\\.|[^\"\\])*\"|[fFrRbBuU]{0,2}'(?:\\.|[^'\\])*'"),
 }
 LIT_FOR = {"php": "both", "java": "c", "cs": "cs", "js": "js", "vb": "vb", "perl": "both", "python": "python",
-           "ruby": "both", "cfml": "both", "aspx": "cs", "sql": "both", "xml": "both"}
+           "ruby": "both", "cfml": "both", "aspx": "cs", "sql": "both", "xml": "both", "rust": "c", "go": "js"}
 CONCAT_OP = {"php": r"\.", "perl": r"\.", "java": r"\+", "cs": r"\+", "js": r"\+", "python": r"\+", "ruby": r"\+",
-             "vb": r"&|\+", "cfml": r"&", "sql": r"\+|\|\|"}
+             "vb": r"&|\+", "cfml": r"&", "sql": r"\+|\|\|", "rust": r"\+", "go": r"\+"}
 INTERP = {
     "php": re.compile(r"\$[A-Za-z_]|\{\$"), "perl": re.compile(r"[$@][A-Za-z_{]"), "ruby": re.compile(r"#\{"),
     "js": re.compile(r"\$\{"), "cs": re.compile(r"\{[^}\d][^}]*\}"), "python": re.compile(r"\{[^}]*\}"),
-    "java": re.compile(r"\$[A-Za-z_]|\$\{"),
+    "java": re.compile(r"\$[A-Za-z_]|\$\{"), "rust": re.compile(r"\{[^}]*\}"),
 }
-FORMAT_CALL = re.compile(r"(?i)\b(String\.format|string\.Format|String\.Format|sprintf|MessageFormat\.format|AppendFormat)\s*\(")
+FORMAT_CALL = re.compile(r"(?i)\b(String\.format|string\.Format|String\.Format|sprintf|MessageFormat\.format|AppendFormat|format!|fmt\.Sprintf)\s*\(")
 PY_PERCENT = re.compile(r"[\"']\s*%\s*[\w(]")
 PY_DOTFORMAT = re.compile(r"[\"']\s*\.format\s*\(")
 
@@ -94,13 +96,14 @@ NOSQL_RULES = [
 ]
 RAW_APIS = re.compile(r"\b(whereRaw|orWhereRaw|havingRaw|orderByRaw|selectRaw|DB::raw|DB::select|DB::statement|DB::unprepared|createQuery|"
                       r"createSQLQuery|createNativeQuery|sqlRestriction|find_by_sql|\.raw|\.extra|SqlQuery|ExecuteSqlCommand|"
-                      r"FromSqlRaw|ExecuteQuery|queryForList|queryForObject|queryForMap|jdbcTemplate\.\w+)\s*\(")
+                      r"FromSqlRaw|ExecuteQuery|queryForList|queryForObject|queryForMap|jdbcTemplate\.\w+|sqlx::query|sqlx::query_as|db\.Raw|db\.Exec)\s*\(")
 ASSIGN = {
     "php": re.compile(r"(\$[\w\->\[\]'\"]+?)\s*(\.=|=)(?!=)"), "perl": re.compile(r"(\$\w+)\s*(\.=|=)(?!=)"),
     "java": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"), "cs": re.compile(r"\b([\w.]+)\s*(\+=|=)(?!=)"),
     "js": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"), "python": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"),
     "ruby": re.compile(r"\b(\w+)\s*(\+=|<<|=)(?!=)"), "vb": re.compile(r"\b([\w.]+)\s*(&=|\+=|=)(?!=)", re.I),
     "cfml": re.compile(r"\b([\w.]+)\s*(&=|=)(?!=)"),
+    "rust": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"), "go": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"),
 }
 APPEND_CALL = re.compile(r"\b(\w+)\s*\.\s*(append|Append|AppendLine|concat)\s*\(")
 
@@ -156,6 +159,8 @@ def has_interpolation(lit_text: str, lang: str) -> bool:
         return lit_text[:2].lower().replace("r", "").startswith("f") and bool(INTERP["python"].search(lit_text))
     if lang == "java":
         return lit_text.startswith('"') and bool(INTERP["java"].search(lit_text))
+    if lang == "rust":
+        return lit_text.startswith('"') and bool(INTERP["rust"].search(lit_text))
     return False
 
 
@@ -254,7 +259,7 @@ class Finder:
             if any(has_interpolation(m.group(0), lang) for m in cand_lits):
                 self.add(lang, rel, i, lines, "sql-interpolation", "string_interpolation", "sql", target_var, file_has_input)
                 continue
-            if FORMAT_CALL.search(line) and re.search(r"%[sd]|\{\d+\}", line):
+            if FORMAT_CALL.search(line) and re.search(r"%[sd]|\{\d*\}", line):
                 self.add(lang, rel, i, lines, "sql-format", "format_string", "sql", target_var, file_has_input)
                 continue
             if lang == "python" and (PY_PERCENT.search(line) or PY_DOTFORMAT.search(line)):
