@@ -58,6 +58,7 @@ RULES = [
     ("go-fiber", "go", "go.md", [("text", r"github\.com/gofiber/fiber|fiber\.New")]),
     ("go-echo", "go", "go.md", [("text", r"github\.com/labstack/echo|echo\.New")]),
     ("go-chi", "go", "go.md", [("text", r"github\.com/go-chi/chi|chi\.NewRouter")]),
+    ("go-gorilla", "go", "go.md", [("text", r"github\.com/gorilla/mux|mux\.NewRouter")]),
     ("python-fastapi", "python", "node-python-ruby.md", [("text", r"from\s+fastapi\s+import|import\s+fastapi|FastAPI\s*\(")]),
     ("node-nestjs", "typescript", "node-python-ruby.md", [("text", r"@nestjs/(common|core|swagger)")]),
 ]

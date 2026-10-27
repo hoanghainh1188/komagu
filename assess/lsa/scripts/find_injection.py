@@ -56,7 +56,8 @@ COMMENT_LINE = {
     "php": re.compile(r"^\s*(//|#|\*|/\*)"), "java": re.compile(r"^\s*(//|\*|/\*)"), "cs": re.compile(r"^\s*(//|\*|/\*)"),
     "js": re.compile(r"^\s*(//|\*|/\*)"), "vb": re.compile(r"^\s*('|REM\b)", re.I), "perl": re.compile(r"^\s*#"),
     "python": re.compile(r"^\s*#"), "ruby": re.compile(r"^\s*#"), "cfml": re.compile(r"^\s*(<!---|//)"),
-    "rust": re.compile(r"^\s*(//|\*|/\*)"), "go": re.compile(r"^\s*(//|\*|/\*)"),
+    # a leading "*" is a block-comment continuation only when followed by whitespace; "*x = ..." is a deref
+    "rust": re.compile(r"^\s*(//|/\*|\*/|\*(?=\s|$))"), "go": re.compile(r"^\s*(//|/\*|\*/|\*(?=\s|$))"),
     "xml": re.compile(r"^\s*<!--"), "sql": re.compile(r"^\s*--"),
 }
 LOG_LINE = re.compile(r"(?i)\b(log(ger)?\.(debug|info|warn|error|trace)|console\.log|System\.out\.print|Debug\.Write|Trace\.Write|error_log|syslog)\s*\(")
@@ -79,6 +80,7 @@ INTERP = {
     "java": re.compile(r"\$[A-Za-z_]|\$\{"), "rust": re.compile(r"\{[^}]*\}"),
 }
 FORMAT_CALL = re.compile(r"(?i)\b(String\.format|string\.Format|String\.Format|sprintf|MessageFormat\.format|AppendFormat|format!|fmt\.Sprintf)\s*\(")
+RUST_FMT_MACRO = re.compile(r"\b(format|format_args|write|writeln)!\s*\(")
 PY_PERCENT = re.compile(r"[\"']\s*%\s*[\w(]")
 PY_DOTFORMAT = re.compile(r"[\"']\s*\.format\s*\(")
 
@@ -96,7 +98,7 @@ NOSQL_RULES = [
 ]
 RAW_APIS = re.compile(r"\b(whereRaw|orWhereRaw|havingRaw|orderByRaw|selectRaw|DB::raw|DB::select|DB::statement|DB::unprepared|createQuery|"
                       r"createSQLQuery|createNativeQuery|sqlRestriction|find_by_sql|\.raw|\.extra|SqlQuery|ExecuteSqlCommand|"
-                      r"FromSqlRaw|ExecuteQuery|queryForList|queryForObject|queryForMap|jdbcTemplate\.\w+|sqlx::query|sqlx::query_as|db\.Raw|db\.Exec)\s*\(")
+                      r"FromSqlRaw|ExecuteQuery|queryForList|queryForObject|queryForMap|jdbcTemplate\.\w+|sqlx::query(?:_as|_scalar)?(?:::<[^()]*>)?|db\.Raw|db\.Exec|db\.Query|db\.QueryRow)\s*\(")
 ASSIGN = {
     "php": re.compile(r"(\$[\w\->\[\]'\"]+?)\s*(\.=|=)(?!=)"), "perl": re.compile(r"(\$\w+)\s*(\.=|=)(?!=)"),
     "java": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"), "cs": re.compile(r"\b([\w.]+)\s*(\+=|=)(?!=)"),
@@ -162,6 +164,21 @@ def has_interpolation(lit_text: str, lang: str) -> bool:
     if lang == "rust":
         return lit_text.startswith('"') and bool(INTERP["rust"].search(lit_text))
     return False
+
+
+def rust_in_format_macro(lines: List[str], lineno: int) -> bool:
+    """True when the first string literal on `lineno` sits inside a still-open format!-style macro call.
+
+    Rust braces are only interpolated by formatting macros, which may open a few lines above the literal.
+    """
+    cur = lines[lineno - 1]
+    q = cur.find('"')
+    ctx = "\n".join(lines[max(0, lineno - 4):lineno - 1] + [cur[:q if q != -1 else len(cur)]])
+    opened = list(RUST_FMT_MACRO.finditer(ctx))
+    if not opened:
+        return False
+    tail = re.sub(r'"(?:\\.|[^"\\])*"', '""', ctx[opened[-1].end():])
+    return tail.count("(") >= tail.count(")")
 
 
 class Finder:
@@ -256,10 +273,11 @@ class Finder:
                 continue
             # interpolation inside a SQL literal (or SQL-variable literal)
             cand_lits = sql_lits or (lits if target_var else [])
-            if any(has_interpolation(m.group(0), lang) for m in cand_lits):
+            in_fmt = lang != "rust" or rust_in_format_macro(lines, i)
+            if in_fmt and any(has_interpolation(m.group(0), lang) for m in cand_lits):
                 self.add(lang, rel, i, lines, "sql-interpolation", "string_interpolation", "sql", target_var, file_has_input)
                 continue
-            if FORMAT_CALL.search(line) and re.search(r"%[sd]|\{\d*\}", line):
+            if FORMAT_CALL.search(line) and re.search(r"%[sdvq]|\{\d*\}", line):
                 self.add(lang, rel, i, lines, "sql-format", "format_string", "sql", target_var, file_has_input)
                 continue
             if lang == "python" and (PY_PERCENT.search(line) or PY_DOTFORMAT.search(line)):
@@ -285,6 +303,8 @@ class Finder:
             rm = RAW_APIS.search(line)
             if rm:
                 arg = line[rm.end():].strip()
+                if lang == "rust":
+                    arg = arg.lstrip("&")
                 if arg and not arg.startswith(("\"", "'", "`", "@\"")) and re.match(r"[$\w]", arg):
                     var = re.match(r"[$\w.\->]+", arg).group(0)
                     if var in sqlvars or var.lstrip("$") in {k.lstrip("$") for k in sqlvars}:

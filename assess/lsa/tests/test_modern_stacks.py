@@ -174,5 +174,167 @@ export class UsersController {
             self.assertIn("/users/:id", paths)
 
 
+class TestModernStackRegressions(unittest.TestCase):
+    """Regression cases from the #257 review (issue #259)."""
+
+    def setUp(self) -> None:
+        self.config = load_config(None)
+
+    def scan(self, files: dict) -> tuple:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            for rel, text in files.items():
+                (root / rel).parent.mkdir(parents=True, exist_ok=True)
+                (root / rel).write_text(text, encoding="utf-8")
+            stack_ids = {s["id"] for s in detect(root, self.config)["stacks"]}
+            routes = map_routes(root, self.config, stack_ids)["candidates"]
+            injections = find_injection(root, self.config)["candidates"]
+            return routes, injections
+
+    @staticmethod
+    def route_set(routes: list) -> set:
+        return {(r["stack"], r["method"][0], r["path"]) for r in routes}
+
+    @staticmethod
+    def flagged_lines(injections: list) -> set:
+        return {i["line"] for i in injections}
+
+    # --- High: route false negatives --------------------------------------------------
+    def test_go_fiber_chi_servemux_gorilla_routes(self) -> None:
+        routes, _ = self.scan({
+            "fiber.go": 'package main\nimport "github.com/gofiber/fiber/v2"\n'
+                        'func main() { app := fiber.New(); app.Get("/users/:id", getUser); c.Get("key") }\n',
+            "chi.go": 'package main\nimport "github.com/go-chi/chi/v5"\n'
+                      'func main() { r := chi.NewRouter(); r.Delete("/orders/{id}", deleteOrder) }\n',
+            "std.go": 'package main\nimport "net/http"\n'
+                      'func main() { mux := http.NewServeMux(); mux.HandleFunc("GET /items/{id}", getItem) }\n',
+            "gorilla.go": 'package main\nimport "github.com/gorilla/mux"\n'
+                          'func main() { r := mux.NewRouter(); r.HandleFunc("/invoices/{id}", showInvoice).Methods("GET", "PUT") }\n',
+        })
+        got = self.route_set(routes)
+        self.assertIn(("go-fiber", "GET", "/users/:id"), got)
+        self.assertIn(("go-chi", "DELETE", "/orders/{id}"), got)
+        self.assertIn(("go-nethttp", "GET", "/items/{id}"), got)
+        gorilla = [r for r in routes if r["path"] == "/invoices/{id}"]
+        self.assertEqual(len(gorilla), 1)
+        self.assertEqual(gorilla[0]["method"], ["GET", "PUT"])
+        self.assertEqual(len(routes), 4, "single-argument Get() calls are not routes")
+
+    def test_axum_qualified_and_chained_handlers(self) -> None:
+        routes, _ = self.scan({"src/main.rs": '''use axum::{routing::get, Router};
+fn app() -> Router {
+    Router::new()
+        .route("/users/:id", get(handlers::show_user))
+        .route("/orders/{id}", get(show_order).delete(remove_order))
+}
+'''})
+        got = {(r["method"][0], r["path"], r["handler"]["symbol"]) for r in routes}
+        self.assertEqual(got, {("GET", "/users/:id", "handlers::show_user"),
+                               ("GET", "/orders/{id}", "show_order"),
+                               ("DELETE", "/orders/{id}", "remove_order")})
+
+    # --- High: injection false negatives ----------------------------------------------
+    def test_go_sprintf_verb_v_and_q(self) -> None:
+        _, inj = self.scan({"db.go": '''package db
+func F(id string) {
+    q := fmt.Sprintf("SELECT * FROM t WHERE id = %v", id)
+    q2 := fmt.Sprintf("SELECT * FROM t WHERE name = %q", id)
+}
+'''})
+        self.assertTrue({3, 4} <= self.flagged_lines(inj))
+
+    def test_sqlx_query_with_borrowed_variable(self) -> None:
+        _, inj = self.scan({"src/db.rs": '''use sqlx;
+async fn f(pool: &PgPool, id: &str) {
+    let sql = build_sql(id);
+    sqlx::query(&sql).execute(pool).await;
+    sqlx::query_as::<_, User>(&sql).fetch_one(pool).await;
+}
+'''})
+        raw = {i["line"] for i in inj if i["rule"] == "raw-api-variable"}
+        self.assertEqual(raw, {4, 5})
+
+    # --- Medium: wrong output ----------------------------------------------------------
+    def test_go_stack_label_ignores_gin_substring(self) -> None:
+        routes, _ = self.scan({"main.go": '''package main
+import "github.com/labstack/echo/v4"
+// login handler with origin check
+func main() { e := echo.New(); e.GET("/users/:id", getUser) }
+'''})
+        self.assertEqual([r["stack"] for r in routes], ["go-echo"])
+
+    def test_go_handler_symbol_with_middleware(self) -> None:
+        routes, _ = self.scan({
+            "echo.go": 'package main\nimport "github.com/labstack/echo/v4"\n'
+                       'func main() { e.GET("/users/:id", getUser, middleware.JWT([]byte("k"))) }\n',
+            "gin.go": 'package main\nimport "github.com/gin-gonic/gin"\n'
+                      'func main() { r.POST("/accounts", auth.Required(), h.Create) }\n',
+        })
+        got = {r["path"]: r["handler"]["symbol"] for r in routes}
+        self.assertEqual(got, {"/users/:id": "getUser", "/accounts": "h.Create"})
+
+    def test_guard_hint_lines_are_absolute(self) -> None:
+        routes, _ = self.scan({
+            "src/main.rs": 'use axum::Router;\n\n\nlet layer = require_login();\n'
+                           'let app = Router::new().route("/me", get(me));\n',
+            "main.go": 'package main\nimport "github.com/gin-gonic/gin"\n\n\n'
+                       'r.Use(RequireLogin())\nr.GET("/me", me)\n',
+        })
+        lines = {r["handler"]["file"]: [g["line"] for g in r["guard_hints"]] for r in routes}
+        self.assertEqual(lines["src/main.rs"], [4])
+        self.assertEqual(lines["main.go"], [5])
+
+    def test_rocket_routes_labeled_and_attribute_args(self) -> None:
+        routes, _ = self.scan({"src/main.rs": '''#[macro_use] extern crate rocket;
+#[get("/user/<id>", rank = 2)]
+fn user(id: u32) -> String { id.to_string() }
+#[post("/user", data = "<form>")]
+#[allow(unused)]
+pub async fn create(form: Form<User>) {}
+#[launch] fn rocket() -> _ { rocket::build() }
+'''})
+        got = {(r["stack"], r["method"][0], r["path"], r["handler"]["symbol"]) for r in routes}
+        self.assertEqual(got, {("rust-rocket", "GET", "/user/<id>", "user"),
+                               ("rust-rocket", "POST", "/user", "create")})
+        user = next(r for r in routes if r["path"] == "/user/<id>")
+        self.assertIn("id", [p["name"] for p in user["id_params"]])
+
+    def test_actix_attribute_with_extra_args(self) -> None:
+        routes, _ = self.scan({"src/main.rs": '''use actix_web::{get, web};
+#[get("/a/{id}", wrap = "Auth")]
+async fn h(path: web::Path<u32>) -> String { "x".into() }
+'''})
+        self.assertEqual(self.route_set(routes), {("rust-actix", "GET", "/a/{id}")})
+
+    def test_rust_plain_literal_braces_not_interpolation(self) -> None:
+        _, inj = self.scan({"src/db.rs": '''use sqlx;
+fn a(id: &str) {
+    let s = "SELECT * FROM t WHERE x = {placeholder}";
+    let q = format!(
+        "SELECT * FROM t WHERE id = {id}"
+    );
+    let label = format!("{}", id);
+    let t = "SELECT * FROM t WHERE y = {other}";
+}
+'''})
+        lines = self.flagged_lines(inj)
+        self.assertNotIn(3, lines)
+        self.assertIn(5, lines)
+        self.assertNotIn(8, lines, "a closed format!() on an earlier line does not cover this literal")
+
+    def test_deref_assignment_not_treated_as_comment(self) -> None:
+        _, inj = self.scan({"db.go": '''package db
+/*
+ * SELECT * FROM t WHERE id = ' + id
+ */
+func F(q *string, id string) {
+    *q = "SELECT * FROM t WHERE id = '" + id + "'"
+}
+'''})
+        lines = self.flagged_lines(inj)
+        self.assertIn(6, lines)
+        self.assertNotIn(3, lines)
+
+
 if __name__ == "__main__":
     unittest.main()
