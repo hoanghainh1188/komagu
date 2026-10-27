@@ -49,6 +49,17 @@ RULES = [
     ("python-flask", "python", "node-python-ruby.md", [("text", r"from\s+flask\s+import|import\s+flask")]),
     ("sql-procedures", "sql", "", [("text", r"(?i)create\s+(or\s+replace\s+)?proc(edure)?\b")]),
     ("ruby-rails", "ruby", "node-python-ruby.md", [("name", r"(^|/)config/routes\.rb$"), ("text", r"<\s*(ApplicationController|ActionController::Base)")]),
+    ("rust", "rust", "rust.md", [("ext", {".rs"})]),
+    ("rust-actix", "rust", "rust.md", [("text", r"use\s+actix_web\b|actix_web::")]),
+    ("rust-axum", "rust", "rust.md", [("text", r"use\s+axum\b|axum::")]),
+    ("rust-rocket", "rust", "rust.md", [("text", r"use\s+rocket\b|#\[launch\]")]),
+    ("go", "go", "go.md", [("ext", {".go"})]),
+    ("go-gin", "go", "go.md", [("text", r"github\.com/gin-gonic/gin|gin\.Default|gin\.New")]),
+    ("go-fiber", "go", "go.md", [("text", r"github\.com/gofiber/fiber|fiber\.New")]),
+    ("go-echo", "go", "go.md", [("text", r"github\.com/labstack/echo|echo\.New")]),
+    ("go-chi", "go", "go.md", [("text", r"github\.com/go-chi/chi|chi\.NewRouter")]),
+    ("python-fastapi", "python", "node-python-ruby.md", [("text", r"from\s+fastapi\s+import|import\s+fastapi|FastAPI\s*\(")]),
+    ("node-nestjs", "typescript", "node-python-ruby.md", [("text", r"@nestjs/(common|core|swagger)")]),
 ]
 
 DATA_ACCESS = [
@@ -66,6 +77,13 @@ DATA_ACCESS = [
     ("Perl DBI", r"DBI->connect"),
     ("ColdFusion cfquery", r"<cfquery"),
     ("MongoDB", r"MongoClient|MongoCollection|MongoDB\\|mongoose|pymongo|com\.mongodb"),
+    ("sqlx (Rust)", r"sqlx::|query!\s*\(|query_as!\s*\(|sqlx\s*="),
+    ("Diesel (Rust)", r"diesel::|RunQueryDsl|diesel\s*="),
+    ("GORM (Go)", r"gorm\.io/gorm|gorm\.Open|gorm\.Model|db\.Where|db\.Find"),
+    ("database/sql (Go)", r"sql\.Open|db\.Query|db\.Exec"),
+    ("SQLAlchemy (Python)", r"sqlalchemy\.|create_engine|SessionLocal"),
+    ("Prisma (Node/TS)", r"PrismaClient|@prisma/client"),
+    ("TypeORM (Node/TS)", r"typeorm|@Entity|getRepository"),
 ]
 
 DB_HINTS = [
@@ -75,7 +93,8 @@ DB_HINTS = [
 ]
 
 TEXT_SAMPLE_EXTS = {".sql", ".php", ".inc", ".java", ".jsp", ".xml", ".cs", ".vb", ".aspx", ".asax", ".config", ".asp",
-                    ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".py", ".rb", ".kt", ".kts"}
+                    ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".py", ".rb", ".kt", ".kts",
+                    ".rs", ".go", ".toml", ".mod"}
 
 
 def detect(target: Path, config: dict) -> dict:

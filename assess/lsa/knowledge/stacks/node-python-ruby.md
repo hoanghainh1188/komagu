@@ -1,7 +1,8 @@
-# Stack Notes — Older Node.js (Express 3/4), Python (Django ≤1.x, Flask, web.py), Ruby (Rails 2–4, Sinatra)
+# Stack Notes — Node.js (Express, NestJS), Python (Django, Flask, FastAPI), Ruby (Rails 2–4, Sinatra)
 
-## Node.js / Express
+## Node.js / Express & NestJS
 
+### Express
 - Routes: `app.get|post|put|delete|all('/path/:id', mw1, mw2, handler)`,
   `router.*` mounted with `app.use('/prefix', router)`. Middleware order
   matters: `app.use(auth)` only protects routes declared **after** it.
@@ -15,7 +16,14 @@
 - Sinks: `connection.query("..." + x)`, template literals, `sequelize.query`,
   `knex.raw`, Mongo `$where`, `find(req.query)`.
 
-## Python
+### NestJS (TypeScript)
+- Routes: `@Controller('orders')` classes with method decorators `@Get(':id')`, `@Post()`, `@Put(':id')`, `@Delete(':id')`.
+- Auth: `@UseGuards(AuthGuard('jwt'))` or custom authorization guards. Note: `@UseGuards` at method level or controller level.
+- Inputs: `@Param('id')`, `@Query()`, `@Body()`, `@Req() req: Request`.
+- Ownership: Check if service layer verifies `req.user.id == order.userId` or uses tenant scoped query in TypeORM / Prisma / Mongoose.
+- Sinks: `dataSource.query("SELECT ... " + id)`, `prisma.$queryRawUnsafe(...)`, `typeorm.createQueryBuilder().where("id = " + id)`. Safe: `prisma.$queryRaw\`SELECT ...\``, parameter bindings.
+
+## Python (Django, Flask, FastAPI)
 
 - Django: `urls.py` `url(r'^order/(?P<id>\d+)/$', views.detail)` /
   `path('order/<int:id>/', ...)`; auth `@login_required` (login only!),
@@ -26,6 +34,8 @@
   (Flask-Login), `current_user`; sinks `db.engine.execute("..." + x)`,
   `cursor.execute(f"...{x}")`. Safe: `cursor.execute("... %s", (x,))`
   (**comma = param binding**; `%` = string formatting — easy to confuse).
+- FastAPI: `@router.get('/order/{id}')` or `@app.post(...)`, dependencies `Depends(get_current_user)`.
+  Ownership: verify `current_user.id` is queried alongside `id`. Sinks: `session.execute(text(f"SELECT ... {id}"))`, raw asyncpg/sqlite string formatting.
 - web.py: `urls = ('/order/(\d+)', 'Order')` class with `GET/POST`;
   `db.query("..." + x)` unsafe; `db.query("... $id", vars={'id': x})` safe.
 

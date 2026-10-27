@@ -20,12 +20,13 @@ The kit is **runtime-neutral** and uses a **Bring-Your-Own-LLM (BYO-LLM)** archi
 
 ## Supported stacks
 
-| Focus (legacy) | Also covered |
+| Focus (legacy) | Also covered / Modern extensions |
 |---|---|
-| Plain PHP 4/5, CodeIgniter 2/3, CakePHP 1/2, Zend 1, early Laravel | Express 3/4 (Node) |
-| Java Servlet/JSP, Struts 1/2, Spring MVC 2.5–4, JAX-RS, iBATIS/MyBatis, Hibernate 3 | Django ≤1.x, Flask, web.py |
-| ASP.NET WebForms, MVC 2–5, Web API, ASMX/WCF, `.ashx` (C# and VB.NET) | Rails 2–4, Sinatra |
-| Classic ASP (VBScript/JScript), Perl CGI (CGI.pm, DBI), ColdFusion (CFML) | T-SQL / PL-SQL stored procedures (dynamic SQL) |
+| Plain PHP 4/5, CodeIgniter 2/3, CakePHP 1/2, Zend 1, early Laravel | Express 3/4, NestJS (Node / TypeScript) |
+| Java Servlet/JSP, Struts 1/2, Spring MVC 2.5–4, JAX-RS, iBATIS/MyBatis, Hibernate 3 | Django, Flask, FastAPI (Python) |
+| ASP.NET WebForms, MVC 2–5, Web API, ASMX/WCF, `.ashx` (C# and VB.NET) | Rails, Sinatra |
+| Classic ASP (VBScript/JScript), Perl CGI (CGI.pm, DBI), ColdFusion (CFML) | Rust (Actix, Axum, Rocket, SQLx, Diesel), Go (Gin, Fiber, Echo, Chi, GORM) |
+| Dynamic stored procedures (T-SQL, PL-SQL) | Microservices & API gateways |
 
 ## How it works
 

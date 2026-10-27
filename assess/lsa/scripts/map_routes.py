@@ -76,6 +76,24 @@ INPUTS: Dict[str, List[Tuple[re.Pattern, int, str]]] = {
         (re.compile(r"params\s*\[\s*:(\w+)\s*\]"), 1, "any"),
         (re.compile(r"params\s*\[\s*['\"](\w+)['\"]\s*\]"), 1, "any"),
     ],
+    "rust": [
+        (re.compile(r"Path\s*<\s*([^>]+)\s*>"), 1, "path"),
+        (re.compile(r"Query\s*<\s*([^>]+)\s*>"), 1, "query"),
+        (re.compile(r"Json\s*<\s*([^>]+)\s*>"), 1, "body"),
+        (re.compile(r"Form\s*<\s*([^>]+)\s*>"), 1, "form"),
+        (re.compile(r"\.match_info\(\)\.get\(\s*\"([^\"]+)\"\s*\)"), 1, "path"),
+        (re.compile(r"web::Path\s*<\s*([^>]+)\s*>"), 1, "path"),
+        (re.compile(r"web::Query\s*<\s*([^>]+)\s*>"), 1, "query"),
+    ],
+    "go": [
+        (re.compile(r"c\.(?:Param|Params)\s*\(\s*\"([^\"]+)\"\s*\)"), 1, "path"),
+        (re.compile(r"c\.(?:Query|QueryParam)\s*\(\s*\"([^\"]+)\"\s*\)"), 1, "query"),
+        (re.compile(r"c\.(?:PostForm|FormValue)\s*\(\s*\"([^\"]+)\"\s*\)"), 1, "form"),
+        (re.compile(r"r\.(?:FormValue|PostFormValue)\s*\(\s*\"([^\"]+)\"\s*\)"), 1, "form"),
+        (re.compile(r"r\.URL\.Query\(\)\.Get\s*\(\s*\"([^\"]+)\"\s*\)"), 1, "query"),
+        (re.compile(r"chi\.URLParam\s*\(\s*\w+\s*,\s*\"([^\"]+)\"\s*\)"), 1, "path"),
+        (re.compile(r"mux\.Vars\s*\(\s*\w+\s*\)\s*\[\s*\"([^\"]+)\"\s*\]"), 1, "path"),
+    ],
 }
 
 SOURCE_MAP = {
@@ -120,6 +138,7 @@ LANG_BY_EXT = {
     ".pl": "perl", ".pm": "perl", ".cgi": "perl",
     ".cfm": "cfml", ".cfc": "cfml", ".cfml": "cfml",
     ".js": "js", ".mjs": "js", ".ts": "js", ".py": "python", ".rb": "ruby",
+    ".rs": "rust", ".go": "go",
 }
 
 FILE_ENDPOINT_EXTS = {".php", ".php3", ".php4", ".php5", ".phtml", ".jsp", ".aspx", ".ashx", ".asmx", ".svc",
@@ -464,6 +483,17 @@ def cfml_declared(c: Collector, rel: str, text: str) -> bool:
 def js_py_rb_declared(c: Collector, rel: str, text: str, lang: str) -> bool:
     found = False
     if lang == "js":
+        if "@Controller" in text or "@nestjs" in text:
+            ctrl_m = re.search(r"@Controller\s*\(\s*(?:['\"]([^'\"]*)['\"])?", text)
+            ctrl_prefix = ("/" + ctrl_m.group(1).strip("/")) if (ctrl_m and ctrl_m.group(1)) else ""
+            for m in re.finditer(r"@(Get|Post|Put|Delete|Patch)\s*\(\s*(?:['\"]([^'\"]*)['\"])?", text):
+                sub_path = m.group(2) or ""
+                path = "/" + "/".join(p.strip("/") for p in (ctrl_prefix, sub_path) if p.strip("/"))
+                line = line_of(text, m.start())
+                c.add(stack="node-nestjs", kind="declared_route", method=[m.group(1).upper()], path=path or "/",
+                      handler={"file": rel, "line": line, "symbol": None}, id_params=c.path_params(path) + c.inputs("js", text[m.start():m.start() + 400], line),
+                      guard_hints=c.guards(text[m.start():m.start() + 400], line), data_hints=c.data_ops(text[m.start():m.start() + 800], line), notes="nestjs controller")
+                found = True
         rx = re.compile(r"\b(app|router|\w+Router)\.(get|post|put|patch|delete|all)\s*\(\s*['\"`]([^'\"`]+)['\"`]([^)]*)")
         decls = list(rx.finditer(text))
         for i, m in enumerate(decls):
@@ -477,6 +507,13 @@ def js_py_rb_declared(c: Collector, rel: str, text: str, lang: str) -> bool:
                   notes="check app.use() order and router mount prefix")
             found = True
     elif lang == "python":
+        # FastAPI
+        for m in re.finditer(r"@\w+\.(get|post|put|patch|delete)\s*\(\s*['\"]([^'\"]+)['\"]", text):
+            line = line_of(text, m.start())
+            c.add(stack="python-fastapi", kind="declared_route", method=[m.group(1).upper()], path=m.group(2),
+                  handler={"file": rel, "line": line, "symbol": None}, id_params=c.path_params(m.group(2)) + c.inputs("python", text[m.start():m.start() + 400], line),
+                  guard_hints=c.guards(text[m.start():m.start() + 400], line), data_hints=c.data_ops(text[m.start():m.start() + 800], line), notes="fastapi route")
+            found = True
         rx = re.compile(r"@\w+\.route\s*\(\s*['\"]([^'\"]+)['\"](?:[^)]*methods\s*=\s*\[([^\]]*)\])?")
         decls = list(rx.finditer(text))
         for i, m in enumerate(decls):
@@ -505,6 +542,69 @@ def js_py_rb_declared(c: Collector, rel: str, text: str, lang: str) -> bool:
             c.add(stack="ruby-rails", kind="declared_route", method=["ANY"], path="/:controller(/:action(/:id))",
                   handler={"file": rel, "line": 1, "symbol": None}, id_params=[{"name": "id", "source": "path", "line": None, "is_id_like": True}],
                   guard_hints=[], data_hints=[], notes="catch-all route: every public controller method is reachable")
+    return found
+
+
+def rust_declared(c: Collector, rel: str, text: str) -> bool:
+    found = False
+    actix_rx = re.compile(r"#\[(get|post|put|delete|patch|head)\s*\(\s*\"([^\"]+)\"\s*\)\]\s*(?:(?:pub|pub\(crate\))\s+)?(?:async\s+)?fn\s+(\w+)\s*\(", re.M)
+    for m in actix_rx.finditer(text):
+        verb, path, fn_name = m.group(1).upper(), m.group(2), m.group(3)
+        line = line_of(text, m.start())
+        c.add(stack="rust-actix", kind="declared_route", method=[verb], path=path,
+              handler={"file": rel, "line": line, "symbol": fn_name},
+              id_params=c.path_params(path) + c.inputs("rust", text[m.start():m.start() + 400], line),
+              guard_hints=c.guards(text[m.start():m.start() + 400], line),
+              data_hints=c.data_ops(text[m.start():m.start() + 800], line), notes="actix-web handler")
+        found = True
+
+    axum_rx = re.compile(r"\.route\s*\(\s*\"([^\"]+)\"\s*,\s*(get|post|put|delete|patch|any)\s*\(\s*(\w+)\s*\)\s*\)")
+    for m in axum_rx.finditer(text):
+        path, verb, fn_name = m.group(1), m.group(2).upper(), m.group(3)
+        line = line_of(text, m.start())
+        c.add(stack="rust-axum", kind="declared_route", method=[verb], path=path,
+              handler={"file": rel, "line": line, "symbol": fn_name},
+              id_params=c.path_params(path),
+              guard_hints=c.guards(text[:m.start()][-500:], 1),
+              data_hints=[], notes="axum router declaration")
+        found = True
+
+    rocket_rx = re.compile(r"#\[(get|post|put|delete)\s*\(\s*\"([^\"]+)\"\s*\)\]\s*(?:(?:pub)\s+)?fn\s+(\w+)", re.M)
+    for m in rocket_rx.finditer(text):
+        verb, path, fn_name = m.group(1).upper(), m.group(2), m.group(3)
+        line = line_of(text, m.start())
+        if not any(it["handler"]["symbol"] == fn_name for it in c.items if it["handler"]["file"] == rel):
+            c.add(stack="rust-rocket", kind="declared_route", method=[verb], path=path,
+                  handler={"file": rel, "line": line, "symbol": fn_name},
+                  id_params=c.path_params(path) + c.inputs("rust", text[m.start():m.start() + 400], line),
+                  guard_hints=c.guards(text[m.start():m.start() + 400], line),
+                  data_hints=c.data_ops(text[m.start():m.start() + 800], line), notes="rocket handler")
+            found = True
+    return found
+
+
+def go_declared(c: Collector, rel: str, text: str) -> bool:
+    found = False
+    go_route_rx = re.compile(r"\b\w+\.(GET|POST|PUT|DELETE|PATCH|Handle)\s*\(\s*\"([^\"]+)\"\s*,\s*([^)]+)\)")
+    for m in go_route_rx.finditer(text):
+        verb, path, handler_arg = m.group(1).upper(), m.group(2), m.group(3).strip()
+        line = line_of(text, m.start())
+        symbol = handler_arg.split(",")[-1].strip().split("(")[0].strip()
+        c.add(stack="go-gin" if "gin" in text else "go", kind="declared_route", method=[verb if verb != "HANDLE" else "ANY"],
+              path=path, handler={"file": rel, "line": line, "symbol": symbol},
+              id_params=c.path_params(path),
+              guard_hints=c.guards(text[:m.start()][-500:], 1),
+              data_hints=[], notes="go route declaration")
+        found = True
+
+    http_rx = re.compile(r"http\.HandleFunc\s*\(\s*\"([^\"]+)\"\s*,\s*(\w+)\s*\)")
+    for m in http_rx.finditer(text):
+        path, fn_name = m.group(1), m.group(2)
+        line = line_of(text, m.start())
+        c.add(stack="go-nethttp", kind="declared_route", method=["ANY"], path=path,
+              handler={"file": rel, "line": line, "symbol": fn_name},
+              id_params=c.path_params(path), guard_hints=[], data_hints=[], notes="net/http handlefunc")
+        found = True
     return found
 
 
@@ -592,6 +692,10 @@ def _scan_route_file_batch(args: Tuple[List[Tuple[str, str]], Dict, set, str]) -
             declared = cfml_declared(c, rel, t)
         elif lang in ("js", "python", "ruby"):
             declared = js_py_rb_declared(c, rel, t, lang)
+        elif lang == "rust":
+            declared = rust_declared(c, rel, t)
+        elif lang == "go":
+            declared = go_declared(c, rel, t)
         if declared or ext not in FILE_ENDPOINT_EXTS:
             continue
         if INCLUDE_DIR_RE.search(rel.rsplit("/", 1)[0] + "/" if "/" in rel else ""):
