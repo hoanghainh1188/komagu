@@ -20,10 +20,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import re
 import time
 import urllib.error
 import urllib.request
-from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 class TestCase:
@@ -40,9 +42,20 @@ class TestCase:
         headers: Optional[Dict[str, str]] = None,
         expected_status: Optional[List[int]] = None,
         insecure_status: Optional[List[int]] = None,
+        finding_id: Optional[str] = None,
+        consensus_score: Optional[float] = None,
     ) -> None:
         self.name = name
-        self.path = path.replace("{id}", str(resource_id)) if resource_id else path
+        self.finding_id = finding_id
+        self.consensus_score = consensus_score
+        final_path = path
+        if resource_id:
+            # Replace placeholder variants like {id}, {order_id}, :id, {userId}
+            final_path = re.sub(r"\{[a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*\}", str(resource_id), final_path)
+            final_path = re.sub(r":([a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*)", str(resource_id), final_path)
+            if "{id}" in final_path:
+                final_path = final_path.replace("{id}", str(resource_id))
+        self.path = final_path
         self.method = method.upper()
         self.resource_id = resource_id
         self.attacker_token = attacker_token
@@ -76,6 +89,8 @@ class TestResult:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.test_case.name,
+            "finding_id": self.test_case.finding_id,
+            "consensus_score": self.test_case.consensus_score,
             "method": self.test_case.method,
             "path": self.test_case.path,
             "status_code": self.status_code,
@@ -84,6 +99,7 @@ class TestResult:
             "duration_ms": round(self.duration_ms, 2),
             "error_message": self.error_message,
         }
+
 
 
 class CrossUserTestRunner:
@@ -229,6 +245,153 @@ def load_suite_from_file(file_path: str) -> List[TestCase]:
                 )
             )
     return test_cases
+
+
+def generate_test_cases_from_findings(
+    scan_data_or_path: Union[str, Path, Dict[str, Any], List[Dict[str, Any]]],
+    default_resource_id: str = "12345",
+    attacker_token: Optional[str] = None,
+    min_consensus_score: float = 0.0,
+    include_likely: bool = True,
+) -> List[TestCase]:
+    """Synthesize active BOLA verification test cases from LSA findings.json or SARIF data.
+
+    Parses confirmed/likely BOLA findings, extracts endpoints, replaces identifier
+    parameters with target resource_id, and constructs offensive test cases.
+    """
+    data: Any = scan_data_or_path
+    if isinstance(scan_data_or_path, (str, Path)):
+        p = Path(scan_data_or_path).resolve()
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+    test_cases: List[TestCase] = []
+
+    # 1. Native Komainu findings format
+    if (isinstance(data, dict) and "findings" in data) or isinstance(data, list):
+        items = data if isinstance(data, list) else data.get("findings", [])
+        for item in items:
+            cat = str(item.get("category", "")).lower()
+            fid = str(item.get("finding_id", ""))
+            if cat != "bola" and not fid.startswith("BOLA"):
+                continue
+
+            status = str(item.get("status", "confirmed")).lower()
+            if status in ("rejected", "fixed"):
+                continue
+            if not include_likely and status in ("likely", "unverified"):
+                continue
+
+            # Check consensus score if present
+            c_info = item.get("consensus") or {}
+            c_score: Optional[float] = None
+            if isinstance(c_info, dict) and "score" in c_info:
+                try:
+                    c_score = float(c_info["score"])
+                except (ValueError, TypeError):
+                    c_score = None
+            if c_score is not None and c_score < min_consensus_score:
+                continue
+
+            # Extract path and method from attack_vector or endpoint
+            av = item.get("attack_vector") or {}
+            ep = item.get("endpoint") or {}
+            path = av.get("path") or ep.get("path")
+            method = av.get("method") or ep.get("method") or "GET"
+
+            # Fallback: attempt to find path in evidence or title
+            if not path:
+                title = item.get("title", "")
+                m = re.search(r"(/[a-zA-Z0-9_\-\./\{\}:]+)", title)
+                if m:
+                    path = m.group(1)
+
+            if not path:
+                continue
+
+            # Determine resource_id to inject
+            target_id = default_resource_id
+            if "{id}" not in path and ":id" not in path and not re.search(r"\{[a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*\}", path):
+                if not path.endswith("/"):
+                    target_path = f"{path}/{target_id}"
+                else:
+                    target_path = f"{path}{target_id}"
+            else:
+                target_path = path
+
+            # Handle multiple HTTP methods joined by |
+            methods = [m.strip().upper() for m in method.split("|") if m.strip()] or ["GET"]
+            for m in methods:
+                payload = None
+                if m in ("POST", "PUT", "PATCH"):
+                    payload = {"status": "tampered_by_attacker", "note": "Komainu BOLA exploit verification"}
+
+                tc_name = f"[{fid}] {item.get('title', target_path)} ({m})"
+                test_cases.append(
+                    TestCase(
+                        name=tc_name,
+                        path=target_path,
+                        method=m,
+                        resource_id=target_id,
+                        attacker_token=attacker_token,
+                        payload=payload,
+                        finding_id=fid,
+                        consensus_score=c_score,
+                    )
+                )
+
+    # 2. OASIS SARIF 2.1.0 format
+    elif isinstance(data, dict) and "runs" in data:
+        for run in data.get("runs", []):
+            for result in run.get("results", []):
+                rule_id = str(result.get("ruleId", "")).lower()
+                msg = result.get("message", {}).get("text", "")
+                props = result.get("properties", {}) or {}
+                tags = [str(t).lower() for t in props.get("tags", [])]
+
+                is_bola = (
+                    "bola" in rule_id
+                    or "639" in rule_id
+                    or any("bola" in t or "639" in t for t in tags)
+                )
+                if not is_bola:
+                    continue
+
+                # Try to extract path and method from SARIF properties or message
+                ep = props.get("endpoint") or {}
+                path = ep.get("path")
+                method = ep.get("method") or "GET"
+
+                if not path:
+                    m = re.search(r"(?:GET|POST|PUT|DELETE|PATCH)?\s*(/[a-zA-Z0-9_\-\./\{\}:]+)", msg)
+                    if m:
+                        path = m.group(1)
+
+                if not path:
+                    continue
+
+                target_id = default_resource_id
+                if "{id}" not in path and ":id" not in path and not re.search(r"\{[a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*\}", path):
+                    target_path = f"{path}/{target_id}" if not path.endswith("/") else f"{path}{target_id}"
+                else:
+                    target_path = path
+
+                fid = props.get("finding_id") or result.get("ruleId", "BOLA")
+                tc_name = f"[{fid}] SARIF {result.get('ruleId', 'BOLA')} ({method})"
+                test_cases.append(
+                    TestCase(
+                        name=tc_name,
+                        path=target_path,
+                        method=method,
+                        resource_id=target_id,
+                        attacker_token=attacker_token,
+                        finding_id=fid,
+                        consensus_score=float(props.get("consensus_score", 1.0)) if "consensus_score" in props else None,
+                    )
+                )
+
+    return test_cases
+
 
 
 def format_report(results: List[TestResult], base_url: str) -> Tuple[str, bool]:

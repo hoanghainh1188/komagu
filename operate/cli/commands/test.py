@@ -27,6 +27,7 @@ from operate.cross_user_tester.runner import (
     CrossUserTestRunner,
     format_report,
     generate_crud_test_cases,
+    generate_test_cases_from_findings,
     load_suite_from_file,
 )
 
@@ -86,6 +87,18 @@ Examples:
         help="Path to save detailed JSON test results",
     )
     parser.add_argument(
+        "--from-scan",
+        dest="from_scan",
+        help="Path to findings.json or SARIF output from komainu scan to generate attack test cases",
+    )
+    parser.add_argument(
+        "--min-consensus",
+        dest="min_consensus",
+        type=float,
+        default=0.0,
+        help="Minimum AI consensus score threshold (0.0 to 1.0) to include a finding (default: 0.0)",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="Enforce strict 404 requirement (reject 401/403 which leak resource existence)",
@@ -99,8 +112,25 @@ def execute_test(args: argparse.Namespace) -> int:
 
     tests: List[Any] = []
 
-    # 1. Load from test suite if specified or default exists
-    suite_path = Path(args.suite).resolve() if args.suite else (DEFAULT_SUITE if DEFAULT_SUITE.is_file() else None)
+    # 1. Ingest from scan output if provided
+    if getattr(args, "from_scan", None):
+        scan_file = Path(args.from_scan).resolve()
+        if not scan_file.is_file():
+            step_fail(f"Scan file not found: {scan_file}")
+            return 1
+        step_info(f"Ingesting findings from scan file: {scan_file.name}")
+        min_c = getattr(args, "min_consensus", 0.0) or 0.0
+        scan_cases = generate_test_cases_from_findings(
+            scan_data_or_path=scan_file,
+            default_resource_id=args.resource_id,
+            attacker_token=args.attacker_token,
+            min_consensus_score=min_c,
+        )
+        step_info(f"Synthesized {len(scan_cases)} active verification cases from scan findings")
+        tests.extend(scan_cases)
+
+    # 2. Load from test suite if specified or default exists
+    suite_path = Path(args.suite).resolve() if args.suite else (DEFAULT_SUITE if DEFAULT_SUITE.is_file() and not getattr(args, "from_scan", None) else None)
     if suite_path and suite_path.is_file():
         step_info(f"Loading test suite from {suite_path.name}")
         try:
@@ -108,7 +138,7 @@ def execute_test(args: argparse.Namespace) -> int:
         except Exception as e:
             step_warn(f"Could not load test suite {suite_path}: {e}")
 
-    # 2. Auto-generate CRUD cases if requested or if no suite cases were loaded
+    # 3. Auto-generate CRUD cases if explicitly requested or if no cases were loaded
     if args.auto_crud or not tests:
         crud_path = args.auto_crud or "/api/members"
         step_info(f"Generating CRUD test cases for resource: {crud_path}")
@@ -119,6 +149,7 @@ def execute_test(args: argparse.Namespace) -> int:
                 attacker_token=args.attacker_token,
             )
         )
+
 
     runner = CrossUserTestRunner(
         base_url=args.base_url,
@@ -160,5 +191,25 @@ def execute_test(args: argparse.Namespace) -> int:
         rows=rows,
         footer="Komainu invariant: cross-user resource access MUST return HTTP 404.",
     )
+
+    if getattr(args, "from_scan", None) and results:
+        exploit_rows = []
+        for r in results:
+            tc = r.test_case
+            f_id = getattr(tc, "finding_id", None) or "-"
+            c_score_str = f"{tc.consensus_score:.2f}" if getattr(tc, "consensus_score", None) is not None else "N/A"
+            if r.is_breach:
+                verdict = color("CONFIRMED BREACH (EXPLOITABLE)", RED, BOLD)
+            elif r.is_secure:
+                verdict = color("PROTECTED (404 INVARIANT)", GREEN, BOLD)
+            else:
+                verdict = color(f"UNEXPECTED HTTP {r.status_code}", YELLOW)
+            exploit_rows.append((f"{f_id} [{tc.method} {tc.path}]", f"Consensus: {c_score_str} | Verdict: {verdict}"))
+
+        print_summary_table(
+            title="Multi-AI Consensus vs Active Exploit Verification",
+            rows=exploit_rows,
+            footer="Offensive Verification: Green = 404 Enforced, Red = Active BOLA Breach Confirmed.",
+        )
 
     return 0 if success else 1
