@@ -318,6 +318,8 @@ app.get('/api/v1/orders/:id',
 
 ## 🛠️ CLI Command Reference
 
+> 📖 **Looking for in-depth documentation?** See the [Komainu CLI Comprehensive User Guide](docs/cli-guide.md) for full argument listings, end-to-end modernization workflows, POSIX exit codes, and CI/CD pipeline integration templates.
+
 | Command | Description | Example |
 | :--- | :--- | :--- |
 | `komainu scan <target>` | Runs Legacy Security Audit (LSA) detecting BOLA & SQLi across 10 stacks | `npx komainu-guard scan ./legacy-app --format html` |

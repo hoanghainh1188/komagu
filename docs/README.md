@@ -16,6 +16,7 @@ Business and planning documents that sit around the LSA kit. They are **internal
 | [Pilot: 4-Week Execution Runbook (Weeks 9–12)](pilot-execution-runbook.md) | Comprehensive step-by-step operational runbook for Weeks 9–12: kickoff, consent gate, LSA audit, Person B sign-off, Kong WAF, D1-D3 fixes, D5 CI, and ROI measurement. | Ready for execution; Closes #75 |
 | [Security Scanning in CI](security-scanning.md) | Architecture, tool matrix (Bandit, pip-audit, golangci-lint, govulncheck, Roslyn, Detekt, CodeQL, Trivy), suppression conventions, and gating roadmap for `.github/workflows/security-scan.yml`. | Active on `main` (#232) |
 | [Developer Community Articles (Qiita & Zenn)](articles/README.md) | Japanese developer community articles: published Qiita hands-on quickstart and Zenn technical architecture deep-dive for `komainu-guard`. | Published & active; Closes #73 |
+| [Komainu CLI Comprehensive User Guide](cli-guide.md) | Unified operator and developer guide for all 8 core CLI subcommands (`scan`, `init`, `protect`, `test`, `fix`, `simulate`, `devsecops`, `demo`), flags, exit codes, and CI/CD pipelines. | Active & verified |
 
 ## How these files are maintained
 
