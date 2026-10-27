@@ -83,11 +83,22 @@ Examples:
         help="Check the status of running perimeter containers",
     )
     parser.add_argument(
+        "--virtual-patch",
+        dest="virtual_patch",
+        help="Path to LSA findings.json to auto-synthesize Coraza WAF SecRules",
+    )
+    parser.add_argument(
+        "--patch-out",
+        dest="patch_out",
+        help="Custom output file for generated SecRules (defaults to remediate/edge/coraza/rules/virtual-patches.conf)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Validate configurations without starting containers",
     )
     parser.set_defaults(func=execute_protect)
+
 
 
 def execute_protect(args: argparse.Namespace) -> int:
@@ -105,6 +116,30 @@ def execute_protect(args: argparse.Namespace) -> int:
 
     step_ok(f"Loaded Kong declarative configuration: {config_path.name}")
     step_ok(f"Coraza WAF rules directory verified: {CORAZA_RULES}")
+
+    # Handle Virtual Patching synthesis if --virtual-patch is provided
+    if getattr(args, "virtual_patch", None):
+        scan_path = Path(args.virtual_patch).resolve()
+        if not scan_path.is_file():
+            step_fail(f"Scan findings file not found: {scan_path}")
+            return 1
+
+        from remediate.edge.coraza.virtual_patcher import VirtualPatcher
+        patcher = VirtualPatcher()
+        default_out = EDGE_DIR / "coraza" / "rules" / "virtual-patches.conf"
+        target_conf = Path(args.patch_out).resolve() if getattr(args, "patch_out", None) else default_out
+
+        step_info(f"Synthesizing Coraza WAF virtual patches from: {scan_path.name}")
+        out_file, manifest = patcher.patch_to_file(scan_path, target_conf)
+        step_ok(f"Synthesized {len(manifest)} SecRules into {out_file}")
+
+        if manifest:
+            patch_rows = [(f"Rule {m['rule_id']} [{m['category'].upper()}]", f"{m['finding_id']} -> {m['endpoint']}") for m in manifest]
+            print_summary_table(
+                title="Synthesized Coraza WAF Virtual Patches",
+                rows=patch_rows,
+                footer="Instant Day-2 edge defense active for verified findings.",
+            )
 
     # If --target is supplied, report upstream routing
     upstream_url = args.target or "http://coraza-waf:8080 (internal upstream)"
