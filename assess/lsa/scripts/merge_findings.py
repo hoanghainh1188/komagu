@@ -292,6 +292,10 @@ def main() -> int:
             f["severity"] = v["severity"]
         if v.get("confidence"):
             f["confidence"] = v["confidence"]
+        if v.get("consensus"):
+            f["consensus"] = v["consensus"]
+        if v.get("attack_vector"):
+            f["attack_vector"] = v["attack_vector"]
 
     # 2. de-duplicate findings: prefer non-rejected findings, then higher severity, confidence, fid
     # Dedupe key includes (category, subtype, route_id, file, start_line)

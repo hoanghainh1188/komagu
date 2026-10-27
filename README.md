@@ -16,7 +16,7 @@
 [![License](https://img.shields.io/npm/l/komainu-guard.svg)](https://github.com/hoanghainh1188/komainu/blob/main/LICENSE)
 [![CI Tests](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml)
 [![Security Scan](https://github.com/hoanghainh1188/komainu/actions/workflows/security-scan.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions/workflows/security-scan.yml)
-[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.2.1%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
+[![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.3.0%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
 [![SARIF v2.1.0](https://img.shields.io/badge/Standards-OASIS%20SARIF%20v2.1.0-orange.svg)](operate/lsa_sarif/)
 [![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%7C%20HTML-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
 
@@ -49,13 +49,14 @@ A common question from engineers and security auditors is: **"Does Komainu conne
 | Tier | Engine | Execution | LLM Required? | Primary Role |
 |---|---|---|---|---|
 | **Tier 1** | **Deterministic Engine** (`komainu scan`, `fix`, `protect`) | Local Python 3.8+ stdlib CLI (Zero 3rd-party dependencies) | **No** (100% offline & local) | Blazing-fast regex/AST candidate extraction, WAF edge provisioning, AST code rewriting, and CI/CD cross-user gating. |
-| **Tier 2** | **Cognitive AI Multi-Agents** (`assess/lsa/`) | Executed by your AI runtime (Claude Code, Cursor, Antigravity, OpenHands, or Private LLM API) | **Yes** (via your chosen AI tool) | Deep semantic data-flow tracing, custom authorization model inference (`auth-model.md`), and adversarial verification (*Skeptic Verifier Agent*) for 0 false positives. |
+| **Tier 2** | **Cognitive AI Multi-Agents** (`assess/lsa/`) | Executed by your AI runtime (Claude Code, Cursor, Antigravity, OpenHands, or Private LLM API) | **Yes** (via your chosen AI tool) | Deep semantic data-flow tracing, custom authorization model inference (`auth-model.md`), and **Multi-AI Consensus Council** (*Skeptic Verifier Agent*) for 0 false positives. |
 
 > **Enterprise Privacy Note:** Your sensitive legacy source code is never sent to any unapproved third-party API by Komainu. You retain full control over whether to run agents with self-hosted models (Ollama, vLLM) or approved enterprise subscriptions (see [`governance/usage-policy.md`](governance/usage-policy.md)).
 
-### 1. 🔍 Auto-Detect (Zero False Positives)
+### 1. 🔍 Auto-Detect (Zero False Positives via Multi-AI Consensus)
 - Scans **10 legacy stacks** (Classic ASP, ColdFusion, Java Struts/Servlet, .NET WebForms, PHP, Node.js, Python Flask, Perl CGI, SQL Procedures).
-- Features an adversarial **Skeptic Verifier Agent** that actively cross-checks every finding against sanitizers, allow-lists, and existing owner checks — achieving an **empirically proven 1.000 precision** ([Evaluation Run 3](assess/lsa/tests/EVAL-RESULTS.md)).
+- Features an adversarial **Multi-AI Consensus Council** (combining Gemini's large-context data-flow tracing, OpenAI/DeepSeek exploit reasoning, and Claude's skeptic refutation) that cross-checks every finding against sanitizers, allow-lists, and existing owner checks — achieving an **empirically proven 1.000 precision** ([Evaluation Run 3](assess/lsa/tests/EVAL-RESULTS.md)).
+
 
 ### 2. 🛡️ Auto-Shield (Immediate Perimeter Defense)
 - Commands like `npx komainu-guard protect --up` automatically provision **Kong API Gateway** and the **OWASP Coraza WAF engine** (OWASP CRS v4).
@@ -150,13 +151,19 @@ Choose your modernization pace:
   ```
   *(All unauthorized or cross-user requests strictly return **HTTP 404 Not Found** to prevent resource enumeration).*
 
-### Phase 4: Continuous Verification & Auto-PR Bot in CI/CD (`komainu test`)
-Add Komainu to your CI pipeline to guarantee zero authorization regressions:
+### Phase 4: Offensive CI/CD Verification & Auto-PR Bot (`komainu test`)
+Add Komainu to your CI pipeline to guarantee zero authorization regressions through active exploit verification:
 ```bash
-npx komainu-guard test --url http://127.0.0.1:8000 --auto-crud-path /api/v1/orders/{id}
+# Option A: Ingest findings directly from LSA audit report or SARIF
+npx komainu-guard test --url http://staging-api:8000 --from-scan ./audit-output/findings.json --min-consensus 0.8
+
+# Option B: Target auto-generated CRUD paths directly
+npx komainu-guard test --url http://staging-api:8000 --auto-crud-path /api/v1/orders/{id}
 ```
 - Komainu automatically sends requests using **Persona B's token** targeting **Persona A's resource IDs**.
-- If any endpoint returns `200 OK` (cross-user data leakage), the pipeline **fails the build immediately**.
+- If any endpoint returns `200 OK` (cross-user data leakage), the pipeline **flags an active BOLA breach and fails the build immediately**.
+- Only endpoints that strictly enforce the **HTTP 404 Not Found invariant** pass verification.
+
 
 ---
 
@@ -316,7 +323,7 @@ app.get('/api/v1/orders/:id',
 | `komainu devsecops sbom <target>` | Generates CycloneDX 1.5 / SPDX 2.3 SBOM across npm, PyPI, NuGet, Maven, Go | `npx komainu-guard devsecops sbom . --format cyclonedx` |
 | `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |
 | `komainu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx komainu-guard devsecops run .` |
-| `komainu test --url <base-url>` | Executes automated cross-user authorization tests against live APIs in CI | `npx komainu-guard test --url http://127.0.0.1:5000` |
+| `komainu test --url <base-url>` | Executes active cross-user authorization tests against live APIs (supports `--from-scan` and `--min-consensus`) | `npx komainu-guard test --url http://127.0.0.1:5000 --from-scan findings.json` |
 | `komainu protect --up` | Launches Kong API Gateway & Coraza WAF (OWASP CRS) perimeter | `npx komainu-guard protect --up` |
 | `komainu demo --up` | Launches the reference Member Portal demo environment | `npx komainu-guard demo --up` |
 

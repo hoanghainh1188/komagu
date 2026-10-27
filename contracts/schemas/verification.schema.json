@@ -22,7 +22,25 @@
           "suggested_cwe": {"type": ["array", "null"], "items": {"type": "string", "pattern": "^CWE-[0-9]+$"}},
           "checked": {"type": "array", "minItems": 1, "items": {"type": "string"}},
           "control_found": {"type": ["object", "null"]},
-          "notes": {"type": "string"}
+          "notes": {"type": "string"},
+          "consensus": {
+            "type": ["object", "null"],
+            "properties": {
+              "score": {"type": "number", "minimum": 0.0},
+              "agreement_level": {"enum": ["unanimous", "majority", "disputed", "single_model"]},
+              "voted_models": {"type": "array", "items": {"type": "string"}},
+              "rationale": {"type": "string"}
+            }
+          },
+          "attack_vector": {
+            "type": ["object", "null"],
+            "properties": {
+              "method": {"type": "string"},
+              "path": {"type": "string"},
+              "target_param": {"type": "string"},
+              "suggested_payload": {"type": "string"}
+            }
+          }
         }
       }
     },

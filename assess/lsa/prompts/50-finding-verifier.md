@@ -74,6 +74,11 @@ find controls the auditor missed.
    `suggested_subtype` / `suggested_cwe`. Do not edit the finding.
 7. If you notice a possible issue that **no finding in your batch covers**,
    add it to `new_issues` (category, file, line, why). Do not investigate it.
+8. **Multi-AI Consensus & Attack Vector Synthesis (Ensemble Mode):**
+   When operating with multi-model findings or consensus pipelines:
+   - Evaluate agreement across auditor models. If multiple models independently confirm the absence of authorization checks without reliance on assumptions, assign `consensus.agreement_level: "unanimous"` and `consensus.score: 0.95 - 1.0`.
+   - If an auditor suspects an issue but another model points to an implicit or framework-level guard, record `consensus.agreement_level: "disputed"` with `consensus.score <= 0.5`.
+   - For any `confirmed` or `likely` finding, synthesize an `attack_vector` object specifying the HTTP `method`, route `path`, and the identifier `target_param` (e.g. `order_id`) that an attacker (Persona B) can manipulate to access Persona A's resource.
 
 ## Output
 
@@ -90,7 +95,18 @@ JSON matching `schemas/verification.schema.json`:
       "confidence": "high",
       "checked": ["global filters in inc/bootstrap.php", "OrderDao::find", "post-query comparison"],
       "control_found": null,
-      "notes": "No owner check on any path."
+      "notes": "No owner check on any path.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": ["gemini-2.0-pro", "claude-3-7"],
+        "rationale": "Direct lookup by request id without tenant or user context binding."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/api/orders/{id}",
+        "target_param": "id"
+      }
     },
     {
       "finding_id": "INJ-I-0004-1",
