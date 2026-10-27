@@ -103,7 +103,13 @@ Examples:
         action="store_true",
         help="Enforce strict 404 requirement (reject 401/403 which leak resource existence)",
     )
+    parser.add_argument(
+        "--export-poc",
+        dest="export_poc",
+        help="Directory path to export standalone executable Python and cURL exploit PoC scripts",
+    )
     parser.set_defaults(func=execute_test)
+
 
 
 def execute_test(args: argparse.Namespace) -> int:
@@ -128,6 +134,18 @@ def execute_test(args: argparse.Namespace) -> int:
         )
         step_info(f"Synthesized {len(scan_cases)} active verification cases from scan findings")
         tests.extend(scan_cases)
+
+        # Export PoC exploits if requested
+        if getattr(args, "export_poc", None):
+            from operate.exploit.generator import ExploitGenerator
+            gen = ExploitGenerator(
+                base_url=args.base_url,
+                default_resource_id=args.resource_id,
+                attacker_token=args.attacker_token,
+            )
+            pocs = gen.export_all_to_dir(scan_file, args.export_poc)
+            step_ok(f"Exported {len(pocs)} standalone exploit scripts to: {args.export_poc}")
+
 
     # 2. Load from test suite if specified or default exists
     suite_path = Path(args.suite).resolve() if args.suite else (DEFAULT_SUITE if DEFAULT_SUITE.is_file() and not getattr(args, "from_scan", None) else None)

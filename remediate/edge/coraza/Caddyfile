@@ -14,6 +14,7 @@
             Include /etc/coraza/coraza.conf
             Include @crs-setup.conf.example
             Include /etc/coraza/rules/coraza-crs-custom.conf
+            Include /etc/coraza/rules/virtual-patches.conf
             Include @owasp_crs/*.conf
         `
     }
