@@ -7,7 +7,7 @@ import sys
 from typing import List, Optional
 
 from operate.cli import __version__
-from operate.cli.commands import demo, devsecops, fix, init, protect, scan, test
+from operate.cli.commands import demo, devsecops, fix, init, protect, scan, simulate, test
 from operate.cli.ui import print_banner
 
 
@@ -26,6 +26,7 @@ Quick Start Workflow:
   5. Run DevSecOps & SBOM:      komainu devsecops run .
   6. Remediate vulnerabilities: komainu fix ./legacy-app --dry-run
   7. Install AI audit agents:   komainu init --ai codex ~/audits/acme
+  8. Simulate breach scenarios: komainu simulate --scenario times-car-breach
 
 Learn more about a specific command:
   komainu help <command>
@@ -57,6 +58,7 @@ Learn more about a specific command:
     devsecops.register_subcommand(subparsers)
     fix.register_subcommand(subparsers)
     init.register_subcommand(subparsers)
+    simulate.register_subcommand(subparsers)
 
     help_parser = subparsers.add_parser(
         "help",
@@ -66,8 +68,8 @@ Learn more about a specific command:
     help_parser.add_argument(
         "topic",
         nargs="?",
-        choices=["scan", "protect", "test", "demo", "devsecops", "fix", "init"],
-        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops, fix, init)",
+        choices=["scan", "protect", "test", "demo", "devsecops", "fix", "init", "simulate"],
+        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops, fix, init, simulate)",
     )
 
     return parser

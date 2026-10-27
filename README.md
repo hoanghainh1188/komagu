@@ -243,6 +243,9 @@ npx komainu-guard protect --up
 
 # 7. Launch interactive reference Demo app
 npx komainu-guard demo --up
+
+# 8. Run Breach & Attack Simulation (BAS) modeling landmark enterprise incidents
+npx komainu-guard simulate --scenario times-car-breach --target http://localhost:8000
 ```
 
 Or run via self-contained Docker:
@@ -324,7 +327,8 @@ app.get('/api/v1/orders/:id',
 | `komainu devsecops merge-sarif <files...>` | Merges & deduplicates multiple OASIS SARIF v2.1.0 scan results | `npx komainu-guard devsecops merge-sarif a.sarif b.sarif -o out.sarif` |
 | `komainu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx komainu-guard devsecops run .` |
 | `komainu test --url <base-url>` | Executes active cross-user authorization tests against live APIs (supports `--from-scan` and `--min-consensus`) | `npx komainu-guard test --url http://127.0.0.1:5000 --from-scan findings.json` |
-| `komainu protect --up` | Launches Kong API Gateway & Coraza WAF (OWASP CRS) perimeter | `npx komainu-guard protect --up` |
+| `komainu protect --up` | Launches Kong API Gateway & Coraza WAF (OWASP CRS) perimeter (supports `--virtual-patch`) | `npx komainu-guard protect --up --virtual-patch findings.json` |
+| `komainu simulate --scenario <name>` | Executes Breach & Attack Simulation (BAS) modeling real-world disasters (Times Car, Metabase SQLi, IDC Frontier) | `npx komainu-guard simulate --target http://localhost:5001 --output report.md` |
 | `komainu demo --up` | Launches the reference Member Portal demo environment | `npx komainu-guard demo --up` |
 
 ---
@@ -378,8 +382,10 @@ komainu/
 │   ├── resilience/       # BP3: Multi-region Terraform S3 WORM backup, KMS CMK & DR verification CLI
 │   └── tenancy/          # BP4: PostgreSQL RLS/schema isolation, BYOK AES-256-GCM & HMAC audit trail
 ├── operate/              # Pillar 4: Continuous verification & DevSecOps (Boilerplate 5)
-│   ├── cli/              # Unified Komainu CLI implementation (scan, fix, devsecops, protect, test, demo)
+│   ├── cli/              # Unified Komainu CLI implementation (scan, fix, devsecops, protect, test, demo, simulate)
 │   ├── devsecops/        # BP5: CycloneDX 1.5 / SPDX 2.3 SBOM generator, SARIF merger & SAST/SCA runner
+│   ├── exploit/          # Automated PoC exploit script generator (Python & cURL)
+│   ├── simulate/         # Breach & attack simulation (BAS) suite & C-level resilience reporting
 │   ├── remediator/       # Automated code patcher for BOLA/IDOR and SQL injection findings
 │   ├── cross_user_tester/# BP1-D5: Automated cross-user authorization CLI test runner
 │   ├── lsa_sarif/        # SARIF v2.1.0 converter for CI code scanning
