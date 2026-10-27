@@ -545,65 +545,138 @@ def js_py_rb_declared(c: Collector, rel: str, text: str, lang: str) -> bool:
     return found
 
 
+RUST_ATTR_ROUTE = re.compile(r"#\[(get|post|put|delete|patch|head|options)\s*\(\s*\"([^\"]+)\"[^\]]*\]\s*"
+                             r"(?:#\[[^\]]*\]\s*)*(?:pub(?:\([\w:]+\))?\s+)?(?:async\s+)?fn\s+(\w+)")
+RUST_ROCKET_FILE = re.compile(r"\brocket::|extern\s+crate\s+rocket\b|use\s+rocket\b")
+AXUM_ROUTE = re.compile(r"\.route\s*\(\s*\"([^\"]+)\"\s*,")
+AXUM_METHOD = re.compile(r"(?<!\w)(get|post|put|delete|patch|head|options|any)\s*\(\s*([\w:]+)\s*\)")
+GO_ROUTE = re.compile(r"\b(\w+)\.(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|Any|All|Handle|HandleFunc|"
+                      r"Get|Post|Put|Delete|Patch|Head|Options)\s*\(")
+GO_FRAMEWORKS = [("go-gin", "github.com/gin-gonic/gin"), ("go-echo", "github.com/labstack/echo"),
+                 ("go-fiber", "github.com/gofiber/fiber"), ("go-chi", "github.com/go-chi/chi"),
+                 ("go-gorilla", "github.com/gorilla/mux")]
+GO_PATTERN = re.compile(r"^(?:([A-Z]+)\s+)?(/\S*)$")
+
+
+def call_args(text: str, open_idx: int, limit: int = 4000) -> Tuple[str, int]:
+    """Return (argument text, index after the closing paren) for the call whose '(' is at open_idx."""
+    depth, i, end = 0, open_idx, min(len(text), open_idx + limit)
+    while i < end:
+        ch = text[i]
+        if ch in "\"`":
+            close = text.find(ch, i + 1)
+            while ch == '"' and close != -1 and text[close - 1] == "\\":
+                close = text.find(ch, close + 1)
+            i = close if close != -1 else end
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                return text[open_idx + 1:i], i + 1
+        i += 1
+    return text[open_idx + 1:end], end
+
+
+def split_top(args: str) -> List[str]:
+    """Split call arguments on top-level commas."""
+    parts, depth, cur, quote = [], 0, [], None
+    for ch in args:
+        if quote:
+            quote = None if ch == quote else quote
+        elif ch in "\"`":
+            quote = ch
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            parts.append("".join(cur).strip())
+            cur = []
+            continue
+        cur.append(ch)
+    if "".join(cur).strip():
+        parts.append("".join(cur).strip())
+    return parts
+
+
+def guards_before(c: Collector, text: str, start: int, end: int, span: int = 500) -> List[Dict]:
+    ws = max(0, start - span)
+    return c.guards(text[ws:end], line_of(text, ws))
+
+
 def rust_declared(c: Collector, rel: str, text: str) -> bool:
     found = False
-    actix_rx = re.compile(r"#\[(get|post|put|delete|patch|head)\s*\(\s*\"([^\"]+)\"\s*\)\]\s*(?:(?:pub|pub\(crate\))\s+)?(?:async\s+)?fn\s+(\w+)\s*\(", re.M)
-    for m in actix_rx.finditer(text):
+    attr_stack = "rust-rocket" if RUST_ROCKET_FILE.search(text) else "rust-actix"
+    for m in RUST_ATTR_ROUTE.finditer(text):
         verb, path, fn_name = m.group(1).upper(), m.group(2), m.group(3)
         line = line_of(text, m.start())
-        c.add(stack="rust-actix", kind="declared_route", method=[verb], path=path,
+        window = text[m.start():m.start() + 400]
+        c.add(stack=attr_stack, kind="declared_route", method=[verb], path=path,
               handler={"file": rel, "line": line, "symbol": fn_name},
-              id_params=c.path_params(path) + c.inputs("rust", text[m.start():m.start() + 400], line),
-              guard_hints=c.guards(text[m.start():m.start() + 400], line),
-              data_hints=c.data_ops(text[m.start():m.start() + 800], line), notes="actix-web handler")
+              id_params=c.path_params(path) + c.inputs("rust", window, line),
+              guard_hints=c.guards(window, line),
+              data_hints=c.data_ops(text[m.start():m.start() + 800], line),
+              notes="rocket handler" if attr_stack == "rust-rocket" else "actix-web handler")
         found = True
 
-    axum_rx = re.compile(r"\.route\s*\(\s*\"([^\"]+)\"\s*,\s*(get|post|put|delete|patch|any)\s*\(\s*(\w+)\s*\)\s*\)")
-    for m in axum_rx.finditer(text):
-        path, verb, fn_name = m.group(1), m.group(2).upper(), m.group(3)
+    for m in AXUM_ROUTE.finditer(text):
+        path = m.group(1)
+        args, end = call_args(text, text.index("(", m.start()))
         line = line_of(text, m.start())
-        c.add(stack="rust-axum", kind="declared_route", method=[verb], path=path,
-              handler={"file": rel, "line": line, "symbol": fn_name},
-              id_params=c.path_params(path),
-              guard_hints=c.guards(text[:m.start()][-500:], 1),
-              data_hints=[], notes="axum router declaration")
-        found = True
-
-    rocket_rx = re.compile(r"#\[(get|post|put|delete)\s*\(\s*\"([^\"]+)\"\s*\)\]\s*(?:(?:pub)\s+)?fn\s+(\w+)", re.M)
-    for m in rocket_rx.finditer(text):
-        verb, path, fn_name = m.group(1).upper(), m.group(2), m.group(3)
-        line = line_of(text, m.start())
-        if not any(it["handler"]["symbol"] == fn_name for it in c.items if it["handler"]["file"] == rel):
-            c.add(stack="rust-rocket", kind="declared_route", method=[verb], path=path,
-                  handler={"file": rel, "line": line, "symbol": fn_name},
-                  id_params=c.path_params(path) + c.inputs("rust", text[m.start():m.start() + 400], line),
-                  guard_hints=c.guards(text[m.start():m.start() + 400], line),
-                  data_hints=c.data_ops(text[m.start():m.start() + 800], line), notes="rocket handler")
+        for mm in AXUM_METHOD.finditer(args.split(",", 1)[1] if "," in args else ""):
+            c.add(stack="rust-axum", kind="declared_route", method=[mm.group(1).upper()], path=path,
+                  handler={"file": rel, "line": line, "symbol": mm.group(2)},
+                  id_params=c.path_params(path),
+                  guard_hints=guards_before(c, text, m.start(), m.start()),
+                  data_hints=[], notes="axum router declaration")
             found = True
     return found
 
 
+def go_stack(text: str, func: str) -> str:
+    for stack, module in GO_FRAMEWORKS:
+        if f'"{module}' in text:
+            return stack
+    if func in ("Handle", "HandleFunc") and '"net/http"' in text:
+        return "go-nethttp"
+    return "go"
+
+
+def go_handler_symbol(arg: str) -> Optional[str]:
+    if arg.startswith("func"):
+        return None
+    m = re.match(r"[\w.]+", arg)
+    return m.group(0) if m else None
+
+
 def go_declared(c: Collector, rel: str, text: str) -> bool:
     found = False
-    go_route_rx = re.compile(r"\b\w+\.(GET|POST|PUT|DELETE|PATCH|Handle)\s*\(\s*\"([^\"]+)\"\s*,\s*([^)]+)\)")
-    for m in go_route_rx.finditer(text):
-        verb, path, handler_arg = m.group(1).upper(), m.group(2), m.group(3).strip()
+    for m in GO_ROUTE.finditer(text):
+        args, end = call_args(text, m.end() - 1)
+        parts = split_top(args)
+        if len(parts) < 2 or parts[0][:1] not in "\"`" or parts[0][-1:] != parts[0][:1]:
+            continue
+        pm = GO_PATTERN.match(parts[0][1:-1].strip())
+        if not pm:
+            continue  # not an absolute route path (e.g. c.Get("key", ...), http.Get(url, ...))
+        func = m.group(2)
+        path = pm.group(2)
+        if pm.group(1):
+            methods = [pm.group(1)]
+        elif func.upper() in ("GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"):
+            methods = [func.upper()]
+        else:
+            mm = re.match(r"\s*\.Methods\s*\(([^)]*)\)", text[end:end + 200])
+            methods = [v.upper() for v in re.findall(r"\"(\w+)\"", mm.group(1))] if mm else ["ANY"]
+        stack = go_stack(text, func)
+        handler_arg = parts[1] if stack == "go-echo" else parts[-1]
         line = line_of(text, m.start())
-        symbol = handler_arg.split(",")[-1].strip().split("(")[0].strip()
-        c.add(stack="go-gin" if "gin" in text else "go", kind="declared_route", method=[verb if verb != "HANDLE" else "ANY"],
-              path=path, handler={"file": rel, "line": line, "symbol": symbol},
-              id_params=c.path_params(path),
-              guard_hints=c.guards(text[:m.start()][-500:], 1),
-              data_hints=[], notes="go route declaration")
-        found = True
-
-    http_rx = re.compile(r"http\.HandleFunc\s*\(\s*\"([^\"]+)\"\s*,\s*(\w+)\s*\)")
-    for m in http_rx.finditer(text):
-        path, fn_name = m.group(1), m.group(2)
-        line = line_of(text, m.start())
-        c.add(stack="go-nethttp", kind="declared_route", method=["ANY"], path=path,
-              handler={"file": rel, "line": line, "symbol": fn_name},
-              id_params=c.path_params(path), guard_hints=[], data_hints=[], notes="net/http handlefunc")
+        c.add(stack=stack, kind="declared_route", method=methods or ["ANY"], path=path,
+              handler={"file": rel, "line": line, "symbol": go_handler_symbol(handler_arg)},
+              id_params=c.path_params(path) + c.inputs("go", args, line),
+              guard_hints=guards_before(c, text, m.start(), end),
+              data_hints=c.data_ops(args, line), notes="go route declaration")
         found = True
     return found
 
