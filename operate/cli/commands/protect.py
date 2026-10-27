@@ -47,6 +47,12 @@ Examples:
   # Launch the perimeter Kong + Coraza container stack
   komainu protect --up
 
+  # Synthesize Coraza WAF virtual patches directly from LSA audit findings
+  komainu protect --virtual-patch ./audit-output/findings.json
+
+  # Synthesize and export virtual patches to custom destination
+  komainu protect --virtual-patch findings.json --patch-out ./rules/virtual-patches.conf
+
   # Point perimeter gateway to a specific upstream service
   komainu protect --target http://host.docker.internal:5001 --up
 
@@ -55,6 +61,9 @@ Examples:
 
   # Stop perimeter containers
   komainu protect --down
+
+Documentation:
+  See docs/cli-guide.md#33-komainu-protect--edge-gateway--coraza-waf-perimeter
 """,
     )
     parser.add_argument(
