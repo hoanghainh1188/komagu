@@ -316,7 +316,7 @@ def _docker_available():
     if not shutil.which("docker"):
         return False
     try:
-        return _docker("info", timeout=5).returncode == 0
+        return _docker("info", timeout=20).returncode == 0
     except (OSError, subprocess.TimeoutExpired):
         return False
 
