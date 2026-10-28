@@ -18,6 +18,7 @@ import subprocess
 import time
 import threading
 from http.server import HTTPServer
+from unittest.mock import patch, MagicMock
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 EDGE_DIR = os.path.dirname(CURRENT_DIR)
@@ -315,7 +316,7 @@ def _docker_available():
     if not shutil.which("docker"):
         return False
     try:
-        return _docker("info", timeout=20).returncode == 0
+        return _docker("info", timeout=5).returncode == 0
     except (OSError, subprocess.TimeoutExpired):
         return False
 
@@ -336,7 +337,15 @@ class TestCorazaWafContainer(unittest.TestCase):
             if REQUIRE_WAF_TEST:
                 raise RuntimeError("KOMAINU_REQUIRE_WAF_TEST=1 but Docker is not available")
             raise unittest.SkipTest("Docker is not available")
-        if _docker("image", "inspect", WAF_IMAGE, timeout=30).returncode != 0:
+        # Check if the WAF image exists locally. Unless KOMAINU_REQUIRE_WAF_TEST=1 is
+        # explicitly configured, avoid triggering long docker builds during general unittest discovery.
+        if _docker("image", "inspect", WAF_IMAGE, timeout=10).returncode != 0:
+            if not REQUIRE_WAF_TEST:
+                raise unittest.SkipTest(
+                    f"WAF container image '{WAF_IMAGE}' is not pre-built locally. "
+                    "Run 'docker build -t komainu-coraza-caddy:local remediate/edge/coraza' "
+                    "or set KOMAINU_REQUIRE_WAF_TEST=1 to build automatically."
+                )
             build = _docker("build", "-t", WAF_IMAGE, os.path.join(EDGE_DIR, "coraza"), timeout=1200)
             if build.returncode != 0:
                 raise RuntimeError(f"WAF image build failed:\n{build.stderr[-2000:]}")
@@ -413,6 +422,55 @@ class TestCorazaWafContainer(unittest.TestCase):
         self.assertNotEqual(self._status("/api/v1/orders?q=a--b"), 403)
         self.assertNotEqual(self._status("/api/v1/orders?q=salt+and+pepper=yes"), 403)
         self.assertNotEqual(self._status("/api/v1/orders?name=C%23"), 403)
+
+
+class TestCorazaWafSkipLogic(unittest.TestCase):
+    """
+    Verifies that TestCorazaWafContainer skips cleanly without triggering
+    lengthy docker builds when the image is missing and KOMAINU_REQUIRE_WAF_TEST!=1.
+    """
+
+    def test_missing_image_skips_without_building_by_default(self):
+        mock_inspect = MagicMock()
+        mock_inspect.returncode = 1  # Image not found in local daemon
+
+        mod = sys.modules[__name__]
+        with patch.object(mod, "_docker_available", return_value=True), \
+             patch.object(mod, "REQUIRE_WAF_TEST", False), \
+             patch.object(mod, "_docker", return_value=mock_inspect) as mock_docker:
+            with self.assertRaises(unittest.SkipTest) as ctx:
+                TestCorazaWafContainer.setUpClass()
+            self.assertIn("not pre-built locally", str(ctx.exception))
+            # Verify docker build was never invoked
+            for call_args in mock_docker.call_args_list:
+                args = call_args[0]
+                self.assertNotIn("build", args)
+
+    def test_missing_image_triggers_build_when_require_waf_test_enabled(self):
+        mock_inspect = MagicMock()
+        mock_inspect.returncode = 1  # Image not found
+
+        mock_build = MagicMock()
+        mock_build.returncode = 1  # Simulate build error to short-circuit container run
+        mock_build.stderr = "build failure simulation"
+
+        def fake_docker(*args, **kwargs):
+            if args[0] == "image" and args[1] == "inspect":
+                return mock_inspect
+            if args[0] == "build":
+                return mock_build
+            return MagicMock(returncode=0)
+
+        mod = sys.modules[__name__]
+        with patch.object(mod, "_docker_available", return_value=True), \
+             patch.object(mod, "REQUIRE_WAF_TEST", True), \
+             patch.object(mod, "_docker", side_effect=fake_docker) as mock_docker:
+            with self.assertRaises(RuntimeError) as ctx:
+                TestCorazaWafContainer.setUpClass()
+            self.assertIn("WAF image build failed", str(ctx.exception))
+            # Verify docker build was indeed called
+            build_called = any(call_args[0][0] == "build" for call_args in mock_docker.call_args_list)
+            self.assertTrue(build_called, "docker build must be invoked when KOMAINU_REQUIRE_WAF_TEST=1")
 
 
 class TestLiveEdgeSecurity(unittest.TestCase):
