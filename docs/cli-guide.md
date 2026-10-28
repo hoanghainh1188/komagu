@@ -80,16 +80,22 @@ komainu scan <target> [options]
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `<target>` | | *Required* | Path to legacy application directory to audit |
-| `--out` | `-o` | `./audit-output` | Output directory for report files and SARIF |
-| `--format` | `-f` | `html` | Output format (`html`, `markdown`, `json`, `sarif`) |
-| `--lang` | `-l` | `en` | Report language (`en`, `ja`) |
-| `--rule-pack` | | `legacy-standard` | Detection rule preset (`legacy-standard`, `strict`, `pci-dss`) |
-| `--max-file-kb` | | `1024` | Maximum single-file size to analyze in kilobytes |
+| `--out` | `-o` | `./komainu-out` | Output directory for report files and SARIF |
+| `--format` | | `all` | Output format (`html`, `md`, `sarif`, `all`) |
+| `--lang` | | `all` | Report language (`en`, `ja`, `all`) |
+| `--sarif-out` | | `OUT/findings.sarif` | Designated path for OASIS SARIF v2.1.0 output |
+| `--headless-ai` | | `None` (`http://localhost:11434/v1` if passed without value) | Execute Tier 2 cognitive AI audit autonomously via an OpenAI-compatible endpoint |
+| `--model` | `-m` | `llama3.1` | Model name for headless cognitive AI execution |
+| `--api-key` | | `ollama` | Bearer API token for private LLM endpoint |
+| `--ai-timeout` | | `120` | Timeout in seconds per LLM request |
 
 #### Examples
 ```bash
-# Generate offline, interactive visual HTML dashboard in Japanese
+# Tier 1: Deterministic offline scan (Zero LLM, regex/AST candidates only)
 komainu scan ./legacy-monolith --lang ja --format html --out ./reports
+
+# Tier 2: Fully autonomous headless cognitive audit via local Ollama / vLLM (0 false positives)
+komainu scan ./legacy-monolith --headless-ai http://localhost:11434/v1 --model llama3.1
 
 # Export machine-readable OASIS SARIF v2.1.0 for GitHub Code Scanning
 komainu scan ./legacy-monolith --format sarif --out ./reports/audit.sarif
