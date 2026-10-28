@@ -1,6 +1,6 @@
 {
   "name": "komainu-guard",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Security-First Legacy Modernization Platform CLI (LSA Kit, IAM Perimeter, Cross-User Testing)",
   "main": "remediate/authz/nodejs/src/index.js",
   "types": "remediate/authz/nodejs/src/index.d.ts",
