@@ -290,7 +290,7 @@ class TestBaselineCli(_TargetMixin, unittest.TestCase):
         res = self.run_cli("--baseline", str(baseline), "--fail-on", "new")
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
         diff = json.loads((self.out / "baseline-diff.json").read_text(encoding="utf-8"))
-        self.assertEqual(diff["counts"], {"new": 0, "unchanged": 1, "regressed": 0, "fixed": 0})
+        self.assertEqual(diff["counts"], {"new": 0, "unchanged": 1, "regressed": 0, "fixed": 0, "suppressed": 0})
 
     def test_fail_on_new_exits_1(self) -> None:
         res = self.run_cli("--fail-on", "new")

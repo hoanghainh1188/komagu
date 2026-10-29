@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/suppressions.schema.json",
+  "title": "Komainu approved finding suppressions",
+  "type": "object",
+  "required": [
+    "version",
+    "suppressions"
+  ],
+  "properties": {
+    "version": {
+      "enum": [
+        1
+      ]
+    },
+    "suppressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fingerprint",
+          "reason",
+          "approved_by"
+        ],
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^kfp1:[0-9a-f]{64}$"
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "approved_by": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "who signed off the accepted risk"
+          },
+          "expires": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "last day the suppression applies; null = no expiry"
+          }
+        }
+      }
+    }
+  }
+}

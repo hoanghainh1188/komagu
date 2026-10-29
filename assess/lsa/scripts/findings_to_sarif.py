@@ -360,6 +360,14 @@ def to_sarif(
             result_item["properties"]["baseline_state"] = state
             if state == "regressed":
                 result_item["properties"]["regressed"] = True
+        sup = f.get("suppression")
+        if sup:
+            result_item["suppressions"] = [{
+                "kind": "external",
+                "status": "accepted",
+                "justification": f"{sup.get('reason', '')} (approved by {sup.get('approved_by', '')}; "
+                                 f"expires {sup.get('expires') or 'never'})",
+            }]
         results.append(result_item)
 
         # Update rule security-severity score (maximum encountered)

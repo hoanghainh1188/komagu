@@ -8,6 +8,7 @@ own baseline reports nothing new, and the CI gate maps to exit codes 0/1/2.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -82,6 +83,49 @@ class TestScanBaseline(unittest.TestCase):
     def test_unreadable_baseline_is_usage_error(self) -> None:
         self.baseline.write_text("not json", encoding="utf-8")
         res = self.scan("--baseline", str(self.baseline))
+        self.assertEqual(res.returncode, 2, res.stderr + res.stdout)
+
+
+class TestScanSuppressions(unittest.TestCase):
+    def setUp(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.target = Path(tmp.name) / "app"
+        shutil.copytree(FIXTURE_PATH, self.target)
+        self.out = Path(tmp.name) / "out"
+        self.out.mkdir()
+        (self.out / "findings.json").write_text(json.dumps({"findings": [FINDING], "summary": {}}), encoding="utf-8")
+
+    def scan(self, *extra: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(BIN_KOMAINU), "scan", str(self.target), "--out", str(self.out), "--format", "sarif", *extra],
+            capture_output=True,
+            text=True,
+        )
+
+    def write_suppressions(self, path: Path, expires: str) -> None:
+        self.assertEqual(self.scan().returncode, 0)
+        fp = json.loads((self.out / "findings.json").read_text(encoding="utf-8"))["findings"][0]["fingerprint"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {"fingerprint": fp, "reason": "Admin-only intranet page", "approved_by": "ciso@client.example", "expires": expires}
+        path.write_text(json.dumps({"version": 1, "suppressions": [entry]}), encoding="utf-8")
+
+    def test_default_suppressions_file_in_target_is_used(self) -> None:
+        self.write_suppressions(self.target / ".komainu" / "suppressions.json", "2999-12-31")
+        res = self.scan("--fail-on", "new")
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        sarif = json.loads((self.out / "findings.sarif").read_text(encoding="utf-8"))
+        self.assertEqual(sarif["runs"][0]["results"][0]["suppressions"][0]["status"], "accepted")
+
+    def test_expired_explicit_suppression_fails_gate_and_warns(self) -> None:
+        path = self.out.parent / "suppressions.json"
+        self.write_suppressions(path, "2020-01-01")
+        res = self.scan("--suppressions", str(path), "--fail-on", "new")
+        self.assertEqual(res.returncode, 1, res.stderr + res.stdout)
+        self.assertIn("expired on 2020-01-01", res.stdout)
+
+    def test_missing_explicit_suppressions_is_usage_error(self) -> None:
+        res = self.scan("--suppressions", str(self.out / "nope.json"))
         self.assertEqual(res.returncode, 2, res.stderr + res.stdout)
 
 
