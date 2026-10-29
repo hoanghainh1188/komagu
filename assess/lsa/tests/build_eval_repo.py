@@ -20,7 +20,8 @@ sys.path.insert(0, str(HERE))
 from lsa_markers import iter_files, read_markers, strip_markers  # noqa: E402
 
 LABEL_MAP = {"SQLI": ("sql_injection", True), "NOSQL": ("nosql_injection", True), "BOLA": ("bola", True),
-             "SAFE-SQL": ("sql_injection", False), "SAFE-SQL-NOFLAG": ("sql_injection", False), "SAFE-BOLA": ("bola", False)}
+             "SAFE-SQL": ("sql_injection", False), "SAFE-SQL-NOFLAG": ("sql_injection", False), "SAFE-BOLA": ("bola", False),
+             "BFLA": ("bfla", True), "SAFE-BFLA": ("bfla", False)}
 
 
 def main() -> int:

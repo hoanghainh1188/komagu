@@ -68,7 +68,7 @@ def pack(groups: "OrderedDict[str, List[Dict]]", limit: int) -> List[List[Dict]]
 
 def route_rank(r: Dict) -> tuple:
     p = r["path"].lower()
-    return (0 if r.get("needs_audit_hint") else 1, 0 if any(d in p for d in PRIORITY_DIRS) else 1, r["handler"]["file"])
+    return (0 if r.get("needs_audit_hint") or r.get("needs_bfla_audit_hint") else 1, 0 if any(d in p for d in PRIORITY_DIRS) else 1, r["handler"]["file"])
 
 
 def make_batches(out: Path, config: Dict) -> Dict:

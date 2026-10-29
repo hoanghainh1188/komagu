@@ -7,6 +7,9 @@ Marker syntax (at the end of a code line, inside that language's comment):
     LSA-EXPECT:SAFE-SQL-NOFLAG  parameterized; pre-scan must NOT flag
     LSA-EXPECT:BOLA             object access without ownership binding; route must be found; agents MUST report
     LSA-EXPECT:SAFE-BOLA        ownership is bound; agents must NOT report
+    LSA-EXPECT:BFLA             privileged function without a server-side role check; pre-scan MUST set
+                                needs_bfla_audit_hint on the covering route; agents MUST report
+    LSA-EXPECT:SAFE-BFLA        role is enforced server-side; pre-scan must NOT set the hint
 """
 from __future__ import annotations
 
