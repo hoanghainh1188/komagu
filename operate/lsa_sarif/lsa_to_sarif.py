@@ -48,11 +48,27 @@ RULE_METADATA = {
         "help_uri": "https://cwe.mitre.org/data/definitions/943.html",
         "tags": ["security", "cwe-943", "owasp-a03", "injection"],
     },
+    "bfla": {
+        "name": "BrokenFunctionLevelAuthorization",
+        "title": "Broken Function Level Authorization (BFLA)",
+        "default_cwe": 285,
+        "help_uri": "https://cwe.mitre.org/data/definitions/285.html",
+        "tags": ["security", "cwe-285", "owasp-api5", "authorization"],
+    },
+    "mass_assignment": {
+        "name": "MassAssignment",
+        "title": "Mass Assignment of Object Properties",
+        "default_cwe": 915,
+        "help_uri": "https://cwe.mitre.org/data/definitions/915.html",
+        "tags": ["security", "cwe-915", "owasp-api3", "authorization"],
+    },
 }
+
+RULE_ID_PREFIX = {"bola": "BOLA", "bfla": "BFLA", "mass_assignment": "MASS"}
 
 
 def _get_rule_id(category: str, cwe: int) -> str:
-    cat_prefix = "BOLA" if category == "bola" else "INJ"
+    cat_prefix = RULE_ID_PREFIX.get(category, "INJ")
     return f"KOMAINU-{cat_prefix}-CWE{cwe}"
 
 
@@ -161,6 +177,9 @@ def convert_findings_to_sarif(
 
         if related_locations:
             result_item["relatedLocations"] = related_locations
+
+        if finding.get("fingerprint"):
+            result_item["partialFingerprints"] = {"komainu/v1": finding["fingerprint"]}
 
         results.append(result_item)
 

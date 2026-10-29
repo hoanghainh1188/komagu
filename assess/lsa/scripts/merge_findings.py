@@ -138,6 +138,20 @@ def load_validator(schema_name: str):
         return fallback
 
 
+BASE_CATEGORIES = ("bola", "sql_injection", "nosql_injection")
+EXTRA_CATEGORIES = ("bfla", "mass_assignment")
+
+
+def count_by_category(active: List[Dict]) -> Dict[str, int]:
+    """Count findings per category; newer categories appear only when present."""
+    counts = {c: sum(1 for f in active if f.get("category") == c) for c in BASE_CATEGORIES}
+    for c in EXTRA_CATEGORIES:
+        n = sum(1 for f in active if f.get("category") == c)
+        if n:
+            counts[c] = n
+    return counts
+
+
 def extract_json(path: Path):
     """Accept a raw JSON file or a markdown file with a ```json fenced block."""
     text = path.read_text(encoding="utf-8")
@@ -346,7 +360,7 @@ def main() -> int:
         "active": len(active),
         "rejected_by_verifier": sum(1 for f in findings.values() if f.get("status") == "rejected"),
         "by_severity": {s: sum(1 for f in active if f.get("severity") == s) for s in SEV_ORDER},
-        "by_category": {c: sum(1 for f in active if f.get("category") == c) for c in ("bola", "sql_injection", "nosql_injection")},
+        "by_category": count_by_category(active),
         "by_status": {s: sum(1 for f in findings.values() if f.get("status") == s)
                       for s in ("unverified", "confirmed", "likely", "rejected", "needs_review")},
     }

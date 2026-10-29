@@ -19,14 +19,21 @@
   "properties": {
     "finding_id": {
       "type": "string",
-      "pattern": "^(BOLA|INJ)-[A-Za-z0-9_.-]+$"
+      "pattern": "^(BOLA|INJ|BFLA|MASS)-[A-Za-z0-9_.-]+$"
     },
     "category": {
       "enum": [
         "bola",
         "sql_injection",
-        "nosql_injection"
+        "nosql_injection",
+        "bfla",
+        "mass_assignment"
       ]
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^kfp1:[0-9a-f]{64}$",
+      "description": "stable identity across scans (line-independent); used for baselines and suppressions"
     },
     "subtype": {
       "enum": [
@@ -45,7 +52,11 @@
         "js_injection",
         "second_order",
         "stored_procedure_dynamic_sql",
-        "missing_role_check"
+        "missing_role_check",
+        "role_from_request",
+        "client_side_role_check",
+        "whole_object_binding",
+        "privileged_field_writable"
       ]
     },
     "title": {

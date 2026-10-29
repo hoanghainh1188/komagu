@@ -39,6 +39,8 @@ JA_CATEGORY_LABELS = {
     "bola": "オブジェクトレベルの認可不備 (BOLA/IDOR)",
     "sql_injection": "SQLインジェクション (SQLi)",
     "nosql_injection": "NoSQLインジェクション (NoSQLi)",
+    "bfla": "機能レベルの認可不備 (BFLA)",
+    "mass_assignment": "マスアサインメント (Mass Assignment)",
 }
 
 JA_STATUS_LABELS = {
@@ -309,6 +311,14 @@ def _build_category_bar_svg(by_cat: Dict[str, int], total_active: int) -> str:
         ("sql_injection", "SQL Injection (CWE-89)", "SQLインジェクション (CWE-89)", "#dc2626"),
         ("nosql_injection", "NoSQL Injection (CWE-943)", "NoSQLインジェクション (CWE-943)", "#ea580c"),
     ]
+    # Newer categories get a bar only when the scan found them
+    cats += [
+        c for c in (
+            ("bfla", "BFLA (CWE-285)", "機能レベル認可不備 BFLA (CWE-285)", "#0891b2"),
+            ("mass_assignment", "Mass Assignment (CWE-915)", "マスアサインメント (CWE-915)", "#ca8a04"),
+        )
+        if by_cat.get(c[0], 0) > 0
+    ]
     denom = max(total_active, 1)
     rows: List[str] = []
     y = 20
@@ -326,7 +336,7 @@ def _build_category_bar_svg(by_cat: Dict[str, int], total_active: int) -> str:
         )
         y += 50
     return (
-        '<svg viewBox="0 0 360 170" class="bar-svg" role="img" aria-label="Category Breakdown Chart">'
+        f'<svg viewBox="0 0 360 {y}" class="bar-svg" role="img" aria-label="Category Breakdown Chart">'
         + "".join(rows)
         + "</svg>"
     )
