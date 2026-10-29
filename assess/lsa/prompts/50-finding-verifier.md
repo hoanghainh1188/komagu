@@ -15,6 +15,8 @@ strict in both directions.
 
 - `knowledge/bola-patterns.md` → §5 "False-positive traps" and §6 "Severity guide".
 - `knowledge/injection-patterns.md` → §5 "Severity guide" and §6 "False-positive traps".
+- `knowledge/bfla-patterns.md` → §5 "False-positive traps" and §6 "Severity guide".
+- `knowledge/mass-assignment-patterns.md` → §4 "False-positive traps" and §5 "Severity guide".
 - `knowledge/severity-and-cwe.md`.
 - The stack files listed in the batch `knowledge_files`.
 
@@ -49,6 +51,17 @@ find controls the auditor missed.
      - MyBatis `<choose><when test="...">` blocks containing only static SQL.
      If an exact-match allow-list constrains the identifier before query
      assembly, reject the finding (`verdict: "rejected"`, `reason_code: "control_found"`).
+   - **For BFLA:** role checks in configuration (`web.xml`
+     `<security-constraint>`, `Web.config` `<location>`, Spring Security
+     `antMatchers`, `.htaccess`), base controllers, class annotations,
+     router-level middleware. Check that the path pattern and HTTP method
+     really cover the route, and that the role comes from the session or
+     token, not the request. A check that only hides a link is not a control.
+   - **For mass assignment:** the model's fields (no privileged field →
+     reject with `control_found` or lower severity), allow-lists (`$fillable`,
+     `permit(...)`, `[Bind(Include)]`, DTOs), validation that strips unknown
+     properties, and server-side assignments after the binding that overwrite
+     every privileged field.
 3. **Check reachability.** Is the code reachable from HTTP? Is it dead code,
    a test, an admin-only page behind a role check? (Admin-only does not
    remove BOLA between tenants — check tenant scoping.)

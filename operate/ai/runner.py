@@ -24,6 +24,8 @@ from operate.ai.client import LLMClient
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LSA_PROMPTS = REPO_ROOT / "assess" / "lsa" / "prompts"
+DEFAULT_CWE = {"bola": ["CWE-284"], "bfla": ["CWE-285"], "mass_assignment": ["CWE-915"],
+               "sql_injection": ["CWE-89"], "nosql_injection": ["CWE-943"]}
 LSA_SCRIPTS = REPO_ROOT / "assess" / "lsa" / "scripts"
 
 
@@ -75,6 +77,9 @@ class HeadlessAIRunner:
 
         # Phase 4b: SQL / NoSQL Injection Cognitive Audit
         self.audit_injection_candidates()
+
+        # Phase 4c: Privilege Audit (BFLA, mass assignment)
+        self.audit_privilege()
 
         # Phase 5: Adversarial Skeptic Verifier
         self.verify_findings_skeptic()
@@ -232,7 +237,7 @@ Output MUST be Markdown format adhering to Komainu auth-model.md specification.
         # cwe must be array of strings matching ^CWE-[0-9]+$
         cwe_list = f.get("cwe", [])
         if not isinstance(cwe_list, list) or len(cwe_list) == 0:
-            f["cwe"] = ["CWE-284"] if f.get("category") == "bola" else ["CWE-89"]
+            f["cwe"] = DEFAULT_CWE.get(f.get("category"), ["CWE-89"])
         else:
             normalized_cwe = []
             for c in cwe_list:
@@ -422,6 +427,84 @@ Respond STRICTLY with a valid JSON object matching:
             (findings_dir / f"inj-{b_file.stem}.json").write_text(json.dumps(out_doc, indent=2), encoding="utf-8")
 
         self._log("ok", "Completed SQL/NoSQL injection auditing phase")
+
+    def audit_privilege(self) -> None:
+        """Phase 4c: Privilege auditor for BFLA and mass assignment."""
+        self._log("step", "Phase 4c: Executing Privilege Auditor Agent (BFLA, mass assignment)")
+        findings_dir = self.out_dir / "findings"
+        findings_dir.mkdir(parents=True, exist_ok=True)
+        batches_dir = self.out_dir / "batches"
+        priv_batches = sorted(batches_dir.glob("privilege-*.json")) if batches_dir.is_dir() else []
+        prompt_path = LSA_PROMPTS / "35-privilege-auditor.md"
+        auditor_prompt = prompt_path.read_text(encoding="utf-8", errors="replace") if prompt_path.is_file() else ""
+        auth_model_file = self.out_dir / "auth-model.md"
+        auth_model = auth_model_file.read_text(encoding="utf-8", errors="replace") if auth_model_file.is_file() else ""
+
+        for b_file in priv_batches:
+            try:
+                b_doc = json.loads(b_file.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            routes = b_doc.get("routes", [])
+            mass = b_doc.get("mass_candidates", [])
+            if not routes and not mass:
+                continue
+
+            route_ctx = [{
+                "route_id": r.get("route_id"),
+                "method": r.get("method"),
+                "path": r.get("path"),
+                "privilege_reasons": r.get("privilege_reasons", []),
+                "role_checks": r.get("role_checks", []),
+                "bfla_signals": r.get("bfla_signals", []),
+                "code_context": _read_snippet(self.target_dir, r["handler"]["file"], r["handler"].get("line") or 1, radius=25),
+            } for r in routes]
+            mass_ctx = [{
+                "candidate_id": c.get("candidate_id"),
+                "rule": c.get("rule"),
+                "subtype": c.get("subtype"),
+                "target": c.get("target"),
+                "allowlist": c.get("allowlist"),
+                "sensitive_fields": c.get("sensitive_fields", []),
+                "code_context": _read_snippet(self.target_dir, c.get("file", ""), c.get("line") or 1),
+            } for c in mass]
+
+            user_prompt = f"""Auth Model:
+{auth_model}
+
+Privileged Route Candidates:
+{json.dumps(route_ctx, indent=2)}
+
+Mass Assignment Candidates:
+{json.dumps(mass_ctx, indent=2)}
+
+Task:
+Judge every route for BFLA and every candidate for mass assignment as described in your role.
+Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}"),
+"privilege_route_verdicts", "candidate_verdicts" and "findings" (category "bfla" or "mass_assignment").
+"""
+            messages = [
+                {"role": "system", "content": auditor_prompt},
+                {"role": "user", "content": user_prompt},
+            ]
+            reply = self.client.chat(messages, temperature=0.1)
+            try:
+                parsed = self.client.extract_json(reply)
+                findings = [self._sanitize_finding(f) for f in parsed.get("findings", [])]
+                route_verdicts = parsed.get("privilege_route_verdicts", [])
+                candidate_verdicts = parsed.get("candidate_verdicts", [])
+            except Exception:
+                findings, route_verdicts, candidate_verdicts = [], [], []
+
+            out_doc = {
+                "batch_id": b_file.stem,
+                "findings": findings,
+                "privilege_route_verdicts": route_verdicts,
+                "candidate_verdicts": candidate_verdicts,
+            }
+            (findings_dir / f"priv-{b_file.stem}.json").write_text(json.dumps(out_doc, indent=2), encoding="utf-8")
+
+        self._log("ok", f"Completed privilege auditing phase ({len(priv_batches)} batches)")
 
     def verify_findings_skeptic(self) -> None:
         """Phase 5: Finding Verifier (Skeptic) to refute false positives."""

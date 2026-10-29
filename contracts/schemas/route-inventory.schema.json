@@ -261,6 +261,10 @@
                 }
               }
             }
+          },
+          "needs_bfla_audit": {
+            "type": "boolean",
+            "description": "privileged function whose role check must be audited (phase 4c)"
           }
         }
       }

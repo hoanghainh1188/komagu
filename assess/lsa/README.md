@@ -36,8 +36,10 @@ flowchart LR
   B --> C[3 Route inventory<br/>agent x N batches]
   C --> D[4a BOLA audit<br/>agent x N]
   B --> E[4b Injection audit<br/>agent x N]
+  C --> P[4c Privilege audit<br/>BFLA + mass assignment<br/>agent x N]
   D --> F[5 Verifier<br/>fresh agent]
   E --> F
+  P --> F
   F --> G[6 Merge, SARIF, report<br/>scripts + reporter agent]
   G --> H[7 Human review<br/>Person B signs]
 ```

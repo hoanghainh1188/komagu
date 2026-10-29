@@ -144,7 +144,8 @@ def render_en(out: Path, project: str) -> str:
             L += [f"*Verifier:* {v.get('verdict')} — checked: {', '.join(v.get('checked') or [])}. {v.get('notes') or ''}", ""]
     L += ["## 4. Systemic fixes", "", "<!-- LLM: reporter agent writes max 5 systemic fixes here -->", ""]
     L += ["## 5. Coverage and limitations", ""]
-    for k in ("missing_from_inventory", "bola_routes_without_verdict", "injection_candidates_without_verdict", "findings_without_verification"):
+    for k in ("missing_from_inventory", "bola_routes_without_verdict", "injection_candidates_without_verdict",
+              "bfla_routes_without_verdict", "mass_candidates_without_verdict", "findings_without_verification"):
         if k in cov:
             L.append(f"- {k.replace('_', ' ')}: {len(cov[k])}" + (f" ({', '.join(cov[k][:10])}{' …' if len(cov[k]) > 10 else ''})" if cov[k] else ""))
     L += ["", "<!-- LLM: reporter agent lists limitations here -->", ""]
@@ -246,7 +247,8 @@ def render_ja(out: Path, project: str) -> str:
     L += ["## 4. 根本的恒久対策", "",
           "<!-- LLM: reporter agent writes max 5 systemic fixes here (日本語で記載: 共通認可ヘルパー、パラメータバインディングDAO等のアーキテクチャ改修案と工数見積 S/M/L) -->", ""]
     L += ["## 5. 調査範囲と制約事項", ""]
-    for k in ("missing_from_inventory", "bola_routes_without_verdict", "injection_candidates_without_verdict", "findings_without_verification"):
+    for k in ("missing_from_inventory", "bola_routes_without_verdict", "injection_candidates_without_verdict",
+              "bfla_routes_without_verdict", "mass_candidates_without_verdict", "findings_without_verification"):
         if k in cov:
             L.append(f"- {k.replace('_', ' ')}: {len(cov[k])}" + (f" ({', '.join(cov[k][:10])}{' …' if len(cov[k]) > 10 else ''})" if cov[k] else ""))
     L += ["", "<!-- LLM: reporter agent lists limitations here (日本語で記載: ストアドプロシージャ、動的インクルード、設定による除外パス等) -->", ""]

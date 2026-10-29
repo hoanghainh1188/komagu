@@ -29,7 +29,7 @@ Start Codex in the workspace and ask, for example:
 > Run the legacy-security-audit skill. TARGET=src, OUT=lsa-out, CONFIG=audit-config.json.
 
 The skill runs the pre-scan, then spawns the `lsa-*` custom agents phase by
-phase (4a and 4b in parallel). Codex spawns subagents only when asked; the
+phase (4a, 4b and 4c in parallel). Codex spawns subagents only when asked; the
 skill asks for them. If subagents are not available, run the roles one after
 another and start the verifier in a new Codex session.
 

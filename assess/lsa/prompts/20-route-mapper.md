@@ -84,5 +84,20 @@ item (object identifiers only — not search text or filters) **and** at least
 one `data_ops` item. Also set it true when the route has no `authn` guard at
 all and touches per-user data. Otherwise set it false and say why in `notes`.
 
+**Privilege fields.** For every route also set:
+
+- `privilege`: the lowest role the function is meant for — `anonymous`,
+  `user`, `privileged` (admin, staff, back office, role or permission
+  management, bulk export, settings) or `unknown`. Judge by what the handler
+  does; the pre-scan `privilege_hint` and `privilege_reasons` are leads.
+- `needs_bfla_audit: true` when `privilege` is `privileged` (or `unknown`
+  and the handler changes other users' data or system state), or the
+  pre-scan `bfla_signals` show a role read from the request or a UI-only
+  check. Otherwise `false`.
+- `body_bindings`: each place the handler binds a request body to a model,
+  entity or object — `{target, style, file, line}` with `style`
+  `whole_object` (all fields), `allowlist` (framework allow-list) or
+  `explicit_fields` (fields copied one by one).
+
 Unknown mount prefix, docroot or `ScriptAlias`: keep the path as found, set
 `path_source: "inferred"`, and add one line to the top-level `notes`.

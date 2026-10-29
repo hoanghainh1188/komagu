@@ -224,7 +224,7 @@ def main() -> int:
     validate = load_validator("finding.schema.json")
     findings: Dict[str, Dict] = {}
     verifs: Dict[str, Dict] = {}
-    route_verdicts, cand_verdicts = {}, {}
+    route_verdicts, cand_verdicts, priv_verdicts = {}, {}, {}
     new_issues: List[Dict] = []
     oos_notes: List[str] = []
     fdir = out / "findings"
@@ -267,6 +267,12 @@ def main() -> int:
                 errors.append(f"{p.name}: malformed route_verdict item (missing route_id)")
                 continue
             route_verdicts[rv["route_id"]] = rv
+
+        for pv in doc.get("privilege_route_verdicts", []) if isinstance(doc.get("privilege_route_verdicts"), list) else []:
+            if not isinstance(pv, dict) or "route_id" not in pv:
+                errors.append(f"{p.name}: malformed privilege_route_verdict item (missing route_id)")
+                continue
+            priv_verdicts[pv["route_id"]] = pv
 
         for cv in doc.get("candidate_verdicts", []) if isinstance(doc.get("candidate_verdicts"), list) else []:
             if not isinstance(cv, dict) or "candidate_id" not in cv:
@@ -342,12 +348,22 @@ def main() -> int:
         need = [r["route_id"] for r in read_json(out / "routes.json").get("routes", []) if isinstance(r, dict) and r.get("needs_bola_audit")]
         cov["bola_routes_to_audit"] = len(need)
         cov["bola_routes_without_verdict"] = sorted(set(need) - set(route_verdicts))
+        need_bfla = [r["route_id"] for r in read_json(out / "routes.json").get("routes", [])
+                     if isinstance(r, dict) and r.get("needs_bfla_audit")]
+        cov["bfla_routes_to_audit"] = len(need_bfla)
+        cov["bfla_routes_without_verdict"] = sorted(set(need_bfla) - set(priv_verdicts))
     if (out / "injection.candidates.json").exists():
         ic_doc = read_json(out / "injection.candidates.json")
         ic_list = ic_doc.get("candidates", []) if isinstance(ic_doc, dict) else []
         ic = [c["candidate_id"] for c in ic_list if isinstance(c, dict) and "candidate_id" in c]
         cov["injection_candidates"] = len(ic)
         cov["injection_candidates_without_verdict"] = sorted(set(ic) - set(cand_verdicts))
+    if (out / "mass-assignment.candidates.json").exists():
+        mc_doc = read_json(out / "mass-assignment.candidates.json")
+        mc_list = mc_doc.get("candidates", []) if isinstance(mc_doc, dict) else []
+        mc = [c["candidate_id"] for c in mc_list if isinstance(c, dict) and "candidate_id" in c]
+        cov["mass_candidates"] = len(mc)
+        cov["mass_candidates_without_verdict"] = sorted(set(mc) - set(cand_verdicts))
     cov["findings_without_verification"] = sorted(unverified)
     cov["duplicates_removed"] = duplicates
     cov["validation_errors"] = errors
@@ -370,7 +386,8 @@ def main() -> int:
     write_json(out / "findings.json", {"generated_by": f"lsa merge_findings.py {KIT_VERSION}", "summary": summary, "findings": ordered})
     write_json(out / "coverage.json", cov)
     gaps = any(cov.get(k) for k in ("missing_from_inventory", "bola_routes_without_verdict",
-                                    "injection_candidates_without_verdict", "validation_errors",
+                                    "injection_candidates_without_verdict", "bfla_routes_without_verdict",
+                                    "mass_candidates_without_verdict", "validation_errors",
                                     "new_issues_from_verifier"))
     print(json.dumps({"summary": summary, "coverage_gaps": gaps}, indent=2))
     return 1 if gaps else 0
