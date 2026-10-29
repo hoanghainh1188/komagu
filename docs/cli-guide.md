@@ -87,7 +87,8 @@ komainu scan <target> [options]
 | `--baseline` | | `None` | Previous `baseline.json` or SARIF file; findings become `new`, `unchanged` or `regressed` (SARIF `baselineState`) and `OUT/baseline-diff.json` lists fixed ones |
 | `--update-baseline` | | `false` | Write the updated baseline to `--baseline` (default `OUT/baseline.json`) |
 | `--suppressions` | | `TARGET/.komainu/suppressions.json` if present | Approved accepted-risk suppressions; matched findings are marked accepted in SARIF and never fail `--fail-on` |
-| `--fail-on` | | `none` | Exit `1` when findings match: `new` (new or regressed), `any` (all active), `none` |
+| `--diff` | | `None` | PR mode: scan only files changed since the merge base with `BASE_REF` (git) plus files that reference them; writes `OUT/diff-scope.json` |
+| `--fail-on` | | `none` (`new` with `--diff`) | Exit `1` when findings match: `new` (new or regressed), `any` (all active), `none` |
 | `--fail-severity` | | `low` | Minimum severity counted by `--fail-on` (`info` … `critical`) |
 | `--headless-ai` | | `None` (`http://localhost:11434/v1` if passed without value) | Execute Tier 2 cognitive AI audit autonomously via an OpenAI-compatible endpoint |
 | `--model` | `-m` | `llama3.1` | Model name for headless cognitive AI execution |
@@ -111,6 +112,19 @@ komainu scan ./legacy-monolith --baseline .komainu/baseline.json --fail-on new -
 ```
 
 Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
+
+#### PR diff mode
+```bash
+# In a pull request: scan what changed against main, fail only on new or regressed findings
+komainu scan . --diff origin/main --baseline .komainu/baseline.json --fail-severity high
+```
+
+- Changed files = committed, staged, unstaged, untracked and deleted files since `git merge-base BASE_REF HEAD`, limited to the scan target.
+- Files that reference a changed file one level deep are scanned too: any file naming it (`include 'inc/db.php'`, `web.xml`), the class name for Java/Kotlin/Groovy/C#/VB, and `import`/`require` for JS/TS/Python/Ruby.
+- Stack detection still sees the whole tree; unchanged files are served from the content-hash cache.
+- With `--baseline`, only entries in scanned files can become `fixed`.
+- An unknown `BASE_REF` or a target outside a git work tree is a usage error (exit `2`).
+- **Limitation:** changes deeper than one level (a helper of a helper) are not followed. Keep a scheduled full scan (for example nightly) as well. In CI, fetch enough history for the merge base (`actions/checkout` with `fetch-depth: 0`).
 
 #### Accepted-risk suppressions
 Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["komainu/v1"]`) into `.komainu/suppressions.json` in the scanned repository. JSON is used instead of YAML so Tier 1 stays standard-library only.

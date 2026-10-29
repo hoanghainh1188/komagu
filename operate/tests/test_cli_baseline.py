@@ -131,3 +131,62 @@ class TestScanSuppressions(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+GIT = ["git", "-c", "user.name=komainu-test", "-c", "user.email=test@komainu.invalid", "-c", "init.defaultBranch=main"]
+
+
+class TestScanDiffMode(unittest.TestCase):
+    def setUp(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.target = Path(tmp.name) / "app"
+        shutil.copytree(FIXTURE_PATH, self.target)
+        for args in (["init", "-q"], ["add", "-A"], ["commit", "-q", "-m", "base"], ["switch", "-q", "-c", "feature"]):
+            subprocess.run([*GIT, "-C", str(self.target), *args], check=True, capture_output=True)
+        self.out = Path(tmp.name) / "out"
+        self.out.mkdir()
+        self.baseline = Path(tmp.name) / "baseline.json"
+
+    def scan(self, *extra: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(BIN_KOMAINU), "scan", str(self.target), "--out", str(self.out), "--format", "sarif", *extra],
+            capture_output=True,
+            text=True,
+        )
+
+    def write_findings(self, *findings: dict) -> None:
+        (self.out / "findings.json").write_text(json.dumps({"findings": list(findings), "summary": {}}), encoding="utf-8")
+
+    def test_diff_scope_reported_and_default_gate_is_new(self) -> None:
+        with open(self.target / "search.php", "a", encoding="utf-8") as fh:
+            fh.write("<?php // touched\n")
+        self.write_findings(FINDING)
+        res = self.scan("--diff", "main")
+        self.assertEqual(res.returncode, 1, res.stderr + res.stdout)
+        self.assertIn("Diff mode:", res.stdout)
+        self.assertIn("CI gate failed (--fail-on new", res.stdout)
+        scope = json.loads((self.out / "diff-scope.json").read_text(encoding="utf-8"))
+        self.assertIn("search.php", scope["selected"])
+
+        explicit = self.scan("--diff", "main", "--fail-on", "none")
+        self.assertEqual(explicit.returncode, 0, explicit.stderr + explicit.stdout)
+
+    def test_baseline_entries_outside_diff_are_not_fixed(self) -> None:
+        other = {**FINDING, "finding_id": "INJ-I-0002-1", "location": {"file": "order_detail.php", "start_line": 3},
+                 "evidence": [{"file": "order_detail.php", "line": 3, "code": "q", "why": "concat"}]}
+        self.write_findings(FINDING, other)
+        self.assertEqual(self.scan("--baseline", str(self.baseline), "--update-baseline").returncode, 0)
+
+        with open(self.target / "search.php", "a", encoding="utf-8") as fh:
+            fh.write("<?php // touched\n")
+        self.write_findings(FINDING)  # a diff scan only reports findings for scanned files
+        res = self.scan("--diff", "main", "--baseline", str(self.baseline))
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        diff = json.loads((self.out / "baseline-diff.json").read_text(encoding="utf-8"))
+        self.assertEqual(diff["counts"]["fixed"], 0)
+        self.assertEqual(diff["counts"]["unchanged"], 1)
+
+    def test_bad_base_ref_is_usage_error(self) -> None:
+        res = self.scan("--diff", "no-such-ref")
+        self.assertEqual(res.returncode, 2, res.stderr + res.stdout)

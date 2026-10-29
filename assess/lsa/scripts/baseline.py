@@ -3,7 +3,7 @@
 
 Usage:
   baseline.py OUT [--target-dir PATH] [--baseline PATH] [--update-baseline]
-                  [--suppressions PATH]
+                  [--suppressions PATH] [--diff-scope OUT/diff-scope.json]
                   [--fail-on none|new|any] [--fail-severity info|low|medium|high|critical]
 
 Steps:
@@ -25,7 +25,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fingerprint import assign_fingerprints  # noqa: E402
@@ -60,7 +60,10 @@ def _entries_from_sarif(doc: Dict) -> Dict[str, Dict]:
             if not fp:
                 continue
             props = result.get("properties") or {}
+            locations = result.get("locations") or [{}]
+            uri = ((locations[0].get("physicalLocation") or {}).get("artifactLocation") or {}).get("uri")
             entries[fp] = {
+                "file": uri or "",
                 "fingerprint": fp,
                 "first_seen": None,
                 "last_seen": None,
@@ -87,8 +90,12 @@ def load_baseline(path: Path) -> Dict[str, Dict]:
     raise BaselineError(f"{path} is neither a Komainu baseline nor a SARIF file")
 
 
-def compare(findings: List[Dict], entries: Dict[str, Dict]) -> BaselineDiff:
-    """Annotate findings with baseline_state and list fixed baseline entries."""
+def compare(findings: List[Dict], entries: Dict[str, Dict], scope: Optional[Set[str]] = None) -> BaselineDiff:
+    """Annotate findings with baseline_state and list fixed baseline entries.
+
+    With a scope (diff mode), only entries in scanned files can be fixed: an
+    unscanned file says nothing about whether its findings still exist.
+    """
     annotated: List[Dict] = []
     seen = set()
     counts = {"new": 0, "unchanged": 0, "regressed": 0, "fixed": 0}
@@ -108,7 +115,10 @@ def compare(findings: List[Dict], entries: Dict[str, Dict]) -> BaselineDiff:
             if fp:
                 seen.add(fp)
         annotated.append(copy)
-    fixed = [dict(e) for fp, e in sorted(entries.items()) if e.get("state") != "fixed" and fp not in seen]
+    fixed = [
+        dict(e) for fp, e in sorted(entries.items())
+        if e.get("state") != "fixed" and fp not in seen and (scope is None or e.get("file") in scope)
+    ]
     counts["fixed"] = len(fixed)
     return BaselineDiff(findings=annotated, fixed=fixed, counts=counts)
 
@@ -128,6 +138,7 @@ def update_baseline(entries: Dict[str, Dict], diff: BaselineDiff, today: str) ->
             "severity": f.get("severity", "medium"),
             "category": f.get("category", ""),
             "title": f.get("title", ""),
+            "file": (f.get("location") or {}).get("file", ""),
         })
         updated[fp] = entry
     for e in diff.fixed:
@@ -158,6 +169,7 @@ def _parse_args(argv: Optional[List[str]]) -> argparse.Namespace:
     ap.add_argument("--update-baseline", action="store_true",
                     help="Write the updated baseline to --baseline (default OUT/baseline.json)")
     ap.add_argument("--suppressions", help="Approved suppressions JSON (see suppressions.py)")
+    ap.add_argument("--diff-scope", help="diff-scope.json from run_prescan.py --diff; limits which entries can be fixed")
     ap.add_argument("--fail-on", choices=FAIL_ON, default="none")
     ap.add_argument("--fail-severity", choices=list(SEVERITY_RANK), default="low")
     ap.add_argument("--today", default=datetime.date.today().isoformat(), help=argparse.SUPPRESS)
@@ -192,7 +204,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     doc = read_json(findings_file)
     target = Path(args.target_dir) if args.target_dir else None
     suppressed = apply_suppressions(assign_fingerprints(doc.get("findings") or [], target), rules, args.today)
-    diff = compare(suppressed.findings, entries)
+    scope = None
+    if args.diff_scope:
+        try:
+            scope = set(read_json(Path(args.diff_scope))["selected"])
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            print(f"error: cannot read diff scope {args.diff_scope}: {exc}", file=sys.stderr)
+            return 2
+    diff = compare(suppressed.findings, entries, scope)
     counts = {**diff.counts, "suppressed": sum(1 for f in diff.findings if f.get("suppression"))}
     write_json(findings_file, {**doc, "findings": diff.findings})
     write_json(out / "baseline-diff.json", {

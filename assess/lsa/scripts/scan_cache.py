@@ -37,7 +37,9 @@ def compute_config_hash(config: Dict, stack_ids: Optional[Set[str]] = None) -> s
     h.update(f"KIT:{KIT_VERSION}".encode("utf-8"))
     if stack_ids:
         h.update(f"STACKS:{sorted(stack_ids)}".encode("utf-8"))
-    canonical_cfg = json.dumps(config, sort_keys=True, separators=(",", ":"))
+    # The diff-mode file list only narrows which files are read; per-file results are unchanged
+    scope = {k: v for k, v in (config.get("scope") or {}).items() if k != "only_files"}
+    canonical_cfg = json.dumps({**config, "scope": scope}, sort_keys=True, separators=(",", ":"))
     h.update(canonical_cfg.encode("utf-8"))
     return h.hexdigest()
 
