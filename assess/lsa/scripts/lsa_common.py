@@ -92,6 +92,9 @@ def iter_source_files(root: Path, config: Dict, exts: Optional[set] = None) -> I
     exts = exts or SOURCE_EXTS
     excludes = config["scope"].get("exclude", [])
     includes = config["scope"].get("include", [])
+    # Diff mode: an explicit file list (an empty list means nothing to scan)
+    only_files = config["scope"].get("only_files")
+    only = set(only_files) if only_files is not None else None
     max_bytes = int(config["scope"].get("max_file_kb", 1024)) * 1024
     root_resolved = root.resolve()
     for dirpath, dirnames, filenames in os.walk(root):
@@ -114,6 +117,8 @@ def iter_source_files(root: Path, config: Dict, exts: Optional[set] = None) -> I
             if p.suffix.lower() not in exts:
                 continue
             if includes and not any(rel.startswith(i.rstrip("/")) for i in includes):
+                continue
+            if only is not None and rel not in only:
                 continue
             if _excluded(rel, excludes):
                 continue

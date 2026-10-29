@@ -121,8 +121,13 @@ Examples:
     parser.add_argument(
         "--fail-on",
         choices=["none", "new", "any"],
-        default="none",
-        help="Exit 1 when findings match: new (new or regressed), any (all active), none (default)",
+        default=None,
+        help="Exit 1 when findings match: new (new or regressed), any (all active), none (default; new with --diff)",
+    )
+    parser.add_argument(
+        "--diff",
+        metavar="BASE_REF",
+        help="PR mode: only scan files changed since the merge base with BASE_REF (git) and files that reference them",
     )
     parser.add_argument(
         "--fail-severity",
@@ -186,14 +191,24 @@ def execute_scan(args: argparse.Namespace) -> int:
         cmd.append("--clean-cache")
     if getattr(args, "cache_dir", None):
         cmd.extend(["--cache-dir", str(args.cache_dir)])
+    diff_ref = getattr(args, "diff", None)
+    if diff_ref:
+        cmd.extend(["--diff", diff_ref])
 
     step("Executing Phase 1: Tier 1 Deterministic Pre-scan (Zero-LLM mode)")
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         step_fail("Pre-scan failed")
         print(res.stderr or res.stdout, file=sys.stderr)
-        return 1
+        return 2 if diff_ref and res.returncode == 2 else 1
     step_ok("Pre-scan completed (stack profile, route candidates, injection candidates)")
+    diff_scope = None
+    if diff_ref:
+        diff_scope = json.loads((out_dir / "diff-scope.json").read_text(encoding="utf-8"))
+        step_info(
+            f"Diff mode: {len(diff_scope['selected'])} file(s) selected from "
+            f"{len(diff_scope['changed'])} changed since merge base with {diff_ref}"
+        )
 
     # Read pre-scan metadata
     prof_file = out_dir / "stack-profile.json"
@@ -307,6 +322,7 @@ def execute_scan(args: argparse.Namespace) -> int:
         findings_file.write_text(json.dumps(initial_findings, indent=2), encoding="utf-8")
 
     # Fingerprint findings and compare with the baseline (also evaluates the CI gate)
+    fail_on = getattr(args, "fail_on", None) or ("new" if diff_ref else "none")
     baseline_cmd = [
         sys.executable,
         str(LSA_SCRIPTS / "baseline.py"),
@@ -314,7 +330,7 @@ def execute_scan(args: argparse.Namespace) -> int:
         "--target-dir",
         str(target_path),
         "--fail-on",
-        getattr(args, "fail_on", "none"),
+        fail_on,
         "--fail-severity",
         getattr(args, "fail_severity", "low"),
     ]
@@ -322,6 +338,8 @@ def execute_scan(args: argparse.Namespace) -> int:
         baseline_cmd.extend(["--baseline", str(Path(args.baseline).resolve())])
     if getattr(args, "update_baseline", False):
         baseline_cmd.append("--update-baseline")
+    if diff_ref:
+        baseline_cmd.extend(["--diff-scope", str(out_dir / "diff-scope.json")])
     suppressions_file = (
         Path(args.suppressions).resolve()
         if getattr(args, "suppressions", None)
@@ -417,6 +435,8 @@ def execute_scan(args: argparse.Namespace) -> int:
     ]
     if baseline_lines and (getattr(args, "baseline", None) or getattr(args, "update_baseline", False)):
         summary_rows.append(("Baseline", baseline_lines[0].split(": ", 1)[-1]))
+    if diff_scope is not None:
+        summary_rows.append(("Diff Scope", f"{len(diff_scope['selected'])} file(s) vs {diff_ref}"))
 
     print_summary_table(
         title="Komainu Security Audit Summary",
@@ -440,7 +460,7 @@ def execute_scan(args: argparse.Namespace) -> int:
         print(f"    • Custom LLM  : see {color('assess/lsa/adapters/generic/README.md', BOLD)} (BYO-LLM: OpenAI, Gemini, Ollama)\n")
 
     if gate_failed:
-        step_fail(f"CI gate failed (--fail-on {args.fail_on} --fail-severity {args.fail_severity})")
+        step_fail(f"CI gate failed (--fail-on {fail_on} --fail-severity {args.fail_severity})")
         for line in (ln for ln in baseline_lines if ln.startswith("  - ")):
             print(line)
         return 1

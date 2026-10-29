@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Phase 1 of the LSA pipeline: deterministic pre-scan.
 
-Usage: run_prescan.py TARGET OUT [--config audit-config.json]
+Usage: run_prescan.py TARGET OUT [--config audit-config.json] [--diff BASE_REF]
 
 Writes into OUT:
   stack-profile.json, routes.candidates.json, injection.candidates.json,
-  batches/*.json, prescan-summary.md
+  batches/*.json, prescan-summary.md, diff-scope.json (only with --diff)
+With --diff, stack detection still sees the whole tree but routes and
+injection candidates come only from files changed since the merge base with
+BASE_REF and the files that reference them (see changed_files.py).
 OUT must not be inside TARGET (audit output never goes into the audited repo).
 """
 from __future__ import annotations
@@ -18,8 +21,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from detect_stack import detect  # noqa: E402
+from changed_files import ChangedFilesError, git_changed_files, select_files  # noqa: E402
 from find_injection import find_injection  # noqa: E402
-from lsa_common import KIT_VERSION, load_config, write_json  # noqa: E402
+from lsa_common import KIT_VERSION, deep_merge, load_config, write_json  # noqa: E402
 from make_batches import make_batches  # noqa: E402
 from map_routes import map_routes  # noqa: E402
 from scan_cache import ScanCache, compute_config_hash  # noqa: E402
@@ -35,6 +39,8 @@ def main() -> int:
     ap.add_argument("--no-cache", action="store_true", help="Disable content-hash candidate caching")
     ap.add_argument("--clean-cache", action="store_true", help="Clear existing candidate cache before scan")
     ap.add_argument("--cache-dir", help="Path to cache directory (default: OUT/.cache)")
+    ap.add_argument("--diff", metavar="BASE_REF",
+                    help="Only scan files changed since the merge base with BASE_REF and their referrers")
     a = ap.parse_args()
     target, out = Path(a.target).resolve(), Path(a.out).resolve()
     if not target.is_dir():
@@ -61,9 +67,25 @@ def main() -> int:
     cfg_hash = compute_config_hash(cfg, stack_ids)
     cache.load(cfg_hash)
 
-    routes = map_routes(target, cfg, stack_ids, workers=a.workers, cache=cache)
+    scan_cfg = cfg
+    diff_line = []
+    scope_file = out / "diff-scope.json"
+    if a.diff:
+        try:
+            changed = git_changed_files(target, a.diff)
+        except ChangedFilesError as exc:
+            print(f"error: --diff {a.diff}: {exc}", file=sys.stderr)
+            return 2
+        selected = select_files(target, changed, cfg)
+        scan_cfg = deep_merge(cfg, {"scope": {"only_files": selected}})
+        write_json(scope_file, {"base_ref": a.diff, "changed": changed, "selected": selected})
+        diff_line = [f"- Diff scope: {len(selected)} file(s) from {len(changed)} changed since merge base with {a.diff}"]
+    elif scope_file.exists():
+        scope_file.unlink()
+
+    routes = map_routes(target, scan_cfg, stack_ids, workers=a.workers, cache=cache)
     write_json(out / "routes.candidates.json", routes)
-    inj = find_injection(target, cfg, workers=a.workers, cache=cache)
+    inj = find_injection(target, scan_cfg, workers=a.workers, cache=cache)
     write_json(out / "injection.candidates.json", inj)
 
     if cache.enabled:
@@ -84,6 +106,7 @@ def main() -> int:
         f"- Kit version: {KIT_VERSION}", f"- Duration: {dt:.1f}s",
         f"- Workers: {effective_workers}",
         f"- Cache: {cache_summary}",
+        *diff_line,
         f"- Stacks: {', '.join(s['id'] for s in prof['stacks']) or 'none detected'}",
         f"- Data access: {', '.join(prof['data_access']) or 'unknown'}",
         f"- Route candidates: {routes['summary']['total']} (with id-like params: {routes['summary']['with_id_like_params']})",
