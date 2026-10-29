@@ -16,6 +16,7 @@ from typing import Any, Dict, List
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import KIT_VERSION, read_json  # noqa: E402
+from trend import render_trend_html, render_trend_md  # noqa: E402
 
 SEV = ["critical", "high", "medium", "low", "info"]
 
@@ -53,6 +54,18 @@ JA_STATUS_LABELS = {
     "unverified": "未検証 (Unverified)",
     "rejected": "棄却 (Rejected)",
 }
+
+
+def _load_trend(out: Path) -> Dict[str, Any]:
+    """Trend from baseline.py (OUT/baseline-diff.json); empty when no baseline step ran."""
+    path = out / "baseline-diff.json"
+    if not path.is_file():
+        return {}
+    try:
+        trend = read_json(path).get("trend") or {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return trend if trend.get("history") else {}
 
 
 def md_escape(s: str) -> str:
@@ -93,6 +106,9 @@ def render_en(out: Path, project: str) -> str:
           "| Category | Count |", "|---|---|"]
     L += [f"| {c} | {n} |" for c, n in s["by_category"].items()]
     L += ["", f"Status: " + ", ".join(f"{k}={v}" for k, v in s["by_status"].items()), ""]
+    trend = _load_trend(out)
+    if trend:
+        L += render_trend_md(trend, "en")
     L += ["## 3. Findings", "",
           "| ID | Sev | Conf | Status | Category | Endpoint | Location | Title |", "|---|---|---|---|---|---|---|---|"]
     for f in active:
@@ -181,6 +197,9 @@ def render_ja(out: Path, project: str) -> str:
         L.append(f"| {cat_label} | {n} |")
     status_summary = ", ".join(f"{JA_STATUS_LABELS.get(k, k)}={v}" for k, v in s["by_status"].items())
     L += ["", f"ステータス内訳: {status_summary}", ""]
+    trend = _load_trend(out)
+    if trend:
+        L += render_trend_md(trend, "ja")
     L += ["## 3. 検出事項の詳細", "",
           "| ID | 重要度 | 確信度 | ステータス | 脆弱性分類 | 対象エンドポイント | 該当箇所 | タイトル |",
           "|---|---|---|---|---|---|---|---|"]
@@ -369,6 +388,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
 
     donut_svg = _build_severity_donut_svg(by_sev, total_active)
     cat_svg = _build_category_bar_svg(by_cat, total_active)
+    trend = _load_trend(out)
+    trend_card = render_trend_html(trend) if trend else ""
 
     # Build severity legend rows
     sev_colors = {
@@ -709,6 +730,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
   .legend-name {{ flex: 1; font-weight: 500; }}
   .legend-val {{ font-weight: 700; }}
   .bar-svg {{ width: 100%; max-width: 440px; height: auto; }}
+  .trend-svg {{ width: 100%; max-width: 520px; height: auto; display: block; margin-bottom: 16px; }}
   .bar-label {{ font-size: 12px; font-weight: 600; fill: #1e293b; }}
   .bar-count {{ font-size: 12px; font-weight: 700; fill: #475569; }}
   .filter-bar {{
@@ -926,6 +948,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
       {cat_svg}
     </div>
   </section>
+
+  {trend_card}
 
   <section class="card" aria-label="Interactive Findings Table">
     <h2 class="card-title" data-en="Interactive Findings Explorer" data-ja="検出事項一覧・インタラクティブ検索 (Findings Explorer)">Interactive Findings Explorer</h2>
