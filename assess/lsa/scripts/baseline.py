@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fingerprint import assign_fingerprints  # noqa: E402
 from lsa_common import read_json, write_json  # noqa: E402
 from suppressions import SuppressionError, apply_suppressions, load_suppressions  # noqa: E402
+from trend import append_history, mttr_by_severity, snapshot  # noqa: E402
 
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 FAIL_ON = ("none", "new", "any")
@@ -90,6 +91,13 @@ def load_baseline(path: Path) -> Dict[str, Dict]:
     raise BaselineError(f"{path} is neither a Komainu baseline nor a SARIF file")
 
 
+def load_history(path: Path) -> List[Dict]:
+    """Scan history stored in a baseline.json; SARIF baselines have none."""
+    doc = read_json(path)
+    history = doc.get("history") if isinstance(doc, dict) and isinstance(doc.get("entries"), list) else None
+    return [h for h in history if isinstance(h, dict)] if isinstance(history, list) else []
+
+
 def compare(findings: List[Dict], entries: Dict[str, Dict], scope: Optional[Set[str]] = None) -> BaselineDiff:
     """Annotate findings with baseline_state and list fixed baseline entries.
 
@@ -123,7 +131,9 @@ def compare(findings: List[Dict], entries: Dict[str, Dict], scope: Optional[Set[
     return BaselineDiff(findings=annotated, fixed=fixed, counts=counts)
 
 
-def update_baseline(entries: Dict[str, Dict], diff: BaselineDiff, today: str) -> Dict:
+def update_baseline(
+    entries: Dict[str, Dict], diff: BaselineDiff, today: str, history: Optional[List[Dict]] = None
+) -> Dict:
     """Return a new baseline document; the input entries are not modified."""
     updated = {fp: dict(e) for fp, e in entries.items()}
     for f in diff.findings:
@@ -143,7 +153,10 @@ def update_baseline(entries: Dict[str, Dict], diff: BaselineDiff, today: str) ->
         updated[fp] = entry
     for e in diff.fixed:
         updated[e["fingerprint"]] = {**updated[e["fingerprint"]], "state": "fixed", "fixed_at": today}
-    return {"version": 1, "updated": today, "entries": [updated[fp] for fp in sorted(updated)]}
+    doc = {"version": 1, "updated": today, "entries": [updated[fp] for fp in sorted(updated)]}
+    if history is not None:
+        doc["history"] = history
+    return doc
 
 
 def gate(findings: List[Dict], fail_on: str, fail_severity: str) -> List[Dict]:
@@ -185,10 +198,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
 
     entries: Dict[str, Dict] = {}
+    history: List[Dict] = []
     baseline_path = Path(args.baseline) if args.baseline else None
     if baseline_path and (baseline_path.exists() or not args.update_baseline):
         try:
             entries = load_baseline(baseline_path)
+            history = load_history(baseline_path)
         except BaselineError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
@@ -213,6 +228,10 @@ def main(argv: Optional[List[str]] = None) -> int:
             return 2
     diff = compare(suppressed.findings, entries, scope)
     counts = {**diff.counts, "suppressed": sum(1 for f in diff.findings if f.get("suppression"))}
+    # A diff scan sees only part of the tree, so it must not add a point to the trend
+    if scope is None:
+        history = append_history(history, snapshot(counts, diff.findings, args.today))
+    updated = update_baseline(entries, diff, args.today, history)
     write_json(findings_file, {**doc, "findings": diff.findings})
     write_json(out / "baseline-diff.json", {
         "generated": args.today,
@@ -223,10 +242,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         "fixed": diff.fixed,
         "expired_suppressions": [s.to_dict() for s in suppressed.expired],
         "unused_suppressions": [s.to_dict() for s in suppressed.unused],
+        "trend": {"history": history, "mttr": mttr_by_severity(updated["entries"])},
     })
 
     if args.update_baseline:
-        write_json(baseline_path or out / "baseline.json", update_baseline(entries, diff, args.today))
+        write_json(baseline_path or out / "baseline.json", updated)
 
     print(f"baseline: {counts['new']} new, {counts['unchanged']} unchanged, {counts['regressed']} regressed, "
           f"{counts['fixed']} fixed, {counts['suppressed']} suppressed")

@@ -113,6 +113,13 @@ komainu scan ./legacy-monolith --baseline .komainu/baseline.json --fail-on new -
 
 Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
 
+#### Trend and time to fix
+Each full scan with `--baseline` adds one point per day to `history` in `baseline.json` (a same-day rerun replaces it; at most 365 points). Diff scans add none, because they see only part of the tree. Commit `baseline.json` so the history follows the repository.
+
+- `report.md`, `report.ja.md` and `report.html` gain a **Trend and time to fix** section: open findings per scan (new, regressed, fixed, suppressed) and the mean days from first seen to fixed (MTTR) per severity.
+- The same data is in `OUT/baseline-diff.json` under `trend`, for monthly retainer reports.
+- A regressed finding keeps its original first-seen date, so its next fix counts the whole time it was open.
+
 #### PR diff mode
 ```bash
 # In a pull request: scan what changed against main, fail only on new or regressed findings
