@@ -10,6 +10,9 @@ Marker syntax (at the end of a code line, inside that language's comment):
     LSA-EXPECT:BFLA             privileged function without a server-side role check; pre-scan MUST set
                                 needs_bfla_audit_hint on the covering route; agents MUST report
     LSA-EXPECT:SAFE-BFLA        role is enforced server-side; pre-scan must NOT set the hint
+    LSA-EXPECT:MASS             request body bound to a model without an allow-list, or a privileged
+                                field written from input; pre-scan MUST flag; agents MUST report
+    LSA-EXPECT:SAFE-MASS        explicit fields or an allow-list; pre-scan must NOT flag
 """
 from __future__ import annotations
 

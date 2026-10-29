@@ -5,6 +5,7 @@ Usage: run_prescan.py TARGET OUT [--config audit-config.json] [--diff BASE_REF]
 
 Writes into OUT:
   stack-profile.json, routes.candidates.json, injection.candidates.json,
+  mass-assignment.candidates.json,
   batches/*.json, prescan-summary.md, diff-scope.json (only with --diff)
 With --diff, stack detection still sees the whole tree but routes and
 injection candidates come only from files changed since the merge base with
@@ -23,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from detect_stack import detect  # noqa: E402
 from changed_files import ChangedFilesError, git_changed_files, select_files  # noqa: E402
 from find_injection import find_injection  # noqa: E402
+from find_mass_assignment import find_mass_assignment  # noqa: E402
 from lsa_common import KIT_VERSION, deep_merge, load_config, write_json  # noqa: E402
 from make_batches import make_batches  # noqa: E402
 from map_routes import map_routes  # noqa: E402
@@ -87,6 +89,8 @@ def main() -> int:
     write_json(out / "routes.candidates.json", routes)
     inj = find_injection(target, scan_cfg, workers=a.workers, cache=cache)
     write_json(out / "injection.candidates.json", inj)
+    mass = find_mass_assignment(target, scan_cfg, cache=cache)
+    write_json(out / "mass-assignment.candidates.json", mass)
 
     if cache.enabled:
         cache.save()
@@ -111,6 +115,8 @@ def main() -> int:
         f"- Data access: {', '.join(prof['data_access']) or 'unknown'}",
         f"- Route candidates: {routes['summary']['total']} (with id-like params: {routes['summary']['with_id_like_params']})",
         f"- Injection candidates: {inj['summary']['total']} (high priority: {inj['summary']['high_priority']})",
+        f"- Mass assignment candidates: {mass['summary']['total']} (high priority: {mass['summary']['high_priority']})",
+        f"- BFLA route hints: {routes['summary'].get('bfla_hints', 0)}",
         f"- Batches: {len(idx['routes'])} route, {len(idx['injection'])} injection",
         f"- Knowledge files to load: {', '.join(prof['knowledge_files'])}", "",
         "Next: run the stack-detector agent (prompts/10-stack-detector.md).",

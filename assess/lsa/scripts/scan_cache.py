@@ -62,15 +62,17 @@ class ScanCache:
             "routes_misses": 0,
             "injection_hits": 0,
             "injection_misses": 0,
+            "mass_hits": 0,
+            "mass_misses": 0,
         }
 
     @property
     def total_hits(self) -> int:
-        return self.stats["routes_hits"] + self.stats["injection_hits"]
+        return self.stats["routes_hits"] + self.stats["injection_hits"] + self.stats["mass_hits"]
 
     @property
     def total_misses(self) -> int:
-        return self.stats["routes_misses"] + self.stats["injection_misses"]
+        return self.stats["routes_misses"] + self.stats["injection_misses"] + self.stats["mass_misses"]
 
     def load(self, config_hash: str) -> bool:
         """Load cache from disk. Invalidate if config_hash or kit_version mismatch."""
@@ -81,6 +83,8 @@ class ScanCache:
             "routes_misses": 0,
             "injection_hits": 0,
             "injection_misses": 0,
+            "mass_hits": 0,
+            "mass_misses": 0,
         }
 
         if not self.enabled or not self.cache_file or not self.cache_file.is_file():
@@ -191,6 +195,38 @@ class ScanCache:
                 "injection_items": injection_items,
                 "injection_suppressed": injection_suppressed,
                 "injection_cached": True,
+            })
+        except Exception:
+            pass
+
+    def get_mass(self, rel: str, path: Path) -> Optional[Tuple[List[Dict], Dict[str, Any]]]:
+        """Retrieve cached mass assignment candidates and model facts for a file."""
+        if not self.enabled:
+            return None
+
+        entry = self._is_file_fresh(rel, path)
+        if entry and entry.get("mass_cached"):
+            self.stats["mass_hits"] += 1
+            return entry.get("mass_items", []), entry.get("mass_meta", {})
+
+        self.stats["mass_misses"] += 1
+        return None
+
+    def put_mass(self, rel: str, path: Path, mass_items: List[Dict], mass_meta: Dict[str, Any]) -> None:
+        """Store mass assignment candidates and model facts for a file."""
+        if not self.enabled:
+            return
+
+        try:
+            stat = path.stat()
+            entry = self.entries.setdefault(rel, {})
+            entry.update({
+                "sha256": compute_file_sha256(path),
+                "mtime": stat.st_mtime,
+                "size": stat.st_size,
+                "mass_items": mass_items,
+                "mass_meta": mass_meta,
+                "mass_cached": True,
             })
         except Exception:
             pass
