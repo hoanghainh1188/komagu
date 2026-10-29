@@ -72,6 +72,26 @@ def md_escape(s: str) -> str:
     return (s or "").replace("|", "\\|").replace("\n", " ")
 
 
+# Coverage rows for BFLA / mass assignment: (coverage key, EN label, JA label).
+# Shown only when coverage.json has the key (audits from kit versions with phase 4c).
+PRIVILEGE_COVERAGE_ROWS = (
+    ("bfla_routes_to_audit", "Privileged routes audited for BFLA", "BFLA監査対象の特権エンドポイント数"),
+    ("mass_candidates", "Mass assignment candidates reviewed", "レビュー対象マスアサインメント候補数"),
+)
+
+DEFAULT_FIX = {
+    "bfla": "// Check the required role from the session before the handler runs (one shared admin guard).",
+    "mass_assignment": "// Copy only editable fields from the request (allow-list / DTO); set privileged fields on the server.",
+}
+DEFAULT_FIX_OTHER = "// Parameterize query and bind tenant/user ownership predicate from session."
+
+
+def privilege_coverage_rows(cov: Dict[str, Any], lang: str) -> List[str]:
+    """Markdown table rows for BFLA / mass assignment coverage, if present."""
+    col = 2 if lang == "ja" else 1
+    return [f"| {row[col]} | {cov[row[0]]} |" for row in PRIVILEGE_COVERAGE_ROWS if row[0] in cov]
+
+
 def render(out: Path, project: str, lang: str = "en", fmt: str = "md") -> str:
     if fmt == "html":
         return render_html(out, project, default_lang=lang if lang in ("en", "ja") else "en")
@@ -94,11 +114,12 @@ def render_en(out: Path, project: str) -> str:
           "| Item | Value |", "|---|---|",
           f"| Date | {dt.date.today().isoformat()} |",
           f"| Kit version | {KIT_VERSION} |",
-          f"| Scope | BOLA/IDOR; SQL/HQL/NoSQL queries built from input |",
+          f"| Scope | BOLA/IDOR; SQL/HQL/NoSQL queries built from input; BFLA (missing role checks); mass assignment |",
           f"| Stacks | {', '.join(x['id'] for x in prof['stacks']) or '-'} |",
           f"| Endpoints inventoried | {cov.get('inventoried', '-')} (candidates: {cov.get('route_candidates', '-')}) |",
           f"| Endpoints audited for BOLA | {cov.get('bola_routes_to_audit', '-')} |",
-          f"| Injection candidates reviewed | {cov.get('injection_candidates', '-')} |", ""]
+          f"| Injection candidates reviewed | {cov.get('injection_candidates', '-')} |"]
+    L += privilege_coverage_rows(cov, "en") + [""]
     L += ["## 1. Executive summary", "", "<!-- LLM: reporter agent writes max 8 bullets here -->", ""]
     L += ["## 2. Findings overview", "",
           "| Severity | " + " | ".join(SEV) + " |", "|---|" + "---|" * len(SEV),
@@ -181,11 +202,12 @@ def render_ja(out: Path, project: str) -> str:
           "| 項目 | 値 |", "|---|---|",
           f"| 診断実施日 | {dt.date.today().isoformat()} |",
           f"| 監査キットバージョン | {KIT_VERSION} |",
-          f"| 監査対象スコープ | BOLA/IDOR（オブジェクトレベルの認可不備）および外部入力によるSQL/HQL/NoSQLクエリ構築 |",
+          f"| 監査対象スコープ | BOLA/IDOR（オブジェクトレベルの認可不備）、外部入力によるSQL/HQL/NoSQLクエリ構築、BFLA（機能レベルの認可不備）、マスアサインメント |",
           f"| 検出技術スタック | {', '.join(x['id'] for x in prof['stacks']) or '-'} |",
           f"| インベントリ登録エンドポイント数 | {cov.get('inventoried', '-')} (候補数: {cov.get('route_candidates', '-')}) |",
           f"| BOLA監査対象エンドポイント数 | {cov.get('bola_routes_to_audit', '-')} |",
-          f"| レビュー対象インジェクション候補数 | {cov.get('injection_candidates', '-')} |", ""]
+          f"| レビュー対象インジェクション候補数 | {cov.get('injection_candidates', '-')} |"]
+    L += privilege_coverage_rows(cov, "ja") + [""]
     L += ["## 1. エグゼクティブサマリー", "",
           "<!-- LLM: reporter agent writes max 8 bullets here (日本語で記載: 全体のリスクレベル、事業影響の大きい上位3件の検出事項、根本原因) -->", ""]
     L += ["## 2. 検出事項の概要", "",
@@ -390,6 +412,19 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
 
     donut_svg = _build_severity_donut_svg(by_sev, total_active)
     cat_svg = _build_category_bar_svg(by_cat, total_active)
+    priv_kpi = "".join(
+        f" | {label}: {html.escape(str(cov[key]))}"
+        for key, label in (("bfla_routes_to_audit", "BFLA"), ("mass_candidates", "Mass"))
+        if key in cov
+    )
+    extra_cat_options = "\n        ".join(
+        f'<option value="{key}" data-en="{en}" data-ja="{ja}">{en}</option>'
+        for key, en, ja in (
+            ("bfla", "BFLA (CWE-285)", "機能レベル認可不備 BFLA (CWE-285)"),
+            ("mass_assignment", "Mass Assignment (CWE-915)", "マスアサインメント (CWE-915)"),
+        )
+        if by_cat.get(key, 0) > 0
+    )
     trend = _load_trend(out)
     trend_card = render_trend_html(trend) if trend else ""
 
@@ -436,7 +471,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
         scenario = f.get("attack_scenario") or "-"
         impact = f.get("impact") or "-"
         rec = f.get("recommendation") or "-"
-        fix_code = f.get("fix_example") or "// Parameterize query and bind tenant/user ownership predicate from session."
+        fix_code = f.get("fix_example") or DEFAULT_FIX.get(cat, DEFAULT_FIX_OTHER)
         data_flow = " → ".join(f.get("data_flow") or [])
 
         evidence_items: List[str] = []
@@ -897,7 +932,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
     </div>
     <div class="meta-bar">
       <div><strong data-en="Audit Date:" data-ja="診断実施日:">Audit Date:</strong> {html.escape(audit_date)}</div>
-      <div><strong data-en="Scope:" data-ja="監査対象スコープ:">Scope:</strong> <span data-en="BOLA/IDOR (CWE-639) &amp; SQL/NoSQL Injection (CWE-89/CWE-943)" data-ja="BOLA/IDOR（認可不備）およびSQL/NoSQLインジェクション">BOLA/IDOR (CWE-639) &amp; SQL/NoSQL Injection (CWE-89/CWE-943)</span></div>
+      <div><strong data-en="Scope:" data-ja="監査対象スコープ:">Scope:</strong> <span data-en="BOLA/IDOR (CWE-639), SQL/NoSQL Injection (CWE-89/CWE-943), BFLA (CWE-285) &amp; Mass Assignment (CWE-915)" data-ja="BOLA/IDOR（認可不備）、SQL/NoSQLインジェクション、BFLA（機能レベル認可不備）、マスアサインメント">BOLA/IDOR (CWE-639), SQL/NoSQL Injection (CWE-89/CWE-943), BFLA (CWE-285) &amp; Mass Assignment (CWE-915)</span></div>
       <div><strong data-en="Detected Stacks:" data-ja="検出技術スタック:">Detected Stacks:</strong> {stacks_badges_html}</div>
     </div>
   </header>
@@ -926,7 +961,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
     <div class="kpi-card">
       <div class="kpi-label" data-en="Endpoints Inventoried" data-ja="登録エンドポイント数">Endpoints Inventoried</div>
       <div class="kpi-val">{cov.get('inventoried', '-')}</div>
-      <div class="kpi-sub">BOLA Audited: {cov.get('bola_routes_to_audit', '-')} | Inj: {cov.get('injection_candidates', '-')}</div>
+      <div class="kpi-sub">BOLA Audited: {cov.get('bola_routes_to_audit', '-')} | Inj: {cov.get('injection_candidates', '-')}{priv_kpi}</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label" data-en="Refuted by Skeptic" data-ja="Skeptic検証により棄却">Refuted by Skeptic</div>
@@ -969,6 +1004,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
         <option value="bola" data-en="BOLA / IDOR (CWE-639)" data-ja="認可不備 BOLA (CWE-639)">BOLA / IDOR (CWE-639)</option>
         <option value="sql_injection" data-en="SQL Injection (CWE-89)" data-ja="SQLインジェクション (CWE-89)">SQL Injection (CWE-89)</option>
         <option value="nosql_injection" data-en="NoSQL Injection (CWE-943)" data-ja="NoSQLインジェクション (CWE-943)">NoSQL Injection (CWE-943)</option>
+        {extra_cat_options}
       </select>
       <select id="stack-filter" class="filter-select" onchange="applyFilters()" aria-label="Filter by Stack">
         <option value="all" data-en="All Stacks / Modules" data-ja="すべての技術スタック">All Stacks / Modules</option>

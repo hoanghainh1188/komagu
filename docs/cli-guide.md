@@ -70,7 +70,7 @@ flowchart TD
 
 ### 3.1 `komainu scan` — Legacy Codebase Security Audit
 
-Audits monolithic repositories across 10 legacy stacks (Classic ASP, ColdFusion, PHP Plain/CodeIgniter, Java Servlet/JSP/Struts1/Spring MVC, .NET WebForms/MVC, Node Express, Perl CGI, Python Flask, SQL Procedures) for Broken Object-Level Authorization (BOLA/IDOR) and dynamic string SQL injection.
+Audits monolithic repositories across 10 legacy stacks (Classic ASP, ColdFusion, PHP Plain/CodeIgniter, Java Servlet/JSP/Struts1/Spring MVC, .NET WebForms/MVC, Node Express, Perl CGI, Python Flask, SQL Procedures) for Broken Object-Level Authorization (BOLA/IDOR), dynamic string SQL/NoSQL injection, Broken Function-Level Authorization (BFLA) and mass assignment.
 
 ```bash
 komainu scan <target> [options]
@@ -112,6 +112,21 @@ komainu scan ./legacy-monolith --baseline .komainu/baseline.json --fail-on new -
 ```
 
 Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
+
+#### Finding categories
+
+| `category` | What it means | CWE | OWASP | SARIF rule id |
+| :--- | :--- | :--- | :--- | :--- |
+| `bola` | Object read or changed by a request id without an owner / tenant check | CWE-639 | API1:2023 | `lsa/bola/<subtype>` |
+| `sql_injection` | SQL / HQL built from input | CWE-89 | A03:2021 | `lsa/sql_injection/<subtype>` |
+| `nosql_injection` | NoSQL filter or script built from input | CWE-943 | A03:2021 | `lsa/nosql_injection/<subtype>` |
+| `bfla` | Privileged function without an enforced server-side role check | CWE-285 (CWE-269, CWE-602) | API5:2023 | `lsa/bfla/<subtype>` |
+| `mass_assignment` | Request body bound to a model, so a caller can write role, owner, price… | CWE-915 | API3:2023 | `lsa/mass_assignment/<subtype>` |
+
+- Tier 1 (`--format`, no `--headless-ai`) marks BFLA and mass assignment **candidates** only; Tier 2 (an AI runtime or `--headless-ai`) decides them in phase 4c and writes the findings.
+- `report.md`, `report.ja.md` and `report.html` list the new categories, show how many privileged routes and mass assignment candidates were reviewed, and add `bfla` / `mass_assignment` to the HTML category filter when the scan found any. A report from a scan without them looks as before.
+- SARIF results carry the CWE taxonomy and the OWASP API tags above, so GitHub Code Scanning shows them as separate rules.
+- Confirm them on a running app with `komainu test` (§3.4): persona matrix for BFLA, `mass_assignment_probe` for mass assignment.
 
 #### Trend and time to fix
 Each full scan with `--baseline` adds one point per day to `history` in `baseline.json` (a same-day rerun replaces it; at most 365 points). Diff scans add none, because they see only part of the tree. Commit `baseline.json` so the history follows the repository.
@@ -214,7 +229,7 @@ komainu protect --virtual-patch findings.json --patch-out /etc/coraza/rules/cust
 
 ---
 
-### 3.4 `komainu test` — Offensive Exploit Verification & BOLA Invariant Testing
+### 3.4 `komainu test` — Offensive Exploit Verification, BOLA Invariant & Persona Matrix
 
 Performs active, cross-user authorization tests against live APIs to verify tenant isolation. Automatically converts scan findings into active exploits, evaluates Multi-AI Consensus scores, and verifies the **HTTP 404 Not Found invariant**.
 
@@ -226,7 +241,7 @@ komainu test --url <base-url> [options]
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--url` | `-u` | *Required* | Base URL of target API (`http://localhost:8000`) |
-| `--from-scan` | | `None` | Ingest candidate BOLA routes from `findings.json` or `SARIF` |
+| `--from-scan` | | `None` | Ingest BOLA routes from `findings.json` or SARIF; BFLA and mass assignment findings from `findings.json` |
 | `--min-consensus` | | `0.0` | Minimum Multi-AI Consensus score threshold (0.0 – 1.0) |
 | `--export-poc` | | `None` | Export verified exploit scripts (`.py` & `.sh`) to directory |
 | `--auto-crud-path` | | `None` | Direct endpoint path pattern (e.g., `/api/v1/orders/{id}`) |
