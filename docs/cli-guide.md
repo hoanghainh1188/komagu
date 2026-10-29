@@ -86,6 +86,7 @@ komainu scan <target> [options]
 | `--sarif-out` | | `OUT/findings.sarif` | Designated path for OASIS SARIF v2.1.0 output |
 | `--baseline` | | `None` | Previous `baseline.json` or SARIF file; findings become `new`, `unchanged` or `regressed` (SARIF `baselineState`) and `OUT/baseline-diff.json` lists fixed ones |
 | `--update-baseline` | | `false` | Write the updated baseline to `--baseline` (default `OUT/baseline.json`) |
+| `--suppressions` | | `TARGET/.komainu/suppressions.json` if present | Approved accepted-risk suppressions; matched findings are marked accepted in SARIF and never fail `--fail-on` |
 | `--fail-on` | | `none` | Exit `1` when findings match: `new` (new or regressed), `any` (all active), `none` |
 | `--fail-severity` | | `low` | Minimum severity counted by `--fail-on` (`info` … `critical`) |
 | `--headless-ai` | | `None` (`http://localhost:11434/v1` if passed without value) | Execute Tier 2 cognitive AI audit autonomously via an OpenAI-compatible endpoint |
@@ -110,6 +111,28 @@ komainu scan ./legacy-monolith --baseline .komainu/baseline.json --fail-on new -
 ```
 
 Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
+
+#### Accepted-risk suppressions
+Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["komainu/v1"]`) into `.komainu/suppressions.json` in the scanned repository. JSON is used instead of YAML so Tier 1 stays standard-library only.
+
+```json
+{
+  "version": 1,
+  "suppressions": [
+    {
+      "fingerprint": "kfp1:3f9a…",
+      "reason": "Admin page reachable only from the office VPN",
+      "approved_by": "ciso@client.example",
+      "expires": "2027-03-31"
+    }
+  ]
+}
+```
+
+- `reason` and `approved_by` are required (record the human sign-off from `governance/`); `expires` is a `YYYY-MM-DD` date or `null`.
+- A suppression applies up to and including its expiry date. After that the finding fails the gate again and the scan prints a warning.
+- Suppressions that match no finding are reported so they can be removed. `OUT/baseline-diff.json` lists both under `expired_suppressions` and `unused_suppressions`.
+- An invalid or missing explicit `--suppressions` file is a usage error (exit `2`).
 
 ---
 

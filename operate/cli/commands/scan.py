@@ -114,6 +114,11 @@ Examples:
         help="Write the updated baseline to --baseline (default: OUT/baseline.json)",
     )
     parser.add_argument(
+        "--suppressions",
+        metavar="PATH",
+        help="Approved accepted-risk suppressions JSON (default: TARGET/.komainu/suppressions.json if present)",
+    )
+    parser.add_argument(
         "--fail-on",
         choices=["none", "new", "any"],
         default="none",
@@ -317,6 +322,13 @@ def execute_scan(args: argparse.Namespace) -> int:
         baseline_cmd.extend(["--baseline", str(Path(args.baseline).resolve())])
     if getattr(args, "update_baseline", False):
         baseline_cmd.append("--update-baseline")
+    suppressions_file = (
+        Path(args.suppressions).resolve()
+        if getattr(args, "suppressions", None)
+        else target_path / ".komainu" / "suppressions.json"
+    )
+    if getattr(args, "suppressions", None) or suppressions_file.is_file():
+        baseline_cmd.extend(["--suppressions", str(suppressions_file)])
     res_baseline = subprocess.run(baseline_cmd, capture_output=True, text=True)
     if res_baseline.returncode == 2:
         step_fail("Baseline comparison failed")
@@ -324,8 +336,11 @@ def execute_scan(args: argparse.Namespace) -> int:
         return 2
     gate_failed = res_baseline.returncode == 1
     baseline_lines = res_baseline.stdout.strip().splitlines()
-    if getattr(args, "baseline", None) or getattr(args, "update_baseline", False):
+    if getattr(args, "baseline", None) or getattr(args, "update_baseline", False) or "--suppressions" in baseline_cmd:
         step_ok(baseline_lines[0] if baseline_lines else "Baseline compared")
+    for line in baseline_lines:
+        if line.startswith("warning: "):
+            step_warn(line[len("warning: "):])
 
     # 3. Export to SARIF if requested
     sarif_file = (
@@ -426,7 +441,7 @@ def execute_scan(args: argparse.Namespace) -> int:
 
     if gate_failed:
         step_fail(f"CI gate failed (--fail-on {args.fail_on} --fail-severity {args.fail_severity})")
-        for line in baseline_lines[2:]:
+        for line in (ln for ln in baseline_lines if ln.startswith("  - ")):
             print(line)
         return 1
     return 0

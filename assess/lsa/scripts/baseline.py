@@ -3,10 +3,12 @@
 
 Usage:
   baseline.py OUT [--target-dir PATH] [--baseline PATH] [--update-baseline]
+                  [--suppressions PATH]
                   [--fail-on none|new|any] [--fail-severity info|low|medium|high|critical]
 
 Steps:
-  1. Assign kfp1 fingerprints to every finding in OUT/findings.json.
+  1. Assign kfp1 fingerprints to every finding in OUT/findings.json and attach
+     approved, unexpired suppressions (suppressed findings never fail the gate).
   2. Classify active findings as new / unchanged / regressed against the
      baseline (baseline.json or a previous SARIF); list baseline entries that
      are no longer found as fixed. Write OUT/baseline-diff.json.
@@ -28,6 +30,7 @@ from typing import Dict, List, Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fingerprint import assign_fingerprints  # noqa: E402
 from lsa_common import read_json, write_json  # noqa: E402
+from suppressions import SuppressionError, apply_suppressions, load_suppressions  # noqa: E402
 
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 FAIL_ON = ("none", "new", "any")
@@ -141,6 +144,7 @@ def gate(findings: List[Dict], fail_on: str, fail_severity: str) -> List[Dict]:
     return [
         f for f in findings
         if _is_active(f)
+        and not f.get("suppression")
         and f.get("baseline_state") in states
         and SEVERITY_RANK.get(f.get("severity", "medium"), 2) >= threshold
     ]
@@ -153,6 +157,7 @@ def _parse_args(argv: Optional[List[str]]) -> argparse.Namespace:
     ap.add_argument("--baseline", help="Previous baseline.json or SARIF file")
     ap.add_argument("--update-baseline", action="store_true",
                     help="Write the updated baseline to --baseline (default OUT/baseline.json)")
+    ap.add_argument("--suppressions", help="Approved suppressions JSON (see suppressions.py)")
     ap.add_argument("--fail-on", choices=FAIL_ON, default="none")
     ap.add_argument("--fail-severity", choices=list(SEVERITY_RANK), default="low")
     ap.add_argument("--today", default=datetime.date.today().isoformat(), help=argparse.SUPPRESS)
@@ -176,24 +181,40 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 2
 
+    rules = []
+    if args.suppressions:
+        try:
+            rules = load_suppressions(Path(args.suppressions))
+        except SuppressionError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+
     doc = read_json(findings_file)
     target = Path(args.target_dir) if args.target_dir else None
-    diff = compare(assign_fingerprints(doc.get("findings") or [], target), entries)
+    suppressed = apply_suppressions(assign_fingerprints(doc.get("findings") or [], target), rules, args.today)
+    diff = compare(suppressed.findings, entries)
+    counts = {**diff.counts, "suppressed": sum(1 for f in diff.findings if f.get("suppression"))}
     write_json(findings_file, {**doc, "findings": diff.findings})
     write_json(out / "baseline-diff.json", {
         "generated": args.today,
         "baseline": str(baseline_path) if baseline_path else None,
-        "counts": diff.counts,
+        "counts": counts,
         "new": [f.get("finding_id") for f in diff.findings if f.get("baseline_state") == "new"],
         "regressed": [f.get("finding_id") for f in diff.findings if f.get("baseline_state") == "regressed"],
         "fixed": diff.fixed,
+        "expired_suppressions": [s.to_dict() for s in suppressed.expired],
+        "unused_suppressions": [s.to_dict() for s in suppressed.unused],
     })
 
     if args.update_baseline:
         write_json(baseline_path or out / "baseline.json", update_baseline(entries, diff, args.today))
 
-    c = diff.counts
-    print(f"baseline: {c['new']} new, {c['unchanged']} unchanged, {c['regressed']} regressed, {c['fixed']} fixed")
+    print(f"baseline: {counts['new']} new, {counts['unchanged']} unchanged, {counts['regressed']} regressed, "
+          f"{counts['fixed']} fixed, {counts['suppressed']} suppressed")
+    for s in suppressed.expired:
+        print(f"warning: suppression for {s.fingerprint} expired on {s.expires} (approved by {s.approved_by})")
+    for s in suppressed.unused:
+        print(f"warning: suppression for {s.fingerprint} matched no finding; remove it if the issue is fixed")
     tripped = gate(diff.findings, args.fail_on, args.fail_severity)
     if tripped:
         print(f"gate: {len(tripped)} finding(s) fail --fail-on {args.fail_on} --fail-severity {args.fail_severity}")

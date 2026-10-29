@@ -43,6 +43,28 @@
       ],
       "description": "result of comparing with a baseline; regressed = fixed earlier, found again"
     },
+    "suppression": {
+      "type": "object",
+      "description": "approved accepted-risk suppression that matched this finding",
+      "required": [
+        "reason",
+        "approved_by"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "expires": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "subtype": {
       "enum": [
         "missing_ownership_check",
