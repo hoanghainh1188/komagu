@@ -21,6 +21,7 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import (KIT_VERSION, compile_id_patterns, is_id_name, iter_source_files,  # noqa: E402
                         line_of, load_config, read_text, write_json)
+from privilege import annotate_privilege  # noqa: E402
 
 # --------------------------------------------------------------------------------------
 # Input sources: (regex, group index of the parameter name, source kind)
@@ -882,11 +883,13 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
     c.items = keep
     for it in c.items:
         it["needs_audit_hint"] = bool(any(i.get("is_id_like") for i in it["id_params"]) or it["kind"] == "declared_route")
+    c.items = annotate_privilege(c.items, target, config)
     by_stack: Dict[str, int] = {}
     for it in c.items:
         by_stack[it["stack"]] = by_stack.get(it["stack"], 0) + 1
     return {"generated_by": f"lsa map_routes.py {KIT_VERSION}", "target": target.resolve().name,
             "summary": {"total": len(c.items), "by_stack": by_stack,
+                        "bfla_hints": sum(1 for i in c.items if i.get("needs_bfla_audit_hint")),
                         "with_id_like_params": sum(1 for i in c.items if any(p.get("is_id_like") for p in i["id_params"]))},
             "candidates": c.items}
 

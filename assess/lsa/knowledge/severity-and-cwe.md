@@ -4,7 +4,7 @@
 
 `critical` > `high` > `medium` > `low` > `info`
 
-Use the category tables in `bola-patterns.md` §6 and
+Use the category tables in `bola-patterns.md` §6, `bfla-patterns.md` §6 and
 `injection-patterns.md` §5. Then adjust:
 
 - **+1 level** (max critical): no authentication needed; affects all tenants;

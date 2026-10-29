@@ -49,7 +49,7 @@ def test_fixture(fx: Path, cfg) -> list:
     routes = map_routes(fx, cfg, {s["id"] for s in prof["stacks"]})["candidates"]
     inj = find_injection(fx, cfg)["candidates"]
     flagged = {(c["file"], c["line"]) for c in inj}
-    n = {"sqli": 0, "sqli_hit": 0, "noflag": 0, "noflag_ok": 0, "bola": 0, "bola_hit": 0}
+    n = {"sqli": 0, "sqli_hit": 0, "noflag": 0, "noflag_ok": 0, "bola": 0, "bola_hit": 0, "bfla": 0, "bfla_ok": 0}
     for m in marks:
         key = (m["file"], m["line"])
         if m["label"] in ("SQLI", "NOSQL"):
@@ -74,9 +74,20 @@ def test_fixture(fx: Path, cfg) -> list:
                     print(f"    route {r['route_id']} {r['method']} {r['path']} id_params={ids}")
             else:
                 fails.append(f"NO ROUTE for {m['label']} marker {m['file']}:{m['line']}")
+        elif m["label"] in ("BFLA", "SAFE-BFLA"):
+            n["bfla"] += 1
+            r = route_covers(routes, m["file"], m["line"])
+            want = m["label"] == "BFLA"
+            if not r:
+                fails.append(f"NO ROUTE for {m['label']} marker {m['file']}:{m['line']}")
+            elif bool(r.get("needs_bfla_audit_hint")) != want:
+                fails.append(f"BFLA HINT {'MISSED' if want else 'FALSE'} {m['label']} {m['file']}:{m['line']} "
+                             f"(route {r['route_id']} signals={[x['signal'] for x in r.get('bfla_signals', [])]})")
+            else:
+                n["bfla_ok"] += 1
     stacks = ",".join(s["id"] for s in prof["stacks"])
     print(f"  {fx.name:<16} stacks=[{stacks}]  inj {n['sqli_hit']}/{n['sqli']}  noflag {n['noflag_ok']}/{n['noflag']}  "
-          f"routes-for-bola {n['bola_hit']}/{n['bola']}  (candidates: {len(routes)} routes, {len(inj)} inj)")
+          f"routes-for-bola {n['bola_hit']}/{n['bola']}  bfla {n['bfla_ok']}/{n['bfla']}  (candidates: {len(routes)} routes, {len(inj)} inj)")
     return fails
 
 
