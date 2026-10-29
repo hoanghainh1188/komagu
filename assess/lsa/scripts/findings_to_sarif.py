@@ -42,6 +42,14 @@ RULE_TEXT = {
         "NoSQL query built from untrusted input",
         "A NoSQL filter or server-side script is built from request-controlled data.",
     ),
+    "bfla": (
+        "Broken function level authorization (BFLA)",
+        "A privileged function is reachable by a lower-privileged user because the role check is missing, client-side only, or based on request-controlled data.",
+    ),
+    "mass_assignment": (
+        "Mass assignment of object properties",
+        "A request body is bound to a model or entity without an allow-list, so a caller can write properties they must not control.",
+    ),
 }
 
 CWE_TAXONOMY_DEFS: Dict[str, Dict[str, str]] = {
@@ -75,6 +83,18 @@ CWE_TAXONOMY_DEFS: Dict[str, Dict[str, str]] = {
         "shortDescription": "Improper Access Control",
         "helpUri": "https://cwe.mitre.org/data/definitions/284.html",
     },
+    "CWE-269": {
+        "id": "CWE-269",
+        "name": "Improper Privilege Management",
+        "shortDescription": "Improper Privilege Management",
+        "helpUri": "https://cwe.mitre.org/data/definitions/269.html",
+    },
+    "CWE-915": {
+        "id": "CWE-915",
+        "name": "Improperly Controlled Modification of Dynamically-Determined Object Attributes",
+        "shortDescription": "Mass Assignment",
+        "helpUri": "https://cwe.mitre.org/data/definitions/915.html",
+    },
     "CWE-20": {
         "id": "CWE-20",
         "name": "Improper Input Validation",
@@ -98,6 +118,16 @@ OWASP_TAGS = {
         "external/owasp/a03-2021-injection",
         "OWASP:A03:2021-Injection",
         "OWASP-API8:2023-Security Misconfiguration",
+    ],
+    "bfla": [
+        "external/owasp/a01-2021-broken-access-control",
+        "OWASP:A01:2021-Broken Access Control",
+        "OWASP-API5:2023-BFLA",
+    ],
+    "mass_assignment": [
+        "external/owasp/a01-2021-broken-access-control",
+        "OWASP:A01:2021-Broken Access Control",
+        "OWASP-API3:2023-BOPLA",
     ],
 }
 
@@ -287,6 +317,10 @@ def to_sarif(
                 },
             })
 
+        fingerprints = {"lsaFindingId": f.get("finding_id", f"LSA-{len(results)+1}")}
+        if f.get("fingerprint"):
+            fingerprints["komainu/v1"] = f["fingerprint"]
+
         result_taxa = []
         for c in norm_cwes:
             if c in taxa_index_map:
@@ -310,7 +344,7 @@ def to_sarif(
                 }
             ],
             "relatedLocations": related_locations,
-            "partialFingerprints": {"lsaFindingId": f.get("finding_id", f"LSA-{len(results)+1}")},
+            "partialFingerprints": fingerprints,
             "taxa": result_taxa,
             "properties": {
                 "security-severity": sec,

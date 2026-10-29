@@ -192,6 +192,44 @@
           "needs_bola_audit": {
             "type": "boolean"
           },
+          "privilege": {
+            "enum": [
+              "anonymous",
+              "user",
+              "privileged",
+              "unknown"
+            ],
+            "description": "lowest role the route is meant for; privileged = admin or other elevated role"
+          },
+          "body_bindings": {
+            "type": "array",
+            "description": "request bodies bound to models or entities - context for the mass assignment audit",
+            "items": {
+              "type": "object",
+              "required": [
+                "target",
+                "style"
+              ],
+              "properties": {
+                "target": {
+                  "type": "string"
+                },
+                "style": {
+                  "enum": [
+                    "whole_object",
+                    "allowlist",
+                    "explicit_fields"
+                  ]
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
           "notes": {
             "type": "string"
           },
