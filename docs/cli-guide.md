@@ -233,9 +233,58 @@ komainu test --url <base-url> [options]
 | `--resource-id` | | `1` | Resource ID belonging to Persona A (target) |
 | `--attacker-token` | | `token-attacker-bob` | Bearer token belonging to unauthorized Persona B |
 | `--output` | `-o` | `None` | Path to save JSON test verification report |
+| `--suite` | `-s` | `operate/tests/test_suite.json` | Test suite file. `"version": 2` turns on the persona matrix |
+| `--strict` | | `false` | Persona matrix: only 404 counts as refused (401/403 fail) |
+| `--token-env` | | `None` | Env variable with a normal user's token for BFLA / mass assignment findings from `--from-scan` (default: `--token`) |
+
+#### Persona matrix (suite v2): BFLA and mass assignment
+
+Suite v2 lists personas and, per route, which personas may call it. Every
+other persona is sent the request and must be refused (401, 403 or 404; only
+404 with `--strict`). A `2xx` is a **BFLA** breach (CWE-285).
+
+A `mass_assignment_probe` reads the object, sends a normal write with extra
+privileged fields as an allowed persona, then reads the object again. A
+privileged value that was stored is a **mass assignment** breach (CWE-915).
+If the object already holds the probe value, the case is reported as
+inconclusive.
+
+```json
+{
+  "version": 2,
+  "personas": {
+    "anonymous": {},
+    "user":  { "token_env": "KOMAINU_TOKEN_USER" },
+    "admin": { "token_env": "KOMAINU_TOKEN_ADMIN" }
+  },
+  "routes": [
+    { "method": "DELETE", "path": "/api/admin/users/{id}", "params": { "id": "42" }, "allow": ["admin"] },
+    { "method": "PUT", "path": "/api/profile", "allow": ["user", "admin"],
+      "payload": { "name": "Komainu probe" },
+      "mass_assignment_probe": { "fields": { "role": "admin" }, "readback": "GET /api/profile" } }
+  ]
+}
+```
+
+- Tokens come **only** from environment variables (`token_env`). A suite with a
+  token inside is rejected (exit 2). Tokens never appear in output or reports.
+- A persona whose variable is not set gives an error for its cases, so the run
+  fails instead of passing silently.
+- Allowed personas are not called, except the probe persona, so the suite does
+  not perform privileged actions as an admin. Denied requests can still run if
+  the route is vulnerable: use a test environment.
+- The JSON report (`--output`) lists these results under `matrix_results`.
+  Schema: `contracts/schemas/persona-suite.schema.json`. Suite v1 files work as before.
+- `--from-scan` also turns `bfla` and `mass_assignment` findings into cases
+  (normal user from `--token-env`; probe fields from `attack_vector.fields`,
+  default `role` / `is_admin`). `--export-poc` writes PoC scripts for both;
+  they read the token from `KOMAINU_TOKEN`.
 
 #### Examples
 ```bash
+# Persona matrix: BFLA + mass assignment checks
+KOMAINU_TOKEN_USER=... KOMAINU_TOKEN_ADMIN=... komainu test --url http://staging-api:8000 --suite personas.json
+
 # Ingest LSA findings and verify only findings with >= 80% AI Consensus
 komainu test --url http://staging-api:8000 --from-scan findings.json --min-consensus 0.8
 

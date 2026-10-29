@@ -344,6 +344,14 @@
         },
         "suggested_payload": {
           "type": "string"
+        },
+        "fields": {
+          "type": "object",
+          "description": "Mass assignment: privileged fields and values to add to a normal write (komainu test probe)."
+        },
+        "readback": {
+          "type": "string",
+          "description": "Mass assignment: request that returns the stored object, e.g. 'GET /api/profile'."
         }
       }
     }

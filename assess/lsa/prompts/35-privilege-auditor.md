@@ -101,6 +101,11 @@ privileged, and a hinted route can be safe.
   be written in `impact`.
 - Severity: `knowledge/bfla-patterns.md` §6 and
   `knowledge/mass-assignment-patterns.md` §5.
+- For mass assignment findings, set `attack_vector` so `komainu test
+  --from-scan` can probe the route: `method`, `path`, `fields` (the
+  privileged fields with a value the caller should not be able to set, e.g.
+  `{"role": "admin"}`) and `readback` (the request that returns the stored
+  object, e.g. `"GET /api/profile"`).
 - If a route is also a BOLA problem, leave that to the BOLA auditor; mention
   it in `out_of_scope_notes`.
 - Also check the **same files** for privileged functions or bindings the
@@ -153,6 +158,7 @@ candidate, plus `findings` matching `schemas/finding.schema.json`:
       "title": "Profile update binds the whole request body to the User model",
       "candidate_id": "M-0002",
       "endpoint": {"method": "PUT", "path": "/profile"},
+      "attack_vector": {"method": "PUT", "path": "/profile", "fields": {"role": "admin"}, "readback": "GET /profile"},
       "location": {"file": "routes/profile.js", "start_line": 8},
       "evidence": [
         {"file": "routes/profile.js", "line": 8, "code": "User.findByIdAndUpdate(req.user._id, req.body, ...)", "why": "whole body bound"},

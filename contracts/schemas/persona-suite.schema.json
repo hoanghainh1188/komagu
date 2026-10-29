@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "operate/persona-suite.schema.json",
+  "title": "Komainu test suite v2 (persona matrix)",
+  "description": "Personas and, per route, the personas allowed to call it. Every other persona must be refused (BFLA). Tokens come only from environment variables.",
+  "type": "object",
+  "required": [
+    "version",
+    "personas",
+    "routes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 2
+    },
+    "personas": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token_env": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "Environment variable that holds this persona's bearer token. Omit for an anonymous persona."
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "allow"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ],
+            "default": "GET"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Path with {name} or :name placeholders, filled from params or --resource-id."
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          },
+          "payload": {
+            "type": "object",
+            "description": "JSON body for writes."
+          },
+          "allow": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Personas allowed to call the route. Every other persona must get 401/403/404 (404 only with --strict)."
+          },
+          "mass_assignment_probe": {
+            "type": "object",
+            "required": [
+              "fields"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "fields": {
+                "type": "object",
+                "minProperties": 1,
+                "description": "Privileged fields and values added to the payload. Use values the object does not already have."
+              },
+              "persona": {
+                "type": "string",
+                "description": "Persona that sends the write (default: first persona in allow)."
+              },
+              "readback": {
+                "type": "string",
+                "pattern": "^((GET|POST|PUT|PATCH|DELETE) )?/",
+                "description": "Request that returns the stored object, e.g. 'GET /api/profile' (default: GET on the route path)."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
