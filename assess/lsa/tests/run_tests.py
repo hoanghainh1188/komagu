@@ -24,6 +24,7 @@ sys.path.insert(0, str(HERE))
 
 from detect_stack import detect  # noqa: E402
 from find_injection import find_injection  # noqa: E402
+from find_mass_assignment import find_mass_assignment  # noqa: E402
 from lsa_common import load_config  # noqa: E402
 from lsa_markers import read_markers  # noqa: E402
 from map_routes import map_routes  # noqa: E402
@@ -49,7 +50,9 @@ def test_fixture(fx: Path, cfg) -> list:
     routes = map_routes(fx, cfg, {s["id"] for s in prof["stacks"]})["candidates"]
     inj = find_injection(fx, cfg)["candidates"]
     flagged = {(c["file"], c["line"]) for c in inj}
-    n = {"sqli": 0, "sqli_hit": 0, "noflag": 0, "noflag_ok": 0, "bola": 0, "bola_hit": 0, "bfla": 0, "bfla_ok": 0}
+    mass = find_mass_assignment(fx, cfg)["candidates"]
+    mass_flagged = {(c["file"], c["line"]) for c in mass}
+    n = {"sqli": 0, "sqli_hit": 0, "noflag": 0, "noflag_ok": 0, "bola": 0, "bola_hit": 0, "bfla": 0, "bfla_ok": 0, "mass": 0, "mass_ok": 0}
     for m in marks:
         key = (m["file"], m["line"])
         if m["label"] in ("SQLI", "NOSQL"):
@@ -85,9 +88,16 @@ def test_fixture(fx: Path, cfg) -> list:
                              f"(route {r['route_id']} signals={[x['signal'] for x in r.get('bfla_signals', [])]})")
             else:
                 n["bfla_ok"] += 1
+        elif m["label"] in ("MASS", "SAFE-MASS"):
+            n["mass"] += 1
+            want = m["label"] == "MASS"
+            if (key in mass_flagged) != want:
+                fails.append(f"MASS {'MISSED' if want else 'FALSE FLAG'} {m['file']}:{m['line']}")
+            else:
+                n["mass_ok"] += 1
     stacks = ",".join(s["id"] for s in prof["stacks"])
     print(f"  {fx.name:<16} stacks=[{stacks}]  inj {n['sqli_hit']}/{n['sqli']}  noflag {n['noflag_ok']}/{n['noflag']}  "
-          f"routes-for-bola {n['bola_hit']}/{n['bola']}  bfla {n['bfla_ok']}/{n['bfla']}  (candidates: {len(routes)} routes, {len(inj)} inj)")
+          f"routes-for-bola {n['bola_hit']}/{n['bola']}  bfla {n['bfla_ok']}/{n['bfla']}  mass {n['mass_ok']}/{n['mass']}  (candidates: {len(routes)} routes, {len(inj)} inj, {len(mass)} mass)")
     return fails
 
 
