@@ -84,6 +84,10 @@ komainu scan <target> [options]
 | `--format` | | `all` | Output format (`html`, `md`, `sarif`, `all`) |
 | `--lang` | | `all` | Report language (`en`, `ja`, `all`) |
 | `--sarif-out` | | `OUT/findings.sarif` | Designated path for OASIS SARIF v2.1.0 output |
+| `--baseline` | | `None` | Previous `baseline.json` or SARIF file; findings become `new`, `unchanged` or `regressed` (SARIF `baselineState`) and `OUT/baseline-diff.json` lists fixed ones |
+| `--update-baseline` | | `false` | Write the updated baseline to `--baseline` (default `OUT/baseline.json`) |
+| `--fail-on` | | `none` | Exit `1` when findings match: `new` (new or regressed), `any` (all active), `none` |
+| `--fail-severity` | | `low` | Minimum severity counted by `--fail-on` (`info` … `critical`) |
 | `--headless-ai` | | `None` (`http://localhost:11434/v1` if passed without value) | Execute Tier 2 cognitive AI audit autonomously via an OpenAI-compatible endpoint |
 | `--model` | `-m` | `llama3.1` | Model name for headless cognitive AI execution |
 | `--api-key` | | `ollama` | Bearer API token for private LLM endpoint |
@@ -99,7 +103,13 @@ komainu scan ./legacy-monolith --headless-ai http://localhost:11434/v1 --model l
 
 # Export machine-readable OASIS SARIF v2.1.0 for GitHub Code Scanning
 komainu scan ./legacy-monolith --format sarif --out ./reports/audit.sarif
+
+# Continuous scanning: record a baseline, then fail CI only on new or regressed high+ findings
+komainu scan ./legacy-monolith --baseline .komainu/baseline.json --update-baseline
+komainu scan ./legacy-monolith --baseline .komainu/baseline.json --fail-on new --fail-severity high
 ```
+
+Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
 
 ---
 

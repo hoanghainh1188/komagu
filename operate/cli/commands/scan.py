@@ -102,6 +102,29 @@ Examples:
         "--sarif-out",
         help="Designated output path for SARIF 2.1.0 file (e.g. for GitHub code scanning upload)",
     )
+    # Baseline comparison and CI gating
+    parser.add_argument(
+        "--baseline",
+        metavar="PATH",
+        help="Compare with a previous baseline.json or SARIF file (findings become new/unchanged/regressed)",
+    )
+    parser.add_argument(
+        "--update-baseline",
+        action="store_true",
+        help="Write the updated baseline to --baseline (default: OUT/baseline.json)",
+    )
+    parser.add_argument(
+        "--fail-on",
+        choices=["none", "new", "any"],
+        default="none",
+        help="Exit 1 when findings match: new (new or regressed), any (all active), none (default)",
+    )
+    parser.add_argument(
+        "--fail-severity",
+        choices=["info", "low", "medium", "high", "critical"],
+        default="low",
+        help="Minimum severity counted by --fail-on (default: low)",
+    )
     # Tier 2 Headless Cognitive AI execution
     parser.add_argument(
         "--headless-ai",
@@ -278,6 +301,32 @@ def execute_scan(args: argparse.Namespace) -> int:
         }
         findings_file.write_text(json.dumps(initial_findings, indent=2), encoding="utf-8")
 
+    # Fingerprint findings and compare with the baseline (also evaluates the CI gate)
+    baseline_cmd = [
+        sys.executable,
+        str(LSA_SCRIPTS / "baseline.py"),
+        str(out_dir),
+        "--target-dir",
+        str(target_path),
+        "--fail-on",
+        getattr(args, "fail_on", "none"),
+        "--fail-severity",
+        getattr(args, "fail_severity", "low"),
+    ]
+    if getattr(args, "baseline", None):
+        baseline_cmd.extend(["--baseline", str(Path(args.baseline).resolve())])
+    if getattr(args, "update_baseline", False):
+        baseline_cmd.append("--update-baseline")
+    res_baseline = subprocess.run(baseline_cmd, capture_output=True, text=True)
+    if res_baseline.returncode == 2:
+        step_fail("Baseline comparison failed")
+        print(res_baseline.stderr or res_baseline.stdout, file=sys.stderr)
+        return 2
+    gate_failed = res_baseline.returncode == 1
+    baseline_lines = res_baseline.stdout.strip().splitlines()
+    if getattr(args, "baseline", None) or getattr(args, "update_baseline", False):
+        step_ok(baseline_lines[0] if baseline_lines else "Baseline compared")
+
     # 3. Export to SARIF if requested
     sarif_file = (
         Path(args.sarif_out).resolve()
@@ -351,6 +400,8 @@ def execute_scan(args: argparse.Namespace) -> int:
         ("Markdown Report", str(out_dir / "report.md")),
         ("SARIF 2.1.0", str(sarif_file)),
     ]
+    if baseline_lines and (getattr(args, "baseline", None) or getattr(args, "update_baseline", False)):
+        summary_rows.append(("Baseline", baseline_lines[0].split(": ", 1)[-1]))
 
     print_summary_table(
         title="Komainu Security Audit Summary",
@@ -373,4 +424,9 @@ def execute_scan(args: argparse.Namespace) -> int:
         print(f"    • Cursor      : {color('python3 assess/lsa/adapters/build_adapters.py cursor .', BOLD)}")
         print(f"    • Custom LLM  : see {color('assess/lsa/adapters/generic/README.md', BOLD)} (BYO-LLM: OpenAI, Gemini, Ollama)\n")
 
+    if gate_failed:
+        step_fail(f"CI gate failed (--fail-on {args.fail_on} --fail-severity {args.fail_severity})")
+        for line in baseline_lines[2:]:
+            print(line)
+        return 1
     return 0

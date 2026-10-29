@@ -354,6 +354,12 @@ def to_sarif(
                 "cwe": norm_cwes,
             },
         }
+        state = f.get("baseline_state")
+        if state:
+            result_item["baselineState"] = "unchanged" if state == "unchanged" else "new"
+            result_item["properties"]["baseline_state"] = state
+            if state == "regressed":
+                result_item["properties"]["regressed"] = True
         results.append(result_item)
 
         # Update rule security-severity score (maximum encountered)

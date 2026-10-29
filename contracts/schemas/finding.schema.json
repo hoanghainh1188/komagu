@@ -35,6 +35,14 @@
       "pattern": "^kfp1:[0-9a-f]{64}$",
       "description": "stable identity across scans (line-independent); used for baselines and suppressions"
     },
+    "baseline_state": {
+      "enum": [
+        "new",
+        "unchanged",
+        "regressed"
+      ],
+      "description": "result of comparing with a baseline; regressed = fixed earlier, found again"
+    },
     "subtype": {
       "enum": [
         "missing_ownership_check",

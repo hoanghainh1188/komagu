@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/baseline.schema.json",
+  "title": "Komainu scan baseline",
+  "type": "object",
+  "required": [
+    "version",
+    "entries"
+  ],
+  "properties": {
+    "version": {
+      "enum": [
+        1
+      ]
+    },
+    "updated": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fingerprint",
+          "first_seen",
+          "last_seen",
+          "state",
+          "fixed_at"
+        ],
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^kfp1:[0-9a-f]{64}$"
+          },
+          "first_seen": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "null when imported from a SARIF file without history"
+          },
+          "last_seen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "enum": [
+              "open",
+              "fixed"
+            ]
+          },
+          "fixed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low",
+              "info"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
