@@ -127,6 +127,11 @@ class TestMatrixAgainstMock(unittest.TestCase):
     def by_persona(self, results):
         return {r.case.persona.name: r for r in results}
 
+    def test_non_http_base_url_rejected(self):
+        for url in ("file:///etc", "ftp://host", "localhost:5001"):
+            with self.assertRaises(ValueError):
+                PersonaMatrixRunner(url, env=ENV)
+
     def test_bfla_breach_detected(self):
         res = self.by_persona(self.runner.run(load_persona_suite(suite(VULN_ADMIN))))
         self.assertTrue(res["user"].is_breach)
@@ -255,6 +260,11 @@ class TestCli(unittest.TestCase):
         bad = suite(VULN_ADMIN)
         bad["personas"] = {"user": {"token": "x"}}
         code, _ = self.run_cli(["test", "--url", self.base_url, "--suite", self.write("s.json", bad)])
+        self.assertEqual(code, 2)
+
+    def test_file_url_exit_2(self):
+        code, _ = self.run_cli(["test", "--url", "file:///tmp",
+                                "--suite", self.write("s.json", suite(SAFE_ADMIN))])
         self.assertEqual(code, 2)
 
     def test_from_scan_bfla_and_mass(self):

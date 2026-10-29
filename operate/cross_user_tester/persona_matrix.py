@@ -22,6 +22,7 @@ import os
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Tuple
@@ -347,6 +348,9 @@ class PersonaMatrixRunner:
         token_prefix: str = "Bearer ",
         timeout: float = 10.0,
     ) -> None:
+        parsed = urllib.parse.urlsplit(base_url)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            raise ValueError("base URL must be an http:// or https:// URL")
         self.base_url = base_url.rstrip("/")
         self.env = os.environ if env is None else env
         self.deny_status = STRICT_DENY_STATUS if strict else DENY_STATUS
@@ -373,7 +377,8 @@ class PersonaMatrixRunner:
             headers["Content-Type"] = "application/json"
         req = urllib.request.Request(f"{self.base_url}{path}", data=data, headers=headers, method=method)
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            # base_url is checked to be http(s) in __init__.
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # nosec B310
                 return resp.status, resp.read(MAX_BODY_BYTES), None
         except urllib.error.HTTPError as err:
             return err.code, err.read(MAX_BODY_BYTES), None

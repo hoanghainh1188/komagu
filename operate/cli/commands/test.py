@@ -229,7 +229,11 @@ def execute_test(args: argparse.Namespace) -> int:
         print()
         print(report_text)
 
-    matrix_results = _run_matrix(matrix_cases, args)
+    try:
+        matrix_results = _run_matrix(matrix_cases, args)
+    except ValueError as e:
+        step_fail(str(e))
+        return 2
     if matrix_results:
         matrix_text, matrix_ok = format_matrix_report(
             matrix_results, STRICT_DENY_STATUS if args.strict else DENY_STATUS
