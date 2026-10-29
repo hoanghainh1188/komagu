@@ -12,6 +12,7 @@ This directory provides CI/CD components for automated security verification, pr
    - Executes multi-method security tests (`GET`, `PUT`, `DELETE`) simulating cross-user access attempts (Persona B accessing Persona A's resources).
    - Invariant: Endpoints protected by Komainu D1 return **HTTP 404 Not Found**. Any `2xx` response is flagged as a BOLA breach (CWE-639 / CWE-284) and fails the pipeline (exit code 1).
    - Standard library only (Python 3.8+).
+   - **Persona matrix (`cross_user_tester/persona_matrix.py`)**: suite `"version": 2` lists personas (tokens from environment variables only) and the personas allowed per route. Other personas must be refused, otherwise it is a BFLA breach (CWE-285). An optional mass assignment probe checks that privileged fields such as `role` are not stored (CWE-915). Run it with `komainu test --suite personas.json`; see `docs/cli-guide.md` §3.4.
 
 2. **LSA-to-SARIF Converter (`lsa-sarif/lsa_to_sarif.py`)**:
    - Converts LSA audit output (`findings.json`) into OASIS SARIF v2.1.0 format.

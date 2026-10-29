@@ -7,6 +7,11 @@ Simulates both:
 2. D1-Protected endpoints:
    Enforces tenant/user isolation: returns 404 Not Found when
    Persona B attempts to access Persona A's resource.
+3. Function-level endpoints for the persona matrix:
+   /api/admin/users/{id} (BFLA: any logged-in user may delete),
+   /api/secure-admin/users/{id} (admin only),
+   /api/profile (mass assignment: every body field is stored),
+   /api/safe-profile (only name and email are stored).
 """
 
 from __future__ import annotations
@@ -14,7 +19,10 @@ from __future__ import annotations
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
+
+ADMIN_TOKEN = "token-admin"
+PROFILE_FIELDS = ("name", "email")
 
 
 class MockAuthzHandler(BaseHTTPRequestHandler):
@@ -34,6 +42,51 @@ class MockAuthzHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def _profile(self, token: str) -> Dict[str, object]:
+        store = getattr(self.server, "profiles", None)
+        if store is None:
+            store = {}
+            setattr(self.server, "profiles", store)
+        return store.setdefault(token, {"name": "User", "email": "user@example.test", "role": "member"})
+
+    def _read_json_body(self) -> dict:
+        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            body = json.loads(self.rfile.read(length) or b"{}")
+        except ValueError:
+            return {}
+        return body if isinstance(body, dict) else {}
+
+    def _handle_profile(self, method: str, token: Optional[str]) -> bool:
+        """Profile routes. Returns True when the path was handled."""
+        path = self.path.split("?")[0]
+        if path not in ("/api/profile", "/api/safe-profile"):
+            return False
+        if not token:
+            self._send_json(401, {"error": "Login required"})
+            return True
+        profile = self._profile(f"{path}:{token}")
+        if method == "PUT":
+            body = self._read_json_body()
+            if path == "/api/profile":
+                profile.update(body)  # Planted mass assignment
+            else:
+                profile.update({k: v for k, v in body.items() if k in PROFILE_FIELDS})
+        self._send_json(200, profile)
+        return True
+
+    def _handle_admin(self, token: Optional[str]) -> bool:
+        """Admin user deletion. Returns True when the path was handled."""
+        if not self.path.startswith(("/api/admin/users/", "/api/secure-admin/users/")):
+            return False
+        if not token:
+            self._send_json(401, {"error": "Login required"})
+        elif self.path.startswith("/api/secure-admin/") and token != ADMIN_TOKEN:
+            self._send_json(403, {"error": "Admin role required"})
+        else:
+            self._send_no_content()  # /api/admin/ has no role check (planted BFLA)
+        return True
+
     def _send_no_content(self) -> None:
         self.send_response(204)
         self.send_header("Content-Length", "0")
@@ -41,6 +94,8 @@ class MockAuthzHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         token = self._get_bearer_token()
+        if self._handle_profile("GET", token):
+            return
 
         # Planted BOLA endpoint: leaking Persona A's order to anyone
         if self.path.startswith("/api/legacy-orders/"):
@@ -70,6 +125,8 @@ class MockAuthzHandler(BaseHTTPRequestHandler):
 
     def do_PUT(self) -> None:
         token = self._get_bearer_token()
+        if self._handle_profile("PUT", token):
+            return
 
         if self.path.startswith("/api/legacy-orders/"):
             order_id = self.path.split("/")[-1]
@@ -90,6 +147,8 @@ class MockAuthzHandler(BaseHTTPRequestHandler):
 
     def do_DELETE(self) -> None:
         token = self._get_bearer_token()
+        if self._handle_admin(token):
+            return
 
         if self.path.startswith("/api/legacy-orders/"):
             # Planted BOLA: destructive action allowed cross-user

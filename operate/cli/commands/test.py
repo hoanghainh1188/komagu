@@ -23,6 +23,17 @@ from operate.cli.ui import (
     step_ok,
     step_warn,
 )
+from operate.cross_user_tester.persona_matrix import (
+    DENY_STATUS,
+    STRICT_DENY_STATUS,
+    MatrixCase,
+    PersonaMatrixRunner,
+    SuiteError,
+    format_matrix_report,
+    generate_matrix_cases_from_findings,
+    is_v2_suite,
+    load_persona_suite,
+)
 from operate.cross_user_tester.runner import (
     CrossUserTestRunner,
     format_report,
@@ -33,6 +44,8 @@ from operate.cross_user_tester.runner import (
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SUITE = REPO_ROOT / "operate" / "tests" / "test_suite.json"
+# --token is passed to persona-matrix cases through this private env entry.
+CLI_TOKEN_ENV = "KOMAINU_CLI_TOKEN"
 
 
 def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
@@ -58,6 +71,9 @@ Examples:
 
   # Run tests with custom attacker token and save report
   komainu test --url http://localhost:5001 --token "jwt-persona-b" --output ./results.json
+
+  # Persona matrix (suite "version": 2): BFLA and mass assignment checks
+  KOMAINU_TOKEN_USER=... KOMAINU_TOKEN_ADMIN=... komainu test --url http://staging:8000 --suite ./personas.json
 
 Documentation:
   See docs/cli-guide.md#34-komainu-test--offensive-exploit-verification--bola-invariant-testing
@@ -113,6 +129,12 @@ Documentation:
         help="Enforce strict 404 requirement (reject 401/403 which leak resource existence)",
     )
     parser.add_argument(
+        "--token-env",
+        dest="token_env",
+        help="Environment variable holding a normal user's token, used for BFLA and "
+             "mass assignment findings from --from-scan (default: the --token value)",
+    )
+    parser.add_argument(
         "--export-poc",
         dest="export_poc",
         help="Directory path to export standalone executable Python and cURL exploit PoC scripts",
@@ -126,6 +148,7 @@ def execute_test(args: argparse.Namespace) -> int:
     step(f"Initializing cross-user security test runner against {color(args.base_url, BOLD)}")
 
     tests: List[Any] = []
+    matrix_cases: List[MatrixCase] = []
 
     # 1. Ingest from scan output if provided
     if getattr(args, "from_scan", None):
@@ -143,6 +166,7 @@ def execute_test(args: argparse.Namespace) -> int:
         )
         step_info(f"Synthesized {len(scan_cases)} active verification cases from scan findings")
         tests.extend(scan_cases)
+        matrix_cases.extend(_matrix_cases_from_scan(scan_file, args, min_c))
 
         # Export PoC exploits if requested
         if getattr(args, "export_poc", None):
@@ -161,12 +185,25 @@ def execute_test(args: argparse.Namespace) -> int:
     if suite_path and suite_path.is_file():
         step_info(f"Loading test suite from {suite_path.name}")
         try:
-            tests.extend(load_suite_from_file(str(suite_path)))
-        except Exception as e:
-            step_warn(f"Could not load test suite {suite_path}: {e}")
+            suite_data = json.loads(suite_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            step_fail(f"Could not read test suite {suite_path}: {e}")
+            return 2
+        if is_v2_suite(suite_data):
+            try:
+                matrix_cases.extend(load_persona_suite(suite_data, default_id=args.resource_id))
+            except SuiteError as e:
+                step_fail(f"Invalid persona suite {suite_path.name}: {e}")
+                return 2
+            step_info(f"Persona matrix: {len(matrix_cases)} BFLA / mass assignment cases")
+        else:
+            try:
+                tests.extend(load_suite_from_file(str(suite_path)))
+            except Exception as e:
+                step_warn(f"Could not load test suite {suite_path}: {e}")
 
     # 3. Auto-generate CRUD cases if explicitly requested or if no cases were loaded
-    if args.auto_crud or not tests:
+    if args.auto_crud or (not tests and not matrix_cases):
         crud_path = args.auto_crud or "/api/members"
         step_info(f"Generating CRUD test cases for resource: {crud_path}")
         tests.extend(
@@ -183,40 +220,53 @@ def execute_test(args: argparse.Namespace) -> int:
         default_attacker_token=args.attacker_token,
     )
 
-    step(f"Executing {len(tests)} cross-user authorization test cases")
-    results = runner.run_suite(tests)
-    report_text, success = format_report(results, args.base_url)
+    results = []
+    success = True
+    if tests:
+        step(f"Executing {len(tests)} cross-user authorization test cases")
+        results = runner.run_suite(tests)
+        report_text, success = format_report(results, args.base_url)
+        print()
+        print(report_text)
 
-    print()
-    print(report_text)
+    matrix_results = _run_matrix(matrix_cases, args)
+    if matrix_results:
+        matrix_text, matrix_ok = format_matrix_report(
+            matrix_results, STRICT_DENY_STATUS if args.strict else DENY_STATUS
+        )
+        print()
+        print(matrix_text)
+        success = success and matrix_ok
 
     # Save output if requested
     if args.output:
         out_path = Path(args.output).resolve()
         report_data = {
             "base_url": args.base_url,
-            "total": len(results),
+            "total": len(results) + len(matrix_results),
             "success": success,
             "results": [r.to_dict() for r in results],
+            "matrix_results": [r.to_dict() for r in matrix_results],
         }
         out_path.write_text(json.dumps(report_data, indent=2), encoding="utf-8")
         step_ok(f"Saved test report to {out_path}")
 
-    passed_count = sum(1 for r in results if r.is_secure)
-    failed_count = len(results) - passed_count
+    all_results = list(results) + list(matrix_results)
+    passed_count = sum(1 for r in all_results if r.is_secure)
+    failed_count = len(all_results) - passed_count
 
     rows = [
         ("Base URL", args.base_url),
-        ("Total Cases", str(len(results))),
-        ("Passed (404 Invariant)", color(f"{passed_count} Passed", GREEN, BOLD)),
-        ("Failed (BOLA Breach)", color(f"{failed_count} Failed", RED, BOLD) if failed_count else "0 Failed"),
+        ("Total Cases", str(len(all_results))),
+        ("Passed (Access Refused)", color(f"{passed_count} Passed", GREEN, BOLD)),
+        ("Failed (Breach or Error)", color(f"{failed_count} Failed", RED, BOLD) if failed_count else "0 Failed"),
         ("Result", color("PASSED (SECURE)", GREEN, BOLD) if success else color("FAILED (VULNERABLE)", RED, BOLD)),
     ]
 
     print_summary_table(
         title="Cross-User Authorization Test Summary",
         rows=rows,
-        footer="Komainu invariant: cross-user resource access MUST return HTTP 404.",
+        footer="Komainu invariant: cross-user access MUST return 404; lower personas MUST be refused.",
     )
 
     if getattr(args, "from_scan", None) and results:
@@ -240,3 +290,28 @@ def execute_test(args: argparse.Namespace) -> int:
         )
 
     return 0 if success else 1
+
+
+def _matrix_cases_from_scan(scan_file: Path, args: argparse.Namespace, min_consensus: float) -> List[MatrixCase]:
+    """BFLA and mass assignment findings from findings.json (SARIF is not read here)."""
+    try:
+        data = json.loads(scan_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    token_env = getattr(args, "token_env", None) or CLI_TOKEN_ENV
+    cases = generate_matrix_cases_from_findings(
+        data, token_env=token_env, default_id=args.resource_id, min_consensus=min_consensus
+    )
+    if cases:
+        step_info(f"Synthesized {len(cases)} BFLA / mass assignment cases from scan findings")
+    return cases
+
+
+def _run_matrix(cases: List[MatrixCase], args: argparse.Namespace) -> List[Any]:
+    if not cases:
+        return []
+    env: Dict[str, str] = dict(os.environ)
+    if args.attacker_token:
+        env.setdefault(CLI_TOKEN_ENV, args.attacker_token)
+    step(f"Executing {len(cases)} persona matrix cases")
+    return PersonaMatrixRunner(args.base_url, env=env, strict=args.strict).run(cases)
