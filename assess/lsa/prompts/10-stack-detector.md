@@ -15,6 +15,7 @@ positives or, worse, missed findings.
 
 - `knowledge/stacks/<stack>.md` for each detected stack.
 - `knowledge/bola-patterns.md` (section "Where ownership checks hide").
+- `knowledge/bfla-patterns.md` (section "Where role checks hide").
 
 ## Steps
 
@@ -68,7 +69,8 @@ sub-application inside every section. Also set `root` on each stack in
 - Enforced by (global / per-page / per-controller):
 - Current-user accessor(s):
 ## 3. Authorization (what may the user access)
-- Role / function-level checks:
+- Role / function-level checks: (where the role comes from — session, token, DB; admin guards,
+  annotations, config such as web.xml / Web.config / Spring Security; which pages they cover)
 - Object-level (ownership / tenant) checks:
 - Helpers that are SAFE to treat as an ownership check:
 - Helpers that LOOK like checks but are NOT (e.g. only check login):

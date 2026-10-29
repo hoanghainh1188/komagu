@@ -45,7 +45,8 @@ def main() -> int:
     needs_review = [f["finding_id"] for f in allf if f["status"] == "needs_review"]
     rows = {}
     matched_findings = set()
-    for g in ("bola", "injection"):
+    present = {group(t["category"]) for t in truth}
+    for g in [g for g in ("bola", "injection", "bfla", "mass_assignment") if g in present]:
         vul = [t for t in truth if group(t["category"]) == g and t["vulnerable"]]
         safe = [t for t in truth if group(t["category"]) == g and not t["vulnerable"]]
         tp = 0

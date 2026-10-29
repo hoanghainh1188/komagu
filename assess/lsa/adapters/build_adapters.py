@@ -39,10 +39,15 @@ ROLES = [
      "description": "LSA phase 4b. Audits one batch of query-building candidates for SQL/HQL/NoSQL injection.",
      "inputs": ["batches/injection-NNN.json", "auth-model.md", "routes.json"], "outputs": ["findings/inj-NNN.json"],
      "knowledge": ["knowledge/injection-patterns.md", "knowledge/stacks/<stack>.md", "knowledge/severity-and-cwe.md"]},
+    {"id": "privilege-auditor", "file": "35-privilege-auditor.md", "phase": 4,
+     "description": "LSA phase 4c. Audits one privilege batch for BFLA (privileged functions without a server-side role check) and mass assignment (request bodies bound to models).",
+     "inputs": ["batches/privilege-NNN.json", "auth-model.md", "routes.json"], "outputs": ["findings/priv-privilege-NNN.json"],
+     "knowledge": ["knowledge/bfla-patterns.md", "knowledge/mass-assignment-patterns.md", "knowledge/stacks/<stack>.md", "knowledge/severity-and-cwe.md"]},
     {"id": "finding-verifier", "file": "50-finding-verifier.md", "phase": 5,
      "description": "LSA phase 5. Skeptical reviewer that tries to refute up to 10 findings it did not write. Must run in a fresh context.",
      "inputs": ["up to 10 findings", "auth-model.md"], "outputs": ["findings/verified-N.json"],
-     "knowledge": ["knowledge/bola-patterns.md", "knowledge/injection-patterns.md", "knowledge/severity-and-cwe.md"]},
+     "knowledge": ["knowledge/bola-patterns.md", "knowledge/injection-patterns.md", "knowledge/bfla-patterns.md",
+                   "knowledge/mass-assignment-patterns.md", "knowledge/severity-and-cwe.md"]},
     {"id": "reporter", "file": "60-reporter.md", "phase": 6,
      "description": "LSA phase 6. Fills the judgment sections (executive summary, systemic fixes, limitations) of the generated report.md.",
      "inputs": ["report.md", "findings.json", "auth-model.md", "coverage.json"], "outputs": ["report.md"],
@@ -90,7 +95,7 @@ description: "Read-only AI security audit of legacy web code (PHP, Java/JSP/Stru
 ## Claude Code mapping
 
 Run each agent role as the matching subagent (Task/Agent tool). Launch the
-phase 4a and 4b subagents in parallel (max `parallel.max_agents`). Give each
+phase 4a, 4b and 4c subagents in parallel (max `parallel.max_agents`). Give each
 subagent its batch file path, OUT path, TARGET path and the auth-model path.
 
 | Role prompt | Subagent |
@@ -199,7 +204,7 @@ description: "Read-only AI security audit of legacy web code (PHP, Java/JSP/Stru
 ## Codex mapping
 
 Each agent role is a project custom agent in `.codex/agents/`. Spawn the
-matching subagent for every role and batch; spawn the phase 4a and 4b
+matching subagent for every role and batch; spawn the phase 4a, 4b and 4c
 subagents in parallel (max `parallel.max_agents`). Give each subagent its
 batch file path, OUT path, TARGET path and the auth-model path.
 

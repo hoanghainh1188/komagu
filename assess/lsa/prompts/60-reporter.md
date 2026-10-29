@@ -16,7 +16,9 @@ numbers, IDs, or the finding tables.
    - Overall risk level and why.
    - The 3 most important findings and their business impact.
    - Systemic root cause, if there is one (e.g. "no shared ownership helper;
-     each page checks by itself", "DAO layer builds SQL by concatenation").
+     each page checks by itself", "DAO layer builds SQL by concatenation",
+     "admin pages check login but not the role (BFLA)", "request bodies are
+     bound straight to entities (mass assignment)").
 2. **Systemic fixes** (max 5): fixes that remove a class of bugs, e.g.
    one ownership helper used by all handlers, a base DAO with binding only,
    a global filter. For each: effort (S/M/L) and which findings it closes.

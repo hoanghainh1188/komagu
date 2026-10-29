@@ -23,7 +23,8 @@
   },
   "batch": {
     "max_endpoints": 15,
-    "max_injection_candidates": 25
+    "max_injection_candidates": 25,
+    "max_privilege_items": 20
   },
   "parallel": {
     "max_agents": 4

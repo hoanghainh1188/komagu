@@ -19,7 +19,7 @@ Do not change numbers, IDs, or the finding tables.
 Write max 8 bullets in plain, professional Business Japanese for business managers and executive stakeholders:
 - **全体のリスクレベルとその理由**: (例: システム全体として高リスク。認証済みの他者データへの不正アクセス（BOLA/IDOR）およびデータベース全件参照・改ざんの恐れがあるSQLインジェクションが複数特定されたため)。
 - **最重要の検出事項トップ3と事業影響**: 各検出事項のビジネスインパクト（個人情報漏洩、なりすましによる不正操作、業務停止等）。
-- **システム的な根本原因**: (例: 「個別ハンドラーごとに属人的な所有権チェックが行われており、共通の認可ヘルパーが存在しない」「データアクセス層で文字列連結による動的クエリ生成が常態化している」)。
+- **システム的な根本原因**: (例: 「個別ハンドラーごとに属人的な所有権チェックが行われており、共通の認可ヘルパーが存在しない」「データアクセス層で文字列連結による動的クエリ生成が常態化している」「管理画面がログインのみ確認しロールを確認していない（機能レベルの認可不備: BFLA）」「リクエスト本文がエンティティに直接バインドされている（マスアサインメント）」)。
 
 ### 2. 根本的恒久対策 (Systemic Fixes)
 Suggest max 5 architectural and framework-level remediations that eliminate entire vulnerability classes:

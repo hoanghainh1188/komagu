@@ -2,7 +2,7 @@
 """Group auditor findings into verifier batches (default 10 findings each).
 
 Usage: make_verify_batches.py OUT [--size 10]
-Reads  OUT/findings/bola-*.json, OUT/findings/inj-*.json
+Reads  OUT/findings/bola-*.json, OUT/findings/inj-*.json, OUT/findings/priv-*.json
 Writes OUT/batches/verify-NNN.json  (give each one to a FRESH finding-verifier agent;
        its output goes to OUT/findings/verified-NNN.json)
 """

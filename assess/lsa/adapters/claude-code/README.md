@@ -21,7 +21,7 @@ Start Claude Code in the workspace and ask, for example:
 > Run the legacy-security-audit skill. TARGET=src, OUT=lsa-out, CONFIG=audit-config.json.
 
 The skill runs the pre-scan, then launches the subagents phase by phase
-(4a and 4b in parallel), then merges and renders the report.
+(4a, 4b and 4c in parallel), then merges and renders the report.
 
 ## Recommended settings
 

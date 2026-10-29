@@ -137,6 +137,11 @@ def test_pipeline(cfg) -> list:
         (out / "findings" / "inj-001.json").write_text(json.dumps({
             "batch_id": "injection-001", "candidate_verdicts": [{"candidate_id": c["candidate_id"], "verdict": "safe", "reason": "test"} for c in ic],
             "findings": []}))
+        mc = json.loads((out / "mass-assignment.candidates.json").read_text())["candidates"]
+        (out / "findings" / "priv-privilege-001.json").write_text(json.dumps({
+            "batch_id": "privilege-001", "privilege_route_verdicts": [],
+            "candidate_verdicts": [{"candidate_id": c["candidate_id"], "verdict": "safe", "reason": "test"} for c in mc],
+            "findings": []}))
         (out / "findings" / "verified-1.json").write_text(json.dumps({"verifications": [
             {"finding_id": finding["finding_id"], "verdict": "confirmed", "severity": "high", "confidence": "high",
              "checked": ["inc/auth.php"], "control_found": None, "notes": "ok"}]}))

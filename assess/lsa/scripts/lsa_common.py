@@ -29,7 +29,7 @@ DEFAULT_CONFIG: Dict = {
         "known_ownership_helpers": [],
         "file_encodings": ["utf-8", "cp932", "euc_jp", "latin-1"],
     },
-    "batch": {"max_endpoints": 15, "max_injection_candidates": 25},
+    "batch": {"max_endpoints": 15, "max_injection_candidates": 25, "max_privilege_items": 20},
     "parallel": {"max_agents": 4},
     "report": {"language": "en", "min_severity": "low"},
 }
