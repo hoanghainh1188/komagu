@@ -183,7 +183,7 @@ jobs:
               done
 
   kotlin:
-    name: Kotlin (Detekt + Komainu rules)
+    name: Kotlin (Detekt + Komagu rules)
     runs-on: ubuntu-latest
     permissions:
       contents: read
