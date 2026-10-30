@@ -8,6 +8,7 @@ All notable changes to `@hoanghainh/komagu` (published as `komainu-guard` up to 
 ### ⚠ BREAKING CHANGES
 
 * rename identifiers kept as "komainu" and remove 1.x shims ([#315](https://github.com/hoanghainh1188/komagu/issues/315))
+  Rule IDs, the SARIF fingerprint key, audit event and logger names, WAF tags, the default token audience, the PostgreSQL role and Terraform resource names change; `KOMAINU_*` env vars, `komainu.security.*` properties and the `komainu` npm bins are removed. Read [Migrating to Komagu 2.0](https://github.com/hoanghainh1188/komagu/blob/main/docs/migration-2.0.md) before upgrading.
 
 ### Features
 
