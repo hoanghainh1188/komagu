@@ -256,6 +256,26 @@ module.exports = app;
         self.assertEqual(stats["parse_failures"]["5-finding-verifier"], ["verified-1"])
         self.assertTrue(any(st == "warn" and "verified-1" in msg for st, msg in logs))
 
+    def test_failed_batch_call_is_recorded_and_run_continues(self) -> None:
+        """A timeout on one batch must not abort the run or lose earlier phases (#286)."""
+
+        class TimeoutOnInjection(LLMClient):
+            def chat(self, messages, temperature=0.1, max_tokens=None):  # noqa: ANN001
+                if "dynamic query string concatenation or interpolation" in messages[-1]["content"]:
+                    raise RuntimeError("timed out")
+                return super().chat(messages, temperature=temperature, max_tokens=max_tokens)
+
+        self._prescan()
+        client = TimeoutOnInjection(endpoint=self.base_url, model="mock-model", api_key="test")
+        result = HeadlessAIRunner(self.target_dir, self.out_dir, client).run()
+        self.assertEqual(result["status"], "success")
+
+        stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
+        self.assertEqual(stats["call_errors"], {"4b-injection-auditor": {"injection-001": "timed out"}})
+        self.assertNotIn("4b-injection-auditor", stats["parse_failures"])
+        self.assertIn("5-finding-verifier", stats["phases"])
+        self.assertTrue((self.out_dir / "findings.json").is_file())
+
     def test_headless_ai_runner_full_cycle(self) -> None:
         # 1. Run deterministic pre-scan to populate OUT
         prescan_script = PROJECT_ROOT / "assess" / "lsa" / "scripts" / "run_prescan.py"

@@ -61,12 +61,25 @@ class HeadlessAIRunner:
         self.callback = step_callback or (lambda status, msg: None)
         # Per-phase replies that could not be parsed as JSON; written to ai-run-stats.json
         self.parse_failures: Dict[str, List[str]] = {}
+        # Per-phase batches whose model call failed (timeout, HTTP error); the run continues without them
+        self.call_errors: Dict[str, Dict[str, str]] = {}
         self.phase_stats: Dict[str, Dict[str, Any]] = {}
 
     def _log(self, status: str, msg: str) -> None:
         self.callback(status, msg)
 
+    def _chat(self, phase: str, batch_id: str, messages: List[Dict[str, str]]) -> Optional[str]:
+        """One batch call; a failed call is recorded and returns None instead of aborting the run."""
+        try:
+            return self.client.chat(messages, temperature=0.1)
+        except Exception as e:
+            self.call_errors.setdefault(phase, {})[batch_id] = str(e)[:300]
+            self._log("warn", f"{phase}: model call failed for {batch_id} ({e}); batch left without verdicts")
+            return None
+
     def _parse_failed(self, phase: str, batch_id: str) -> None:
+        if batch_id in self.call_errors.get(phase, {}):
+            return
         self.parse_failures.setdefault(phase, []).append(batch_id)
         self._log("warn", f"{phase}: could not parse the model reply for {batch_id}; batch left without verdicts")
 
@@ -90,6 +103,7 @@ class HeadlessAIRunner:
             "phases": self.phase_stats,
             "totals": self._usage(),
             "parse_failures": self.parse_failures,
+            "call_errors": self.call_errors,
         }
         path = self.out_dir / "ai-run-stats.json"
         path.write_text(json.dumps(stats, indent=2), encoding="utf-8")
@@ -357,7 +371,7 @@ Respond STRICTLY with a valid JSON object matching:
                 {"role": "user", "content": user_prompt},
             ]
 
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("4a-bola-auditor", r_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
                 raw_findings = parsed.get("findings", [])
@@ -444,7 +458,7 @@ Respond STRICTLY with a valid JSON object matching:
                 {"role": "user", "content": user_prompt},
             ]
 
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("4b-injection-auditor", b_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
                 raw_findings = parsed.get("findings", [])
@@ -523,7 +537,7 @@ Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}")
                 {"role": "system", "content": auditor_prompt},
                 {"role": "user", "content": user_prompt},
             ]
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("4c-privilege-auditor", b_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
                 findings = [self._sanitize_finding(f) for f in parsed.get("findings", [])]
@@ -605,7 +619,7 @@ Respond STRICTLY with a valid JSON object matching verification.schema.json:
                 {"role": "user", "content": user_prompt},
             ]
 
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("5-finding-verifier", f"verified-{(idx // batch_size) + 1}", messages)
             try:
                 parsed = self.client.extract_json(reply)
                 verifs = parsed.get("verifications", [])
