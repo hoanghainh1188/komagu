@@ -7,7 +7,7 @@ LLM endpoint (Ollama, vLLM, private OpenAI server):
 3. Audits candidate routes for BOLA / IDOR (BOLA Auditor).
 4. Audits candidate queries for SQL/NoSQL Injection (Injection Auditor).
 5. Adversarial Skeptic Verification (Finding Verifier Council).
-6. Merges and schema-validates all findings with 0 false positives.
+6. Merges and schema-validates all findings; writes OUT/ai-run-stats.json.
 
 Standard-library only (Python 3.8+ compatible).
 """
@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 from operate.ai.client import LLMClient
@@ -58,34 +59,67 @@ class HeadlessAIRunner:
         self.out_dir = Path(out_dir).resolve()
         self.client = client
         self.callback = step_callback or (lambda status, msg: None)
+        # Per-phase replies that could not be parsed as JSON; written to ai-run-stats.json
+        self.parse_failures: Dict[str, List[str]] = {}
+        self.phase_stats: Dict[str, Dict[str, Any]] = {}
 
     def _log(self, status: str, msg: str) -> None:
         self.callback(status, msg)
+
+    def _parse_failed(self, phase: str, batch_id: str) -> None:
+        self.parse_failures.setdefault(phase, []).append(batch_id)
+        self._log("warn", f"{phase}: could not parse the model reply for {batch_id}; batch left without verdicts")
+
+    def _usage(self) -> Dict[str, Any]:
+        return dict(getattr(self.client, "usage", None) or {})
+
+    def _timed(self, phase: str, fn: Callable[[], Any]) -> None:
+        before, started = self._usage(), time.monotonic()
+        fn()
+        after = self._usage()
+        self.phase_stats[phase] = {
+            "seconds": round(time.monotonic() - started, 3),
+            **{k: after.get(k, 0) - before.get(k, 0) for k in ("calls", "prompt_tokens", "completion_tokens")},
+        }
+
+    def write_run_stats(self) -> Path:
+        """Write model, per-phase durations, token counts and parse failures to OUT/ai-run-stats.json."""
+        stats = {
+            "model": getattr(self.client, "model", None),
+            "endpoint": getattr(self.client, "endpoint", None),
+            "phases": self.phase_stats,
+            "totals": self._usage(),
+            "parse_failures": self.parse_failures,
+        }
+        path = self.out_dir / "ai-run-stats.json"
+        path.write_text(json.dumps(stats, indent=2), encoding="utf-8")
+        return path
 
     def run(self) -> Dict[str, Any]:
         """Execute all cognitive AI phases end-to-end."""
         self._log("step", "Starting Tier 2 Cognitive Multi-Agent Audit (Headless BYO-LLM)")
 
         # Phase 2: Stack & Auth Model Detector
-        self.infer_auth_model()
+        self._timed("2-stack-detector", self.infer_auth_model)
 
         # Phase 3: Route Inventory Mapping
-        self.map_routes_inventory()
+        self._timed("3-route-mapper", self.map_routes_inventory)
 
         # Phase 4a: BOLA / IDOR Cognitive Audit
-        self.audit_bola_routes()
+        self._timed("4a-bola-auditor", self.audit_bola_routes)
 
         # Phase 4b: SQL / NoSQL Injection Cognitive Audit
-        self.audit_injection_candidates()
+        self._timed("4b-injection-auditor", self.audit_injection_candidates)
 
         # Phase 4c: Privilege Audit (BFLA, mass assignment)
-        self.audit_privilege()
+        self._timed("4c-privilege-auditor", self.audit_privilege)
 
         # Phase 5: Adversarial Skeptic Verifier
-        self.verify_findings_skeptic()
+        self._timed("5-finding-verifier", self.verify_findings_skeptic)
 
         # Phase 6: Merge & Validate Outputs
         self.merge_and_validate()
+        self.write_run_stats()
 
         self._log("ok", "Tier 2 Cognitive Multi-Agent Audit completed successfully")
         return {"status": "success", "out_dir": str(self.out_dir)}
@@ -330,6 +364,7 @@ Respond STRICTLY with a valid JSON object matching:
                 findings = [self._sanitize_finding(f) for f in raw_findings]
                 route_verdicts = parsed.get("route_verdicts", [])
             except Exception:
+                self._parse_failed("4a-bola-auditor", r_file.stem)
                 findings = []
                 route_verdicts = []
 
@@ -416,6 +451,7 @@ Respond STRICTLY with a valid JSON object matching:
                 findings = [self._sanitize_finding(f) for f in raw_findings]
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
+                self._parse_failed("4b-injection-auditor", b_file.stem)
                 findings = []
                 candidate_verdicts = []
 
@@ -494,6 +530,7 @@ Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}")
                 route_verdicts = parsed.get("privilege_route_verdicts", [])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
+                self._parse_failed("4c-privilege-auditor", b_file.stem)
                 findings, route_verdicts, candidate_verdicts = [], [], []
 
             out_doc = {
@@ -573,24 +610,10 @@ Respond STRICTLY with a valid JSON object matching verification.schema.json:
                 parsed = self.client.extract_json(reply)
                 verifs = parsed.get("verifications", [])
             except Exception:
-                # Default fallback verification for unverified items
-                verifs = [
-                    {
-                        "finding_id": f.get("finding_id", ""),
-                        "verdict": "confirmed",
-                        "reason_code": "traced",
-                        "confidence": "high",
-                        "checked": ["Audited data-flow"],
-                        "notes": "Traced via headless cognitive consensus.",
-                        "consensus": {
-                            "score": 0.90,
-                            "agreement_level": "majority",
-                            "voted_models": [self.client.model],
-                            "rationale": "Verified in headless pipeline.",
-                        },
-                    }
-                    for f in chunk
-                ]
+                # No verdicts: merge_findings.py lists these findings under
+                # coverage.findings_without_verification instead of confirming them
+                self._parse_failed("5-finding-verifier", f"verified-{(idx // batch_size) + 1}")
+                verifs = []
 
             verif_doc = {
                 "batch_id": f"verified-{(idx // batch_size) + 1}",

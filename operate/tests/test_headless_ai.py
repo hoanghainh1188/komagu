@@ -196,6 +196,7 @@ module.exports = app;
 ```"""
             return '{"status": "ok"}'
 
+        self.mock_agent_responses = mock_agent_responses
         self.server, self.thread, self.base_url = start_mock_llm_server(
             port=0, response_generator=mock_agent_responses
         )
@@ -203,6 +204,57 @@ module.exports = app;
     def tearDown(self) -> None:
         self.server.server_close()
         shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _prescan(self) -> None:
+        import subprocess
+
+        prescan_script = PROJECT_ROOT / "assess" / "lsa" / "scripts" / "run_prescan.py"
+        res = subprocess.run(
+            [sys.executable, str(prescan_script), str(self.target_dir), str(self.out_dir)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(res.returncode, 0, f"Pre-scan failed: {res.stderr}")
+
+    def test_run_stats_record_tokens_and_phases(self) -> None:
+        self._prescan()
+        client = LLMClient(endpoint=self.base_url, model="mock-model", api_key="test")
+        HeadlessAIRunner(self.target_dir, self.out_dir, client).run()
+
+        stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
+        self.assertEqual(stats["model"], "mock-model")
+        self.assertGreater(stats["totals"]["calls"], 0)
+        # the mock server reports 100 prompt / 50 completion tokens per call
+        self.assertEqual(stats["totals"]["prompt_tokens"], 100 * stats["totals"]["calls"])
+        self.assertEqual(stats["totals"]["completion_tokens"], 50 * stats["totals"]["calls"])
+        self.assertEqual(sum(ph["calls"] for ph in stats["phases"].values()), stats["totals"]["calls"])
+        self.assertIn("5-finding-verifier", stats["phases"])
+        # the mock answers the BOLA prompt with the auth-model markdown, so that batch is a parse failure
+        self.assertEqual(stats["parse_failures"], {"4a-bola-auditor": ["routes-001"]})
+
+    def test_unparseable_verifier_reply_leaves_findings_unverified(self) -> None:
+        """A broken verifier reply must not confirm findings (#286)."""
+        self.server.server_close()
+
+        def broken_verifier(messages, model):
+            if "Findings to Verify & Challenge" in messages[-1]["content"]:
+                return "I think these all look vulnerable."
+            return self.mock_agent_responses(messages, model)
+
+        self.server, self.thread, self.base_url = start_mock_llm_server(port=0, response_generator=broken_verifier)
+        self._prescan()
+        client = LLMClient(endpoint=self.base_url, model="mock-model", api_key="test")
+        logs = []
+        HeadlessAIRunner(self.target_dir, self.out_dir, client, step_callback=lambda st, msg: logs.append((st, msg))).run()
+
+        findings = json.loads((self.out_dir / "findings.json").read_text(encoding="utf-8"))["findings"]
+        self.assertGreaterEqual(len(findings), 1)
+        self.assertNotIn("confirmed", [f.get("status") for f in findings])
+        coverage = json.loads((self.out_dir / "coverage.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(coverage["findings_without_verification"]), sorted(f["finding_id"] for f in findings))
+        stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
+        self.assertEqual(stats["parse_failures"]["5-finding-verifier"], ["verified-1"])
+        self.assertTrue(any(st == "warn" and "verified-1" in msg for st, msg in logs))
 
     def test_headless_ai_runner_full_cycle(self) -> None:
         # 1. Run deterministic pre-scan to populate OUT
