@@ -48,7 +48,7 @@ class AuthorizationResult:
 class SecurityAuditEvent:
     """Structured security audit event for authorization failures."""
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    event_name: str = "Komainu.Authorization.Denied"
+    event_name: str = "Komagu.Authorization.Denied"
     actor_user_id: Optional[str] = None
     actor_tenant_id: Optional[str] = None
     resource_type: str = "Unknown"
@@ -81,7 +81,7 @@ class ISecurityAuditSink(ABC):
 class LoggingSecurityAuditSink(ISecurityAuditSink):
     """Default logger-based audit sink emitting JSON to standard logging."""
 
-    def __init__(self, logger_name: str = "komainu.security.audit") -> None:
+    def __init__(self, logger_name: str = "komagu.security.audit") -> None:
         import logging
         self.logger = logging.getLogger(logger_name)
 

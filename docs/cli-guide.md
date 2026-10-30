@@ -86,7 +86,7 @@ komagu scan <target> [options]
 | `--sarif-out` | | `OUT/findings.sarif` | Designated path for OASIS SARIF v2.1.0 output |
 | `--baseline` | | `None` | Previous `baseline.json` or SARIF file; findings become `new`, `unchanged` or `regressed` (SARIF `baselineState`) and `OUT/baseline-diff.json` lists fixed ones |
 | `--update-baseline` | | `false` | Write the updated baseline to `--baseline` (default `OUT/baseline.json`) |
-| `--suppressions` | | `TARGET/.komagu/suppressions.json` if present (legacy `.komainu/` is still read, with a warning) | Approved accepted-risk suppressions; matched findings are marked accepted in SARIF and never fail `--fail-on` |
+| `--suppressions` | | `TARGET/.komagu/suppressions.json` if present | Approved accepted-risk suppressions; matched findings are marked accepted in SARIF and never fail `--fail-on` |
 | `--diff` | | `None` | PR mode: scan only files changed since the merge base with `BASE_REF` (git) plus files that reference them; writes `OUT/diff-scope.json` |
 | `--fail-on` | | `none` (`new` with `--diff`) | Exit `1` when findings match: `new` (new or regressed), `any` (all active), `none` |
 | `--fail-severity` | | `low` | Minimum severity counted by `--fail-on` (`info` … `critical`) |
@@ -111,7 +111,7 @@ komagu scan ./legacy-monolith --baseline .komagu/baseline.json --update-baseline
 komagu scan ./legacy-monolith --baseline .komagu/baseline.json --fail-on new --fail-severity high
 ```
 
-Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
+Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komagu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
 
 #### Finding categories
 
@@ -149,7 +149,7 @@ komagu scan . --diff origin/main --baseline .komagu/baseline.json --fail-severit
 - **Limitation:** changes deeper than one level (a helper of a helper) are not followed. Keep a scheduled full scan (for example nightly) as well. In CI, fetch enough history for the merge base (`actions/checkout` with `fetch-depth: 0`).
 
 #### Accepted-risk suppressions
-Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["komainu/v1"]`) into `.komagu/suppressions.json` in the scanned repository. JSON is used instead of YAML so Tier 1 stays standard-library only.
+Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["komagu/v1"]`) into `.komagu/suppressions.json` in the scanned repository. JSON is used instead of YAML so Tier 1 stays standard-library only.
 
 ```json
 {

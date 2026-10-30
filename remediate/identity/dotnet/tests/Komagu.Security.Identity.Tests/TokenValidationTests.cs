@@ -14,7 +14,7 @@ using Xunit;
 public class TokenValidationTests : IDisposable
 {
     private const string ExpectedIssuer = "https://auth.komagu.test/realms/komagu";
-    private const string ExpectedAudience = "komainu-api";
+    private const string ExpectedAudience = "komagu-api";
 
     private readonly TestTokenGenerator _tokenGenerator;
     private readonly TestServer _server;

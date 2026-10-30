@@ -38,7 +38,7 @@ class TestPythonAuthz(unittest.TestCase):
         self.authz_service = KomaguAuthorizationService(audit_sink=self.audit_sink)
         self.validator = OidcTokenValidator(
             issuer="https://auth.komagu.test",
-            audience="komainu-api",
+            audience="komagu-api",
             allow_dev_tokens=True,
         )
 
@@ -77,7 +77,7 @@ class TestPythonAuthz(unittest.TestCase):
         self.assertEqual(len(self.audit_sink.events), 0)
 
     def test_02_attacker_same_tenant_denied_with_audit(self) -> None:
-        """Attacker Bob (same tenant) is denied access; emits Komainu.Authorization.Denied event."""
+        """Attacker Bob (same tenant) is denied access; emits Komagu.Authorization.Denied event."""
         result = self.authz_service.authorize(
             user=self.bob_attacker,
             resource=self.alice_order,
@@ -89,7 +89,7 @@ class TestPythonAuthz(unittest.TestCase):
         # Verify audit emission
         self.assertEqual(len(self.audit_sink.events), 1)
         event = self.audit_sink.events[0]
-        self.assertEqual(event.event_name, "Komainu.Authorization.Denied")
+        self.assertEqual(event.event_name, "Komagu.Authorization.Denied")
         self.assertEqual(event.actor_user_id, "user-b")
         self.assertEqual(event.actor_tenant_id, "tenant-komagu")
         self.assertEqual(event.resource_id, "ord-001")

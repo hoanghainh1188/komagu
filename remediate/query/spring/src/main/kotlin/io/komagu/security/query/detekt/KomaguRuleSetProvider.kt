@@ -9,7 +9,7 @@ import io.gitlab.arturbosch.detekt.api.RuleSetProvider
  */
 class KomaguRuleSetProvider : RuleSetProvider {
     // Kept after the rename so existing detekt.yml sections and @Suppress ids still apply (#290).
-    override val ruleSetId: String = "komainu-security"
+    override val ruleSetId: String = "komagu-security"
 
     override fun instance(config: Config): RuleSet {
         return RuleSet(

@@ -42,7 +42,7 @@ val safeClause = allowList.buildSortClause(userInputColumn, "DESC")
 
 The `Komagu.Security.Query.Analyzers` package inspects syntax trees during build time and inside the IDE to flag any string concatenation or string interpolation passed into raw SQL query methods:
 
-- **Diagnostic ID:** `KOMAINU001`
+- **Diagnostic ID:** `KOMAGU001`
 - **Severity:** `Warning` / `Error`
 - **Target APIs:** `FromSqlRaw`, `ExecuteSqlRaw`, `ExecuteSqlRawAsync`, `SqlQueryRaw`, `Query`, `Execute`.
 

@@ -10,8 +10,6 @@ bin/
 !/bin/
 !/bin/komagu
 !/bin/komagu.js
-!/bin/komainu
-!/bin/komainu-legacy.js
 obj/
 *.user
 *.suo

@@ -18,7 +18,7 @@ public sealed class TestTokenGenerator : IDisposable
 
     public string GenerateToken(
         string issuer = "https://auth.komagu.test/realms/komagu",
-        string audience = "komainu-api",
+        string audience = "komagu-api",
         string userId = "user-alice",
         string tenantId = "tenant-alpha",
         DateTime? expires = null,

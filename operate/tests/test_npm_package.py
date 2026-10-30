@@ -14,7 +14,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_JSON = REPO_ROOT / "package.json"
 BIN_KOMAGU_JS = REPO_ROOT / "bin" / "komagu.js"
-BIN_LEGACY_JS = REPO_ROOT / "bin" / "komainu-legacy.js"
 WORKFLOW_FILE = REPO_ROOT / ".github" / "workflows" / "npm-publish.yml"
 RELEASE_PLEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release-please.yml"
 RELEASE_PLEASE_CONFIG = REPO_ROOT / "release-please-config.json"
@@ -35,9 +34,8 @@ class TestNPMPackage(unittest.TestCase):
         self.assertEqual(data.get("publishConfig", {}).get("access"), "public")
         self.assertIn("version", data)
         self.assertEqual(data.get("bin", {}).get("komagu"), "bin/komagu.js")
-        # Deprecated pre-rename aliases (#290)
-        self.assertEqual(data.get("bin", {}).get("komainu"), "bin/komainu-legacy.js")
-        self.assertEqual(data.get("bin", {}).get("komainu-guard"), "bin/komainu-legacy.js")
+        # Pre-rename aliases were removed in 2.0 (#312)
+        self.assertEqual(set(data.get("bin", {})), {"komagu"})
         self.assertEqual(data.get("license"), "Apache-2.0")
 
         # Whitelisted files must include platform modules
@@ -71,18 +69,6 @@ class TestNPMPackage(unittest.TestCase):
         self.assertIn("protect", res_h.stdout)
         self.assertIn("test", res_h.stdout)
         self.assertIn("demo", res_h.stdout)
-
-    def test_legacy_bin_alias_warns_and_delegates(self) -> None:
-        """Deprecated komainu / komainu-guard bins must print a rename notice and still run (#290)."""
-        node_bin = shutil.which("node")
-        if not node_bin:
-            self.skipTest("Node.js runtime not installed on host")
-
-        self.assertTrue(BIN_LEGACY_JS.stat().st_mode & 0o111 != 0, "bin/komainu-legacy.js is not executable")
-        res = subprocess.run([node_bin, str(BIN_LEGACY_JS), "--version"], capture_output=True, text=True)
-        self.assertEqual(res.returncode, 0, res.stderr)
-        self.assertIn("komagu v", res.stdout)
-        self.assertIn("renamed to `komagu`", res.stderr)
 
     def test_node_launcher_error_on_missing_python(self) -> None:
         """Launcher must show friendly error with Docker fallback if Python is missing."""

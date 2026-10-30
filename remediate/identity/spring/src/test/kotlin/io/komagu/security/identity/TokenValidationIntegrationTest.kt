@@ -27,7 +27,7 @@ class TokenValidationIntegrationTest {
 
     companion object {
         const val EXPECTED_ISSUER = "https://auth.komagu.test/realms/komagu"
-        const val EXPECTED_AUDIENCE = "komainu-api"
+        const val EXPECTED_AUDIENCE = "komagu-api"
         val jwtFactory = TestJwtFactory()
     }
 

@@ -93,6 +93,17 @@ class TestCodexAdapter(unittest.TestCase):
         self.assertEqual(text.count(AGENTS_MD_BEGIN), 1)
         self.assertEqual(text.count(AGENTS_MD_END), 1)
 
+    def test_pre_2_0_markers_are_replaced_in_place(self) -> None:
+        old = (f"# Notes\n\n{build_adapters.LEGACY_AGENTS_MD_BEGIN}\nold block\n"
+               f"{build_adapters.LEGACY_AGENTS_MD_END}\n\n# Footer\n")
+        (self.dest / "AGENTS.md").write_text(old, encoding="utf-8")
+        build("codex", self.dest)
+        text = (self.dest / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertNotIn("komainu-lsa", text)
+        self.assertNotIn("old block", text)
+        self.assertEqual(text.count(AGENTS_MD_BEGIN), 1)
+        self.assertTrue(text.startswith("# Notes\n\n") and text.endswith("# Footer\n"))
+
     def test_unbalanced_markers_fail_before_touching_workspace(self) -> None:
         user = f"# Notes\n{AGENTS_MD_BEGIN}\nimportant user text\n"
         (self.dest / "AGENTS.md").write_text(user, encoding="utf-8")
@@ -187,7 +198,7 @@ class TestGenericAdapterGuard(unittest.TestCase):
 
     def test_contract_carries_generator_marker(self) -> None:
         build("generic", self.dest)
-        self.assertEqual(json.loads(self.contract.read_text(encoding="utf-8"))["generator"], "komainu-lsa")
+        self.assertEqual(json.loads(self.contract.read_text(encoding="utf-8"))["generator"], "komagu-lsa")
 
     def test_rebuild_refreshes_generated_contract(self) -> None:
         build("generic", self.dest)
@@ -196,6 +207,14 @@ class TestGenericAdapterGuard(unittest.TestCase):
         self.contract.write_text(json.dumps(data), encoding="utf-8")
         build("generic", self.dest)
         self.assertEqual(json.loads(self.contract.read_text(encoding="utf-8"))["kit_version"], build_adapters.VERSION)
+
+    def test_rebuild_accepts_pre_2_0_generator(self) -> None:
+        build("generic", self.dest)
+        data = json.loads(self.contract.read_text(encoding="utf-8"))
+        data["generator"] = "komainu-lsa"
+        self.contract.write_text(json.dumps(data), encoding="utf-8")
+        build("generic", self.dest)
+        self.assertEqual(json.loads(self.contract.read_text(encoding="utf-8"))["generator"], "komagu-lsa")
 
     def test_foreign_contract_fails_before_touching_workspace(self) -> None:
         self.contract.write_text('{"name": "my-project-contract"}', encoding="utf-8")
@@ -211,7 +230,7 @@ class TestGenericAdapterGuard(unittest.TestCase):
         self.assert_untouched("contract.json")
 
     def test_non_object_contract_fails(self) -> None:
-        self.contract.write_text('["komainu-lsa"]', encoding="utf-8")
+        self.contract.write_text('["komagu-lsa"]', encoding="utf-8")
         with self.assertRaises(ValueError):
             build("generic", self.dest)
 

@@ -5,9 +5,7 @@
   "main": "remediate/authz/nodejs/src/index.js",
   "types": "remediate/authz/nodejs/src/index.d.ts",
   "bin": {
-    "komagu": "bin/komagu.js",
-    "komainu": "bin/komainu-legacy.js",
-    "komainu-guard": "bin/komainu-legacy.js"
+    "komagu": "bin/komagu.js"
   },
   "files": [
     "bin/",

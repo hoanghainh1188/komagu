@@ -43,7 +43,7 @@ Finding id prefixes: `BOLA-`, `INJ-`, `BFLA-`, `MASS-`.
 
 `fingerprint` is optional. When present it has the form `kfp1:<64 lowercase hex>`
 and must not depend on line numbers, so the same issue keeps the same value
-across scans. Exporters copy it to SARIF `partialFingerprints["komainu/v1"]`.
+across scans. Exporters copy it to SARIF `partialFingerprints["komagu/v1"]`.
 
 ## SARIF level mapping
 

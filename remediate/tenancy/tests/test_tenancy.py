@@ -206,8 +206,8 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         self.assertIn("REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
         self.assertIn("REVOKE ALL ON FUNCTION switch_tenant_schema(VARCHAR) FROM PUBLIC", sql_content)
-        self.assertIn("GRANT USAGE ON SCHEMA %I TO komainu_app", sql_content)
-        self.assertIn("GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komainu_app", sql_content)
+        self.assertIn("GRANT USAGE ON SCHEMA %I TO komagu_app", sql_content)
+        self.assertIn("GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komagu_app", sql_content)
 
     def test_11_rls_sql_app_role_and_tenant_organizations_security(self) -> None:
         """Verifies RLS template defines non-owner app role, protects tenant_organizations, and pins search_path."""
@@ -215,7 +215,7 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         with open(rls_file, "r", encoding="utf-8") as f:
             sql_content = f.read()
 
-        self.assertIn("CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS", sql_content)
+        self.assertIn("CREATE ROLE komagu_app WITH NOSUPERUSER NOBYPASSRLS", sql_content)
         self.assertIn("NOLOGIN", sql_content)
         self.assertNotIn("replace_with_secure_app_password", sql_content)
         self.assertIn("ALTER TABLE tenant_organizations ENABLE ROW LEVEL SECURITY", sql_content)
@@ -225,7 +225,7 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         self.assertIn("TRANSACTION REQUIREMENT", sql_content)
         self.assertIn("BEGIN ... COMMIT", sql_content)
         self.assertIn("REVOKE ALL ON FUNCTION set_current_tenant(VARCHAR) FROM PUBLIC", sql_content)
-        self.assertIn("GRANT EXECUTE ON FUNCTION set_current_tenant(VARCHAR) TO komainu_app", sql_content)
+        self.assertIn("GRANT EXECUTE ON FUNCTION set_current_tenant(VARCHAR) TO komagu_app", sql_content)
 
     def test_12_rls_cross_tenant_isolation_logic_simulation(self) -> None:
         """Simulates RLS policy evaluation: verifying cross-tenant records cannot be read."""

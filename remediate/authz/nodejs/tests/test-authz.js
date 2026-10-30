@@ -59,7 +59,7 @@ test('KomaguSecurityService: denies attacker with 404 and emits audit', async ()
   // Verify audit event
   assert.strictEqual(auditSink.events.length, 2); // 1 from authorize + 1 from requireOwnership
   const event = auditSink.events[0];
-  assert.strictEqual(event.eventName, 'Komainu.Authorization.Denied');
+  assert.strictEqual(event.eventName, 'Komagu.Authorization.Denied');
   assert.strictEqual(event.actorUserId, 'user-b');
   assert.strictEqual(event.actorTenantId, 'tenant-komagu');
   assert.strictEqual(event.resourceId, 'ord-01');

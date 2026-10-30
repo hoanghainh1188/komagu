@@ -3,8 +3,6 @@
 
 Translates confirmed LSA findings (BOLA & SQLi) into deterministic,
 production-ready SecRule configurations for instant Day-2 edge protection.
-
-Rule tags stay 'komainu-*' after the rename so existing WAF log alerts still match (#290).
 """
 
 from __future__ import annotations
@@ -74,8 +72,8 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
    msg:'Komagu Virtual Patch: SQL Injection blocked on {path}',\\
    logdata:'Matched Data: %{{TX.0}}',\\
    severity:'CRITICAL',\\
-   tag:'komainu-virtual-patch',\\
-   tag:'komainu-sqli',\\
+   tag:'komagu-virtual-patch',\\
+   tag:'komagu-sqli',\\
    tag:'{finding_id}',\\
    setvar:'tx.sql_injection_score=+5',\\
    setvar:'tx.inbound_anomaly_score_exceeded=1',\\
@@ -115,8 +113,8 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
    t:urlDecodeUni,\\
    msg:'Komagu Virtual Patch: Missing Authorization Token on BOLA Endpoint {path}',\\
    severity:'CRITICAL',\\
-   tag:'komainu-virtual-patch',\\
-   tag:'komainu-bola',\\
+   tag:'komagu-virtual-patch',\\
+   tag:'komagu-bola',\\
    tag:'{finding_id}',\\
    chain"
   SecRule &REQUEST_HEADERS:Authorization "@eq 0"

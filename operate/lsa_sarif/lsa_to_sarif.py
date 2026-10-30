@@ -69,7 +69,7 @@ RULE_ID_PREFIX = {"bola": "BOLA", "bfla": "BFLA", "mass_assignment": "MASS"}
 
 def _get_rule_id(category: str, cwe: int) -> str:
     cat_prefix = RULE_ID_PREFIX.get(category, "INJ")
-    return f"KOMAINU-{cat_prefix}-CWE{cwe}"
+    return f"KOMAGU-{cat_prefix}-CWE{cwe}"
 
 
 # Same replay properties as assess/lsa/scripts/findings_to_sarif.py, so `komagu test --from-scan`
@@ -201,7 +201,7 @@ def convert_findings_to_sarif(
             result_item["relatedLocations"] = related_locations
 
         if finding.get("fingerprint"):
-            result_item["partialFingerprints"] = {"komainu/v1": finding["fingerprint"]}
+            result_item["partialFingerprints"] = {"komagu/v1": finding["fingerprint"]}
 
         results.append(result_item)
 

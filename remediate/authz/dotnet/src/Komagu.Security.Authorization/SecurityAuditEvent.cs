@@ -11,9 +11,9 @@ public record SecurityAuditEvent
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 
     /// <summary>
-    /// Event name or category. Kept as "Komainu.*" after the rename so existing SIEM rules still match (#290).
+    /// Event name or category.
     /// </summary>
-    public string EventName { get; init; } = "Komainu.Authorization.Denied";
+    public string EventName { get; init; } = "Komagu.Authorization.Denied";
 
     /// <summary>
     /// Distributed tracing identifier (W3C traceparent or correlation ID).

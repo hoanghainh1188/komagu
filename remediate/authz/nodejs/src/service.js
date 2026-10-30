@@ -140,7 +140,7 @@ class KomaguSecurityService {
 
       const event = {
         timestamp: new Date().toISOString(),
-        eventName: 'Komainu.Authorization.Denied',
+        eventName: 'Komagu.Authorization.Denied',
         actorUserId: actorUserId || undefined,
         actorTenantId: actorTenantId || undefined,
         resourceType: resource && resource.constructor ? resource.constructor.name : 'Object',

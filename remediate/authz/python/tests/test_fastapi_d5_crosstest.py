@@ -42,7 +42,7 @@ class MockFastApiServer(http.server.BaseHTTPRequestHandler):
     authz_service = KomaguAuthorizationService(audit_sink=InMemorySecurityAuditSink())
     validator = OidcTokenValidator(
         issuer="https://auth.komagu.test",
-        audience="komainu-api",
+        audience="komagu-api",
         allow_dev_tokens=True,
     )
 

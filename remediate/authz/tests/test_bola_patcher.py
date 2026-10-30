@@ -157,7 +157,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
         """If file already contains ownership guards, patcher must skip to prevent duplicates."""
         controller_file = self.test_dir / "protected_order.ts"
         controller_file.write_text(
-            "import { RequireOwnership } from 'komainu-guard';\n"
+            "import { RequireOwnership } from '@hoanghainh/komagu';\n"
             "export class OrderController {\n"
             "    @UseGuards(OwnershipGuard)\n"
             "    @RequireOwnership(ResourceOperation.READ)\n"

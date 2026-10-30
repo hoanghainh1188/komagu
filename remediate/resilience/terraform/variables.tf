@@ -15,7 +15,7 @@ variable "secondary_region" {
 variable "project_name" {
   description = "Project and workload prefix"
   type        = string
-  default     = "komainu"
+  default     = "komagu"
 }
 
 variable "environment" {

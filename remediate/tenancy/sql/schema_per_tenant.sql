@@ -59,10 +59,10 @@ BEGIN
 
 
     -- Grant least-privilege tenant access to application role
-    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komainu_app') THEN
-        EXECUTE format('GRANT USAGE ON SCHEMA %I TO komainu_app', v_schema_name);
-        EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %I TO komainu_app', v_schema_name);
-        EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO komainu_app', v_schema_name);
+    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komagu_app') THEN
+        EXECUTE format('GRANT USAGE ON SCHEMA %I TO komagu_app', v_schema_name);
+        EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %I TO komagu_app', v_schema_name);
+        EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO komagu_app', v_schema_name);
     END IF;
 
 END;
@@ -101,11 +101,11 @@ $$ LANGUAGE plpgsql;
 REVOKE ALL ON FUNCTION create_tenant_schema(VARCHAR) FROM PUBLIC;
 REVOKE ALL ON FUNCTION switch_tenant_schema(VARCHAR) FROM PUBLIC;
 REVOKE ALL ON TABLE public.tenant_registry FROM PUBLIC;
--- Note: No SELECT grant on tenant_registry for komainu_app. Namespace‑only isolation is enforced; cross‑tenant queries must use tenant‑specific schemas.
+-- Note: No SELECT grant on tenant_registry for komagu_app. Namespace‑only isolation is enforced; cross‑tenant queries must use tenant‑specific schemas.
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komainu_app') THEN
-        GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komainu_app;
+    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'komagu_app') THEN
+        GRANT EXECUTE ON FUNCTION switch_tenant_schema(VARCHAR) TO komagu_app;
     END IF;
 END $$;
 
