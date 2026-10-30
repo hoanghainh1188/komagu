@@ -21,21 +21,25 @@ class LegacyKomainuPropertiesPostProcessor(logFactory: DeferredLogFactory) : Env
     override fun postProcessEnvironment(environment: ConfigurableEnvironment, application: SpringApplication?) {
         val mapped = linkedMapOf<String, Any>()
         // Property sources iterate highest precedence first, so the first legacy value seen wins.
-        for (source in environment.propertySources) {
-            if (source !is EnumerablePropertySource<*> || source.name == SOURCE_NAME) continue
-            for (name in source.propertyNames) {
-                val current = currentName(name) ?: continue
-                if (current !in mapped) {
-                    source.getProperty(name)?.let { mapped[current] = it }
-                }
-            }
-        }
+        environment.propertySources
+            .filterIsInstance<EnumerablePropertySource<*>>()
+            .filter { it.name != SOURCE_NAME }
+            .forEach { collectLegacy(it, mapped) }
         if (mapped.isEmpty()) return
         log.warn(
             "komainu.security.* properties are deprecated, rename them to komagu.security.* " +
                 "(mapped: ${mapped.keys.joinToString()})"
         )
         environment.propertySources.addLast(MapPropertySource(SOURCE_NAME, mapped))
+    }
+
+    private fun collectLegacy(source: EnumerablePropertySource<*>, mapped: MutableMap<String, Any>) {
+        for (name in source.propertyNames) {
+            val current = currentName(name)
+            if (current != null && current !in mapped) {
+                source.getProperty(name)?.let { mapped[current] = it }
+            }
+        }
     }
 
     override fun getOrder(): Int = ConfigDataEnvironmentPostProcessor.ORDER + 1
