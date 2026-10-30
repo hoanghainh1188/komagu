@@ -6,7 +6,7 @@ Komagu 1.x kept some identifiers under the old name "Komainu", because systems o
 
 | Identifier | 1.x | 2.0 | Transition |
 |---|---|---|---|
-| SARIF rule IDs (`komagu scan`, DevSecOps pipeline, remediator) | `KOMAINU-BOLA-CWE639`, `KOMAINU-INJ-CWE89`, `KOMAINU-SCA-*`, `KOMAINU-SECRET-001`, `KOMAINU-CONTAINER-001` | `KOMAGU-*` (same suffixes) | Hard rename |
+| SARIF rule IDs (`komagu scan`, DevSecOps pipeline, remediator) | `KOMAINU-BOLA-CWE639`, `KOMAINU-INJ-CWE89`, `KOMAINU-SCA-*`, `KOMAINU-SECRET-001`, `KOMAINU-CONTAINER-001` | `KOMAGU-*` (same suffixes) | Hard rename in output. `komagu test --from-scan` / `--export-poc` still read `KOMAINU-*` from a 1.x SARIF file |
 | Roslyn analyzer ID | `KOMAINU001` | `KOMAGU001` | Hard rename |
 | detekt rule set | `komainu-security` | `komagu-security` | Hard rename |
 | SARIF fingerprint key | `partialFingerprints["komainu/v1"]` | `partialFingerprints["komagu/v1"]` | Dual-read: `--baseline` still reads `komainu/v1` from a 1.x SARIF file during 2.x |
