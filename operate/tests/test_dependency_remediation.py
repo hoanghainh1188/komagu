@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unit and integration tests for automated CVE dependency manifest remediation in `komainu fix`."""
+"""Unit and integration tests for automated CVE dependency manifest remediation in `komagu fix`."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ class TestDependencyRemediation(unittest.TestCase):
     """Test suite verifying multi-ecosystem CVE dependency patching and CLI --sca integration."""
 
     def setUp(self) -> None:
-        self.temp_dir = tempfile.mkdtemp(prefix="komainu_dep_fix_")
+        self.temp_dir = tempfile.mkdtemp(prefix="komagu_dep_fix_")
         self.target_path = Path(self.temp_dir).resolve()
         self.patcher = DependencyManifestPatcher()
 
@@ -294,7 +294,7 @@ class TestDependencyRemediation(unittest.TestCase):
         self.assertIn('"lodash": "^4.17.21"', pkg_file.read_text(encoding="utf-8"))
 
     def test_cli_fix_with_sca_flag_across_multiple_manifests(self) -> None:
-        """`komainu fix <target> --sca` must scan manifests using built-in CVE catalog and apply upgrades."""
+        """`komagu fix <target> --sca` must scan manifests using built-in CVE catalog and apply upgrades."""
         (self.target_path / "package.json").write_text(
             '{\n  "dependencies": {\n    "lodash": "^4.17.15",\n    "express": "^4.18.2"\n  }\n}\n',
             encoding="utf-8",
@@ -333,8 +333,8 @@ class TestDependencyRemediation(unittest.TestCase):
         self.assertIn("requests==2.32.0", patched_req)
         self.assertIn("urllib3>=2.0.7", patched_req)
 
-    def test_devsecops_sca_feeds_directly_into_komainu_fix(self) -> None:
-        """DevSecOpsPipeline.run_sca() must emit sca.sarif that `komainu fix` auto-discovers and patches."""
+    def test_devsecops_sca_feeds_directly_into_komagu_fix(self) -> None:
+        """DevSecOpsPipeline.run_sca() must emit sca.sarif that `komagu fix` auto-discovers and patches."""
         (self.target_path / "go.mod").write_text(
             "module app\n\ngo 1.21\n\nrequire golang.org/x/net v0.17.0\n",
             encoding="utf-8",
@@ -343,7 +343,7 @@ class TestDependencyRemediation(unittest.TestCase):
         sca_res = pipeline.run_sca()
         self.assertGreaterEqual(sca_res["findings_count"], 1)
 
-        # Now run RemediationRunner without explicit --findings or --sca; it auto-discovers .komainu-devsecops/sca.sarif
+        # Now run RemediationRunner without explicit --findings or --sca; it auto-discovers .komagu-devsecops/sca.sarif
         runner = RemediationRunner(target_dir=self.target_path, dry_run=False)
         report = runner.run()
         self.assertEqual(report.applied_count, 1)

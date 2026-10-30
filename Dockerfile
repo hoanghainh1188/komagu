@@ -1,11 +1,11 @@
 # ==============================================================================
-# Komainu — Security-First Legacy Modernization Platform
+# Komagu — Security-First Legacy Modernization Platform
 # All-in-One Zero-Install Container Image
 # ==============================================================================
 
 FROM python:3.13-slim AS base
 
-LABEL org.opencontainers.image.title="Komainu Security-First Modernization Platform"
+LABEL org.opencontainers.image.title="Komagu Security-First Modernization Platform"
 LABEL org.opencontainers.image.description="All-in-one zero-install security audit and BOLA verification container"
 LABEL org.opencontainers.image.source="https://github.com/hoanghainh1188/komainu"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
@@ -16,12 +16,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user and group
-RUN groupadd -g 1000 komainu \
-    && useradd -u 1000 -g komainu -m -s /bin/bash komainu
+RUN groupadd -g 1000 komagu \
+    && useradd -u 1000 -g komagu -m -s /bin/bash komagu
 
 WORKDIR /app
 
-# Copy Komainu platform modules and executables
+# Copy Komagu platform modules and executables
 COPY bin/ /app/bin/
 COPY assess/ /app/assess/
 COPY operate/ /app/operate/
@@ -31,7 +31,7 @@ COPY governance/ /app/governance/
 COPY examples/ /app/examples/
 
 # Ensure executable permissions on CLI entrypoints
-RUN chmod +x /app/bin/komainu
+RUN chmod +x /app/bin/komagu
 
 # Configure environment
 ENV PYTHONUNBUFFERED=1 \
@@ -40,9 +40,9 @@ ENV PYTHONUNBUFFERED=1 \
     PATH=/app/bin:${PATH}
 
 # Switch to non-root user and workspace
-USER komainu
+USER komagu
 WORKDIR /workspace
 
 # Set default entrypoint and command
-ENTRYPOINT ["/app/bin/komainu"]
+ENTRYPOINT ["/app/bin/komagu"]
 CMD ["--help"]

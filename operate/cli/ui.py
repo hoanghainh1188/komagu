@@ -1,4 +1,4 @@
-"""Terminal UI and output formatting helpers for Komainu CLI."""
+"""Terminal UI and output formatting helpers for Komagu CLI."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def color(text: str, *codes: str) -> str:
 
 
 def print_banner() -> None:
-    """Print the Komainu branding banner."""
+    """Print the Komagu branding banner."""
     lines = [
         color("  _  __                       _             ", CYAN, BOLD),
         color(" | |/ /___  _ __ ___   __ _  (_)_ __  _   _ ", CYAN, BOLD),

@@ -1,4 +1,4 @@
-"""Komainu Unified Command-Line Interface."""
+"""Komagu Unified Command-Line Interface."""
 
 from __future__ import annotations
 

@@ -17,7 +17,7 @@ from operate.devsecops.sbom import Component, SBOMGenerator
 
 class TestDevSecOpsPipeline(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp_dir = tempfile.mkdtemp(prefix="komainu_devsecops_test_")
+        self.temp_dir = tempfile.mkdtemp(prefix="komagu_devsecops_test_")
 
     def tearDown(self) -> None:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
@@ -190,7 +190,7 @@ class TestDevSecOpsPipeline(unittest.TestCase):
         self.assertGreaterEqual(res["findings_count"], 2)
 
     def test_08_cli_devsecops_sbom_command(self) -> None:
-        """Verifies CLI `komainu devsecops sbom` execution."""
+        """Verifies CLI `komagu devsecops sbom` execution."""
         pkg_json = os.path.join(self.temp_dir, "package.json")
         with open(pkg_json, "w", encoding="utf-8") as f:
             json.dump({"dependencies": {"uuid": "^9.0.0"}}, f)

@@ -1,4 +1,4 @@
-# Komainu Continuous Security Verification for GitLab CI
+# Komagu Continuous Security Verification for GitLab CI
 # Include this template in .gitlab-ci.yml to enable cross-user authorization tests and SARIF export.
 
 stages:
@@ -6,15 +6,15 @@ stages:
   - security
 
 variables:
-  KOMAINU_BASE_URL: "http://127.0.0.1:8080"
-  KOMAINU_CONFIG_PATH: "operate/tests/test_suite.json"
-  KOMAINU_FINDINGS_PATH: "audit-out/findings.json"
+  KOMAGU_BASE_URL: "http://127.0.0.1:8080"
+  KOMAGU_CONFIG_PATH: "operate/tests/test_suite.json"
+  KOMAGU_FINDINGS_PATH: "audit-out/findings.json"
 
 cross_user_authz_test:
   stage: test
   image: python:3.11-slim
   script:
-    - python3 operate/cross-user-tester/runner.py --base-url "$KOMAINU_BASE_URL" --config "$KOMAINU_CONFIG_PATH" --output cross-user-results.json ${ATTACKER_TOKEN:+--attacker-token "$ATTACKER_TOKEN"}
+    - python3 operate/cross-user-tester/runner.py --base-url "$KOMAGU_BASE_URL" --config "$KOMAGU_CONFIG_PATH" --output cross-user-results.json ${ATTACKER_TOKEN:+--attacker-token "$ATTACKER_TOKEN"}
   artifacts:
     when: always
     paths:
@@ -26,10 +26,10 @@ lsa_sarif_export:
   image: python:3.11-slim
   script:
     - |
-      if [ -f "$KOMAINU_FINDINGS_PATH" ]; then
-        python3 operate/lsa-sarif/lsa_to_sarif.py --input "$KOMAINU_FINDINGS_PATH" --output gl-sast-report.sarif
+      if [ -f "$KOMAGU_FINDINGS_PATH" ]; then
+        python3 operate/lsa-sarif/lsa_to_sarif.py --input "$KOMAGU_FINDINGS_PATH" --output gl-sast-report.sarif
       else
-        echo "No findings file found at $KOMAINU_FINDINGS_PATH, skipping SARIF export."
+        echo "No findings file found at $KOMAGU_FINDINGS_PATH, skipping SARIF export."
       fi
   artifacts:
     reports:

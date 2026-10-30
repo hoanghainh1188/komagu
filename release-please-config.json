@@ -16,7 +16,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "komainu-guard",
+      "package-name": "@hoanghainh/komagu",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         { "type": "generic", "path": "operate/cli/__init__.py" }

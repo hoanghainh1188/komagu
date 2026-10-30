@@ -1,4 +1,4 @@
-name: Komainu DevSecOps, SCA & SBOM Supply Chain Security Pipeline
+name: Komagu DevSecOps, SCA & SBOM Supply Chain Security Pipeline
 
 on:
   workflow_call:
@@ -71,7 +71,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Komainu DevSecOps Dependencies
+      - name: Install Komagu DevSecOps Dependencies
         run: |
           python3 -m pip install --upgrade pip
 
@@ -79,39 +79,39 @@ jobs:
         if: ${{ inputs.enable-sast }}
         continue-on-error: true
         run: |
-          mkdir -p .komainu-devsecops
+          mkdir -p .komagu-devsecops
           if command -v semgrep &> /dev/null; then
-            semgrep scan --config auto --sarif --output .komainu-devsecops/sast.sarif ${{ inputs.target-path }} || true
+            semgrep scan --config auto --sarif --output .komagu-devsecops/sast.sarif ${{ inputs.target-path }} || true
           else
-            echo "Semgrep not pre-installed on runner; Komainu pipeline will use native AST analyzer"
+            echo "Semgrep not pre-installed on runner; Komagu pipeline will use native AST analyzer"
           fi
 
       - name: Secret Leak Detection (Gitleaks)
         if: ${{ inputs.enable-secrets }}
         continue-on-error: true
         run: |
-          mkdir -p .komainu-devsecops
+          mkdir -p .komagu-devsecops
           if command -v gitleaks &> /dev/null; then
-            gitleaks detect --source ${{ inputs.target-path }} --format sarif --report-path .komainu-devsecops/secrets.sarif --no-git || true
+            gitleaks detect --source ${{ inputs.target-path }} --format sarif --report-path .komagu-devsecops/secrets.sarif --no-git || true
           else
-            echo "Gitleaks CLI not pre-installed; Komainu pipeline will use native high-entropy scanner"
+            echo "Gitleaks CLI not pre-installed; Komagu pipeline will use native high-entropy scanner"
           fi
 
       - name: SCA & Dependency Vulnerability Scan (Trivy)
         if: ${{ inputs.enable-sca }}
         continue-on-error: true
         run: |
-          mkdir -p .komainu-devsecops
+          mkdir -p .komagu-devsecops
           if command -v trivy &> /dev/null; then
-            trivy fs --format sarif --output .komainu-devsecops/sca.sarif ${{ inputs.target-path }} || true
+            trivy fs --format sarif --output .komagu-devsecops/sca.sarif ${{ inputs.target-path }} || true
           else
-            echo "Trivy CLI not pre-installed; Komainu pipeline will use native manifest analyzer"
+            echo "Trivy CLI not pre-installed; Komagu pipeline will use native manifest analyzer"
           fi
 
-      - name: Execute Unified Komainu DevSecOps & SBOM Generator
+      - name: Execute Unified Komagu DevSecOps & SBOM Generator
         run: |
           python3 -m operate.cli.main devsecops run ${{ inputs.target-path }} \
-            --output-dir .komainu-devsecops \
+            --output-dir .komagu-devsecops \
             --app-name "${{ inputs.app-name }}" \
             --app-version "${{ inputs.app-version }}"
 
@@ -121,14 +121,14 @@ jobs:
         with:
           name: sbom-compliance-artifacts
           path: |
-            .komainu-devsecops/cyclonedx-sbom.json
-            .komainu-devsecops/spdx-sbom.json
+            .komagu-devsecops/cyclonedx-sbom.json
+            .komagu-devsecops/spdx-sbom.json
           retention-days: 30
 
       - name: Upload Unified SARIF to GitHub Security Tab
-        if: ${{ inputs.upload-sarif-to-github && hashFiles('.komainu-devsecops/komainu-devsecops.sarif') != '' }}
+        if: ${{ inputs.upload-sarif-to-github && hashFiles('.komagu-devsecops/komagu-devsecops.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true
         with:
-          sarif_file: .komainu-devsecops/komainu-devsecops.sarif
-          category: komainu-devsecops
+          sarif_file: .komagu-devsecops/komagu-devsecops.sarif
+          category: komagu-devsecops

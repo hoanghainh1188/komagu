@@ -117,7 +117,7 @@ class TimesCarBreachScenario(BaseScenario):
             url = f"{self.target}{path}"
             headers = {
                 "Authorization": f"Bearer {self.attacker_token}",
-                "User-Agent": "Komainu-BAS-TimesCarSimulator/1.0",
+                "User-Agent": "Komagu-BAS-TimesCarSimulator/1.0",
                 "Accept": "application/json",
             }
             req = urllib.request.Request(url, headers=headers, method="GET")
@@ -161,7 +161,7 @@ class TimesCarBreachScenario(BaseScenario):
         passed = (leaked == 0)
 
         recommendation = (
-            "Enforce Komainu Boilerplate 1 (Object-Level Authorization) with declarative "
+            "Enforce Komagu Boilerplate 1 (Object-Level Authorization) with declarative "
             "@RequireOwnership decorators or integrate Kong perimeter WAF with strict 404 invariants."
             if not passed
             else "Endpoint securely enforces tenant isolation (404 Not Found invariant maintained)."
@@ -206,7 +206,7 @@ class MetabaseZeroDayScenario(BaseScenario):
         self.payloads = [
             "' OR '1'='1",
             "1 OR 1=1 --",
-            "' UNION SELECT 1, 'komainu-cve-probe', 3 --",
+            "' UNION SELECT 1, 'komagu-cve-probe', 3 --",
             "admin' --",
             "1; SELECT pg_sleep(0) --",
         ]
@@ -223,7 +223,7 @@ class MetabaseZeroDayScenario(BaseScenario):
             url = f"{self.target}{self.query_path}{sep}{encoded_query}"
 
             headers = {
-                "User-Agent": "Komainu-BAS-MetabaseSimulator/1.0",
+                "User-Agent": "Komagu-BAS-MetabaseSimulator/1.0",
                 "Accept": "application/json",
             }
             req = urllib.request.Request(url, headers=headers, method="GET")
@@ -238,7 +238,7 @@ class MetabaseZeroDayScenario(BaseScenario):
                     body = resp.read().decode("utf-8", errors="replace")[:300]
                     response_sample = body
                     # If injection probe is reflected or returned without error on raw injection
-                    if "komainu-cve-probe" in body:
+                    if "komagu-cve-probe" in body:
                         is_leaked = True
                         leaked += 1
                     else:
@@ -274,8 +274,8 @@ class MetabaseZeroDayScenario(BaseScenario):
         passed = (leaked == 0)
 
         recommendation = (
-            "Deploy Komainu Coraza WAF virtual patches (SecRule id:1100001+) and execute "
-            "'komainu fix' to rewrite dynamic SQL concatenations into parameterized prepared statements."
+            "Deploy Komagu Coraza WAF virtual patches (SecRule id:1100001+) and execute "
+            "'komagu fix' to rewrite dynamic SQL concatenations into parameterized prepared statements."
             if not passed
             else "Perimeter WAF and parameterized queries successfully mitigated all injection payloads."
         )
@@ -325,7 +325,7 @@ class IDCFrontierRansomwareScenario(BaseScenario):
         test_file = self.target_dir / "audit_archive_sample.bak"
         try:
             self.target_dir.mkdir(parents=True, exist_ok=True)
-            test_file.write_text("Komainu Immutable WORM Backup - Read Only", encoding="utf-8")
+            test_file.write_text("Komagu Immutable WORM Backup - Read Only", encoding="utf-8")
             # Mark file read-only (simulating local WORM compliance mode)
             os.chmod(str(test_file), 0o444)
         except Exception:
@@ -373,7 +373,7 @@ class IDCFrontierRansomwareScenario(BaseScenario):
         passed = (leaked == 0)
 
         recommendation = (
-            "Deploy Komainu Boilerplate 3 (Immutable Backup & DR) with AWS S3 Object Lock in "
+            "Deploy Komagu Boilerplate 3 (Immutable Backup & DR) with AWS S3 Object Lock in "
             "COMPLIANCE mode and cross-region replication to prevent unrecoverable cloud ransomware wiping."
             if not passed
             else "Storage assets strictly adhere to immutable WORM policy."
@@ -412,7 +412,7 @@ class ExecutiveReportGenerator:
         status_label = "EXCELLENT (RESILIENT)" if avg_score >= 90 else ("MODERATE (VULNERABLE)" if avg_score >= 50 else "CRITICAL RISK")
 
         lines = [
-            "# Komainu Executive Breach & Attack Simulation (BAS) Report",
+            "# Komagu Executive Breach & Attack Simulation (BAS) Report",
             "",
             f"> **Target System:** `{self.target}`  ",
             f"> **Date of Execution:** {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}  ",
@@ -449,17 +449,17 @@ class ExecutiveReportGenerator:
             lines.append("")
 
         lines.extend([
-            "## 3. Komainu Modernization Blueprint Mapping",
+            "## 3. Komagu Modernization Blueprint Mapping",
             "",
             "| Problem Discovered | Modernization Solution | Immediate Remediation Action |",
             "|---|---|---|",
             "| Cross-user BOLA/IDOR data harvesting | **Boilerplate 1: Secure API & IAM** | Apply `@RequireOwnership` decorators & deploy Kong perimeter shield |",
-            "| Dynamic SQL query injection | **Boilerplate 1: Safe Query Engine** | Run `komainu fix` for automated AST parameterization |",
+            "| Dynamic SQL query injection | **Boilerplate 1: Safe Query Engine** | Run `komagu fix` for automated AST parameterization |",
             "| Raw PII ID image exposure | **Boilerplate 2: Zero-PII eKYC & NFC** | Transition to hardware NFC chip reading & blind tokenization |",
             "| Ransomware cloud backup erasure | **Boilerplate 3: Immutable Backup & DR** | Enable S3 Object Lock COMPLIANCE mode & automated DR drills |",
             "",
             "---",
-            "*Report generated autonomously by Komainu Security-First Modernization Platform.*",
+            "*Report generated autonomously by Komagu Security-First Modernization Platform.*",
         ])
 
         return "\n".join(lines) + "\n"

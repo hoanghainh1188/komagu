@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Komainu CLI — Node.js Bridge Launcher for npm / npx execution.
+ * Komagu CLI — Node.js Bridge Launcher for npm / npx execution.
  *
- * Forwards arguments and streams directly to the Komainu Python CLI engine.
+ * Forwards arguments and streams directly to the Komagu Python CLI engine.
  */
 
 'use strict';
@@ -38,7 +38,7 @@ function findPythonBinary() {
 }
 
 function showPythonMissingError() {
-  console.error('\x1b[31m\x1b[1m[ERROR]\x1b[0m Python 3.8+ is required to execute Komainu CLI.');
+  console.error('\x1b[31m\x1b[1m[ERROR]\x1b[0m Python 3.8+ is required to execute Komagu CLI.');
   console.error('Please install Python 3 from https://www.python.org/downloads/');
   console.error('');
   console.error('Alternatively, run via the zero-install Docker container image:');
@@ -47,7 +47,7 @@ function showPythonMissingError() {
 
 function main() {
   const pythonBin = findPythonBinary();
-  const scriptPath = path.join(__dirname, 'komainu');
+  const scriptPath = path.join(__dirname, 'komagu');
 
   if (!pythonBin) {
     showPythonMissingError();
@@ -55,7 +55,7 @@ function main() {
   }
 
   if (!fs.existsSync(scriptPath)) {
-    console.error(`\x1b[31m\x1b[1m[ERROR]\x1b[0m Komainu engine script not found at ${scriptPath}`);
+    console.error(`\x1b[31m\x1b[1m[ERROR]\x1b[0m Komagu engine script not found at ${scriptPath}`);
     process.exit(1);
   }
 
@@ -69,7 +69,7 @@ function main() {
     if (err.code === 'ENOENT') {
       showPythonMissingError();
     } else {
-      console.error('\x1b[31m[ERROR]\x1b[0m Failed to spawn Komainu process:', err.message);
+      console.error('\x1b[31m[ERROR]\x1b[0m Failed to spawn Komagu process:', err.message);
     }
     process.exit(1);
   });

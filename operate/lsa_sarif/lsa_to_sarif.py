@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """LSA-to-SARIF Converter.
 
-Converts Komainu LSA (Legacy Security Audit) findings into OASIS SARIF v2.1.0
+Converts Komagu LSA (Legacy Security Audit) findings into OASIS SARIF v2.1.0
 format for integration with GitHub Code Scanning, GitLab Security Dashboard,
 and other standard DevSecOps reporting tools.
 """
@@ -76,7 +76,7 @@ def convert_findings_to_sarif(
     findings: List[Dict[str, Any]],
     tool_version: str = "0.1.0",
 ) -> Dict[str, Any]:
-    """Convert a list of Komainu LSA findings to SARIF v2.1.0 dict."""
+    """Convert a list of Komagu LSA findings to SARIF v2.1.0 dict."""
     rules_dict: Dict[str, Dict[str, Any]] = {}
     results: List[Dict[str, Any]] = []
 
@@ -99,7 +99,7 @@ def convert_findings_to_sarif(
                 "shortDescription": {"text": meta["title"]},
                 "fullDescription": {
                     "text": (
-                        f"Komainu LSA identified a {meta['title']} vulnerability "
+                        f"Komagu LSA identified a {meta['title']} vulnerability "
                         f"violating object isolation or query parameterization invariants."
                     )
                 },
@@ -190,7 +190,7 @@ def convert_findings_to_sarif(
             {
                 "tool": {
                     "driver": {
-                        "name": "Komainu LSA",
+                        "name": "Komagu LSA",
                         "semanticVersion": tool_version,
                         "informationUri": "https://github.com/hoanghainh1188/komainu",
                         "rules": list(rules_dict.values()),
@@ -206,7 +206,7 @@ def convert_findings_to_sarif(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Convert Komainu LSA findings to OASIS SARIF v2.1.0 format"
+        description="Convert Komagu LSA findings to OASIS SARIF v2.1.0 format"
     )
     parser.add_argument(
         "-i", "--input", required=True, help="Input findings.json file path (or '-' for stdin)"
@@ -215,7 +215,7 @@ def main() -> None:
         "-o", "--output", help="Output SARIF file path (default: stdout)"
     )
     parser.add_argument(
-        "--tool-version", default="0.1.0", help="Komainu tool version (default: 0.1.0)"
+        "--tool-version", default="0.1.0", help="Komagu tool version (default: 0.1.0)"
     )
 
     args = parser.parse_args()

@@ -1,4 +1,4 @@
-name: Build and Publish Komainu Docker Image
+name: Build and Publish Komagu Docker Image
 
 on:
   push:
@@ -31,16 +31,16 @@ jobs:
         with:
           context: .
           load: true
-          tags: komainu:test
+          tags: komagu:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Verify zero-install container execution
         run: |
-          docker run --rm komainu:test --version
-          docker run --rm komainu:test scan --help
-          docker run --rm komainu:test protect --dry-run
-          docker run --rm komainu:test demo --dry-run
+          docker run --rm komagu:test --version
+          docker run --rm komagu:test scan --help
+          docker run --rm komagu:test protect --dry-run
+          docker run --rm komagu:test demo --dry-run
 
   publish:
     needs: build-and-test

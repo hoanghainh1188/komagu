@@ -1,6 +1,6 @@
 """Zero-dependency HTTP client for OpenAI-compatible LLM endpoints (Ollama, vLLM, etc.).
 
-Adheres strictly to Komainu's zero 3rd-party dependency invariant (Python 3.8+ stdlib).
+Adheres strictly to Komagu's zero 3rd-party dependency invariant (Python 3.8+ stdlib).
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ class LLMClient:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
-            "User-Agent": "Komainu-Headless-AI/1.5.0",
+            "User-Agent": "Komagu-Headless-AI/1.5.0",
         }
 
         req = urllib.request.Request(self.endpoint, data=data, headers=headers, method="POST")

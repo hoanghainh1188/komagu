@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Tests for Komainu Breach & Attack Simulation (BAS) Suite (TASK-3.1 to TASK-3.4).
+"""Tests for Komagu Breach & Attack Simulation (BAS) Suite (TASK-3.1 to TASK-3.4).
 
 Validates:
 1. TimesCarBreachScenario: detects mass BOLA account scraping on vulnerable endpoint, passes on protected endpoint.
 2. MetabaseZeroDayScenario: executes remote SQL injection probes and verifies error handling.
 3. IDCFrontierRansomwareScenario: evaluates storage resilience against malicious tampering and deletion.
 4. ExecutiveReportGenerator: produces structured C-level Markdown and JSON summaries.
-5. CLI integration: `komainu simulate` execution, argument parsing, and report exporting.
+5. CLI integration: `komagu simulate` execution, argument parsing, and report exporting.
 """
 
 from __future__ import annotations
@@ -135,7 +135,7 @@ class TestSimulateScenarios(unittest.TestCase):
         self.assertEqual(generator.overall_resilience_score, 90.0)
 
         md = generator.generate_markdown()
-        self.assertIn("# Komainu Executive Breach & Attack Simulation (BAS) Report", md)
+        self.assertIn("# Komagu Executive Breach & Attack Simulation (BAS) Report", md)
         self.assertIn("Times Car Mass BOLA Simulation", md)
         self.assertIn("Metabase SQLi Simulation", md)
         self.assertIn("90.0%", md)
@@ -147,7 +147,7 @@ class TestSimulateScenarios(unittest.TestCase):
         self.assertEqual(len(data["results"]), 2)
 
     def test_cli_simulate_command_json_output(self) -> None:
-        """Verify running `komainu simulate` CLI with JSON output format."""
+        """Verify running `komagu simulate` CLI with JSON output format."""
         with tempfile.TemporaryDirectory() as temp_dir:
             exit_code = cli_main([
                 "--no-banner",
@@ -162,7 +162,7 @@ class TestSimulateScenarios(unittest.TestCase):
             self.assertIn(exit_code, (0, 1))
 
     def test_cli_simulate_command_report_file_export(self) -> None:
-        """Verify `komainu simulate` CLI exports executive report to specified path."""
+        """Verify `komagu simulate` CLI exports executive report to specified path."""
         with tempfile.TemporaryDirectory() as temp_dir:
             out_file = Path(temp_dir) / "bas_report.md"
             exit_code = cli_main([
@@ -182,7 +182,7 @@ class TestSimulateScenarios(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             self.assertTrue(out_file.exists())
             content = out_file.read_text(encoding="utf-8")
-            self.assertIn("Komainu Executive Breach & Attack Simulation (BAS) Report", content)
+            self.assertIn("Komagu Executive Breach & Attack Simulation (BAS) Report", content)
 
 
 if __name__ == "__main__":

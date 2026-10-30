@@ -1,4 +1,4 @@
-"""Orchestrator runner for Komainu automated code remediation."""
+"""Orchestrator runner for Komagu automated code remediation."""
 
 from __future__ import annotations
 
@@ -185,10 +185,14 @@ class RemediationRunner:
             return self.findings_path
 
         candidates = [
-            self.target_dir / "komainu-out" / "findings.json",
+            self.target_dir / "komagu-out" / "findings.json",
             self.target_dir / "findings.json",
             self.target_dir / "audit-results" / "findings.json",
             self.target_dir / "out" / "findings.json",
+            self.target_dir / ".komagu-devsecops" / "sca.sarif",
+            self.target_dir / ".komagu-devsecops" / "komagu-devsecops.sarif",
+            # Pre-rename output locations (#290)
+            self.target_dir / "komainu-out" / "findings.json",
             self.target_dir / ".komainu-devsecops" / "sca.sarif",
             self.target_dir / ".komainu-devsecops" / "komainu-devsecops.sarif",
         ]
@@ -202,7 +206,7 @@ class RemediationRunner:
         )
 
     def _parse_findings_data(self, data: Any) -> List[Dict[str, Any]]:
-        """Parse findings list from Komainu JSON dict, JSON array, or OASIS SARIF v2.1.0."""
+        """Parse findings list from Komagu JSON dict, JSON array, or OASIS SARIF v2.1.0."""
         # 1. Format: { "findings": [...] }
         if isinstance(data, dict) and "findings" in data and isinstance(data["findings"], list):
             return list(data["findings"])

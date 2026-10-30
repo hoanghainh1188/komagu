@@ -1,12 +1,13 @@
 {
-  "name": "komainu-guard",
+  "name": "@hoanghainh/komagu",
   "version": "1.7.0",
   "description": "Security-First Legacy Modernization Platform CLI (LSA Kit, IAM Perimeter, Cross-User Testing)",
   "main": "remediate/authz/nodejs/src/index.js",
   "types": "remediate/authz/nodejs/src/index.d.ts",
   "bin": {
-    "komainu": "bin/komainu.js",
-    "komainu-guard": "bin/komainu.js"
+    "komagu": "bin/komagu.js",
+    "komainu": "bin/komainu-legacy.js",
+    "komainu-guard": "bin/komainu-legacy.js"
   },
   "files": [
     "bin/",
@@ -30,7 +31,7 @@
     "!**/*.sqlite"
   ],
   "scripts": {
-    "test": "node bin/komainu.js --version && python3 -m unittest discover -s operate/tests"
+    "test": "node bin/komagu.js --version && python3 -m unittest discover -s operate/tests"
   },
   "repository": {
     "type": "git",
@@ -48,8 +49,11 @@
     "static-analysis",
     "sarif"
   ],
-  "author": "Komainu Contributors",
+  "author": "Komagu Contributors",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "bugs": {
     "url": "https://github.com/hoanghainh1188/komainu/issues"
   },

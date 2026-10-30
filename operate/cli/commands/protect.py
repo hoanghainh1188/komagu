@@ -1,4 +1,4 @@
-"""Command: komainu protect - Perimeter protection gateway and WAF management."""
+"""Command: komagu protect - Perimeter protection gateway and WAF management."""
 
 from __future__ import annotations
 
@@ -42,25 +42,25 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         epilog="""
 Examples:
   # Validate perimeter configurations (dry-run)
-  komainu protect --dry-run
+  komagu protect --dry-run
 
   # Launch the perimeter Kong + Coraza container stack
-  komainu protect --up
+  komagu protect --up
 
   # Synthesize Coraza WAF virtual patches directly from LSA audit findings
-  komainu protect --virtual-patch ./audit-output/findings.json
+  komagu protect --virtual-patch ./audit-output/findings.json
 
   # Synthesize and export virtual patches to custom destination
-  komainu protect --virtual-patch findings.json --patch-out ./rules/virtual-patches.conf
+  komagu protect --virtual-patch findings.json --patch-out ./rules/virtual-patches.conf
 
   # Point perimeter gateway to a specific upstream service
-  komainu protect --target http://host.docker.internal:5001 --up
+  komagu protect --target http://host.docker.internal:5001 --up
 
   # Check perimeter container status
-  komainu protect --status
+  komagu protect --status
 
   # Stop perimeter containers
-  komainu protect --down
+  komagu protect --down
 
 Documentation:
   See docs/cli-guide.md#33-komainu-protect--edge-gateway--coraza-waf-perimeter
@@ -112,7 +112,7 @@ Documentation:
 
 def execute_protect(args: argparse.Namespace) -> int:
     """Execute perimeter protection actions."""
-    step("Validating Komainu Perimeter Protection assets")
+    step("Validating Komagu Perimeter Protection assets")
 
     if not EDGE_DIR.is_dir():
         step_fail(f"Edge directory not found at {EDGE_DIR}")
@@ -200,7 +200,7 @@ def execute_protect(args: argparse.Namespace) -> int:
     ]
 
     print_summary_table(
-        title="Komainu Perimeter Protection Status",
+        title="Komagu Perimeter Protection Status",
         rows=rows,
         footer="Use --up to start the gateway or --down to stop.",
     )

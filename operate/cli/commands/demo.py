@@ -1,4 +1,4 @@
-"""Command: komainu demo - Reference Member Portal environment management."""
+"""Command: komagu demo - Reference Member Portal environment management."""
 
 from __future__ import annotations
 
@@ -39,16 +39,16 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         epilog="""
 Examples:
   # Start the Member Portal demo with .NET Core 8 backend
-  komainu demo --backend dotnet --up
+  komagu demo --backend dotnet --up
 
   # Start the Member Portal demo with Spring Boot 3 backend
-  komainu demo --backend spring --up
+  komagu demo --backend spring --up
 
   # Check status of running demo containers
-  komainu demo --status
+  komagu demo --status
 
   # Stop and clean up demo containers
-  komainu demo --down
+  komagu demo --down
 """,
     )
     parser.add_argument(
@@ -82,7 +82,7 @@ Examples:
 
 def execute_demo(args: argparse.Namespace) -> int:
     """Execute demo environment lifecycle commands."""
-    step("Validating Komainu Member Portal Demo assets")
+    step("Validating Komagu Member Portal Demo assets")
 
     if not DEMO_COMPOSE.is_file():
         step_fail(f"Demo docker-compose.yml not found at {DEMO_COMPOSE}")
@@ -138,13 +138,13 @@ def execute_demo(args: argparse.Namespace) -> int:
         ("Frontend Web App", "http://localhost:3000"),
         (".NET Backend API", "http://localhost:5001" if args.backend in ("dotnet", "all") else "Disabled"),
         ("Spring Boot API", "http://localhost:5002" if args.backend in ("spring", "all") else "Disabled"),
-        ("PostgreSQL Database", "localhost:5432 (user: komainu, db: member_portal)"),
+        ("PostgreSQL Database", "localhost:5432 (user: komagu, db: member_portal)"),
     ]
 
     print_summary_table(
         title="Member Portal Reference Demo Status",
         rows=rows,
-        footer="Use --down to stop the demo or komainu test --url http://localhost:5001 to run tests.",
+        footer="Use --down to stop the demo or komagu test --url http://localhost:5001 to run tests.",
     )
 
     return 0

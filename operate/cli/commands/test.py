@@ -1,4 +1,4 @@
-"""Command: komainu test - Cross-user BOLA/IDOR continuous verification."""
+"""Command: komagu test - Cross-user BOLA/IDOR continuous verification."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ from operate.cross_user_tester.runner import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SUITE = REPO_ROOT / "operate" / "tests" / "test_suite.json"
 # --token is passed to persona-matrix cases through this private env entry.
-CLI_TOKEN_ENV = "KOMAINU_CLI_TOKEN"
+CLI_TOKEN_ENV = "KOMAGU_CLI_TOKEN"
 
 
 def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
@@ -53,27 +53,27 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "test",
         help="Execute continuous cross-user authorization tests against an API",
-        description="Enforces Komainu BOLA/IDOR security invariants (attacker access MUST return 404 Not Found).",
+        description="Enforces Komagu BOLA/IDOR security invariants (attacker access MUST return 404 Not Found).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Ingest LSA findings and verify only findings with >= 80% AI Consensus
-  komainu test --url http://staging.internal:8000 --from-scan ./findings.json --min-consensus 0.8
+  komagu test --url http://staging.internal:8000 --from-scan ./findings.json --min-consensus 0.8
 
   # Verify findings and export reproducible Python & cURL exploit PoC scripts
-  komainu test --url http://localhost:5001 --from-scan ./findings.json --export-poc ./pocs
+  komagu test --url http://localhost:5001 --from-scan ./findings.json --export-poc ./pocs
 
   # Test auto-generated CRUD BOLA cases against local API
-  komainu test --url http://localhost:5001 --auto-crud /api/members
+  komagu test --url http://localhost:5001 --auto-crud /api/members
 
   # Run custom test suite with strict 404 enforcement
-  komainu test --url http://staging.internal:8000 --suite ./test_suite.json --strict
+  komagu test --url http://staging.internal:8000 --suite ./test_suite.json --strict
 
   # Run tests with custom attacker token and save report
-  komainu test --url http://localhost:5001 --token "jwt-persona-b" --output ./results.json
+  komagu test --url http://localhost:5001 --token "jwt-persona-b" --output ./results.json
 
   # Persona matrix (suite "version": 2): BFLA and mass assignment checks
-  KOMAINU_TOKEN_USER=... KOMAINU_TOKEN_ADMIN=... komainu test --url http://staging:8000 --suite ./personas.json
+  KOMAGU_TOKEN_USER=... KOMAGU_TOKEN_ADMIN=... komagu test --url http://staging:8000 --suite ./personas.json
 
 Documentation:
   See docs/cli-guide.md#34-komainu-test--offensive-exploit-verification-bola-invariant--persona-matrix
@@ -114,7 +114,7 @@ Documentation:
     parser.add_argument(
         "--from-scan",
         dest="from_scan",
-        help="Path to findings.json or SARIF output from komainu scan to generate attack test cases",
+        help="Path to findings.json or SARIF output from komagu scan to generate attack test cases",
     )
     parser.add_argument(
         "--min-consensus",
@@ -270,7 +270,7 @@ def execute_test(args: argparse.Namespace) -> int:
     print_summary_table(
         title="Cross-User Authorization Test Summary",
         rows=rows,
-        footer="Komainu invariant: cross-user access MUST return 404; lower personas MUST be refused.",
+        footer="Komagu invariant: cross-user access MUST return 404; lower personas MUST be refused.",
     )
 
     if getattr(args, "from_scan", None) and results:

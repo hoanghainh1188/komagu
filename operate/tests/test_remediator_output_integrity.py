@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression tests for #216: `komainu fix` must not corrupt files or claim non-functional fixes."""
+"""Regression tests for #216: `komagu fix` must not corrupt files or claim non-functional fixes."""
 
 from __future__ import annotations
 

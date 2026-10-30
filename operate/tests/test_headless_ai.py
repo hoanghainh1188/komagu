@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Comprehensive test suite for Komainu Headless Cognitive AI Runner (Issue #263).
+"""Comprehensive test suite for Komagu Headless Cognitive AI Runner (Issue #263).
 
 Standard-library only (Python 3.8+ compatible).
 """
@@ -78,7 +78,7 @@ class TestHeadlessAIRunner(unittest.TestCase):
     """End-to-end tests for HeadlessAIRunner and multi-agent pipeline."""
 
     def setUp(self) -> None:
-        self.temp_dir = tempfile.mkdtemp(prefix="komainu_ai_test_")
+        self.temp_dir = tempfile.mkdtemp(prefix="komagu_ai_test_")
         self.target_dir = Path(self.temp_dir) / "sample_app"
         self.target_dir.mkdir(parents=True)
         self.out_dir = Path(self.temp_dir) / "out"
@@ -258,7 +258,7 @@ module.exports = app;
             "--format",
             "all",
         ])
-        self.assertEqual(ret, 0, "komainu scan --headless-ai returned non-zero")
+        self.assertEqual(ret, 0, "komagu scan --headless-ai returned non-zero")
 
         # Verify output reports
         self.assertTrue((cli_out / "report.html").is_file())

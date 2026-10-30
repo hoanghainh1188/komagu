@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for `komainu init --ai <runtime>` (Issue #244)."""
+"""Tests for `komagu init --ai <runtime>` (Issue #244)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BIN_KOMAINU = REPO_ROOT / "bin" / "komainu"
+BIN_KOMAGU = REPO_ROOT / "bin" / "komagu"
 
 from operate.cli.main import build_parser, main  # noqa: E402
 
@@ -67,7 +67,7 @@ class TestInitCommand(unittest.TestCase):
 
     def test_invalid_agents_md_reports_error_without_traceback(self) -> None:
         (self.dest / "AGENTS.md").write_bytes(b"# caf\xe9\n")
-        res = subprocess.run([sys.executable, str(BIN_KOMAINU), "--no-banner", "init", "--ai", "codex", str(self.dest)],
+        res = subprocess.run([sys.executable, str(BIN_KOMAGU), "--no-banner", "init", "--ai", "codex", str(self.dest)],
                              capture_output=True, text=True)
         self.assertEqual(res.returncode, 1)
         self.assertNotIn("Traceback", res.stderr)
@@ -76,7 +76,7 @@ class TestInitCommand(unittest.TestCase):
     def test_generic_refuses_foreign_contract_without_traceback(self) -> None:
         contract = self.dest / "contract.json"
         contract.write_text('{"openapi": "3.0.0"}', encoding="utf-8")
-        res = subprocess.run([sys.executable, str(BIN_KOMAINU), "--no-banner", "init", "--ai", "generic", str(self.dest)],
+        res = subprocess.run([sys.executable, str(BIN_KOMAGU), "--no-banner", "init", "--ai", "generic", str(self.dest)],
                              capture_output=True, text=True)
         self.assertEqual(res.returncode, 1)
         self.assertNotIn("Traceback", res.stderr)
@@ -90,14 +90,14 @@ class TestInitCommand(unittest.TestCase):
         self.assertTrue((self.dest / "system-prompts" / "orchestrator.md").is_file())
 
     def test_help_topic_and_examples(self) -> None:
-        res = subprocess.run([sys.executable, str(BIN_KOMAINU), "help", "init"], capture_output=True, text=True)
+        res = subprocess.run([sys.executable, str(BIN_KOMAGU), "help", "init"], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0)
-        self.assertIn("usage: komainu init", res.stdout)
+        self.assertIn("usage: komagu init", res.stdout)
         self.assertIn("Examples:", res.stdout)
         self.assertIn("codex", res.stdout)
 
     def test_bin_end_to_end(self) -> None:
-        res = subprocess.run([sys.executable, str(BIN_KOMAINU), "--no-banner", "init", "--ai", "codex", str(self.dest)],
+        res = subprocess.run([sys.executable, str(BIN_KOMAGU), "--no-banner", "init", "--ai", "codex", str(self.dest)],
                              capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, res.stderr)
         self.assertIn("Run the legacy-security-audit skill", res.stdout)

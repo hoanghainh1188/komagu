@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Komagu CLI root executable."""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+# Add project root to sys.path
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from operate.cli.main import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

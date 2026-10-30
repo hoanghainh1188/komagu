@@ -1,4 +1,4 @@
-"""Main entrypoint for the unified Komainu CLI."""
+"""Main entrypoint for the unified Komagu CLI."""
 
 from __future__ import annotations
 
@@ -14,38 +14,38 @@ from operate.cli.ui import print_banner
 def build_parser() -> argparse.ArgumentParser:
     """Build the top-level argument parser with all subcommands."""
     parser = argparse.ArgumentParser(
-        prog="komainu",
-        description="Komainu — Security-First Legacy Modernization Platform CLI.",
+        prog="komagu",
+        description="Komagu — Security-First Legacy Modernization Platform CLI.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Quick Start Workflow:
-  1. Audit a legacy codebase:   komainu scan ./legacy-app --lang ja --format html
-  2. Launch perimeter edge:     komainu protect --up
-  3. Verify BOLA invariant:     komainu test --url http://localhost:8000
-  4. Explore reference demo:    komainu demo --up
-  5. Run DevSecOps & SBOM:      komainu devsecops run .
-  6. Remediate vulnerabilities: komainu fix ./legacy-app --dry-run
-  7. Install AI audit agents:   komainu init --ai codex ~/audits/acme
-  8. Simulate breach scenarios: komainu simulate --scenario times-car-breach
+  1. Audit a legacy codebase:   komagu scan ./legacy-app --lang ja --format html
+  2. Launch perimeter edge:     komagu protect --up
+  3. Verify BOLA invariant:     komagu test --url http://localhost:8000
+  4. Explore reference demo:    komagu demo --up
+  5. Run DevSecOps & SBOM:      komagu devsecops run .
+  6. Remediate vulnerabilities: komagu fix ./legacy-app --dry-run
+  7. Install AI audit agents:   komagu init --ai codex ~/audits/acme
+  8. Simulate breach scenarios: komagu simulate --scenario times-car-breach
 
 Documentation & Guides:
   Comprehensive User Guide: docs/cli-guide.md
 
 Learn more about a specific command:
-  komainu help <command>
-  komainu <command> --help
+  komagu help <command>
+  komagu <command> --help
 """,
     )
     parser.add_argument(
         "--version",
         "-v",
         action="version",
-        version=f"komainu v{__version__}",
+        version=f"komagu v{__version__}",
     )
     parser.add_argument(
         "--no-banner",
         action="store_true",
-        help="Suppress the Komainu ASCII banner",
+        help="Suppress the Komagu ASCII banner",
     )
 
     subparsers = parser.add_subparsers(
@@ -65,7 +65,7 @@ Learn more about a specific command:
 
     help_parser = subparsers.add_parser(
         "help",
-        help="Show help and usage examples for Komainu or a specific subcommand",
+        help="Show help and usage examples for Komagu or a specific subcommand",
         description="Displays help information, workflow guide, and command examples.",
     )
     help_parser.add_argument(

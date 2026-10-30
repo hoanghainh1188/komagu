@@ -1,4 +1,4 @@
-"""Command: komainu simulate - Empirical Breach & Attack Simulation (BAS)."""
+"""Command: komagu simulate - Empirical Breach & Attack Simulation (BAS)."""
 
 from __future__ import annotations
 
@@ -41,19 +41,19 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         epilog="""
 Examples:
   # Run all simulated attack scenarios against a target staging API
-  komainu simulate --target http://localhost:5001
+  komagu simulate --target http://localhost:5001
 
   # Simulate the Times Car mass IDOR harvesting attack specifically
-  komainu simulate --scenario times-car-breach --target http://staging-api:8000
+  komagu simulate --scenario times-car-breach --target http://staging-api:8000
 
   # Simulate Metabase unauthenticated SQL injection probe
-  komainu simulate --scenario metabase-cve-2026-72898 --target http://localhost:5001
+  komagu simulate --scenario metabase-cve-2026-72898 --target http://localhost:5001
 
   # Simulate IDC Frontier ransomware immutable storage attack
-  komainu simulate --scenario idc-frontier-ransomware --target /tmp/backup-dir
+  komagu simulate --scenario idc-frontier-ransomware --target /tmp/backup-dir
 
   # Export Executive C-Level Report for Board of Directors
-  komainu simulate --target http://localhost:5001 --output ./executive-bas-report.md --format markdown
+  komagu simulate --target http://localhost:5001 --output ./executive-bas-report.md --format markdown
 """,
     )
     parser.add_argument(
@@ -99,7 +99,7 @@ Examples:
 
 def execute_simulate(args: argparse.Namespace) -> int:
     """Execute Breach & Attack Simulation scenarios."""
-    step(f"Initializing Komainu Breach & Attack Simulation against {color(args.target, BOLD)}")
+    step(f"Initializing Komagu Breach & Attack Simulation against {color(args.target, BOLD)}")
 
     results: List[ScenarioResult] = []
     scenarios_to_run = [args.scenario] if args.scenario != "all" else [
@@ -140,7 +140,7 @@ def execute_simulate(args: argparse.Namespace) -> int:
                 step_fail(f"Metabase Zero-Day Simulation: SQLi probes unhandled ({res.resilience_score}% resilient)")
 
         elif sc == "idc-frontier-ransomware":
-            storage_path = args.target if not args.target.startswith("http") else "/tmp/komainu-backup-sim"
+            storage_path = args.target if not args.target.startswith("http") else "/tmp/komagu-backup-sim"
             step_info(f"Launching Scenario: IDC Frontier Cloud Storage Ransomware Simulation ({storage_path})")
             runner = IDCFrontierRansomwareScenario(target_dir=storage_path)
             res = runner.run()

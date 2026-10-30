@@ -1,4 +1,4 @@
-name: Komainu Continuous Security Verification
+name: Komagu Continuous Security Verification
 
 on:
   workflow_call:
@@ -81,11 +81,11 @@ jobs:
         run: |
           python3 operate/lsa-sarif/lsa_to_sarif.py \
             --input "${{ inputs.findings_path }}" \
-            --output komainu-lsa.sarif
+            --output komagu-lsa.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         if: steps.check_findings.outputs.exists == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: komainu-lsa.sarif
-          category: komainu-lsa-audit
+          sarif_file: komagu-lsa.sarif
+          category: komagu-lsa-audit

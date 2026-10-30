@@ -129,7 +129,7 @@ Produce an Markdown document summarizing:
 2. Identity Helpers (how current user / tenant ID is retrieved on server).
 3. Ownership Check Functions (e.g. checkOwner, isMyOrder, or direct SQL scoping).
 4. Safe DAO or Query Scoping conventions.
-Output MUST be Markdown format adhering to Komainu auth-model.md specification.
+Output MUST be Markdown format adhering to Komagu auth-model.md specification.
 """
         messages = [
             {"role": "system", "content": detector_prompt},

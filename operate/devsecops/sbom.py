@@ -277,8 +277,8 @@ class SBOMGenerator:
                 "timestamp": timestamp,
                 "tools": [
                     {
-                        "vendor": "Komainu Security",
-                        "name": "Komainu SBOM Generator",
+                        "vendor": "Komagu Security",
+                        "name": "Komagu SBOM Generator",
                         "version": "1.0.0",
                     }
                 ],
@@ -329,7 +329,7 @@ class SBOMGenerator:
             "documentNamespace": doc_namespace,
             "creationInfo": {
                 "created": timestamp,
-                "creators": ["Tool: Komainu-SBOM-Generator-1.0.0", "Organization: Komainu Security"],
+                "creators": ["Tool: Komagu-SBOM-Generator-1.0.0", "Organization: Komagu Security"],
             },
             "packages": packages,
             "relationships": relationships,
