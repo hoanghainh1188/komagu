@@ -11,7 +11,7 @@
 ## 1. Executive Summary
 
 In accordance with Pilot Phase Weeks 10–12 and following the accepted security audit findings from Issue #76 (`delivery/pilot/audit-out/report.md` / `report.ja.md`), all **8 accepted security vulnerabilities** (6 BOLA and 2 SQL Injection) across both .NET 8 and Kotlin / Spring Boot 3 backends have been **100% remediated** using Boilerplate 1 components:
-- **Komainu D1 (Object-Level Authorization)**: Neutralized all 6 BOLA vulnerabilities by introducing fine-grained resource authorization (`IKomainuAuthorizationService` in .NET and `KomainuSecurityManager` in Spring Boot) with secure **404 Not Found (deny-by-default)** semantics to prevent resource enumeration.
+- **Komainu D1 (Object-Level Authorization)**: Neutralized all 6 BOLA vulnerabilities by introducing fine-grained resource authorization (`IKomaguAuthorizationService` in .NET and `KomainuSecurityManager` in Spring Boot) with secure **404 Not Found (deny-by-default)** semantics to prevent resource enumeration.
 - **Komainu D3 (Safe Query Formulation)**: Neutralized both SQL Injection vulnerabilities by replacing dynamic SQL string concatenation with type-safe parameterized queries (`FromSqlInterpolated` in EF Core and JPA parameterized criteria queries in Spring Boot).
 - **Komainu D5 (Continuous Cross-User Authorization CI)**: Setup automated CI verification pipeline enforcing regression-free authorization checks on every Pull Request and branch merge.
 
@@ -21,7 +21,7 @@ In accordance with Pilot Phase Weeks 10–12 and following the accepted security
 
 | Finding ID | CWE | Vulnerability Class | Stack / Component | Endpoint & File | Remediation Component & Strategy | Verification Status |
 |---|---|---|---|---|---|---|
-| **F-BOLA-001** | CWE-639 / CWE-862 | BOLA / IDOR (Read) | .NET 8 (C#) | `GET /api/v1/test/legacy-orders/{id}`<br>`Controllers/LegacyTestController.cs` | **Komainu D1**: Injected `IKomainuAuthorizationService`, enforced `AuthorizeAsync(User, order, ResourceOperation.Read)`. Returns `404 Not Found` on unowned objects. | **PASS** (D5 runner + Unit test) |
+| **F-BOLA-001** | CWE-639 / CWE-862 | BOLA / IDOR (Read) | .NET 8 (C#) | `GET /api/v1/test/legacy-orders/{id}`<br>`Controllers/LegacyTestController.cs` | **Komainu D1**: Injected `IKomaguAuthorizationService`, enforced `AuthorizeAsync(User, order, ResourceOperation.Read)`. Returns `404 Not Found` on unowned objects. | **PASS** (D5 runner + Unit test) |
 | **F-BOLA-002** | CWE-639 / CWE-862 | BOLA / IDOR (Update) | .NET 8 (C#) | `PUT /api/v1/test/legacy-orders/{id}`<br>`Controllers/LegacyTestController.cs` | **Komainu D1**: Enforced `AuthorizeAsync(User, order, ResourceOperation.Update)`. Returns `404 Not Found`. | **PASS** (D5 runner + Unit test) |
 | **F-BOLA-003** | CWE-639 / CWE-862 | BOLA / IDOR (Delete) | .NET 8 (C#) | `DELETE /api/v1/test/legacy-orders/{id}`<br>`Controllers/LegacyTestController.cs` | **Komainu D1**: Enforced `AuthorizeAsync(User, order, ResourceOperation.Delete)`. Returns `404 Not Found`. | **PASS** (D5 runner + Unit test) |
 | **F-BOLA-004** | CWE-639 / CWE-862 | BOLA / IDOR (Read) | Kotlin / Spring Boot 3 | `GET /api/v1/test/legacy-orders/{id}`<br>`io.komainu.portal.controller.Controllers.kt` | **Komainu D1**: Injected `KomainuSecurityManager`, enforced `requireOwnership(order, ResourceOperation.READ)`. Throws `AuthorizationDeniedException` mapped to 404. | **PASS** (Spring build + Integration test) |
@@ -73,9 +73,9 @@ python3 -m unittest discover -s examples/member-portal/tests -p "test_*.py"
 python3 -m unittest examples/member-portal/tests/test_d6_remediation_verification.py
 
 # 3. Verify .NET 8 unit tests across D1, D2, D3
-dotnet test remediate/authz/dotnet/tests/Komainu.Security.Authorization.Tests/Komainu.Security.Authorization.Tests.csproj
-dotnet test remediate/identity/dotnet/tests/Komainu.Security.Identity.Tests/Komainu.Security.Identity.Tests.csproj
-dotnet test remediate/query/dotnet/tests/Komainu.Security.Query.Tests/Komainu.Security.Query.Tests.csproj
+dotnet test remediate/authz/dotnet/tests/Komagu.Security.Authorization.Tests/Komagu.Security.Authorization.Tests.csproj
+dotnet test remediate/identity/dotnet/tests/Komagu.Security.Identity.Tests/Komagu.Security.Identity.Tests.csproj
+dotnet test remediate/query/dotnet/tests/Komagu.Security.Query.Tests/Komagu.Security.Query.Tests.csproj
 
 # 4. Verify Kotlin / Spring Boot tests across D1, D2, D3
 (cd remediate/authz/spring && gradle test --no-daemon)

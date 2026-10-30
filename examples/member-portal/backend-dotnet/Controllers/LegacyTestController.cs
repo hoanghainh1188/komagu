@@ -4,24 +4,24 @@ using MemberPortal.Backend.Data;
 using MemberPortal.Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Komainu.Security.Authorization;
+using Komagu.Security.Authorization;
 
 /// <summary>
 /// Legacy endpoints for continuous security testing and verification.
 /// Supports both legacy/vulnerable mode (ENABLE_SECURITY_TEST_VULNERABILITIES=true)
-/// and modernized remediated mode using Komainu D1 Authorization & D3 Safe Queries.
+/// and modernized remediated mode using Komagu D1 Authorization & D3 Safe Queries.
 /// </summary>
 [ApiController]
 [Route("api/v1/test")]
 public class LegacyTestController : ControllerBase
 {
     private readonly PortalDbContext _dbContext;
-    private readonly IKomainuAuthorizationService _authzService;
+    private readonly IKomaguAuthorizationService _authzService;
     private readonly bool _vulnerabilitiesEnabled;
 
     public LegacyTestController(
         PortalDbContext dbContext,
-        IKomainuAuthorizationService authzService,
+        IKomaguAuthorizationService authzService,
         IConfiguration configuration)
     {
         _dbContext = dbContext;

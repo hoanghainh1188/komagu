@@ -59,7 +59,7 @@ The Pilot phase (Weeks 9–12) of Project Komainu was executed on Deliverable D6
 |                 ▼                                                                                  |
 |    [Upstream Application Services]                                                                 |
 |         ├── .NET 8 Backend (ASP.NET Core)                                                          |
-|         │     • D1: IKomainuAuthorizationService (Deny-by-default -> HTTP 404)                     |
+|         │     • D1: IKomaguAuthorizationService (Deny-by-default -> HTTP 404)                     |
 |         │     • D3: EF Core FromSqlInterpolated Parameterization                                   |
 |         │                                                                                          |
 |         └── Kotlin Spring Boot 3 Backend                                                           |
@@ -177,7 +177,7 @@ The pilot on Deliverable D6 establishes a verified **Client Reference Package (�
 2. **Turnkey WAF & Gateway Deployments**:
    - Ready-to-deploy Kong `deck.yaml` and Coraza CRS configurations requiring zero code changes for Day-1 edge defense.
 3. **Drop-in Remediation Libraries**:
-   - Production-ready .NET NuGet (`Komainu.Security.Authorization`, `Komainu.Security.Query`) and Spring Boot starter (`komainu-spring-boot-starter`).
+   - Production-ready .NET NuGet (`Komagu.Security.Authorization`, `Komagu.Security.Query`) and Spring Boot starter (`komainu-spring-boot-starter`).
 
 ---
 

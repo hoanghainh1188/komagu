@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Komagu.Security.Query</PackageId>
+    <Version>1.0.0-preview.1</Version>
+    <Authors>Komagu Contributors</Authors>
+    <Company>Komagu Security</Company>
+    <Description>Runtime safe query helpers and allow-list validators for SQL injection defense.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>

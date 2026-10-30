@@ -19,7 +19,7 @@ flowchart TD
     end
 
     subgraph Backends["Twin Backends (.NET 8 & Spring Boot 3)"]
-        DotNet["ASP.NET Core 8 Web API<br>+ Komainu.Security.Authorization (D1)<br>+ Komainu.Security.Identity (D2)<br>+ Komainu.Security.Query (D3)"]
+        DotNet["ASP.NET Core 8 Web API<br>+ Komagu.Security.Authorization (D1)<br>+ Komagu.Security.Identity (D2)<br>+ Komagu.Security.Query (D3)"]
         Spring["Spring Boot 3 (Kotlin)<br>+ komainu-security-spring (D1)<br>+ komainu-security-identity (D2)<br>+ komainu-security-query (D3)"]
     end
 
@@ -139,7 +139,7 @@ Integrate **Keycloak** or Enterprise IdP (`remediate/identity`):
 
 ### Stage 3: Object-Level Authorization (Remediation)
 Incorporate **Komainu D1 Authorization Library** into modernizing services:
-- **.NET 8**: Add `Komainu.Security.AspNetCore` and `Komainu.Security.EntityFrameworkCore`. Use `[RequireOwnership]` or `.WithUserScope(userId, tenantId)`.
+- **.NET 8**: Add `Komagu.Security.AspNetCore` and `Komagu.Security.EntityFrameworkCore`. Use `[RequireOwnership]` or `.WithUserScope(userId, tenantId)`.
 - **Spring Boot 3**: Add `komainu-security-spring`. Use `@RequireOwnership` or `KomainuSecurityManager.requireOwnership()`.
 - Ensure all authorization rejections return **HTTP 404 Not Found**.
 

@@ -1,7 +1,7 @@
 namespace MemberPortal.Backend.Models;
 
 using System;
-using Komainu.Security.Authorization;
+using Komagu.Security.Authorization;
 
 /// <summary>
 /// Domain entity representing a customer order, bound to a specific tenant and owner.

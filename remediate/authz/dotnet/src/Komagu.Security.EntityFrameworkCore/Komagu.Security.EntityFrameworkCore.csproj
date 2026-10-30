@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Komagu.Security.EntityFrameworkCore</PackageId>
+    <Version>1.0.0-preview.1</Version>
+    <Authors>Komagu Contributors</Authors>
+    <Company>Komagu Security</Company>
+    <Description>Entity Framework Core query extensions for tenant and user scoped data access.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.32" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Komagu.Security.Authorization\Komagu.Security.Authorization.csproj" />
+  </ItemGroup>
+
+</Project>

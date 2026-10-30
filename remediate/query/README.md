@@ -14,7 +14,7 @@ Dynamic `ORDER BY` clauses cannot be parameterized using standard database query
 
 #### .NET 8 (C#)
 ```csharp
-using Komainu.Security.Query;
+using Komagu.Security.Query;
 
 // Define allowed sort columns
 var allowList = new SafeSortAllowList(new[] { "id", "created_at", "total_amount", "status" });
@@ -40,7 +40,7 @@ val safeClause = allowList.buildSortClause(userInputColumn, "DESC")
 
 ### Roslyn Diagnostic Analyzer (.NET / C#)
 
-The `Komainu.Security.Query.Analyzers` package inspects syntax trees during build time and inside the IDE to flag any string concatenation or string interpolation passed into raw SQL query methods:
+The `Komagu.Security.Query.Analyzers` package inspects syntax trees during build time and inside the IDE to flag any string concatenation or string interpolation passed into raw SQL query methods:
 
 - **Diagnostic ID:** `KOMAINU001`
 - **Severity:** `Warning` / `Error`
@@ -99,7 +99,7 @@ Run both test suites:
 
 - **.NET 8 Tests (18 tests):**
   ```bash
-  dotnet test remediate/query/dotnet/Komainu.Security.Query.slnx
+  dotnet test remediate/query/dotnet/Komagu.Security.Query.slnx
   ```
 - **Spring Boot 3 Tests (8 tests):**
   ```bash

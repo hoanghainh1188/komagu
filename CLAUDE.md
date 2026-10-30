@@ -22,7 +22,7 @@ python3 -m unittest discover -s operate/tests -p "test_*.py"
 npm test
 
 # Remediate modules (run relevant suite when touching language modules)
-dotnet test remediate/authz/dotnet/Komainu.Authz.Tests/Komainu.Authz.Tests.csproj
+dotnet test remediate/authz/dotnet/tests/Komagu.Security.Authorization.Tests/Komagu.Security.Authorization.Tests.csproj
 (cd remediate/authz/go && go test ./...)
 (cd remediate/authz/spring && ./mvnw test)
 ```
