@@ -184,7 +184,7 @@ flowchart LR
       ```
     - **Qua Docker Container:** Khép kín không cần cài đặt môi trường host:
       ```bash
-      docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komainu:latest scan ...
+      docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komagu:latest scan ...
       ```
 - **Speaker Notes (Harry):**
   > *"Không có công cụ nào phát huy tác dụng nếu việc cài đặt quá phức tạp. Với Komainu, các kỹ sư không cần cài đặt thư viện rườm rà. Chỉ cần gõ lệnh `npx komainu-guard scan` hoặc chạy Docker, toàn bộ quy trình phân tích và tạo báo cáo sẽ hoàn tất trong vài giây."*
@@ -230,7 +230,7 @@ flowchart LR
   3. **Bước 3 — Thực hiện Audit & Bàn giao Báo cáo (1 tuần):** Chạy `npx komainu-guard`, chuyên gia Person B rà soát và thuyết trình báo cáo Dashboard trực tiếp cho Ban Lãnh đạo.
 - **Thông tin liên hệ & Q&A:**
   - Harry — Principal Architect & Modernization Lead
-  - GitHub: [https://github.com/hoanghainh1188/komainu](https://github.com/hoanghainh1188/komainu)
+  - GitHub: [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
   - npmjs: [https://www.npmjs.com/package/komainu-guard](https://www.npmjs.com/package/komainu-guard)
 - **Speaker Notes (Harry):**
   > *"Để bắt đầu, quý vị không cần phải cam kết bất kỳ một dự án triệu đô nào. Hãy cùng chúng tôi chọn ra một ứng dụng di sản nhỏ đang vận hành. Trong vòng 1 tuần, chúng tôi sẽ bàn giao cho quý vị một bức tranh an ninh rõ ràng nhất mà quý vị từng thấy. Xin trân trọng cảm ơn quý vị và tôi rất sẵn lòng giải đáp mọi câu hỏi."*

@@ -262,7 +262,7 @@ app.get('/api/v1/orders/:id',
 ```go
 import (
     "net/http"
-    authz "github.com/hoanghainh1188/komainu/remediate/authz/golang"
+    authz "github.com/hoanghainh1188/komagu/remediate/authz/golang"
 )
 
 func RegisterOrderRoutes(mux *http.ServeMux, authorizer *authz.Authorizer) {

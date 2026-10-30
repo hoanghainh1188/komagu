@@ -311,7 +311,7 @@ def execute_scan(args: argparse.Namespace) -> int:
     # If findings.json still doesn't exist, create a clean initial scaffold
     if not findings_file.is_file():
         initial_findings = {
-            "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komainu/main/contracts/schemas/finding.schema.json",
+            "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komagu/main/contracts/schemas/finding.schema.json",
             "findings": [],
             "summary": {
                 "total": 0,

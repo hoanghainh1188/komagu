@@ -7,7 +7,7 @@ FROM python:3.13-slim AS base
 
 LABEL org.opencontainers.image.title="Komagu Security-First Modernization Platform"
 LABEL org.opencontainers.image.description="All-in-one zero-install security audit and BOLA verification container"
-LABEL org.opencontainers.image.source="https://github.com/hoanghainh1188/komainu"
+LABEL org.opencontainers.image.source="https://github.com/hoanghainh1188/komagu"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 # Install essential system utilities for repository analysis

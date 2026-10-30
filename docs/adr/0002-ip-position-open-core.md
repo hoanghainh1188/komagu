@@ -37,7 +37,7 @@ We adopt **Option C: Open Core** as the official intellectual property strategy 
 
 ### 2. Repository Visibility & Release Strategy
 
-1. **Private during Stage 1 MVP:** The current repository (`hoanghainh1188/komainu`) remains **Private**
+1. **Private during Stage 1 MVP:** The current repository (`hoanghainh1188/komagu`) remains **Private**
    throughout the development of Boilerplate 1 (Weeks 1–8) and the pilot run (Weeks 9–12).
 2. **Public release split at M3 / v0.1:** When ready for external publication:
    - The public repository (`komainu`) will contain the Open Core elements (`assess/`, `contracts/`, `governance/`, public examples).

@@ -252,6 +252,6 @@ Is your enterprise gate guarded by passive stone walls—or is it protected by t
 ---
 
 ### Experience Komainu Today:
-- **Open-Source Repository & Docs:** [github.com/hoanghainh1188/komainu](https://github.com/hoanghainh1188/komainu)
+- **Open-Source Repository & Docs:** [github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 - **Install & Audit via CLI:** `npx komainu-guard scan ./your-legacy-app`
 - **Partner With Us:** We are actively onboarding enterprise partners and forward-thinking security leaders into our **Commercial Pilot Program**. Let's transform your legacy estate into an impenetrable fortress.

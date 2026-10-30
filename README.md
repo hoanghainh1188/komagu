@@ -13,14 +13,14 @@
 > *Audit legacy vulnerabilities (BOLA/IDOR, BFLA, mass assignment & SQLi), auto-generate code fixes, deploy instant edge shields, and continuously verify cross-user authorization in CI/CD.*
 
 [![npm version](https://img.shields.io/npm/v/komainu-guard.svg)](https://www.npmjs.com/package/komainu-guard)
-[![License](https://img.shields.io/npm/l/komainu-guard.svg)](https://github.com/hoanghainh1188/komainu/blob/main/LICENSE)
-[![CI Tests](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions/workflows/remediate-tests.yml)
-[![Security Scan](https://github.com/hoanghainh1188/komainu/actions/workflows/security-scan.yml/badge.svg)](https://github.com/hoanghainh1188/komainu/actions/workflows/security-scan.yml)
+[![License](https://img.shields.io/npm/l/komainu-guard.svg)](https://github.com/hoanghainh1188/komagu/blob/main/LICENSE)
+[![CI Tests](https://github.com/hoanghainh1188/komagu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komagu/actions/workflows/remediate-tests.yml)
+[![Security Scan](https://github.com/hoanghainh1188/komagu/actions/workflows/security-scan.yml/badge.svg)](https://github.com/hoanghainh1188/komagu/actions/workflows/security-scan.yml)
 [![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.3.0%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
 [![SARIF v2.1.0](https://img.shields.io/badge/Standards-OASIS%20SARIF%20v2.1.0-orange.svg)](operate/lsa_sarif/)
 [![i18n](https://img.shields.io/badge/Reports-English%20%7C%20%E6%97%A5%E6%9C%AC%E8%AA%9E%20%7C%20HTML-purple.svg)](assess/lsa/prompts/60-reporter-ja.md)
 
-**[Changelog](https://github.com/hoanghainh1188/komainu/blob/main/CHANGELOG.md)** · [GitHub Releases](https://github.com/hoanghainh1188/komainu/releases)
+**[Changelog](https://github.com/hoanghainh1188/komagu/blob/main/CHANGELOG.md)** · [GitHub Releases](https://github.com/hoanghainh1188/komagu/releases)
 
 ---
 
@@ -47,7 +47,7 @@ npx komainu-guard demo --up
 
 *Or via Docker:*
 ```bash
-docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komainu:latest scan --target /workspace/legacy-repo --out /workspace/audit-out
+docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komagu:latest scan --target /workspace/legacy-repo --out /workspace/audit-out
 ```
 
 ---

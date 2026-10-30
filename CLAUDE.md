@@ -29,7 +29,7 @@ dotnet test remediate/authz/dotnet/tests/Komagu.Security.Authorization.Tests/Kom
 
 ## Workflow & Development Guidelines
 
-- **Issues & Project Board**: Tasks are tracked in `hoanghainh1188/komainu` and Project Board #6. Always work from an issue.
+- **Issues & Project Board**: Tasks are tracked in `hoanghainh1188/komagu` and Project Board #6. Always work from an issue.
 - **Branches**: Create `<issue-number>-<short-kebab-description>` from `main`.
 - **Pull Requests**: Open PR targeting `main` with `Closes #N`. Move Project #6 items: *In progress* → *In review* → *Done*.
 - **Branch Protection & Merging**: Direct push to `main` is blocked both server-side and locally via `.githooks/pre-push` (`git config core.hooksPath .githooks`). All 6 CI status checks must pass before squash-merging.

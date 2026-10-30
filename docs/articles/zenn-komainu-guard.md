@@ -181,6 +181,6 @@ Web API のセキュリティモダン化において、BOLA の撲滅は避け�
 まずはぜひ、ご自身のプロジェクトやレガシーコードに対して `npx komainu-guard` を試してみてください！
 
 - **npm:** [https://www.npmjs.com/package/komainu-guard](https://www.npmjs.com/package/komainu-guard)
-- **GitHub Repository:** [https://github.com/hoanghainh1188/komainu](https://github.com/hoanghainh1188/komainu)
+- **GitHub Repository:** [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 
 フィードバックやディスカッションを歓迎いたします！

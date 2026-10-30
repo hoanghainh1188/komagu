@@ -28,7 +28,7 @@ from lsa_common import write_json  # noqa: E402
 class TestSarifExport(unittest.TestCase):
     def setUp(self) -> None:
         self.sample_findings_doc = {
-            "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komainu/main/contracts/schemas/finding.schema.json",
+            "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komagu/main/contracts/schemas/finding.schema.json",
             "findings": [
                 {
                     "finding_id": "BOLA-order-1",

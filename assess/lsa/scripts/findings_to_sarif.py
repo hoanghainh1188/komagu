@@ -380,7 +380,7 @@ def to_sarif(
     driver: Dict[str, Any] = {
         "name": "Komainu LSA Security Audit",
         "version": KIT_VERSION,
-        "informationUri": "https://github.com/hoanghainh1188/komainu",
+        "informationUri": "https://github.com/hoanghainh1188/komagu",
         "rules": rules,
         "supportedTaxonomies": [{"name": "CWE", "index": 0}],
     }

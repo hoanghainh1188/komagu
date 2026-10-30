@@ -42,7 +42,7 @@ function showPythonMissingError() {
   console.error('Please install Python 3 from https://www.python.org/downloads/');
   console.error('');
   console.error('Alternatively, run via the zero-install Docker container image:');
-  console.error('  docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komainu scan /workspace');
+  console.error('  docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komagu scan /workspace');
 }
 
 function main() {
