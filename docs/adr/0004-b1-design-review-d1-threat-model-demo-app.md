@@ -156,10 +156,10 @@ public static class ScopedQueryExtensions
 
 #### 1.3. Kotlin / Spring Boot 3 Interface Contract
 
-##### Core Abstractions (`io.komainu.security.authorization`)
+##### Core Abstractions (`io.komagu.security.authorization`)
 
 ```kotlin
-package io.komainu.security.authorization
+package io.komagu.security.authorization
 
 import org.springframework.security.core.Authentication
 import java.util.UUID
@@ -182,7 +182,7 @@ interface OwnedResource<TKey> {
 /**
  * Primary security manager for JVM / Spring applications.
  */
-interface KomainuSecurityManager {
+interface KomaguSecurityManager {
     /**
      * Imperative assertion: verifies ownership. Throws ResourceNotFoundException (mapped to 404) on failure.
      */
@@ -197,12 +197,12 @@ interface KomainuSecurityManager {
 }
 ```
 
-##### Declarative Annotation & Aspect (`io.komainu.security.spring`)
+##### Declarative Annotation & Aspect (`io.komagu.security.spring`)
 
 ```kotlin
-package io.komainu.security.spring
+package io.komagu.security.spring
 
-import io.komainu.security.authorization.ResourceOperation
+import io.komagu.security.authorization.ResourceOperation
 import kotlin.reflect.KClass
 
 /**
@@ -221,7 +221,7 @@ annotation class RequireOwnership(
 ##### Scoped Data Access (Spring Data JPA)
 
 ```kotlin
-package io.komainu.security.data
+package io.komagu.security.data
 
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.Repository

@@ -97,9 +97,9 @@ class BOLAOwnershipPatcher:
             return import_stmt + content, True
 
         elif lang == "java":
-            if "import io.komainu.security.authorization.RequireOwnership;" in content:
+            if "import io.komagu.security.authorization.RequireOwnership;" in content:
                 return content, False
-            import_stmt = "import io.komainu.security.authorization.RequireOwnership;\nimport io.komainu.security.authorization.ResourceOperation;\n"
+            import_stmt = "import io.komagu.security.authorization.RequireOwnership;\nimport io.komagu.security.authorization.ResourceOperation;\n"
             if "package " in content:
                 parts = content.split(";\n", 1)
                 return parts[0] + ";\n\n" + import_stmt + parts[1], True

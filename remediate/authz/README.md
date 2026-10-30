@@ -110,7 +110,7 @@ var myOrders = await dbContext.Orders
 ### Domain Entity
 
 ```kotlin
-import io.komainu.security.authorization.OwnedResource
+import io.komagu.security.authorization.OwnedResource
 import java.util.UUID
 
 data class Order(
@@ -127,7 +127,7 @@ data class Order(
 @RestController
 @RequestMapping("/api/v1/orders")
 class OrderController(
-    private val securityManager: KomainuSecurityManager,
+    private val securityManager: KomaguSecurityManager,
     private val orderRepository: OrderRepository
 ) {
     @GetMapping("/{id}")
@@ -155,7 +155,7 @@ fun getOrder(@PathVariable id: UUID): Order {
 ### Scoped Repository Access (Spring Data JPA)
 
 ```kotlin
-import io.komainu.security.data.ScopedRepository
+import io.komagu.security.data.ScopedRepository
 import java.util.UUID
 
 interface OrderRepository : ScopedRepository<Order, UUID> {

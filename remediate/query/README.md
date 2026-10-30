@@ -26,7 +26,7 @@ string safeOrderBy = allowList.BuildSortClause(userInputColumn, SortDirection.De
 
 #### Spring Boot 3 (Kotlin)
 ```kotlin
-import io.komainu.security.query.SafeSortAllowList
+import io.komagu.security.query.SafeSortAllowList
 
 val allowList = SafeSortAllowList(listOf("id", "created_at", "total_amount", "status"))
 
@@ -68,7 +68,7 @@ dbContext.Orders.FromSqlInterpolated($"SELECT * FROM orders WHERE id = {orderId}
 
 ### detekt Custom Rule (Kotlin / Spring)
 
-The `komainu-security-query` module provides the custom detekt rule `StringBuiltSqlQueryRule`:
+The `komagu-security-query` module provides the custom detekt rule `StringBuiltSqlQueryRule`:
 
 - **Rule ID:** `StringBuiltSqlQuery`
 - **RuleSet:** `komainu-security`

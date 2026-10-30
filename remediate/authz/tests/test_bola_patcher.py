@@ -127,7 +127,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
         patched_content, res = self.patcher.patch_file(controller_file, 5, finding)
         self.assertTrue(res.changed)
-        self.assertIn("import io.komainu.security.authorization.RequireOwnership;", patched_content)
+        self.assertIn("import io.komagu.security.authorization.RequireOwnership;", patched_content)
         self.assertIn("@RequireOwnership(entityClass = Order.class, operation = ResourceOperation.READ)", patched_content)
 
     def test_patch_python_fastapi(self) -> None:
