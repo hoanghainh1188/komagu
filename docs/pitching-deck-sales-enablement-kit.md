@@ -231,7 +231,7 @@ flowchart LR
 - **Thông tin liên hệ & Q&A:**
   - Harry — Principal Architect & Modernization Lead
   - GitHub: [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
-  - npmjs: [https://www.npmjs.com/package/komagu](https://www.npmjs.com/package/komagu)
+  - npmjs: [https://www.npmjs.com/package/@hoanghainh/komagu](https://www.npmjs.com/package/@hoanghainh/komagu)
 - **Speaker Notes (Harry):**
   > *"Để bắt đầu, quý vị không cần phải cam kết bất kỳ một dự án triệu đô nào. Hãy cùng chúng tôi chọn ra một ứng dụng di sản nhỏ đang vận hành. Trong vòng 1 tuần, chúng tôi sẽ bàn giao cho quý vị một bức tranh an ninh rõ ràng nhất mà quý vị từng thấy. Xin trân trọng cảm ơn quý vị và tôi rất sẵn lòng giải đáp mọi câu hỏi."*
 

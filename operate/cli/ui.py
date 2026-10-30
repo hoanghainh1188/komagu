@@ -38,12 +38,13 @@ def color(text: str, *codes: str) -> str:
 def print_banner() -> None:
     """Print the Komagu branding banner."""
     lines = [
-        color("  _  __                       _             ", CYAN, BOLD),
-        color(" | |/ /___  _ __ ___   __ _  (_)_ __  _   _ ", CYAN, BOLD),
-        color(" | ' // _ \\| '_ ` _ \\ / _` | | | '_ \\| | | |", CYAN, BOLD),
-        color(" | . \\ (_) | | | | | | (_| | | | | | | |_| |", BLUE, BOLD),
-        color(" |_|\\_\\___/|_| |_| |_|\\__,_| |_|_| |_|\\__,_|", BLUE, BOLD),
-        color(" Legacy Modernization & Security Platform  ", DIM),
+        color("  _  __                                 ", CYAN, BOLD),
+        color(" | |/ /___  _ __ ___   __ _  __ _ _   _ ", CYAN, BOLD),
+        color(" | ' // _ \\| '_ ` _ \\ / _` |/ _` | | | |", CYAN, BOLD),
+        color(" | . \\ (_) | | | | | | (_| | (_| | |_| |", BLUE, BOLD),
+        color(" |_|\\_\\___/|_| |_| |_|\\__,_|\\__, |\\__,_|", BLUE, BOLD),
+        color("                            |___/       ", BLUE, BOLD),
+        color(" Legacy Modernization & Security Platform", DIM),
     ]
     print("\n".join(lines))
     print()

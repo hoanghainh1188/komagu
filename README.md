@@ -1,10 +1,11 @@
 ```text
-  _  __                       _             
- | |/ /___  _ __ ___   __ _  (_)_ __  _   _ 
- | ' // _ \| '_ ` _ \ / _` | | | '_ \| | | |
- | . \ (_) | | | | | | (_| | | | | | | |_| |
- |_|\_\___/|_| |_| |_|\__,_| |_|_| |_|\__,_|
- Legacy Modernization & Security Platform  
+  _  __                                 
+ | |/ /___  _ __ ___   __ _  __ _ _   _ 
+ | ' // _ \| '_ ` _ \ / _` |/ _` | | | |
+ | . \ (_) | | | | | | (_| | (_| | |_| |
+ |_|\_\___/|_| |_| |_|\__,_|\__, |\__,_|
+                            |___/       
+ Legacy Modernization & Security Platform
 ```
 
 # komagu (狛犬)
@@ -12,8 +13,8 @@
 > **Security-First CLI & Framework for Enterprise Legacy Modernization**  
 > *Audit legacy vulnerabilities (BOLA/IDOR, BFLA, mass assignment & SQLi), auto-generate code fixes, deploy instant edge shields, and continuously verify cross-user authorization in CI/CD.*
 
-[![npm version](https://img.shields.io/npm/v/komagu.svg)](https://www.npmjs.com/package/komagu)
-[![License](https://img.shields.io/npm/l/komagu.svg)](https://github.com/hoanghainh1188/komagu/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/@hoanghainh/komagu.svg)](https://www.npmjs.com/package/@hoanghainh/komagu)
+[![License](https://img.shields.io/npm/l/@hoanghainh/komagu.svg)](https://github.com/hoanghainh1188/komagu/blob/main/LICENSE)
 [![CI Tests](https://github.com/hoanghainh1188/komagu/actions/workflows/remediate-tests.yml/badge.svg)](https://github.com/hoanghainh1188/komagu/actions/workflows/remediate-tests.yml)
 [![Security Scan](https://github.com/hoanghainh1188/komagu/actions/workflows/security-scan.yml/badge.svg)](https://github.com/hoanghainh1188/komagu/actions/workflows/security-scan.yml)
 [![LSA Tests](https://img.shields.io/badge/LSA%20Kit-v1.3.0%20(10%20Stacks)-brightgreen.svg)](assess/lsa/)
