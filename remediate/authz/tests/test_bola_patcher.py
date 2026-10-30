@@ -101,7 +101,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
         patched_content, res = self.patcher.patch_file(controller_file, 4, finding)
         self.assertTrue(res.changed)
-        self.assertIn("using Komainu.Security.Authorization;", patched_content)
+        self.assertIn("using Komagu.Security.Authorization;", patched_content)
         self.assertIn("[RequireOwnership(typeof(Order), idRouteParameter: \"id\", operation: ResourceOperation.Read)]", patched_content)
 
     def test_patch_spring_boot_controller(self) -> None:

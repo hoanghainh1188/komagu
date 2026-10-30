@@ -51,11 +51,11 @@ Keycloak starts at `http://localhost:8080` with the `komainu` realm pre-loaded:
 In `Program.cs`:
 
 ```csharp
-using Komainu.Security.Identity;
+using Komagu.Security.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddKomainuJwtAuthentication(options =>
+builder.Services.AddKomaguJwtAuthentication(options =>
 {
     options.Issuer = builder.Configuration["Authentication:Issuer"] ?? "https://auth.komainu.test/realms/komainu";
     options.Audience = "komainu-api";
@@ -100,7 +100,7 @@ Both test suites verify all 6 acceptance criteria scenarios:
 
 ```bash
 # .NET 8 (6 tests)
-dotnet test remediate/identity/dotnet/Komainu.Security.Identity.slnx
+dotnet test remediate/identity/dotnet/Komagu.Security.Identity.slnx
 
 # Spring Boot 3 (6 tests)
 gradle -p remediate/identity/spring test

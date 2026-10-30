@@ -4,7 +4,7 @@ using MemberPortal.Backend.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Komainu.Security.Authorization;
+using Komagu.Security.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +16,9 @@ builder.Services.AddDbContext<PortalDbContext>(options =>
     options.UseSqlite(connectionString);
 });
 
-// Register Komainu D1 Authorization Service
+// Register Komagu D1 Authorization Service
 builder.Services.AddScoped<ISecurityAuditSink, LoggingSecurityAuditSink>();
-builder.Services.AddScoped<IKomainuAuthorizationService, DefaultKomainuAuthorizationService>();
+builder.Services.AddScoped<IKomaguAuthorizationService, DefaultKomaguAuthorizationService>();
 
 // Configure Authentication (Demo Mock + OIDC claims mapping)
 builder.Services.AddAuthentication("DemoAuth")

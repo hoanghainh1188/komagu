@@ -27,7 +27,7 @@ All implementations strictly enforce these architectural guarantees:
 In your ASP.NET Core `Program.cs`:
 
 ```csharp
-using Komainu.Security.AspNetCore;
+using Komagu.Security.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +35,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(...);
 
 // Register Komainu Authorization services
-builder.Services.AddKomainuAuthorization();
+builder.Services.AddKomaguAuthorization();
 
 var app = builder.Build();
 ```
@@ -43,7 +43,7 @@ var app = builder.Build();
 ### Implementing `IOwnedResource` on Domain Entities
 
 ```csharp
-using Komainu.Security.Authorization;
+using Komagu.Security.Authorization;
 
 public class Order : IOwnedResource<Guid>, IOwnedResource
 {
@@ -60,7 +60,7 @@ public class Order : IOwnedResource<Guid>, IOwnedResource
 [HttpGet("{id:guid}")]
 public async Task<IActionResult> GetOrder(
     Guid id,
-    [FromServices] IKomainuAuthorizationService authService,
+    [FromServices] IKomaguAuthorizationService authService,
     [FromServices] MyDbContext dbContext)
 {
     var order = await dbContext.Orders.FindAsync(id);
@@ -92,7 +92,7 @@ public async Task<IActionResult> GetOrderDeclarative(Guid id)
 ### Scoped EF Core Queries
 
 ```csharp
-using Komainu.Security.EntityFrameworkCore;
+using Komagu.Security.EntityFrameworkCore;
 
 var currentUserId = authService.GetCurrentUserId(User);
 var currentTenantId = authService.GetCurrentTenantId(User);
@@ -282,7 +282,7 @@ All multi-language adapters verify identical BOLA defense invariants:
 
 - **.NET 8:**
   ```bash
-  dotnet test remediate/authz/dotnet/Komainu.Security.Authz.slnx
+  dotnet test remediate/authz/dotnet/Komagu.Security.Authz.slnx
   ```
 - **Spring Boot 3:**
   ```bash

@@ -13,11 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komainu.Security.Authorization\Komainu.Security.Authorization.csproj" />
-    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komainu.Security.AspNetCore\Komainu.Security.AspNetCore.csproj" />
-    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komainu.Security.EntityFrameworkCore\Komainu.Security.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\..\..\remediate\identity\dotnet\src\Komainu.Security.Identity\Komainu.Security.Identity.csproj" />
-    <ProjectReference Include="..\..\..\remediate\query\dotnet\src\Komainu.Security.Query\Komainu.Security.Query.csproj" />
+    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komagu.Security.Authorization\Komagu.Security.Authorization.csproj" />
+    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komagu.Security.AspNetCore\Komagu.Security.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\remediate\authz\dotnet\src\Komagu.Security.EntityFrameworkCore\Komagu.Security.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\..\remediate\identity\dotnet\src\Komagu.Security.Identity\Komagu.Security.Identity.csproj" />
+    <ProjectReference Include="..\..\..\remediate\query\dotnet\src\Komagu.Security.Query\Komagu.Security.Query.csproj" />
   </ItemGroup>
 
 </Project>

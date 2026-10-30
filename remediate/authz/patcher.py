@@ -91,9 +91,9 @@ class BOLAOwnershipPatcher:
             return import_stmt + content, True
 
         elif lang == "csharp":
-            if "using Komainu.Security.Authorization;" in content:
+            if "using Komagu.Security.Authorization;" in content:
                 return content, False
-            import_stmt = "using Komainu.Security.Authorization;\n"
+            import_stmt = "using Komagu.Security.Authorization;\n"
             return import_stmt + content, True
 
         elif lang == "java":

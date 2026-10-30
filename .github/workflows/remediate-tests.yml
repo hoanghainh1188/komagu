@@ -100,13 +100,13 @@ jobs:
           python-version: "3.11"
 
       - name: Test D1 Object-Level Authorization (.NET 8)
-        run: dotnet test remediate/authz/dotnet/tests/Komainu.Security.Authorization.Tests/Komainu.Security.Authorization.Tests.csproj
+        run: dotnet test remediate/authz/dotnet/tests/Komagu.Security.Authorization.Tests/Komagu.Security.Authorization.Tests.csproj
 
       - name: Test D2 OIDC Identity Integration (.NET 8)
-        run: dotnet test remediate/identity/dotnet/tests/Komainu.Security.Identity.Tests/Komainu.Security.Identity.Tests.csproj
+        run: dotnet test remediate/identity/dotnet/tests/Komagu.Security.Identity.Tests/Komagu.Security.Identity.Tests.csproj
 
       - name: Test D3 Safe Query & Roslyn Analyzer (.NET 8)
-        run: dotnet test remediate/query/dotnet/tests/Komainu.Security.Query.Tests/Komainu.Security.Query.Tests.csproj
+        run: dotnet test remediate/query/dotnet/tests/Komagu.Security.Query.Tests/Komagu.Security.Query.Tests.csproj
 
       - name: Test D6 Member Portal End-to-End BOLA & D5 Continuous Authorization Verification
         run: python3 -m unittest discover -s examples/member-portal/tests -p "test_*.py"
