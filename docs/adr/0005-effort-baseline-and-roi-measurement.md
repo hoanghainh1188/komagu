@@ -1,7 +1,7 @@
 # ADR-0005: Effort Baseline and ROI Measurement Framework for Pilot and Client Deployments
 
 Date: 2026-10-18 · Status: accepted · Owner: Harry (BOD / Principal Architect)  
-Related Issue: [hoanghainh1188/komainu#4](https://github.com/hoanghainh1188/komainu/issues/4)  
+Related Issue: [hoanghainh1188/komagu#4](https://github.com/hoanghainh1188/komagu/issues/4)  
 Parent Documents: [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komainu/docs/boilerplate-1-delivery-plan.md), [Modernization Proposal](file:///Users/hoanghainh/Projects/komainu/docs/modernization-boilerplates-proposal.md)
 
 ---

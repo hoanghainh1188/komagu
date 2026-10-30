@@ -5,7 +5,7 @@
 **Effective Date:** 2026-10-18  
 **Project Lead & Sign-off Authority:** Harry (Principal Architect / PM / Person B)  
 **Classification:** Confidential — Internal & Client Governance (`docs/`)  
-**Related Issue:** [hoanghainh1188/komainu#5](https://github.com/hoanghainh1188/komainu/issues/5)  
+**Related Issue:** [hoanghainh1188/komagu#5](https://github.com/hoanghainh1188/komagu/issues/5)  
 **Parent Plan:** [Boilerplate 1 — Secure API & IAM Delivery Plan (Pilot Section)](boilerplate-1-delivery-plan.md)
 
 ---

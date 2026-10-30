@@ -50,7 +50,7 @@ on: [pull_request, push]
 
 jobs:
   devsecops:
-    uses: hoanghainh1188/komainu/.github/workflows/reusable-devsecops.yml@main
+    uses: hoanghainh1188/komagu/.github/workflows/reusable-devsecops.yml@main
     with:
       target-path: "."
       app-name: "EnterpriseService"

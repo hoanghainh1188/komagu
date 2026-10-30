@@ -6,9 +6,9 @@
 
 | Issue | Tính năng | Giá trị chính |
 |---|---|---|
-| [#269](https://github.com/hoanghainh1188/komainu/issues/269) | Phát hiện BFLA + mass assignment, kiểm thử nhiều vai trò | Mở rộng năng lực lõi (OWASP API3 + API5) |
-| [#270](https://github.com/hoanghainh1188/komainu/issues/270) | Baseline, suppression, chế độ PR diff | Nền tảng cho dịch vụ retainer hằng tháng |
-| [#271](https://github.com/hoanghainh1188/komainu/issues/271) | Bộ bằng chứng METI SCS ★3/★4 + luật ACD | Đòn bẩy bán hàng trước mốc SCS 2027 |
+| [#269](https://github.com/hoanghainh1188/komagu/issues/269) | Phát hiện BFLA + mass assignment, kiểm thử nhiều vai trò | Mở rộng năng lực lõi (OWASP API3 + API5) |
+| [#270](https://github.com/hoanghainh1188/komagu/issues/270) | Baseline, suppression, chế độ PR diff | Nền tảng cho dịch vụ retainer hằng tháng |
+| [#271](https://github.com/hoanghainh1188/komagu/issues/271) | Bộ bằng chứng METI SCS ★3/★4 + luật ACD | Đòn bẩy bán hàng trước mốc SCS 2027 |
 
 ---
 

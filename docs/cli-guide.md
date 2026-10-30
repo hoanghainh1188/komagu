@@ -19,7 +19,7 @@ npx komainu-guard <command> [options]
 Recommended for air-gapped environments or restricted CI environments:
 ```bash
 docker run --rm -v $(pwd):/workspace \
-  ghcr.io/hoanghainh1188/komainu:latest <command> --target /workspace/legacy-app
+  ghcr.io/hoanghainh1188/komagu:latest <command> --target /workspace/legacy-app
 ```
 
 ### 1.3 Direct Python CLI
@@ -494,7 +494,7 @@ stages:
 
 komainu-audit:
   stage: security-audit
-  image: ghcr.io/hoanghainh1188/komainu:latest
+  image: ghcr.io/hoanghainh1188/komagu:latest
   script:
     - komainu scan . --format sarif -o audit.sarif
     - komainu devsecops sbom . --format cyclonedx -o sbom.json
@@ -505,7 +505,7 @@ komainu-audit:
 
 komainu-exploit-gating:
   stage: offensive-verification
-  image: ghcr.io/hoanghainh1188/komainu:latest
+  image: ghcr.io/hoanghainh1188/komagu:latest
   script:
     - komainu test --url $STAGING_API_URL --from-scan audit.sarif --min-consensus 0.8
     - komainu simulate --target $STAGING_API_URL --format table

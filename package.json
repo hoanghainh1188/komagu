@@ -35,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hoanghainh1188/komainu.git"
+    "url": "git+https://github.com/hoanghainh1188/komagu.git"
   },
   "keywords": [
     "security",
@@ -55,9 +55,9 @@
     "access": "public"
   },
   "bugs": {
-    "url": "https://github.com/hoanghainh1188/komainu/issues"
+    "url": "https://github.com/hoanghainh1188/komagu/issues"
   },
-  "homepage": "https://github.com/hoanghainh1188/komainu#readme",
+  "homepage": "https://github.com/hoanghainh1188/komagu#readme",
   "engines": {
     "node": ">=16.0.0"
   }

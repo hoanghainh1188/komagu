@@ -106,7 +106,7 @@ class SARIFReportAggregator:
                             "name": "Komagu DevSecOps Pipeline",
                             "organization": "Komagu Security",
                             "semanticVersion": "1.0.0",
-                            "informationUri": "https://github.com/hoanghainh1188/komainu",
+                            "informationUri": "https://github.com/hoanghainh1188/komagu",
                             "rules": list(self.rules.values()),
                         }
                     },

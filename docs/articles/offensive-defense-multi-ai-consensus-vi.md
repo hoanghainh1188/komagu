@@ -251,6 +251,6 @@ Cổng đền của doanh nghiệp bạn đã có linh thú Komainu trấn giữ
 ---
 
 ### Trải nghiệm Komainu ngay hôm nay:
-- **Mã nguồn mở & Tài liệu:** [github.com/hoanghainh1188/komainu](https://github.com/hoanghainh1188/komainu)
+- **Mã nguồn mở & Tài liệu:** [github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 - **Cài đặt & Dùng thử CLI:** `npx komainu-guard scan ./your-legacy-app`
 - **Kết nối cùng chúng tôi:** Chúng tôi đang tìm kiếm các đối tác doanh nghiệp và các kỹ sư đam mê bảo mật tham gia chương trình Commercial Pilot. Hãy cùng nhau biến những hệ thống legacy mỏng manh thành những pháo đài bất khả xâm phạm.

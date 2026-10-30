@@ -42,7 +42,7 @@ class TestCliTestFromScan(unittest.TestCase):
 
     def setUp(self) -> None:
         self.sample_findings = {
-            "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komainu/main/contracts/schemas/finding.schema.json",
+            "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komagu/main/contracts/schemas/finding.schema.json",
             "findings": [
                 {
                     "finding_id": "BOLA-vulnerable-order",

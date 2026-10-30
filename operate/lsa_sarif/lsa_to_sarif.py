@@ -192,7 +192,7 @@ def convert_findings_to_sarif(
                     "driver": {
                         "name": "Komagu LSA",
                         "semanticVersion": tool_version,
-                        "informationUri": "https://github.com/hoanghainh1188/komainu",
+                        "informationUri": "https://github.com/hoanghainh1188/komagu",
                         "rules": list(rules_dict.values()),
                     }
                 },

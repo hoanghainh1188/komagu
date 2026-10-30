@@ -164,6 +164,6 @@ AI に脆弱性を探させると、存在しない欠陥を過剰に報告し�
 まずはぜひ、お手元のレガシープロジェクトやサンプルコードで試してみてください！
 
 - **npm:** [https://www.npmjs.com/package/komainu-guard](https://www.npmjs.com/package/komainu-guard)
-- **GitHub:** [https://github.com/hoanghainh1188/komainu](https://github.com/hoanghainh1188/komainu)
+- **GitHub:** [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 
 フィードバックや Issue、スターをいただけると大変励みになります！

@@ -6,7 +6,7 @@
 **Project Lead & Sign-off Authority:** Harry (Principal Architect / PM / Person B)  
 **Parent Delivery Plan:** [Boilerplate 1 Delivery Plan (§Pilot)](boilerplate-1-delivery-plan.md)  
 **Related Documents:** [ADR-0005: Effort Baseline](adr/0005-effort-baseline-and-roi-measurement.md), [AI Data Governance Protocol](pilot-client-ai-approval-consent.md)  
-**Related Issue:** [hoanghainh1188/komainu#75](https://github.com/hoanghainh1188/komainu/issues/75)
+**Related Issue:** [hoanghainh1188/komagu#75](https://github.com/hoanghainh1188/komagu/issues/75)
 
 ---
 
