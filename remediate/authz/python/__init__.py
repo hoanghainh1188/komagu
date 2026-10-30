@@ -1,1 +1,1 @@
-"""Komainu Authz Python Package."""
+"""Komagu Authz Python Package."""

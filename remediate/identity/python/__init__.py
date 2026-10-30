@@ -1,1 +1,1 @@
-"""Komainu Identity Python Package."""
+"""Komagu Identity Python Package."""

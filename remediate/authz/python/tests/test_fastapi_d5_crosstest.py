@@ -1,8 +1,8 @@
 """Automated Cross-User Testing (D5) Integration with Python FastAPI Adapter.
 
-Runs the Komainu continuous authorization verification runner (D5)
-against live HTTP endpoints protected by Komainu D1/D2:
-1. Protected endpoints enforce Komainu invariant: attacker gets 404 on Read/Update/Delete -> [PASS - SECURE].
+Runs the Komagu continuous authorization verification runner (D5)
+against live HTTP endpoints protected by Komagu D1/D2:
+1. Protected endpoints enforce Komagu invariant: attacker gets 404 on Read/Update/Delete -> [PASS - SECURE].
 2. Planted vulnerable endpoints expose BOLA: attacker gets 200 -> [FAIL - VULNERABILITY DETECTED].
 """
 
@@ -17,14 +17,14 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from operate.cross_user_tester.runner import CrossUserTestRunner, TestCase
-from remediate.authz.python.komainu_authz.models import (
+from remediate.authz.python.komagu_authz.models import (
     InMemorySecurityAuditSink,
     IOwnedResource,
     OwnershipException,
     ResourceOperation,
 )
-from remediate.authz.python.komainu_authz.service import KomainuAuthorizationService
-from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+from remediate.authz.python.komagu_authz.service import KomaguAuthorizationService
+from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator
 
 
 @dataclass
@@ -37,19 +37,19 @@ class Order(IOwnedResource):
 
 
 class MockFastApiServer(http.server.BaseHTTPRequestHandler):
-    """Simulates FastAPI routing and Komainu D1/D2 dependency injection."""
+    """Simulates FastAPI routing and Komagu D1/D2 dependency injection."""
 
-    authz_service = KomainuAuthorizationService(audit_sink=InMemorySecurityAuditSink())
+    authz_service = KomaguAuthorizationService(audit_sink=InMemorySecurityAuditSink())
     validator = OidcTokenValidator(
-        issuer="https://auth.komainu.test",
+        issuer="https://auth.komagu.test",
         audience="komainu-api",
         allow_dev_tokens=True,
     )
 
     # Pre-seeded test database
     orders: Dict[str, Order] = {
-        "ord-101": Order("ord-101", "user-a", "tenant-komainu", "Alice Laptop", 1200.0),
-        "ord-102": Order("ord-102", "user-b", "tenant-komainu", "Bob Monitor", 300.0),
+        "ord-101": Order("ord-101", "user-a", "tenant-komagu", "Alice Laptop", 1200.0),
+        "ord-102": Order("ord-102", "user-b", "tenant-komagu", "Bob Monitor", 300.0),
     }
 
     def log_message(self, format: str, *args: Any) -> None:
@@ -78,7 +78,7 @@ class MockFastApiServer(http.server.BaseHTTPRequestHandler):
             self._send_json(401, {"detail": "Unauthorized"})
             return
 
-        # 1. Protected endpoint with Komainu D1
+        # 1. Protected endpoint with Komagu D1
         if self.path.startswith("/api/v1/orders/"):
             order_id = self.path.split("/")[-1]
             order = self.orders.get(order_id)

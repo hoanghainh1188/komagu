@@ -249,7 +249,7 @@ class TestZeroPIIeKYC(unittest.TestCase):
 
     def test_12_simulation_blocked_in_production(self) -> None:
         """Verifies simulation mode cannot be activated in production environments."""
-        for env in ({"KOMAINU_ENV": "production", "CI": ""}, {"KOMAINU_ENV": "dev", "CI": "true"}):
+        for env in ({"KOMAGU_ENV": "production", "CI": ""}, {"KOMAGU_ENV": "dev", "CI": "true"}):
             with patch.dict(os.environ, {**env, SIMULATION_ENV_FLAG: ""}):
                 with self.assertRaises(RuntimeError):
                     JPKIVerificationEngine(allow_simulation=True)

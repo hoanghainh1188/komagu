@@ -1,4 +1,4 @@
-package dev.komainu.legacy.shim;
+package dev.komagu.legacy.shim;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Komainu Legacy Remediation Shim for Java (Servlet / JSP / Struts 1 / JDBC).
+ * Komagu Legacy Remediation Shim for Java (Servlet / JSP / Struts 1 / JDBC).
  *
  * <p>Drop-in, zero-dependency helper class to remediate BOLA/IDOR (CWE-639) and
  * SQL Injection (CWE-89) in legacy Java web applications that cannot yet migrate

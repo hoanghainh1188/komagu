@@ -1,6 +1,6 @@
 <?php
 /**
- * Komainu Legacy Remediation Shim for PHP (PDO)
+ * Komagu Legacy Remediation Shim for PHP (PDO)
  *
  * Drop-in helper functions to remediate BOLA/IDOR (CWE-639) and SQL Injection (CWE-89)
  * in legacy PHP applications (Plain PHP, CodeIgniter, legacy custom frameworks).
@@ -25,7 +25,7 @@ declare(strict_types=1);
  * @return string Validated identifier
  * @throws InvalidArgumentException If identifier is not in the allow-list or has invalid format
  */
-function komainu_validate_identifier(string $identifier, array $allowList): string
+function komagu_validate_identifier(string $identifier, array $allowList): string
 {
     if (!in_array($identifier, $allowList, true)) {
         throw new InvalidArgumentException('Disallowed SQL identifier.');
@@ -45,7 +45,7 @@ function komainu_validate_identifier(string $identifier, array $allowList): stri
  * @return int|string Normalized integer ID (int when <= PHP_INT_MAX, string digits otherwise)
  * @throws InvalidArgumentException If identifier is falsy, non-positive, or non-canonical
  */
-function komainu_normalize_id($id)
+function komagu_normalize_id($id)
 {
     if ($id === null || $id === '' || $id === false || $id === true) {
         throw new InvalidArgumentException('Identifier cannot be empty, null, or boolean.');
@@ -82,7 +82,7 @@ function komainu_normalize_id($id)
  * @param string $sessionKey Key in $_SESSION holding the authenticated user ID
  * @return int|string Normalized authenticated user ID
  */
-function komainu_require_login(string $sessionKey = 'uid')
+function komagu_require_login(string $sessionKey = 'uid')
 {
     if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
@@ -96,7 +96,7 @@ function komainu_require_login(string $sessionKey = 'uid')
     }
 
     try {
-        $normUid = komainu_normalize_id($_SESSION[$sessionKey]);
+        $normUid = komagu_normalize_id($_SESSION[$sessionKey]);
     } catch (Throwable $e) {
         if (!headers_sent()) {
             http_response_code(401);
@@ -121,7 +121,7 @@ function komainu_require_login(string $sessionKey = 'uid')
  * @param array<string, array{pk: string, owner: string}> $allowedTables Map of allowed table schemas
  * @return bool True if the resource exists and belongs to $sessionUserId, false otherwise
  */
-function komainu_check_ownership(
+function komagu_check_ownership(
     PDO $pdo,
     string $table,
     string $pkColumn,
@@ -132,8 +132,8 @@ function komainu_check_ownership(
 ): bool {
     // Normalise and reject falsy/non-canonical IDs before database querying
     try {
-        $normResourceId = komainu_normalize_id($resourceId);
-        $normSessionUserId = komainu_normalize_id($sessionUserId);
+        $normResourceId = komagu_normalize_id($resourceId);
+        $normSessionUserId = komagu_normalize_id($sessionUserId);
     } catch (Throwable $e) {
         return false;
     }
@@ -146,9 +146,9 @@ function komainu_check_ownership(
         throw new InvalidArgumentException("Column mismatch against registered ownership schema.");
     }
 
-    $safeTable = komainu_validate_identifier($table, array_keys($allowedTables));
-    $safePk = komainu_validate_identifier($pkColumn, [$schema['pk']]);
-    $safeOwner = komainu_validate_identifier($ownerColumn, [$schema['owner']]);
+    $safeTable = komagu_validate_identifier($table, array_keys($allowedTables));
+    $safePk = komagu_validate_identifier($pkColumn, [$schema['pk']]);
+    $safeOwner = komagu_validate_identifier($ownerColumn, [$schema['owner']]);
 
     // Portable SQL: Primary key uniqueness guarantees at most one row without LIMIT
     $sql = sprintf(
@@ -174,7 +174,7 @@ function komainu_check_ownership(
  *
  * @return int|string Normalized resource ID for caller to safely use
  */
-function komainu_enforce_ownership(
+function komagu_enforce_ownership(
     PDO $pdo,
     string $table,
     string $pkColumn,
@@ -186,8 +186,8 @@ function komainu_enforce_ownership(
     $isOwner = false;
     $normResourceId = null;
     try {
-        $normResourceId = komainu_normalize_id($resourceId);
-        $isOwner = komainu_check_ownership(
+        $normResourceId = komagu_normalize_id($resourceId);
+        $isOwner = komagu_check_ownership(
             $pdo,
             $table,
             $pkColumn,
@@ -221,15 +221,15 @@ function komainu_enforce_ownership(
  * @param string|null $inputDir User-supplied sort direction ('ASC' or 'DESC')
  * @return string Safe "column ASC|DESC" fragment ready for SQL interpolation
  */
-function komainu_safe_order_by(
+function komagu_safe_order_by(
     ?string $inputColumn,
     array $allowedColumns,
     string $defaultColumn,
     ?string $inputDir = 'ASC'
 ): string {
-    $safeDefault = komainu_validate_identifier($defaultColumn, $allowedColumns);
+    $safeDefault = komagu_validate_identifier($defaultColumn, $allowedColumns);
     $col = ($inputColumn !== null && in_array($inputColumn, $allowedColumns, true))
-        ? komainu_validate_identifier($inputColumn, $allowedColumns)
+        ? komagu_validate_identifier($inputColumn, $allowedColumns)
         : $safeDefault;
 
     $dir = (strtoupper((string)$inputDir) === 'DESC') ? 'DESC' : 'ASC';

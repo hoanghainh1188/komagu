@@ -1,4 +1,4 @@
-"""Unit tests for Komainu Python Object-Level Authorization & OIDC Validation (D1/D2)."""
+"""Unit tests for Komagu Python Object-Level Authorization & OIDC Validation (D1/D2)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import unittest
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from remediate.authz.python.komainu_authz.models import (
+from remediate.authz.python.komagu_authz.models import (
     InMemorySecurityAuditSink,
     IOwnedResource,
     OwnershipException,
@@ -17,8 +17,8 @@ from remediate.authz.python.komainu_authz.models import (
     SecurityAuditEvent,
     UserPrincipal,
 )
-from remediate.authz.python.komainu_authz.service import KomainuAuthorizationService
-from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+from remediate.authz.python.komagu_authz.service import KomaguAuthorizationService
+from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import jwt
@@ -35,22 +35,22 @@ class MockOrder:
 class TestPythonAuthz(unittest.TestCase):
     def setUp(self) -> None:
         self.audit_sink = InMemorySecurityAuditSink()
-        self.authz_service = KomainuAuthorizationService(audit_sink=self.audit_sink)
+        self.authz_service = KomaguAuthorizationService(audit_sink=self.audit_sink)
         self.validator = OidcTokenValidator(
-            issuer="https://auth.komainu.test",
+            issuer="https://auth.komagu.test",
             audience="komainu-api",
             allow_dev_tokens=True,
         )
 
         self.alice_user = UserPrincipal(
             user_id="user-a",
-            tenant_id="tenant-komainu",
-            claims={"sub": "user-a", "tenant_id": "tenant-komainu"},
+            tenant_id="tenant-komagu",
+            claims={"sub": "user-a", "tenant_id": "tenant-komagu"},
         )
         self.bob_attacker = UserPrincipal(
             user_id="user-b",
-            tenant_id="tenant-komainu",
-            claims={"sub": "user-b", "tenant_id": "tenant-komainu"},
+            tenant_id="tenant-komagu",
+            claims={"sub": "user-b", "tenant_id": "tenant-komagu"},
         )
         self.charlie_cross_tenant = UserPrincipal(
             user_id="user-c",
@@ -61,7 +61,7 @@ class TestPythonAuthz(unittest.TestCase):
         self.alice_order = MockOrder(
             id="ord-001",
             owner_user_id="user-a",
-            tenant_id="tenant-komainu",
+            tenant_id="tenant-komagu",
             total_amount=150.0,
         )
 
@@ -91,7 +91,7 @@ class TestPythonAuthz(unittest.TestCase):
         event = self.audit_sink.events[0]
         self.assertEqual(event.event_name, "Komainu.Authorization.Denied")
         self.assertEqual(event.actor_user_id, "user-b")
-        self.assertEqual(event.actor_tenant_id, "tenant-komainu")
+        self.assertEqual(event.actor_tenant_id, "tenant-komagu")
         self.assertEqual(event.resource_id, "ord-001")
         self.assertEqual(event.operation, ResourceOperation.READ)
 
@@ -139,13 +139,13 @@ class TestPythonAuthz(unittest.TestCase):
         dict_order = {
             "id": "ord-dict-99",
             "ownerUserId": "user-a",
-            "tenantId": "tenant-komainu",
+            "tenantId": "tenant-komagu",
         }
         res = self.authz_service.authorize(self.alice_user, dict_order)
         self.assertTrue(res.succeeded)
 
         # Custom extractor test
-        opaque_obj = ("ord-tuple", "user-a", "tenant-komainu")
+        opaque_obj = ("ord-tuple", "user-a", "tenant-komagu")
         res2 = self.authz_service.authorize(
             user=self.alice_user,
             resource=opaque_obj,
@@ -158,12 +158,12 @@ class TestPythonAuthz(unittest.TestCase):
         """OidcTokenValidator validates dev bearer tokens used across test harnesses."""
         p_alice = self.validator.validate_token("Bearer token-user-a")
         self.assertEqual(p_alice.user_id, "user-a")
-        self.assertEqual(p_alice.tenant_id, "tenant-komainu")
+        self.assertEqual(p_alice.tenant_id, "tenant-komagu")
         self.assertTrue(p_alice.is_authenticated)
 
         p_bob = self.validator.validate_token("token-user-b")
         self.assertEqual(p_bob.user_id, "user-b")
-        self.assertEqual(p_bob.tenant_id, "tenant-komainu")
+        self.assertEqual(p_bob.tenant_id, "tenant-komagu")
 
         with self.assertRaises(PermissionError):
             self.validator.validate_token("Bearer token-unknown")

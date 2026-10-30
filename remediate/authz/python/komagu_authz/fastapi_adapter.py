@@ -1,9 +1,9 @@
-"""FastAPI Dependency Injection & Middleware Adapter for Komainu Authz.
+"""FastAPI Dependency Injection & Middleware Adapter for Komagu Authz.
 
 Provides:
 - `get_current_user`: Dependency extracting and validating OIDC bearer tokens.
 - `RequireOwnership`: Declarative dependency enforcing object-level authorization on endpoints.
-- `komainu_ownership_exception_handler`: Exception handler returning HTTP 404 on BOLA violations.
+- `komagu_ownership_exception_handler`: Exception handler returning HTTP 404 on BOLA violations.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, Dict, Optional
 
-from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator
 
 from .models import (
     IOwnedResource,
@@ -19,7 +19,7 @@ from .models import (
     ResourceOperation,
     UserPrincipal,
 )
-from .service import KomainuAuthorizationService
+from .service import KomaguAuthorizationService
 
 # Attempt imports from fastapi/starlette; fall back to runtime-neutral standard classes
 try:
@@ -80,7 +80,7 @@ except ImportError:
         return dependency
 
 
-_DEFAULT_AUTHZ_SERVICE = KomainuAuthorizationService()
+_DEFAULT_AUTHZ_SERVICE = KomaguAuthorizationService()
 
 
 def get_current_user(
@@ -142,7 +142,7 @@ class RequireOwnership:
         operation: ResourceOperation = ResourceOperation.READ,
         id_param: str = "id",
         loader: Optional[Callable[[str], Any]] = None,
-        authz_service: Optional[KomainuAuthorizationService] = None,
+        authz_service: Optional[KomaguAuthorizationService] = None,
         validator: Optional[OidcTokenValidator] = None,
     ) -> None:
         self.operation = operation
@@ -181,7 +181,7 @@ class RequireOwnership:
             # Resource does not exist -> 404
             raise HTTPException(status_code=404, detail="Resource not found")
 
-        # 4. Enforce ownership using Komainu D1
+        # 4. Enforce ownership using Komagu D1
         try:
             self.authz_service.require_ownership(user, resource, self.operation)
         except OwnershipException:
@@ -191,17 +191,17 @@ class RequireOwnership:
         return resource
 
 
-def komainu_ownership_exception_handler(request: Any, exc: OwnershipException) -> Any:
+def komagu_ownership_exception_handler(request: Any, exc: OwnershipException) -> Any:
     """Global exception handler for FastAPI / Starlette applications."""
     return JSONResponse(status_code=404, content={"detail": exc.detail or "Resource not found"})
 
 
-class KomainuAuthMiddleware:
+class KomaguAuthMiddleware:
     """ASGI middleware for extracting Bearer tokens and attaching UserPrincipal to request scope."""
 
     def __init__(self, app: Any, validator: Optional[OidcTokenValidator] = None) -> None:
         if validator is None:
-            raise ValueError("KomainuAuthMiddleware requires a configured OidcTokenValidator instance")
+            raise ValueError("KomaguAuthMiddleware requires a configured OidcTokenValidator instance")
         self.app = app
         self.validator = validator
 

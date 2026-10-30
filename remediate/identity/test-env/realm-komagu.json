@@ -1,7 +1,7 @@
 {
-  "id": "komainu",
-  "realm": "komainu",
-  "displayName": "Komainu Security Realm",
+  "id": "komagu",
+  "realm": "komagu",
+  "displayName": "Komagu Security Realm",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
@@ -17,8 +17,8 @@
   },
   "clients": [
     {
-      "clientId": "komainu-portal",
-      "name": "Komainu Demo Portal SPA",
+      "clientId": "komagu-portal",
+      "name": "Komagu Demo Portal SPA",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
@@ -38,7 +38,7 @@
     },
     {
       "clientId": "komainu-api",
-      "name": "Komainu Resource Server API",
+      "name": "Komagu Resource Server API",
       "enabled": true,
       "bearerOnly": true,
       "protocol": "openid-connect"

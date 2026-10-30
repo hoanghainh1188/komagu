@@ -1,4 +1,4 @@
-"""Komainu OIDC Identity & Token Validation Adapter (Python).
+"""Komagu OIDC Identity & Token Validation Adapter (Python).
 
 Validates OpenID Connect / OAuth2 JWT Bearer tokens with cryptographic
 signature verification against an HTTPS JWKS or static public key,
@@ -11,6 +11,7 @@ from __future__ import annotations
 import math
 import os
 import sys
+import warnings
 from typing import Any, Dict, List, Optional, Union
 
 import jwt
@@ -30,17 +31,28 @@ from jwt.exceptions import (
 
 from .models import UserPrincipal
 
-# Standard test/dev personas matching Komainu cross-user test fixtures
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
+
+# Standard test/dev personas matching Komagu cross-user test fixtures
 DEFAULT_DEV_TOKENS: Dict[str, Dict[str, Any]] = {
     "token-user-a": {
         "sub": "user-a",
-        "tenant_id": "tenant-komainu",
+        "tenant_id": "tenant-komagu",
         "name": "Alice (Owner)",
         "roles": ["Member"],
     },
     "token-user-b": {
         "sub": "user-b",
-        "tenant_id": "tenant-komainu",
+        "tenant_id": "tenant-komagu",
         "name": "Bob (Attacker)",
         "roles": ["Member"],
     },
@@ -52,7 +64,7 @@ DEFAULT_DEV_TOKENS: Dict[str, Dict[str, Any]] = {
     },
     "token-admin": {
         "sub": "user-admin",
-        "tenant_id": "tenant-komainu",
+        "tenant_id": "tenant-komagu",
         "name": "Admin",
         "roles": ["Admin"],
     },
@@ -68,9 +80,9 @@ DEFAULT_ALLOWED_ALGORITHMS: List[str] = [
 
 def _is_test_environment() -> bool:
     """Determine whether the current process is executing under explicit test mode."""
-    if os.environ.get("KOMAINU_ENV") == "test":
+    if _env("ENV") == "test":
         return True
-    if os.environ.get("KOMAINU_ALLOW_DEV_TOKENS") == "1":
+    if _env("ALLOW_DEV_TOKENS") == "1":
         return True
     if "PYTEST_CURRENT_TEST" in os.environ:
         return True
@@ -118,7 +130,7 @@ class OidcTokenValidator:
             if not _is_test_environment():
                 raise RuntimeError(
                     "Dev tokens are only permitted in test environments. "
-                    "Set KOMAINU_ENV=test or run within a recognized test framework."
+                    "Set KOMAGU_ENV=test or run within a recognized test framework."
                 )
             self.dev_tokens: Dict[str, Dict[str, Any]] = (
                 dict(dev_tokens) if dev_tokens is not None else dict(DEFAULT_DEV_TOKENS)

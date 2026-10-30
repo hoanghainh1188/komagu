@@ -16,7 +16,19 @@ import os
 import secrets
 import threading
 import time
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
 
 try:
     from cryptography import x509
@@ -30,9 +42,9 @@ except ImportError:
 MAX_ACTIVE_NONCES = 1000
 
 # Simulation (signature = sha256("JPKI-SE-KEY:" + nonce), computable by anyone) is only
-# allowed when this variable is exactly "1". It is never inferred from CI, KOMAINU_ENV
+# allowed when this variable is exactly "1". It is never inferred from CI, KOMAGU_ENV
 # or imported test frameworks: a production container can easily carry any of those.
-SIMULATION_ENV_FLAG = "KOMAINU_EKYC_SIMULATION"
+SIMULATION_ENV_FLAG = "KOMAGU_EKYC_SIMULATION"
 
 # Verifies a driver-licence SOD (CMS SignedData: DS certificate chain to the CSCA and
 # data-group hashes). Returns (ok, message, attributes read from the verified data groups).
@@ -139,7 +151,7 @@ class RedisNonceStore(BaseNonceStore):
     def __init__(
         self,
         redis_client: Any,
-        key_prefix: str = "komainu:ekyc:nonce:",
+        key_prefix: str = "komagu:ekyc:nonce:",
         rate_limit_per_client: int = 20,
         rate_limit_window_seconds: int = 60,
     ):
@@ -184,7 +196,7 @@ class RedisNonceStore(BaseNonceStore):
 
 def _simulation_opted_in() -> bool:
     """True only when simulation was explicitly enabled for this process."""
-    return os.environ.get(SIMULATION_ENV_FLAG, "") == "1"
+    return _env("EKYC_SIMULATION", "") == "1"
 
 
 def _check_attribute_binding(claimed: Optional[Dict[str, Any]], verified: Dict[str, str]) -> Optional[str]:

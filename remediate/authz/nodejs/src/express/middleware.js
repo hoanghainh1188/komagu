@@ -1,9 +1,9 @@
 'use strict';
 
 const { ResourceOperation } = require('../interfaces');
-const { KomainuSecurityService } = require('../service');
+const { KomaguSecurityService } = require('../service');
 
-const defaultService = new KomainuSecurityService();
+const defaultService = new KomaguSecurityService();
 
 /**
  * Express middleware for declarative object ownership checks.
@@ -12,9 +12,9 @@ const defaultService = new KomainuSecurityService();
  * @param {string} [config.operation=ResourceOperation.READ]
  * @param {string} [config.idParamName='id']
  * @param {Function} config.resourceLoader - (id, req) => Promise<any>
- * @param {KomainuSecurityService} [config.securityService]
+ * @param {KomaguSecurityService} [config.securityService]
  */
-function komainuOwnershipMiddleware(config) {
+function komaguOwnershipMiddleware(config) {
   const op = config.operation || ResourceOperation.READ;
   const idParam = config.idParamName || 'id';
   const loader = config.resourceLoader;
@@ -46,7 +46,7 @@ function komainuOwnershipMiddleware(config) {
         return res.status(404).json({ message: 'Resource not found' });
       }
 
-      req.komainuResource = resource;
+      req.komaguResource = resource;
       next();
     } catch (err) {
       if (err.status === 404 || err.statusCode === 404) {
@@ -58,5 +58,5 @@ function komainuOwnershipMiddleware(config) {
 }
 
 module.exports = {
-  komainuOwnershipMiddleware,
+  komaguOwnershipMiddleware,
 };

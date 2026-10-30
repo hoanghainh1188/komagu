@@ -1,4 +1,4 @@
-# Komainu Legacy Remediation Shims (`remediate/legacy_shims/`)
+# Komagu Legacy Remediation Shims (`remediate/legacy_shims/`)
 
 For legacy enterprise systems that cannot immediately migrate to **.NET 8** or **Kotlin / Spring Boot 3** (covered by `remediate/authz`, `remediate/identity`, and `remediate/query`), this directory provides **zero-dependency, drop-in remediation shims** for legacy stacks supported by the LSA kit.
 
@@ -19,9 +19,9 @@ Every legacy shim enforces the same four architectural invariants as Boilerplate
 
 | Stack | File | Fixes |
 |---|---|---|
-| **PHP (5.6 – 8.x)** | [`php/komainu_authz_shim.php`](php/komainu_authz_shim.php) | BOLA (`missing_ownership_check`, `check_result_ignored`) & SQLi (`string_concatenation`, `dynamic_identifier`) |
+| **PHP (5.6 – 8.x)** | [`php/komagu_authz_shim.php`](php/komagu_authz_shim.php) | BOLA (`missing_ownership_check`, `check_result_ignored`) & SQLi (`string_concatenation`, `dynamic_identifier`) |
 | **Java (Servlet / Struts 1 / JSP / MyBatis)** | [`java/OwnershipEnforcer.java`](java/OwnershipEnforcer.java)<br/>[`java/mybatis-safe-sort-example.xml`](java/mybatis-safe-sort-example.xml) | BOLA in Servlets/Struts Actions & MyBatis `${orderBy}` XML injection |
-| **ColdFusion (CFML)** | [`coldfusion/KomainuSecurityShim.cfc`](coldfusion/KomainuSecurityShim.cfc) | Unauthenticated `access="remote"` CFC exposure, missing `<cfqueryparam>`, and BOLA |
+| **ColdFusion (CFML)** | [`coldfusion/KomaguSecurityShim.cfc`](coldfusion/KomaguSecurityShim.cfc) | Unauthenticated `access="remote"` CFC exposure, missing `<cfqueryparam>`, and BOLA |
 | **Classic ASP (VBScript)** | [`classic_asp/check_owner.asp`](classic_asp/check_owner.asp) | BOLA on `member_id` / `cart_id` mutations (`Login != Authorization`) and unparameterized `conn.Execute` |
 
 ---

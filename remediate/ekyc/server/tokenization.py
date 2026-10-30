@@ -22,7 +22,19 @@ import re
 import secrets
 import sys
 import time
+import warnings
 from typing import Any, Dict, List, Optional, Set, Tuple
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
 
 # Allowed fields in API requests under Zero-PII contract
 ALLOWED_TOP_LEVEL_FIELDS: Set[str] = {
@@ -255,7 +267,7 @@ def _is_running_in_test() -> bool:
     """Return True if running under a test runner or with explicit test opt-in."""
     if "unittest" in sys.modules or "pytest" in sys.modules:
         return True
-    if os.environ.get("KOMAINU_EKYC_ALLOW_EPHEMERAL_KEY") == "1":
+    if _env("EKYC_ALLOW_EPHEMERAL_KEY") == "1":
         return True
     return False
 
@@ -272,15 +284,15 @@ class ZeroPIITokenizer:
         key = hmac_key or signing_key
         if key:
             self.hmac_key = key
-        elif "KOMAINU_EKYC_HMAC_KEY" in os.environ and os.environ["KOMAINU_EKYC_HMAC_KEY"]:
-            self.hmac_key = os.environ["KOMAINU_EKYC_HMAC_KEY"].encode("utf-8")
+        elif _env("EKYC_HMAC_KEY"):
+            self.hmac_key = _env("EKYC_HMAC_KEY").encode("utf-8")
         else:
             is_test = _is_running_in_test() if allow_ephemeral_key is None else allow_ephemeral_key
-            if is_test and os.environ.get("KOMAINU_EKYC_REQUIRE_HMAC_KEY") != "1":
+            if is_test and _env("EKYC_REQUIRE_HMAC_KEY") != "1":
                 self.hmac_key = secrets.token_bytes(32)
             else:
                 raise RuntimeError(
-                    "KOMAINU_EKYC_HMAC_KEY environment variable is required to initialize ZeroPIITokenizer. "
+                    "KOMAGU_EKYC_HMAC_KEY environment variable is required to initialize ZeroPIITokenizer. "
                     "Silent fallback to an ephemeral random key is prohibited outside test environments to prevent "
                     "intermittent token verification failures across restarts and multi-replica deployments."
                 )
@@ -331,7 +343,7 @@ class ZeroPIITokenizer:
     def issue_identity_token(
         self,
         verified_attributes: Dict[str, str],
-        issuer: str = "Komainu-eKYC-Gateway",
+        issuer: str = "Komagu-eKYC-Gateway",
         ttl_minutes: int = 60,
         verified_via: str = "JPKI_NFC_CRYPTO",
     ) -> Dict[str, Any]:
@@ -411,8 +423,8 @@ class ZeroPIITokenizer:
         self,
         verified_attributes: Dict[str, Any],
         tenant_id: str = "default",
-        issuer: str = "https://auth.komainu.io",
-        audience: str = "komainu-app",
+        issuer: str = "https://auth.komagu.io",
+        audience: str = "komagu-app",
         client_jkt: Optional[str] = None,
         ttl_minutes: int = 60,
         trust_framework: str = "jp_ekyc_2027",
@@ -444,7 +456,7 @@ class ZeroPIITokenizer:
 
         claims: Dict[str, Any] = {
             "iss": issuer,
-            "sub": f"urn:komainu:blind:{blind_hash}",
+            "sub": f"urn:komagu:blind:{blind_hash}",
             "aud": audience,
             "iat": int(now.timestamp()),
             "exp": int(exp.timestamp()),

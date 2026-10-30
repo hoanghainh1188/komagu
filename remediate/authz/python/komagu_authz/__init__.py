@@ -1,10 +1,10 @@
-"""Komainu Object-Level Authorization Library for Python (D1)."""
+"""Komagu Object-Level Authorization Library for Python (D1)."""
 
 from .fastapi_adapter import (
-    KomainuAuthMiddleware,
+    KomaguAuthMiddleware,
     RequireOwnership,
     get_current_user,
-    komainu_ownership_exception_handler,
+    komagu_ownership_exception_handler,
 )
 from .models import (
     AuthorizationResult,
@@ -17,15 +17,15 @@ from .models import (
     SecurityAuditEvent,
     UserPrincipal,
 )
-from .service import KomainuAuthorizationService
+from .service import KomaguAuthorizationService
 
 __all__ = [
     "AuthorizationResult",
     "InMemorySecurityAuditSink",
     "IOwnedResource",
     "ISecurityAuditSink",
-    "KomainuAuthMiddleware",
-    "KomainuAuthorizationService",
+    "KomaguAuthMiddleware",
+    "KomaguAuthorizationService",
     "LoggingSecurityAuditSink",
     "OwnershipException",
     "RequireOwnership",
@@ -33,5 +33,5 @@ __all__ = [
     "SecurityAuditEvent",
     "UserPrincipal",
     "get_current_user",
-    "komainu_ownership_exception_handler",
+    "komagu_ownership_exception_handler",
 ]

@@ -362,7 +362,7 @@ class ParameterizedQueryPatcher:
         if not script_path.is_file():
             return False
 
-        scan_dir = Path(tempfile.mkdtemp(prefix="komainu_verify_"))
+        scan_dir = Path(tempfile.mkdtemp(prefix="komagu_verify_"))
         try:
             shutil.copy2(target_file, scan_dir / target_file.name)
             res = subprocess.run(

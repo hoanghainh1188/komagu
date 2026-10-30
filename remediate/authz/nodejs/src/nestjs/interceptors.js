@@ -1,7 +1,7 @@
 'use strict';
 
 const { ResourceOperation, NotFoundException, UnauthorizedException } = require('../interfaces');
-const { KOMAINU_REQUIRE_OWNERSHIP_KEY, getMetadata } = require('./decorators');
+const { KOMAGU_REQUIRE_OWNERSHIP_KEY, getMetadata } = require('./decorators');
 
 /**
  * NestJS Interceptor verifying ownership of controller returned domain entities.
@@ -18,12 +18,12 @@ class OwnershipInterceptor {
 
     let meta = null;
     if (this.reflector && typeof this.reflector.get === 'function') {
-      meta = this.reflector.get(KOMAINU_REQUIRE_OWNERSHIP_KEY, handler) ||
-             this.reflector.get(KOMAINU_REQUIRE_OWNERSHIP_KEY, targetClass);
+      meta = this.reflector.get(KOMAGU_REQUIRE_OWNERSHIP_KEY, handler) ||
+             this.reflector.get(KOMAGU_REQUIRE_OWNERSHIP_KEY, targetClass);
     }
     if (!meta) {
-      meta = (handler && getMetadata(KOMAINU_REQUIRE_OWNERSHIP_KEY, handler)) ||
-             (targetClass && getMetadata(KOMAINU_REQUIRE_OWNERSHIP_KEY, targetClass));
+      meta = (handler && getMetadata(KOMAGU_REQUIRE_OWNERSHIP_KEY, handler)) ||
+             (targetClass && getMetadata(KOMAGU_REQUIRE_OWNERSHIP_KEY, targetClass));
     }
 
     const httpContext = context.switchToHttp ? context.switchToHttp() : null;

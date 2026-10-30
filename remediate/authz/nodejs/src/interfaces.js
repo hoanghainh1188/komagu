@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Komainu Object-Level Authorization Interfaces & Exceptions (Node.js).
+ * Komagu Object-Level Authorization Interfaces & Exceptions (Node.js).
  */
 
 const ResourceOperation = Object.freeze({

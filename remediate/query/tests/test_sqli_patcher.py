@@ -20,7 +20,7 @@ class TestParameterizedQueryPatcher(unittest.TestCase):
 
     def setUp(self) -> None:
         self.patcher = ParameterizedQueryPatcher()
-        self.temp_dir = tempfile.mkdtemp(prefix="komainu_sqli_patch_test_")
+        self.temp_dir = tempfile.mkdtemp(prefix="komagu_sqli_patch_test_")
         self.test_dir = Path(self.temp_dir).resolve()
 
     def tearDown(self) -> None:

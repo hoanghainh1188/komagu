@@ -1,5 +1,5 @@
 <!---
-  Komainu Legacy Remediation Shim for ColdFusion (CFML)
+  Komagu Legacy Remediation Shim for ColdFusion (CFML)
 
   Fixes:
   1. CWE-287 / P12: Uses access="public" (NEVER access="remote" on data-access CFCs).
@@ -8,7 +8,7 @@
      returning HTTP 404 + <cfabort> on mismatch or invalid/missing identifiers.
   4. Falsy / 0 IDs: Rejects empty, 0, negative, and non-canonical IDs.
 --->
-<cfcomponent displayname="KomainuSecurityShim" output="false">
+<cfcomponent displayname="KomaguSecurityShim" output="false">
 
   <!---
     Validate and normalize a positive canonical decimal integer ID.

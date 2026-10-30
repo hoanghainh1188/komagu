@@ -392,15 +392,15 @@ class TestZeroPIITokenizationAndOIDC(unittest.TestCase):
 
     def test_tokenizer_requires_hmac_key_in_production(self) -> None:
         """Issue #213: ZeroPIITokenizer must reject missing HMAC key outside test environments."""
-        with patch.dict(os.environ, {"KOMAINU_EKYC_REQUIRE_HMAC_KEY": "1"}, clear=False):
-            # Ensure env var KOMAINU_EKYC_HMAC_KEY is removed
-            with patch.dict(os.environ, {"KOMAINU_EKYC_HMAC_KEY": ""}):
+        with patch.dict(os.environ, {"KOMAGU_EKYC_REQUIRE_HMAC_KEY": "1"}, clear=False):
+            # Ensure env var KOMAGU_EKYC_HMAC_KEY is removed
+            with patch.dict(os.environ, {"KOMAGU_EKYC_HMAC_KEY": ""}):
                 with self.assertRaises(RuntimeError) as ctx:
                     ZeroPIITokenizer()
-                self.assertIn("KOMAINU_EKYC_HMAC_KEY", str(ctx.exception))
+                self.assertIn("KOMAGU_EKYC_HMAC_KEY", str(ctx.exception))
 
         # Explicit allow_ephemeral_key=False must also fail when key is unset
-        with patch.dict(os.environ, {"KOMAINU_EKYC_HMAC_KEY": ""}):
+        with patch.dict(os.environ, {"KOMAGU_EKYC_HMAC_KEY": ""}):
             with self.assertRaises(RuntimeError):
                 ZeroPIITokenizer(allow_ephemeral_key=False)
 

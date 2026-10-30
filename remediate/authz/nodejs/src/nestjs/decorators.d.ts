@@ -1,6 +1,6 @@
 import { ResourceOperationType } from '../interfaces';
 
-export declare const KOMAINU_REQUIRE_OWNERSHIP_KEY = 'komainu:require_ownership';
+export declare const KOMAGU_REQUIRE_OWNERSHIP_KEY = 'komagu:require_ownership';
 
 export interface RequireOwnershipOptions {
   idParamName?: string;

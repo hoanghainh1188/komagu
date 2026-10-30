@@ -1,6 +1,6 @@
 """Automated BOLA / IDOR Ownership Guard Patcher (OWASP API1:2023, CWE-639).
 
-Automatically inspects controller/route definitions and injects standard Komainu
+Automatically inspects controller/route definitions and injects standard Komagu
 @RequireOwnership decorators, action filters, or middleware across TypeScript,
 C#, Java, Python, and PHP.
 """
@@ -83,11 +83,13 @@ class BOLAOwnershipPatcher:
         return "Resource"
 
     def ensure_imports(self, content: str, lang: str) -> Tuple[str, bool]:
-        """Ensure necessary Komainu authorization import is present at the top of the file."""
+        """Ensure necessary Komagu authorization import is present at the top of the file."""
         if lang in ("typescript", "javascript"):
-            if "from 'komainu-guard'" in content or 'from "komainu-guard"' in content:
-                return content, False
-            import_stmt = "import { RequireOwnership, OwnershipGuard, ResourceOperation } from 'komainu-guard';\n"
+            # komainu-guard: package name before the rename (#290), already-patched files keep it
+            for pkg in ("@hoanghainh/komagu", "komainu-guard"):
+                if f"from '{pkg}'" in content or f'from "{pkg}"' in content:
+                    return content, False
+            import_stmt = "import { RequireOwnership, OwnershipGuard, ResourceOperation } from '@hoanghainh/komagu';\n"
             return import_stmt + content, True
 
         elif lang == "csharp":
@@ -106,9 +108,9 @@ class BOLAOwnershipPatcher:
             return import_stmt + content, True
 
         elif lang == "python":
-            if "from remediate.authz.python.komainu_authz" in content:
+            if "from remediate.authz.python.komagu_authz" in content:
                 return content, False
-            import_stmt = "from remediate.authz.python.komainu_authz import RequireOwnership, ResourceOperation\n"
+            import_stmt = "from remediate.authz.python.komagu_authz import RequireOwnership, ResourceOperation\n"
             return import_stmt + content, True
 
         return content, False

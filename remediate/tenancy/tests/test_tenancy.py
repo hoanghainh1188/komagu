@@ -30,8 +30,8 @@ MODULE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 class TestTenantIsolationAndBYOK(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        os.environ["KOMAINU_ENV"] = "test"
-        os.environ["KOMAINU_ALLOW_BYOK_SIMULATION"] = "1"
+        os.environ["KOMAGU_ENV"] = "test"
+        os.environ["KOMAGU_ALLOW_BYOK_SIMULATION"] = "1"
     def test_01_sql_templates_exist(self) -> None:
         """Verifies PostgreSQL RLS and schema-per-tenant SQL scripts exist."""
         sql_dir = os.path.join(MODULE_ROOT, "sql")
@@ -114,14 +114,14 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         """Verifies secure tenant resolution prioritizing verified JWT claims and internal auth."""
         # 1. From verified JWT claims
         tenant_jwt = TenantContextResolver.resolve_from_headers(
-            headers={"host": "api.komainu.dev"},
+            headers={"host": "api.komagu.dev"},
             jwt_claims={"tenant_id": "tenant-from-jwt"},
         )
         self.assertEqual(tenant_jwt, "tenant-from-jwt")
 
         # 2. Subdomain matching verified JWT claims passes
         tenant_sub = TenantContextResolver.resolve_from_headers(
-            headers={"host": "enterprise-corp.komainu.dev"},
+            headers={"host": "enterprise-corp.komagu.dev"},
             jwt_claims={"tenant_id": "enterprise-corp"},
         )
         self.assertEqual(tenant_sub, "enterprise-corp")
@@ -263,7 +263,7 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         # Host subdomain alone without JWT cannot establish tenant identity
         with self.assertRaises(MissingTenantContextError):
             TenantContextResolver.resolve_from_headers(
-                headers={"Host": "victim-corp.komainu-saas.com"}
+                headers={"Host": "victim-corp.komagu-saas.com"}
             )
 
     def test_14_tenant_resolution_conflict_fails_closed(self) -> None:
@@ -271,7 +271,7 @@ class TestTenantIsolationAndBYOK(unittest.TestCase):
         # 1. JWT claim vs Host subdomain mismatch
         with self.assertRaises(CrossTenantAccessDeniedError):
             TenantContextResolver.resolve_from_headers(
-                headers={"Host": "attacker.komainu.dev"},
+                headers={"Host": "attacker.komagu.dev"},
                 jwt_claims={"tenant_id": "victim-tenant"},
             )
 

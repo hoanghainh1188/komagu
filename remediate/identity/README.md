@@ -1,6 +1,6 @@
-# Komainu OpenID Connect (OIDC) Authentication Integration (D2)
+# Komagu OpenID Connect (OIDC) Authentication Integration (D2)
 
-The **Komainu OIDC Authentication Integration** implements **Layer 3: Authentication** in the 5-layer STRIDE defense model of Boilerplate 1.
+The **Komagu OIDC Authentication Integration** implements **Layer 3: Authentication** in the 5-layer STRIDE defense model of Boilerplate 1.
 
 It provides standardized, production-grade JWT access token validation conforming strictly to **RFC 9700** and the **OAuth 2.1 draft** (Authorization Code Flow with PKCE only) across both **.NET 8** and **Spring Boot 3**.
 
@@ -31,11 +31,11 @@ cd remediate/identity/test-env
 docker compose up -d
 ```
 
-Keycloak starts at `http://localhost:8080` with the `komainu` realm pre-loaded:
+Keycloak starts at `http://localhost:8080` with the `komagu` realm pre-loaded:
 - **Admin Console:** `http://localhost:8080/admin` (Username: `admin`, Password: `admin`)
-- **Realm Discovery URL:** `http://localhost:8080/realms/komainu/.well-known/openid-configuration`
+- **Realm Discovery URL:** `http://localhost:8080/realms/komagu/.well-known/openid-configuration`
 - **Clients:**
-  - `komainu-portal`: Public SPA client (Standard Flow + PKCE enforced)
+  - `komagu-portal`: Public SPA client (Standard Flow + PKCE enforced)
   - `komainu-api`: Resource server bearer-only client (`aud`: `komainu-api`)
 - **Test Personas:**
   - `alice` (Password: `password123`, Tenant: `tenant-alpha`, Role: `Member`)
@@ -57,7 +57,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddKomaguJwtAuthentication(options =>
 {
-    options.Issuer = builder.Configuration["Authentication:Issuer"] ?? "https://auth.komainu.test/realms/komainu";
+    options.Issuer = builder.Configuration["Authentication:Issuer"] ?? "https://auth.komagu.test/realms/komagu";
     options.Audience = "komainu-api";
     options.RequireHttpsMetadata = builder.Environment.IsProduction();
     options.ClockSkew = TimeSpan.Zero;
@@ -78,12 +78,12 @@ app.UseAuthorization();
 ### Configuration (`application.yml`)
 
 ```yaml
-komainu:
+komagu:
   security:
     oidc:
-      issuer: "https://auth.komainu.test/realms/komainu"
+      issuer: "https://auth.komagu.test/realms/komagu"
       audience: "komainu-api"
-      jwk-set-uri: "https://auth.komainu.test/realms/komainu/protocol/openid-connect/certs"
+      jwk-set-uri: "https://auth.komagu.test/realms/komagu/protocol/openid-connect/certs"
       clock-skew-seconds: 0
 ```
 

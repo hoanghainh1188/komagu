@@ -17,7 +17,19 @@ import os
 import secrets
 import sys
 import threading
+import warnings
 from typing import Any, Dict, List, Optional, Tuple
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
 
 
 class AuditRecord:
@@ -88,9 +100,9 @@ def _is_test_environment() -> bool:
     """Detect if running under test execution.
     Returns True when opted in via environment variables or running under test runners.
     """
-    if os.getenv("KOMAINU_ENV", "").lower() == "test":
+    if _env("ENV", "").lower() == "test":
         return True
-    if os.getenv("KOMAINU_ALLOW_BYOK_SIMULATION") == "1":
+    if _env("ALLOW_BYOK_SIMULATION") == "1":
         return True
     if "unittest" in sys.modules or "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ:
         return True
@@ -110,18 +122,18 @@ class TenantAuditTrail:
                     f"Audit trail HMAC key must be at least 32 bytes (got {len(hmac_key)} bytes)"
                 )
             self.hmac_key = hmac_key
-        elif "KOMAINU_AUDIT_HMAC_KEY" in os.environ and os.environ["KOMAINU_AUDIT_HMAC_KEY"]:
-            raw_key = os.environ["KOMAINU_AUDIT_HMAC_KEY"].encode("utf-8")
+        elif _env("AUDIT_HMAC_KEY"):
+            raw_key = _env("AUDIT_HMAC_KEY").encode("utf-8")
             if len(raw_key) < 32:
                 raise ValueError(
-                    f"KOMAINU_AUDIT_HMAC_KEY must be at least 32 bytes (got {len(raw_key)} bytes)"
+                    f"KOMAGU_AUDIT_HMAC_KEY must be at least 32 bytes (got {len(raw_key)} bytes)"
                 )
             self.hmac_key = raw_key
         elif _is_test_environment():
             self.hmac_key = secrets.token_bytes(32)
         else:
             raise ValueError(
-                "Audit trail HMAC key must be configured via KOMAINU_AUDIT_HMAC_KEY or constructor in production"
+                "Audit trail HMAC key must be configured via KOMAGU_AUDIT_HMAC_KEY or constructor in production"
             )
 
         # Audit store: {tenant_id: List[AuditRecord]}

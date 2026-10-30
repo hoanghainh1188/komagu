@@ -1,6 +1,6 @@
-# Komainu Object-Level Authorization Library (D1)
+# Komagu Object-Level Authorization Library (D1)
 
-The **Komainu Object-Level Authorization Library** is the core application-layer defense against **Broken Object Level Authorization (BOLA)** and **Insecure Direct Object Reference (IDOR)** (OWASP API Security Top 10 API1:2023 / CWE-639 / CWE-284).
+The **Komagu Object-Level Authorization Library** is the core application-layer defense against **Broken Object Level Authorization (BOLA)** and **Insecure Direct Object Reference (IDOR)** (OWASP API Security Top 10 API1:2023 / CWE-639 / CWE-284).
 
 It provides standardized, high-performance security primitives for both **.NET 8 (ASP.NET Core & EF Core)** and **Spring Boot 3 (Kotlin & Java / Spring Data JPA)**.
 
@@ -34,7 +34,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Register authentication (JWT / OIDC)
 builder.Services.AddAuthentication(...);
 
-// Register Komainu Authorization services
+// Register Komagu Authorization services
 builder.Services.AddKomaguAuthorization();
 
 var app = builder.Build();
@@ -172,8 +172,8 @@ interface OrderRepository : ScopedRepository<Order, UUID> {
 ```python
 from dataclasses import dataclass
 from fastapi import FastAPI, Depends
-from remediate.authz.python.komainu_authz import (
-    KomainuAuthorizationService,
+from remediate.authz.python.komagu_authz import (
+    KomaguAuthorizationService,
     RequireOwnership,
     ResourceOperation,
     get_current_user,
@@ -219,7 +219,7 @@ import {
   OwnershipGuard,
   OwnershipInterceptor,
   ResourceOperation,
-} from '@komainu/security-authz';
+} from '@hoanghainh/komagu';
 
 @Controller('api/v1/orders')
 @UseGuards(OwnershipGuard)
@@ -241,16 +241,16 @@ export class OrderController {
 ### Express.js Middleware
 
 ```javascript
-const { komainuOwnershipMiddleware, ResourceOperation } = require('@komainu/security-authz');
+const { komaguOwnershipMiddleware, ResourceOperation } = require('@hoanghainh/komagu');
 
 app.get('/api/v1/orders/:id',
-  komainuOwnershipMiddleware({
+  komaguOwnershipMiddleware({
     operation: ResourceOperation.READ,
     idParamName: 'id',
     resourceLoader: async (id, req) => db.orders.findById(id),
   }),
   (req, res) => {
-    res.json(req.komainuResource);
+    res.json(req.komaguResource);
   }
 );
 ```

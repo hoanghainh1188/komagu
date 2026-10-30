@@ -15,7 +15,7 @@ export interface AuthorizationDecision {
   failureReason?: string;
 }
 
-export declare class KomainuSecurityService {
+export declare class KomaguSecurityService {
   readonly auditSink: ISecurityAuditSink;
   constructor(auditSink?: ISecurityAuditSink);
   getCurrentUserId(user: any): string;

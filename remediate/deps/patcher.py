@@ -242,7 +242,7 @@ class CVEAdvisoryCatalog:
         """Scan all manifest files under target_dir and return actionable CVE findings."""
         root = Path(target_dir).resolve()
         findings: List[Dict[str, Any]] = []
-        skip_dirs = {".git", "node_modules", "bin", "obj", "target", "build", "dist", "venv", ".komainu", ".komainu-devsecops"}
+        skip_dirs = {".git", "node_modules", "bin", "obj", "target", "build", "dist", "venv", ".komagu", ".komagu-devsecops"}
 
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [d for d in dirnames if not d.startswith(".") and d not in skip_dirs]

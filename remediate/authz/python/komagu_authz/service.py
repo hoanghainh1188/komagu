@@ -1,4 +1,4 @@
-"""Komainu Authorization Service Implementation (Python).
+"""Komagu Authorization Service Implementation (Python).
 
 Enforces tenant and user ownership boundaries on domain objects.
 Denies access with HTTP 404 (OwnershipException) on BOLA/IDOR violations.
@@ -20,7 +20,7 @@ from .models import (
 )
 
 
-class KomainuAuthorizationService:
+class KomaguAuthorizationService:
     """Core authorization service enforcing tenant and user boundaries."""
 
     # Include generic "id" claim for services that expose a plain identifier.

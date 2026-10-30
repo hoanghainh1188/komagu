@@ -1,4 +1,4 @@
-"""Komainu Object-Level Authorization & BOLA Remediation Engine."""
+"""Komagu Object-Level Authorization & BOLA Remediation Engine."""
 
 from __future__ import annotations
 

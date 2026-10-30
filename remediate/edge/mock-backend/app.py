@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lightweight mock upstream backend for Komainu edge security test harness.
+Lightweight mock upstream backend for Komagu edge security test harness.
 Echoes received request headers and JSON payloads back to caller,
 with sensitive authorization headers strictly redacted.
 """

@@ -1,6 +1,6 @@
 <%
 ' =============================================================================
-' Komainu Legacy Remediation Shim for Classic ASP (VBScript)
+' Komagu Legacy Remediation Shim for Classic ASP (VBScript)
 '
 ' Include this file in legacy ASP endpoints:
 '   <!--#include file="../inc/check_owner.asp"-->
@@ -23,7 +23,7 @@ Const adParamInput = 1
 Const adCmdText = 1
 
 ' Halt execution with HTTP 401 Unauthorized
-Sub KomainuHalt401()
+Sub KomaguHalt401()
     Response.Clear
     Response.Status = "401 Unauthorized"
     Response.Write "401 Unauthorized"
@@ -31,7 +31,7 @@ Sub KomainuHalt401()
 End Sub
 
 ' Halt execution with HTTP 404 Not Found
-Sub KomainuHalt404()
+Sub KomaguHalt404()
     Response.Clear
     Response.Status = "404 Not Found"
     Response.Write "404 Not Found"
@@ -40,8 +40,8 @@ End Sub
 
 ' Validate and normalize a positive canonical integer ID
 ' Rejects null, empty, 0, negative, hex (&H), scientific (1e2), decimals, and overflow
-Function KomainuNormalizeId(idVal)
-    KomainuNormalizeId = 0
+Function KomaguNormalizeId(idVal)
+    KomaguNormalizeId = 0
     If IsNull(idVal) Or IsEmpty(idVal) Then Exit Function
 
     Dim s, i, ch
@@ -61,29 +61,29 @@ Function KomainuNormalizeId(idVal)
     ' Protect against 32-bit signed long overflow (> 2,147,483,647)
     If CDbl(s) > 2147483647 Then Exit Function
 
-    KomainuNormalizeId = CLng(s)
+    KomaguNormalizeId = CLng(s)
 End Function
 
 ' Require an authenticated numeric UserID in Session("UserID")
-Function KomainuRequireLogin()
+Function KomaguRequireLogin()
     On Error Resume Next
     Dim normUid
-    normUid = KomainuNormalizeId(Session("UserID"))
+    normUid = KomaguNormalizeId(Session("UserID"))
     If normUid <= 0 Or Err.Number <> 0 Then
-        KomainuHalt401
+        KomaguHalt401
     End If
-    KomainuRequireLogin = normUid
+    KomaguRequireLogin = normUid
 End Function
 
 ' Exact-match allow-list check against a comma-separated list of safe identifiers
-Function KomainuIsAllowedIdentifier(candidate, allowedCsv)
-    KomainuIsAllowedIdentifier = False
+Function KomaguIsAllowedIdentifier(candidate, allowedCsv)
+    KomaguIsAllowedIdentifier = False
     If IsNull(candidate) Or IsEmpty(candidate) Then Exit Function
     Dim items, item
     items = Split(allowedCsv, ",")
     For Each item In items
         If Trim(item) = CStr(candidate) Then
-            KomainuIsAllowedIdentifier = True
+            KomaguIsAllowedIdentifier = True
             Exit Function
         End If
     Next
@@ -91,23 +91,23 @@ End Function
 
 ' Verify two-way ownership using parameterized ADODB.Command; halt with 404 on mismatch or error
 ' Returns normalized resourceId for the caller to safely use
-Function KomainuEnforceOwnership(conn, tableName, pkCol, resourceId, ownerCol, sessionUserId, allowedTablesCsv, allowedColsCsv)
+Function KomaguEnforceOwnership(conn, tableName, pkCol, resourceId, ownerCol, sessionUserId, allowedTablesCsv, allowedColsCsv)
     On Error Resume Next
 
     ' Fail closed on invalid table or column identifiers (avoid raising unhandled errors to prevent bypass under caller error handlers)
-    If Not KomainuIsAllowedIdentifier(tableName, allowedTablesCsv) Then
-        KomainuHalt404
+    If Not KomaguIsAllowedIdentifier(tableName, allowedTablesCsv) Then
+        KomaguHalt404
     End If
-    If Not KomainuIsAllowedIdentifier(pkCol, allowedColsCsv) Or Not KomainuIsAllowedIdentifier(ownerCol, allowedColsCsv) Then
-        KomainuHalt404
+    If Not KomaguIsAllowedIdentifier(pkCol, allowedColsCsv) Or Not KomaguIsAllowedIdentifier(ownerCol, allowedColsCsv) Then
+        KomaguHalt404
     End If
 
     ' Strictly validate and normalize both identifiers
     Dim normResId, normUid
-    normResId = KomainuNormalizeId(resourceId)
-    normUid = KomainuNormalizeId(sessionUserId)
+    normResId = KomaguNormalizeId(resourceId)
+    normUid = KomaguNormalizeId(sessionUserId)
     If normResId <= 0 Or normUid <= 0 Or Err.Number <> 0 Then
-        KomainuHalt404
+        KomaguHalt404
     End If
 
     Dim cmd, rs, sql, isOwner
@@ -115,7 +115,7 @@ Function KomainuEnforceOwnership(conn, tableName, pkCol, resourceId, ownerCol, s
 
     Set cmd = Server.CreateObject("ADODB.Command")
     If Err.Number <> 0 Or cmd Is Nothing Then
-        KomainuHalt404
+        KomaguHalt404
     End If
 
     Set cmd.ActiveConnection = conn
@@ -126,7 +126,7 @@ Function KomainuEnforceOwnership(conn, tableName, pkCol, resourceId, ownerCol, s
 
     Set rs = cmd.Execute()
     If Err.Number <> 0 Or rs Is Nothing Then
-        KomainuHalt404
+        KomaguHalt404
     End If
 
     isOwner = Not rs.EOF
@@ -135,17 +135,17 @@ Function KomainuEnforceOwnership(conn, tableName, pkCol, resourceId, ownerCol, s
     Set cmd = Nothing
 
     If Err.Number <> 0 Or Not isOwner Then
-        KomainuHalt404
+        KomaguHalt404
     End If
 
-    KomainuEnforceOwnership = normResId
+    KomaguEnforceOwnership = normResId
 End Function
 
 ' Safe ORDER BY helper using an exact-match allow-list
-Function KomainuSafeOrderBy(inputCol, allowedColsCsv, defaultCol, inputDir)
+Function KomaguSafeOrderBy(inputCol, allowedColsCsv, defaultCol, inputDir)
     Dim chosen, dir
     chosen = defaultCol
-    If KomainuIsAllowedIdentifier(inputCol, allowedColsCsv) Then
+    If KomaguIsAllowedIdentifier(inputCol, allowedColsCsv) Then
         chosen = inputCol
     End If
     If UCase(CStr(inputDir)) = "DESC" Then
@@ -153,6 +153,6 @@ Function KomainuSafeOrderBy(inputCol, allowedColsCsv, defaultCol, inputDir)
     Else
         dir = "ASC"
     End If
-    KomainuSafeOrderBy = chosen & " " & dir
+    KomaguSafeOrderBy = chosen & " " & dir
 End Function
 %>

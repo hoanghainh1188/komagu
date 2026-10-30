@@ -15,7 +15,19 @@ import json
 import os
 import secrets
 import sys
+import warnings
 from typing import Any, Dict, Optional, Tuple
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
 
 try:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -28,9 +40,9 @@ def _is_test_environment() -> bool:
     """Detect if running under test execution.
     Returns True when opted in via environment variables or running under test runners.
     """
-    if os.getenv("KOMAINU_ENV", "").lower() == "test":
+    if _env("ENV", "").lower() == "test":
         return True
-    if os.getenv("KOMAINU_ALLOW_BYOK_SIMULATION") == "1":
+    if _env("ALLOW_BYOK_SIMULATION") == "1":
         return True
     if "unittest" in sys.modules or "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ:
         return True

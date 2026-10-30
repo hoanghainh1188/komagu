@@ -15,7 +15,19 @@ import json
 import os
 import sys
 import time
+import warnings
 from typing import Any, Dict, List, Optional, Tuple
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
 
 
 class ImmutableRetentionViolationError(PermissionError):
@@ -80,7 +92,7 @@ class DRManager:
         storage_path: Optional[str] = None,
     ):
         self.secondary_region = secondary_region
-        self.storage_path = storage_path or os.environ.get("KOMAINU_DR_METADATA_PATH")
+        self.storage_path = storage_path or _env("DR_METADATA_PATH")
         # Simulated immutable WORM storage: {snapshot_id: DRBackupRecord}
         self.storage: Dict[str, DRBackupRecord] = {}
         if self.storage_path and os.path.exists(self.storage_path):
@@ -182,7 +194,7 @@ class DRManager:
                 return sorted_snaps[0].snapshot_id
             seed = self.create_snapshot(
                 snapshot_id="latest-verified",
-                data_payload=b'{"komainu_resilience": "baseline_golden_master_snapshot", "verified": true}',
+                data_payload=b'{"komagu_resilience": "baseline_golden_master_snapshot", "verified": true}',
                 retention_days=365,
             )
             return seed.snapshot_id
@@ -250,7 +262,7 @@ class DRManager:
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Komainu DR & Immutable WORM Backup Manager CLI"
+        description="Komagu DR & Immutable WORM Backup Manager CLI"
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--restore", action="store_true", help="Execute DR failover restore")

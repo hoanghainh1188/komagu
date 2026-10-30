@@ -9,11 +9,11 @@ const {
   InMemorySecurityAuditSink,
 } = require('./interfaces');
 
-const { KomainuSecurityService } = require('./service');
-const { KOMAINU_REQUIRE_OWNERSHIP_KEY, RequireOwnership, CurrentUser } = require('./nestjs/decorators');
+const { KomaguSecurityService } = require('./service');
+const { KOMAGU_REQUIRE_OWNERSHIP_KEY, RequireOwnership, CurrentUser } = require('./nestjs/decorators');
 const { OwnershipGuard } = require('./nestjs/guards');
 const { OwnershipInterceptor } = require('./nestjs/interceptors');
-const { komainuOwnershipMiddleware } = require('./express/middleware');
+const { komaguOwnershipMiddleware } = require('./express/middleware');
 
 module.exports = {
   ResourceOperation,
@@ -22,11 +22,11 @@ module.exports = {
   UnauthorizedException,
   LoggingSecurityAuditSink,
   InMemorySecurityAuditSink,
-  KomainuSecurityService,
-  KOMAINU_REQUIRE_OWNERSHIP_KEY,
+  KomaguSecurityService,
+  KOMAGU_REQUIRE_OWNERSHIP_KEY,
   RequireOwnership,
   CurrentUser,
   OwnershipGuard,
   OwnershipInterceptor,
-  komainuOwnershipMiddleware,
+  komaguOwnershipMiddleware,
 };

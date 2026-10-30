@@ -1,4 +1,4 @@
-// Package golang provides Komainu Object-Level Authorization (D1) for Go.
+// Package golang provides Komagu Object-Level Authorization (D1) for Go.
 //
 // Strictly enforces tenant and user ownership boundaries (BOLA defense).
 // Denies access with HTTP 404 (ErrResourceNotFound) to prevent ID enumeration.
@@ -77,7 +77,7 @@ type Authorizer struct {
 	Sink AuditSink
 }
 
-// NewAuthorizer creates a new Komainu Authorizer.
+// NewAuthorizer creates a new Komagu Authorizer.
 func NewAuthorizer(sink AuditSink) *Authorizer {
 	if sink == nil {
 		sink = &LoggingAuditSink{}
@@ -223,7 +223,7 @@ func (a *Authorizer) emitDenial(userId, tenantId string, resource IOwnedResource
 // ContextKey for attaching verified resource to request context.
 type contextKey string
 
-const ResourceContextKey contextKey = "komainuResource"
+const ResourceContextKey contextKey = "komaguResource"
 
 // Middleware creates standard net/http middleware enforcing object ownership.
 func (a *Authorizer) Middleware(

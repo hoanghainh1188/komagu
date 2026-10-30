@@ -20,7 +20,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
     def setUp(self) -> None:
         self.patcher = BOLAOwnershipPatcher()
-        self.temp_dir = tempfile.mkdtemp(prefix="komainu_bola_patch_test_")
+        self.temp_dir = tempfile.mkdtemp(prefix="komagu_bola_patch_test_")
         self.test_dir = Path(self.temp_dir).resolve()
 
     def tearDown(self) -> None:
@@ -75,7 +75,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
         patched_content, res = self.patcher.patch_file(controller_file, 2, finding)
         self.assertTrue(res.changed)
-        self.assertIn("import { RequireOwnership, OwnershipGuard, ResourceOperation } from 'komainu-guard';", patched_content)
+        self.assertIn("import { RequireOwnership, OwnershipGuard, ResourceOperation } from '@hoanghainh/komagu';", patched_content)
         self.assertIn("@UseGuards(OwnershipGuard)", patched_content)
         self.assertIn("@RequireOwnership(ResourceOperation.READ, { idParamName: 'id' })", patched_content)
 
@@ -150,7 +150,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
         patched_content, res = self.patcher.patch_file(py_file, 4, finding)
         self.assertTrue(res.changed)
-        self.assertIn("from remediate.authz.python.komainu_authz import RequireOwnership, ResourceOperation", patched_content)
+        self.assertIn("from remediate.authz.python.komagu_authz import RequireOwnership, ResourceOperation", patched_content)
         self.assertIn("@RequireOwnership(operation=ResourceOperation.READ, id_param=\"id\")", patched_content)
 
     def test_skip_already_patched_file(self) -> None:

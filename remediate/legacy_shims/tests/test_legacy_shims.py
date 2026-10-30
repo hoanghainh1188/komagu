@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unit and security verification tests for Komainu Legacy Remediation Shims (Issue #48 & #111)."""
+"""Unit and security verification tests for Komagu Legacy Remediation Shims (Issue #48 & #111)."""
 
 from __future__ import annotations
 
@@ -19,19 +19,19 @@ class TestLegacyRemediationShims(unittest.TestCase):
 
     def test_php_shim_enforces_pdo_allowlist_portable_sql_and_404_exit(self) -> None:
         """PHP shim must validate identifiers, normalize IDs, use portable SQL, and exit with 404."""
-        php_file = SHIMS_ROOT / "php" / "komainu_authz_shim.php"
+        php_file = SHIMS_ROOT / "php" / "komagu_authz_shim.php"
         self.assertTrue(php_file.is_file())
         content = php_file.read_text(encoding="utf-8")
 
-        self.assertIn("function komainu_validate_identifier", content)
+        self.assertIn("function komagu_validate_identifier", content)
         self.assertIn("in_array($identifier, $allowList, true)", content)
-        self.assertIn("function komainu_normalize_id", content)
+        self.assertIn("function komagu_normalize_id", content)
         self.assertIn("$pdo->prepare($sql)", content)
         self.assertIn("':resource_id' => $normResourceId", content)
         self.assertIn("':owner_id' => $normSessionUserId", content)
         self.assertIn("http_response_code(404)", content)
         self.assertIn("exit;", content)
-        self.assertIn("function komainu_safe_order_by", content)
+        self.assertIn("function komagu_safe_order_by", content)
         # Ensure non-portable LIMIT 1 is eliminated in query
         self.assertNotIn("LIMIT 1", content)
 
@@ -66,7 +66,7 @@ class TestLegacyRemediationShims(unittest.TestCase):
     def test_java_shim_behavioural_execution(self) -> None:
         """Verify Java OwnershipEnforcer behavioral execution with dynamic mock JDBC proxy."""
         java_source = SHIMS_ROOT / "java" / "OwnershipEnforcer.java"
-        test_harness_src = """package dev.komainu.legacy.shim;
+        test_harness_src = """package dev.komagu.legacy.shim;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -196,7 +196,7 @@ public class OwnershipEnforcerBehaviouralTest {
 }
 """
         with tempfile.TemporaryDirectory() as tmp_dir:
-            pkg_dir = Path(tmp_dir) / "dev" / "komainu" / "legacy" / "shim"
+            pkg_dir = Path(tmp_dir) / "dev" / "komagu" / "legacy" / "shim"
             pkg_dir.mkdir(parents=True)
             shutil.copy(java_source, pkg_dir / "OwnershipEnforcer.java")
             (pkg_dir / "OwnershipEnforcerBehaviouralTest.java").write_text(test_harness_src, encoding="utf-8")
@@ -210,7 +210,7 @@ public class OwnershipEnforcerBehaviouralTest {
             self.assertEqual(compile_proc.returncode, 0, f"Compilation failed: {compile_proc.stderr}")
 
             run_proc = subprocess.run(
-                ["java", "-cp", tmp_dir, "dev.komainu.legacy.shim.OwnershipEnforcerBehaviouralTest"],
+                ["java", "-cp", tmp_dir, "dev.komagu.legacy.shim.OwnershipEnforcerBehaviouralTest"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -221,18 +221,18 @@ public class OwnershipEnforcerBehaviouralTest {
     @unittest.skipUnless(shutil.which("php"), "php runtime not available")
     def test_php_shim_behavioural_execution(self) -> None:
         """Verify PHP shim behavioral normalization and denial with SQLite in-memory PDO."""
-        php_file = SHIMS_ROOT / "php" / "komainu_authz_shim.php"
+        php_file = SHIMS_ROOT / "php" / "komagu_authz_shim.php"
         php_test_script = f"""
         require_once '{php_file}';
 
-        // 1. Test komainu_normalize_id
-        assert(komainu_normalize_id(1) === 1);
-        assert(komainu_normalize_id('42') === 42);
+        // 1. Test komagu_normalize_id
+        assert(komagu_normalize_id(1) === 1);
+        assert(komagu_normalize_id('42') === 42);
         
         $invalidIds = [null, '', false, true, 0, '0', -1, '-5', '007', '1e2', '0x5', '1.5'];
         foreach ($invalidIds as $inv) {{
             try {{
-                komainu_normalize_id($inv);
+                komagu_normalize_id($inv);
                 echo "FAIL: Expected exception for " . var_export($inv, true) . "\\n";
                 exit(1);
             }} catch (InvalidArgumentException $e) {{
@@ -240,7 +240,7 @@ public class OwnershipEnforcerBehaviouralTest {
             }}
         }}
 
-        // 2. Test komainu_check_ownership with SQLite in-memory PDO
+        // 2. Test komagu_check_ownership with SQLite in-memory PDO
         $pdo = new PDO('sqlite::memory:');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER)');
@@ -249,13 +249,13 @@ public class OwnershipEnforcerBehaviouralTest {
         $allowed = ['orders' => ['pk' => 'id', 'owner' => 'user_id']];
 
         // Matching owner
-        assert(komainu_check_ownership($pdo, 'orders', 'id', 1, 'user_id', 100, $allowed) === true);
+        assert(komagu_check_ownership($pdo, 'orders', 'id', 1, 'user_id', 100, $allowed) === true);
         // Non-matching owner
-        assert(komainu_check_ownership($pdo, 'orders', 'id', 1, 'user_id', 101, $allowed) === false);
+        assert(komagu_check_ownership($pdo, 'orders', 'id', 1, 'user_id', 101, $allowed) === false);
         // Falsy or 0 ID never matches unowned row (id=2, user_id=0)
-        assert(komainu_check_ownership($pdo, 'orders', 'id', 2, 'user_id', 0, $allowed) === false);
-        assert(komainu_check_ownership($pdo, 'orders', 'id', 2, 'user_id', '0', $allowed) === false);
-        assert(komainu_check_ownership($pdo, 'orders', 'id', '', 'user_id', 100, $allowed) === false);
+        assert(komagu_check_ownership($pdo, 'orders', 'id', 2, 'user_id', 0, $allowed) === false);
+        assert(komagu_check_ownership($pdo, 'orders', 'id', 2, 'user_id', '0', $allowed) === false);
+        assert(komagu_check_ownership($pdo, 'orders', 'id', '', 'user_id', 100, $allowed) === false);
 
         echo "ALL_PHP_BEHAVIOURAL_TESTS_PASSED\\n";
         """
@@ -283,7 +283,7 @@ public class OwnershipEnforcerBehaviouralTest {
 
     def test_coldfusion_shim_forbids_remote_and_enforces_cfqueryparam(self) -> None:
         """ColdFusion CFC shim must use access='public', <cfqueryparam>, normalizeId, and 404 + <cfabort>."""
-        cfc_file = SHIMS_ROOT / "coldfusion" / "KomainuSecurityShim.cfc"
+        cfc_file = SHIMS_ROOT / "coldfusion" / "KomaguSecurityShim.cfc"
         self.assertTrue(cfc_file.is_file())
         content = cfc_file.read_text(encoding="utf-8")
 
@@ -307,8 +307,8 @@ public class OwnershipEnforcerBehaviouralTest {
         self.assertIn("cmd.CreateParameter", content)
         self.assertIn('Response.Status = "404 Not Found"', content)
         self.assertIn("Response.End", content)
-        self.assertIn("Function KomainuNormalizeId", content)
-        self.assertIn("Function KomainuSafeOrderBy", content)
+        self.assertIn("Function KomaguNormalizeId", content)
+        self.assertIn("Function KomaguSafeOrderBy", content)
         self.assertIn("On Error Resume Next", content)
         # Ensure no Err.Raise exists that could be swallowed by caller's On Error Resume Next
         self.assertNotIn("Err.Raise", content)

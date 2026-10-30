@@ -2,7 +2,7 @@
 
 const { ResourceOperation } = require('../interfaces');
 
-const KOMAINU_REQUIRE_OWNERSHIP_KEY = 'komainu:require_ownership';
+const KOMAGU_REQUIRE_OWNERSHIP_KEY = 'komagu:require_ownership';
 
 // WeakMap fallback when reflect-metadata is not loaded
 const metadataStore = new WeakMap();
@@ -34,7 +34,7 @@ function getMetadata(key, target) {
 }
 
 /**
- * Decorator attaching Komainu object ownership requirements to a NestJS controller or route handler.
+ * Decorator attaching Komagu object ownership requirements to a NestJS controller or route handler.
  *
  * @param {string} operation - ResourceOperation ('Read', 'Create', 'Update', 'Delete')
  * @param {Object} options - { idParamName: 'id', resourceLoader: (id, req) => Promise<any> }
@@ -49,10 +49,10 @@ function RequireOwnership(operation = ResourceOperation.READ, options = {}) {
     };
 
     if (descriptor && descriptor.value) {
-      setMetadata(KOMAINU_REQUIRE_OWNERSHIP_KEY, meta, descriptor.value);
+      setMetadata(KOMAGU_REQUIRE_OWNERSHIP_KEY, meta, descriptor.value);
       return descriptor;
     }
-    setMetadata(KOMAINU_REQUIRE_OWNERSHIP_KEY, meta, target);
+    setMetadata(KOMAGU_REQUIRE_OWNERSHIP_KEY, meta, target);
     return target;
   };
 }
@@ -62,14 +62,14 @@ function RequireOwnership(operation = ResourceOperation.READ, options = {}) {
  */
 function CurrentUser() {
   return function (target, propertyKey, parameterIndex) {
-    const existing = getMetadata('komainu:current_user_indices', target) || [];
+    const existing = getMetadata('komagu:current_user_indices', target) || [];
     existing.push(parameterIndex);
-    setMetadata('komainu:current_user_indices', existing, target);
+    setMetadata('komagu:current_user_indices', existing, target);
   };
 }
 
 module.exports = {
-  KOMAINU_REQUIRE_OWNERSHIP_KEY,
+  KOMAGU_REQUIRE_OWNERSHIP_KEY,
   RequireOwnership,
   CurrentUser,
   setMetadata,

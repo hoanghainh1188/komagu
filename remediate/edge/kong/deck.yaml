@@ -1,4 +1,4 @@
-# decK configuration file for managing Komainu Kong Gateway declarative state
+# decK configuration file for managing Komagu Kong Gateway declarative state
 konnect-token: ""
 kong-addr: "http://localhost:8001"
 tls-skip-verify: false

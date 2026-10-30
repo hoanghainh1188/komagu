@@ -1,4 +1,4 @@
-"""Komainu Identity Models & Principals.
+"""Komagu Identity Models & Principals.
 
 Contains the UserPrincipal representation extracted from verified OIDC/OAuth2 tokens.
 """
