@@ -4,6 +4,7 @@ import io.komagu.portal.model.DocumentEntity
 import io.komagu.portal.model.OrderEntity
 import io.komagu.portal.repository.DocumentRepository
 import io.komagu.portal.repository.OrderRepository
+import io.komagu.security.identity.KomaguIdentityAutoConfiguration
 import io.komagu.security.spring.ResourceNotFoundException
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -29,7 +30,9 @@ import org.springframework.web.filter.OncePerRequestFilter
 import java.math.BigDecimal
 import java.time.Instant
 
-@SpringBootApplication
+// The demo authenticates with fixed persona tokens (DemoTokenFilter), not a real OIDC provider,
+// so the identity module's JWT decoder, which requires komagu.security.oidc.*, is left out.
+@SpringBootApplication(exclude = [KomaguIdentityAutoConfiguration::class])
 class Application {
     @Bean
     fun seedDataRunner(
