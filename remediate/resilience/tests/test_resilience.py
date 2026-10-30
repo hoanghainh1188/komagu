@@ -147,7 +147,7 @@ class TestMultiRegionResilience(unittest.TestCase):
 
         # Invariant 3: KMS key deletion deny statement uses managed security officer role
         self.assertIn("aws_iam_role.security_officer.arn", content)
-        self.assertNotIn("role/KomainuSecurityOfficer", content)
+        self.assertNotIn("role/KomaguSecurityOfficer", content)
 
         # Invariant 4: No unguarded direct index on replication_role[0]
         # Must be conditionally guarded when enable_cross_region_replication = false
@@ -198,7 +198,7 @@ class TestMultiRegionResilience(unittest.TestCase):
         env = dict(os.environ)
 
         with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
-            env["KOMAINU_DR_METADATA_PATH"] = tmp.name
+            env["KOMAGU_DR_METADATA_PATH"] = tmp.name
 
             # CLI --create
             create_cmd = [

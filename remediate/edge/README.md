@@ -1,6 +1,6 @@
-# Komainu Edge Gateway & WAF Protection (D4)
+# Komagu Edge Gateway & WAF Protection (D4)
 
-The **Komainu Edge Gateway & WAF** component implements **Layer 1 (Kong Gateway)** and **Layer 2 (OWASP Coraza WAF)** in the 5-layer STRIDE defense model of Boilerplate 1.
+The **Komagu Edge Gateway & WAF** component implements **Layer 1 (Kong Gateway)** and **Layer 2 (OWASP Coraza WAF)** in the 5-layer STRIDE defense model of Boilerplate 1.
 
 It provides immediate, perimeter-level protection for legacy web systems that cannot yet be refactored with application-level authorization (D1) or authentication (D2) libraries.
 
@@ -52,9 +52,9 @@ docker compose up -d
 
 | Container | Internal Port | Host Port | Role |
 |---|---|---|---|
-| `komainu-kong-gateway` | `8000`, `8001` | `8000`, `8001` | Edge API Gateway proxy & Admin API |
-| `komainu-coraza-waf` | `8080` | None | Pure-Go WAF reverse proxy (OWASP CRS v4) |
-| `komainu-mock-backend`| `5000` | None | Upstream echo backend for verification |
+| `komagu-kong-gateway` | `8000`, `8001` | `8000`, `8001` | Edge API Gateway proxy & Admin API |
+| `komagu-coraza-waf` | `8080` | None | Pure-Go WAF reverse proxy (OWASP CRS v4) |
+| `komagu-mock-backend`| `5000` | None | Upstream echo backend for verification |
 
 ---
 

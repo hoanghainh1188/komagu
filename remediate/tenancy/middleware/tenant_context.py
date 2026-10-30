@@ -12,7 +12,19 @@ from contextlib import contextmanager
 import hmac
 import os
 import re
+import warnings
 from typing import Any, Dict, Iterator, Optional
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
+    value = os.environ.get("KOMAGU_" + name)
+    if value is None:
+        value = os.environ.get("KOMAINU_" + name)
+        if value is not None:
+            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
+    return default if value is None else value
+
 
 # Context variable holding the active tenant_id for the current execution thread/coroutine
 _active_tenant: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
@@ -112,7 +124,7 @@ class TenantContextResolver:
         # 2. Extract internal service authentication
         expected_secret = (
             internal_service_secret
-            or os.environ.get("KOMAINU_INTERNAL_SERVICE_SECRET")
+            or _env("INTERNAL_SERVICE_SECRET")
         )
         internal_key = (
             norm_headers.get("x-internal-service-key")

@@ -1,13 +1,13 @@
 import { ResourceOperationType } from '../interfaces';
-import { KomainuSecurityService } from '../service';
+import { KomaguSecurityService } from '../service';
 
 export interface ExpressMiddlewareConfig {
   operation?: ResourceOperationType;
   idParamName?: string;
   resourceLoader: (id: string, req: any) => Promise<any> | any;
-  securityService?: KomainuSecurityService;
+  securityService?: KomaguSecurityService;
 }
 
-export declare function komainuOwnershipMiddleware(
+export declare function komaguOwnershipMiddleware(
   config: ExpressMiddlewareConfig
 ): (req: any, res: any, next: (err?: any) => void) => Promise<void>;

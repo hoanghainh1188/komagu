@@ -10,7 +10,7 @@ const {
 const USER_ID_CLAIMS = ['sub', 'uid', 'userId', 'user_id', 'id'];
 const TENANT_ID_CLAIMS = ['tenant_id', 'tid', 'tenant', 'org_id', 'organization_id'];
 
-class KomainuSecurityService {
+class KomaguSecurityService {
   constructor(auditSink = new LoggingSecurityAuditSink()) {
     this.auditSink = auditSink;
   }
@@ -157,5 +157,5 @@ class KomainuSecurityService {
 }
 
 module.exports = {
-  KomainuSecurityService,
+  KomaguSecurityService,
 };

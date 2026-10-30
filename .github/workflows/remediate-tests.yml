@@ -36,12 +36,12 @@ jobs:
         run: python3 -m unittest discover -s remediate/legacy_shims/tests -p "test_*.py"
 
       - name: Build Coraza WAF image
-        run: docker build -t komainu-coraza-caddy:local remediate/edge/coraza
+        run: docker build -t komagu-coraza-caddy:local remediate/edge/coraza
 
       - name: Run Edge Config verification tests
         env:
           # Load the real Caddy/Coraza config in the WAF image; fail instead of skipping
-          KOMAINU_REQUIRE_WAF_TEST: "1"
+          KOMAGU_REQUIRE_WAF_TEST: "1"
         run: python3 -m unittest discover -s remediate/edge/tests -p "test_*.py"
 
       - name: Verify Komainu DevSecOps & SBOM CLI pipeline

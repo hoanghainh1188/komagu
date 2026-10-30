@@ -120,7 +120,7 @@ Komainu operates on a strict **Bring-Your-Own-LLM (BYO-LLM)** and runtime-neutra
 ```typescript
 // NestJS Controller with Komainu Guard
 import { Controller, Get, Param, UseGuards, UseInterceptors } from '@nestjs/common';
-import { RequireOwnership, OwnershipGuard, OwnershipInterceptor, ResourceOperation } from 'komainu-guard';
+import { RequireOwnership, OwnershipGuard, OwnershipInterceptor, ResourceOperation } from '@hoanghainh/komagu';
 
 @Controller('api/v1/orders')
 @UseGuards(OwnershipGuard)

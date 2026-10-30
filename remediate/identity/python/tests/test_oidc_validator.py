@@ -1,4 +1,4 @@
-"""Security & Conformance Unit Tests for Komainu OIDC Token Validator (D2).
+"""Security & Conformance Unit Tests for Komagu OIDC Token Validator (D2).
 
 Covers all acceptance criteria from Issue #104:
 - Cryptographic signature verification against pinned asymmetric algorithms (RS256, etc.)
@@ -25,14 +25,14 @@ import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from remediate.identity.python.komainu_identity.models import UserPrincipal
-from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+from remediate.identity.python.komagu_identity.models import UserPrincipal
+from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator
 
 
 class TestOidcTokenValidator(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        os.environ.setdefault("KOMAINU_ENV", "test")
+        os.environ.setdefault("KOMAGU_ENV", "test")
         # Generate an RSA-2048 keypair for cryptographic testing
         cls.private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         cls.public_pem = cls.private_key.public_key().public_bytes(
@@ -43,7 +43,7 @@ class TestOidcTokenValidator(unittest.TestCase):
         # Generate a separate attacker keypair for forged signature testing
         cls.attacker_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-        cls.issuer = "https://identity.komainu.test"
+        cls.issuer = "https://identity.komagu.test"
         cls.audience = "komainu-api"
 
     def _create_token(
@@ -247,11 +247,11 @@ class TestOidcTokenValidator(unittest.TestCase):
 
     def test_09_dev_tokens_refuses_outside_test_environment(self) -> None:
         """OidcTokenValidator must raise RuntimeError if allow_dev_tokens=True outside a test runner."""
-        # Run a standalone python snippet with KOMAINU_ENV=production to simulate production
+        # Run a standalone python snippet with KOMAGU_ENV=production to simulate production
         snippet = (
             "import os\n"
-            "os.environ['KOMAINU_ENV'] = 'production'\n"
-            "from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator\n"
+            "os.environ['KOMAGU_ENV'] = 'production'\n"
+            "from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator\n"
             "try:\n"
             "    OidcTokenValidator(issuer='https://a', audience='b', allow_dev_tokens=True)\n"
             "    print('FAIL')\n"
@@ -275,7 +275,7 @@ class TestOidcTokenValidator(unittest.TestCase):
         )
         user_a = validator.validate_token("token-user-a")
         self.assertEqual(user_a.user_id, "user-a")
-        self.assertEqual(user_a.tenant_id, "tenant-komainu")
+        self.assertEqual(user_a.tenant_id, "tenant-komagu")
         self.assertTrue(user_a.is_authenticated)
 
         admin = validator.validate_token("Bearer token-admin")
@@ -353,8 +353,8 @@ class TestOidcTokenValidator(unittest.TestCase):
         """JWKS URI must use HTTPS protocol outside permissive test dev-token mode."""
         snippet = (
             "import os\n"
-            "os.environ['KOMAINU_ENV'] = 'production'\n"
-            "from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator\n"
+            "os.environ['KOMAGU_ENV'] = 'production'\n"
+            "from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator\n"
             "try:\n"
             "    OidcTokenValidator(issuer='https://a', audience='b', jwks_uri='http://insecure.test/jwks')\n"
             "    print('FAIL')\n"
@@ -365,8 +365,8 @@ class TestOidcTokenValidator(unittest.TestCase):
         self.assertIn("JWKS URI must use HTTPS protocol", res.stdout)
 
     def test_15_no_circular_import(self) -> None:
-        """Importing komainu_identity independently must not trigger circular import errors."""
-        snippet = "import remediate.identity.python.komainu_identity; print('IMPORT_OK')"
+        """Importing komagu_identity independently must not trigger circular import errors."""
+        snippet = "import remediate.identity.python.komagu_identity; print('IMPORT_OK')"
         res = subprocess.run([sys.executable, "-c", snippet], capture_output=True, text=True, check=True)
         self.assertIn("IMPORT_OK", res.stdout)
 
@@ -394,22 +394,22 @@ class TestOidcTokenValidator(unittest.TestCase):
 
     def test_17_is_test_environment_not_fooled_by_latest_flag(self) -> None:
         """_is_test_environment must not treat flags like --latest as running tests."""
-        from remediate.identity.python.komainu_identity.oidc_validator import _is_test_environment
+        from remediate.identity.python.komagu_identity.oidc_validator import _is_test_environment
 
         orig_argv = sys.argv
-        orig_env = os.environ.get("KOMAINU_ENV")
+        orig_env = os.environ.get("KOMAGU_ENV")
         orig_pytest = os.environ.get("PYTEST_CURRENT_TEST")
         try:
-            if "KOMAINU_ENV" in os.environ:
-                del os.environ["KOMAINU_ENV"]
+            if "KOMAGU_ENV" in os.environ:
+                del os.environ["KOMAGU_ENV"]
             if "PYTEST_CURRENT_TEST" in os.environ:
                 del os.environ["PYTEST_CURRENT_TEST"]
-            sys.argv = ["komainu", "--latest", "run"]
+            sys.argv = ["komagu", "--latest", "run"]
             self.assertFalse(_is_test_environment())
         finally:
             sys.argv = orig_argv
             if orig_env is not None:
-                os.environ["KOMAINU_ENV"] = orig_env
+                os.environ["KOMAGU_ENV"] = orig_env
             if orig_pytest is not None:
                 os.environ["PYTEST_CURRENT_TEST"] = orig_pytest
 
@@ -470,17 +470,17 @@ class TestOidcTokenValidator(unittest.TestCase):
 
     def test_20_is_test_environment_strictly_requires_explicit_opt_in(self) -> None:
         """Issue #223: _is_test_environment must not be fooled by argv substrings when unittest is imported."""
-        from remediate.identity.python.komainu_identity.oidc_validator import _is_test_environment
+        from remediate.identity.python.komagu_identity.oidc_validator import _is_test_environment
 
-        orig_env = os.environ.get("KOMAINU_ENV")
-        orig_allow = os.environ.get("KOMAINU_ALLOW_DEV_TOKENS")
+        orig_env = os.environ.get("KOMAGU_ENV")
+        orig_allow = os.environ.get("KOMAGU_ALLOW_DEV_TOKENS")
         orig_pytest = os.environ.get("PYTEST_CURRENT_TEST")
         orig_argv = sys.argv
         try:
-            if "KOMAINU_ENV" in os.environ:
-                del os.environ["KOMAINU_ENV"]
-            if "KOMAINU_ALLOW_DEV_TOKENS" in os.environ:
-                del os.environ["KOMAINU_ALLOW_DEV_TOKENS"]
+            if "KOMAGU_ENV" in os.environ:
+                del os.environ["KOMAGU_ENV"]
+            if "KOMAGU_ALLOW_DEV_TOKENS" in os.environ:
+                del os.environ["KOMAGU_ALLOW_DEV_TOKENS"]
             if "PYTEST_CURRENT_TEST" in os.environ:
                 del os.environ["PYTEST_CURRENT_TEST"]
 
@@ -488,20 +488,20 @@ class TestOidcTokenValidator(unittest.TestCase):
             sys.argv = ["python", "/app/tests/my_test_runner.py", "--unittest"]
             self.assertFalse(_is_test_environment())
 
-            # Explicit opt-in KOMAINU_ENV=test
-            os.environ["KOMAINU_ENV"] = "test"
+            # Explicit opt-in KOMAGU_ENV=test
+            os.environ["KOMAGU_ENV"] = "test"
             self.assertTrue(_is_test_environment())
-            del os.environ["KOMAINU_ENV"]
+            del os.environ["KOMAGU_ENV"]
 
-            # Explicit opt-in KOMAINU_ALLOW_DEV_TOKENS=1
-            os.environ["KOMAINU_ALLOW_DEV_TOKENS"] = "1"
+            # Explicit opt-in KOMAGU_ALLOW_DEV_TOKENS=1
+            os.environ["KOMAGU_ALLOW_DEV_TOKENS"] = "1"
             self.assertTrue(_is_test_environment())
         finally:
             sys.argv = orig_argv
             if orig_env is not None:
-                os.environ["KOMAINU_ENV"] = orig_env
+                os.environ["KOMAGU_ENV"] = orig_env
             if orig_allow is not None:
-                os.environ["KOMAINU_ALLOW_DEV_TOKENS"] = orig_allow
+                os.environ["KOMAGU_ALLOW_DEV_TOKENS"] = orig_allow
             if orig_pytest is not None:
                 os.environ["PYTEST_CURRENT_TEST"] = orig_pytest
 

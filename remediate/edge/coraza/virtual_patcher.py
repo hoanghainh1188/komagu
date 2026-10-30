@@ -3,6 +3,8 @@
 
 Translates confirmed LSA findings (BOLA & SQLi) into deterministic,
 production-ready SecRule configurations for instant Day-2 edge protection.
+
+Rule tags stay 'komainu-*' after the rename so existing WAF log alerts still match (#290).
 """
 
 from __future__ import annotations
@@ -57,7 +59,7 @@ class VirtualPatcher:
         path_regex = self._sanitize_regex_path(path)
 
         rule = f"""# ==============================================================================
-# Komainu Virtual Patch: {finding_id}
+# Komagu Virtual Patch: {finding_id}
 # Vulnerability: SQL Injection (CWE-89)
 # Title: {title}
 # Target Endpoint: {method} {path}
@@ -69,7 +71,7 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
    status:403,\\
    t:urlDecodeUni,\\
    t:lowercase,\\
-   msg:'Komainu Virtual Patch: SQL Injection blocked on {path}',\\
+   msg:'Komagu Virtual Patch: SQL Injection blocked on {path}',\\
    logdata:'Matched Data: %{{TX.0}}',\\
    severity:'CRITICAL',\\
    tag:'komainu-virtual-patch',\\
@@ -100,7 +102,7 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
         path_regex = self._sanitize_regex_path(path)
 
         rule = f"""# ==============================================================================
-# Komainu Virtual Patch: {finding_id}
+# Komagu Virtual Patch: {finding_id}
 # Vulnerability: Broken Object Level Authorization (CWE-639)
 # Title: {title}
 # Target Endpoint: {method} {path}
@@ -111,7 +113,7 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
    deny,\\
    status:404,\\
    t:urlDecodeUni,\\
-   msg:'Komainu Virtual Patch: Missing Authorization Token on BOLA Endpoint {path}',\\
+   msg:'Komagu Virtual Patch: Missing Authorization Token on BOLA Endpoint {path}',\\
    severity:'CRITICAL',\\
    tag:'komainu-virtual-patch',\\
    tag:'komainu-bola',\\
@@ -129,7 +131,7 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
         items = findings_data if isinstance(findings_data, list) else findings_data.get("findings", [])
         rules: List[str] = [
             "# ==============================================================================",
-            "# Komainu Automated Virtual Patching Configuration for OWASP Coraza WAF",
+            "# Komagu Automated Virtual Patching Configuration for OWASP Coraza WAF",
             "# Generated automatically from verified LSA audit findings.",
             "# Inbound requests matching known attack signatures on these routes are blocked.",
             "# ==============================================================================",

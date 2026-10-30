@@ -8,24 +8,24 @@ import unittest
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-os.environ.setdefault("KOMAINU_ENV", "test")
+os.environ.setdefault("KOMAGU_ENV", "test")
 
-from remediate.authz.python.komainu_authz.fastapi_adapter import (
+from remediate.authz.python.komagu_authz.fastapi_adapter import (
     HAS_FASTAPI,
     HTTPException,
-    KomainuAuthMiddleware,
+    KomaguAuthMiddleware,
     Request,
     RequireOwnership,
     get_current_user,
-    komainu_ownership_exception_handler,
+    komagu_ownership_exception_handler,
 )
-from remediate.authz.python.komainu_authz.models import (
+from remediate.authz.python.komagu_authz.models import (
     InMemorySecurityAuditSink,
     OwnershipException,
     ResourceOperation,
 )
-from remediate.authz.python.komainu_authz.service import KomainuAuthorizationService
-from remediate.identity.python.komainu_identity.oidc_validator import OidcTokenValidator
+from remediate.authz.python.komagu_authz.service import KomaguAuthorizationService
+from remediate.identity.python.komagu_identity.oidc_validator import OidcTokenValidator
 
 
 @dataclass
@@ -64,17 +64,17 @@ def _build_request(
 class TestFastApiAdapter(unittest.TestCase):
     def setUp(self) -> None:
         self.audit_sink = InMemorySecurityAuditSink()
-        self.authz_service = KomainuAuthorizationService(audit_sink=self.audit_sink)
+        self.authz_service = KomaguAuthorizationService(audit_sink=self.audit_sink)
         self.validator = OidcTokenValidator(
-            issuer="https://auth.komainu.test",
+            issuer="https://auth.komagu.test",
             audience="komainu-api",
             allow_dev_tokens=True,
         )
 
         # In-memory document store
         self.docs: Dict[str, Document] = {
-            "doc-1": Document("doc-1", "user-a", "tenant-komainu", "Alice's Secret"),
-            "doc-2": Document("doc-2", "user-b", "tenant-komainu", "Bob's Public Note"),
+            "doc-1": Document("doc-1", "user-a", "tenant-komagu", "Alice's Secret"),
+            "doc-2": Document("doc-2", "user-b", "tenant-komagu", "Bob's Public Note"),
         }
 
     def _loader(self, doc_id: str) -> Optional[Document]:
@@ -85,7 +85,7 @@ class TestFastApiAdapter(unittest.TestCase):
         req_valid = _build_request(headers={"Authorization": "Bearer token-user-a"})
         user = get_current_user(req_valid, self.validator)
         self.assertEqual(user.user_id, "user-a")
-        self.assertEqual(user.tenant_id, "tenant-komainu")
+        self.assertEqual(user.tenant_id, "tenant-komagu")
 
         # Missing header -> 401
         req_missing = _build_request(headers={})
@@ -159,19 +159,19 @@ class TestFastApiAdapter(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 404)
 
     def test_05_ownership_exception_handler(self) -> None:
-        """komainu_ownership_exception_handler returns HTTP 404 response."""
+        """komagu_ownership_exception_handler returns HTTP 404 response."""
         exc = OwnershipException(detail="Forbidden probe blocked")
-        resp = komainu_ownership_exception_handler(None, exc)
+        resp = komagu_ownership_exception_handler(None, exc)
         self.assertEqual(resp.status_code, 404)
 
-    def test_06_komainu_auth_middleware(self) -> None:
-        """KomainuAuthMiddleware attaches authenticated UserPrincipal to ASGI scope."""
+    def test_06_komagu_auth_middleware(self) -> None:
+        """KomaguAuthMiddleware attaches authenticated UserPrincipal to ASGI scope."""
         received_scope: Dict[str, Any] = {}
 
         async def dummy_app(scope: Dict[str, Any], receive: Any, send: Any) -> None:
             received_scope.update(scope)
 
-        middleware = KomainuAuthMiddleware(dummy_app, self.validator)
+        middleware = KomaguAuthMiddleware(dummy_app, self.validator)
 
         scope = {
             "type": "http",
@@ -202,12 +202,12 @@ class TestFastApiAdapter(unittest.TestCase):
             )
         self.assertIn("requires a configured OidcTokenValidator", str(ctx_dep.exception))
 
-        # 3. KomainuAuthMiddleware with None validator raises ValueError
+        # 3. KomaguAuthMiddleware with None validator raises ValueError
         async def dummy_app(scope: Any, receive: Any, send: Any) -> None:
             pass
 
         with self.assertRaises(ValueError) as ctx_mid:
-            KomainuAuthMiddleware(dummy_app, validator=None)
+            KomaguAuthMiddleware(dummy_app, validator=None)
         self.assertIn("requires a configured OidcTokenValidator", str(ctx_mid.exception))
 
     def test_06_get_current_user_does_not_leak_internal_exception(self) -> None:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Automated edge security test suite for Komainu D4 (Kong Gateway + Coraza WAF).
+Automated edge security test suite for Komagu D4 (Kong Gateway + Coraza WAF).
 Provides declarative configuration validation, behavioral rule unit tests,
 and local traffic integration tests.
 Standard-library only (Python 3.8+ compatible).
@@ -51,8 +51,8 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         self.assertIn("name: jwt", content)
         self.assertIn("consumers:", content)
         self.assertIn("jwt_secrets:", content)
-        self.assertIn('secret: ${{ env "KOMAINU_JWT_SECRET" }}', content)
-        self.assertNotIn("komainu-default-test-jwt-secret-key-32chars", content)
+        self.assertIn('secret: ${{ env "KOMAGU_JWT_SECRET" }}', content)
+        self.assertNotIn("komagu-default-test-jwt-secret-key-32chars", content)
 
         # Invariant 4: Rate limiting plugin enabled with fail-closed redis policy
         self.assertIn("name: rate-limiting", content)
@@ -125,17 +125,17 @@ class TestEdgeDeclarativeConfiguration(unittest.TestCase):
         self.assertIn("ctl:requestBodyProcessor=JSON", content)
 
         # Invariant 2: Must detect and block SQL injection across ARGS, URI, and REQUEST_HEADERS
-        self.assertIn("Komainu WAF: SQL Injection Attack Detected", content)
+        self.assertIn("Komagu WAF: SQL Injection Attack Detected", content)
         self.assertIn("REQUEST_HEADERS", content)
         self.assertIn("\\bunion\\b", content)
         self.assertIn("\\bselect\\b", content)
 
         # Invariant 3: Must detect and block XSS
-        self.assertIn("Komainu WAF: Cross-Site Scripting (XSS) Attack Detected", content)
+        self.assertIn("Komagu WAF: Cross-Site Scripting (XSS) Attack Detected", content)
         self.assertIn("<script", content)
 
         # Invariant 4: Must detect and block Path Traversal
-        self.assertIn("Komainu WAF: Path Traversal Attack Detected", content)
+        self.assertIn("Komagu WAF: Path Traversal Attack Detected", content)
         self.assertIn("\\.\\./", content)
 
     def test_docker_compose_topology_and_admin_api_isolation(self):
@@ -303,9 +303,9 @@ class TestCorazaWafRulesBehavior(unittest.TestCase):
             )
 
 
-WAF_IMAGE = os.environ.get("KOMAINU_WAF_IMAGE", "komainu-coraza-caddy:local")
+WAF_IMAGE = os.environ.get("KOMAGU_WAF_IMAGE", "komagu-coraza-caddy:local")
 # CI sets this so a missing Docker daemon fails the job instead of silently skipping.
-REQUIRE_WAF_TEST = os.environ.get("KOMAINU_REQUIRE_WAF_TEST") == "1"
+REQUIRE_WAF_TEST = os.environ.get("KOMAGU_REQUIRE_WAF_TEST") == "1"
 
 
 def _docker(*args, timeout=120):
@@ -335,16 +335,16 @@ class TestCorazaWafContainer(unittest.TestCase):
     def setUpClass(cls):
         if not _docker_available():
             if REQUIRE_WAF_TEST:
-                raise RuntimeError("KOMAINU_REQUIRE_WAF_TEST=1 but Docker is not available")
+                raise RuntimeError("KOMAGU_REQUIRE_WAF_TEST=1 but Docker is not available")
             raise unittest.SkipTest("Docker is not available")
-        # Check if the WAF image exists locally. Unless KOMAINU_REQUIRE_WAF_TEST=1 is
+        # Check if the WAF image exists locally. Unless KOMAGU_REQUIRE_WAF_TEST=1 is
         # explicitly configured, avoid triggering long docker builds during general unittest discovery.
         if _docker("image", "inspect", WAF_IMAGE, timeout=10).returncode != 0:
             if not REQUIRE_WAF_TEST:
                 raise unittest.SkipTest(
                     f"WAF container image '{WAF_IMAGE}' is not pre-built locally. "
-                    "Run 'docker build -t komainu-coraza-caddy:local remediate/edge/coraza' "
-                    "or set KOMAINU_REQUIRE_WAF_TEST=1 to build automatically."
+                    "Run 'docker build -t komagu-coraza-caddy:local remediate/edge/coraza' "
+                    "or set KOMAGU_REQUIRE_WAF_TEST=1 to build automatically."
                 )
             build = _docker("build", "-t", WAF_IMAGE, os.path.join(EDGE_DIR, "coraza"), timeout=1200)
             if build.returncode != 0:
@@ -409,7 +409,7 @@ class TestCorazaWafContainer(unittest.TestCase):
 
     def test_crs_rules_active(self):
         self._require_running()
-        # Not matched by any Komainu custom rule: only CRS (930120 OS file access) blocks it.
+        # Not matched by any Komagu custom rule: only CRS (930120 OS file access) blocks it.
         self.assertEqual(self._status("/api/v1/files?name=/etc/passwd"), 403)
 
     def test_benign_request_not_blocked(self):
@@ -427,7 +427,7 @@ class TestCorazaWafContainer(unittest.TestCase):
 class TestCorazaWafSkipLogic(unittest.TestCase):
     """
     Verifies that TestCorazaWafContainer skips cleanly without triggering
-    lengthy docker builds when the image is missing and KOMAINU_REQUIRE_WAF_TEST!=1.
+    lengthy docker builds when the image is missing and KOMAGU_REQUIRE_WAF_TEST!=1.
     """
 
     def test_missing_image_skips_without_building_by_default(self):
@@ -470,7 +470,7 @@ class TestCorazaWafSkipLogic(unittest.TestCase):
             self.assertIn("WAF image build failed", str(ctx.exception))
             # Verify docker build was indeed called
             build_called = any(call_args[0][0] == "build" for call_args in mock_docker.call_args_list)
-            self.assertTrue(build_called, "docker build must be invoked when KOMAINU_REQUIRE_WAF_TEST=1")
+            self.assertTrue(build_called, "docker build must be invoked when KOMAGU_REQUIRE_WAF_TEST=1")
 
 
 class TestLiveEdgeSecurity(unittest.TestCase):
@@ -479,7 +479,7 @@ class TestLiveEdgeSecurity(unittest.TestCase):
     Skipped automatically if port 8000 is not reachable.
     """
 
-    BASE_URL = os.environ.get("KOMAINU_GATEWAY_URL", "http://localhost:8000")
+    BASE_URL = os.environ.get("KOMAGU_GATEWAY_URL", "http://localhost:8000")
 
     @classmethod
     def setUpClass(cls):

@@ -1,4 +1,4 @@
-"""Komainu Object-Level Authorization Domain Models & Contracts (Python).
+"""Komagu Object-Level Authorization Domain Models & Contracts (Python).
 
 Defines the core abstractions for BOLA defense, ownership enforcement,
 and security audit emission.
@@ -115,5 +115,5 @@ class OwnershipException(Exception):
         self.status_code = status_code
 
 # Re-export UserPrincipal from identity package (Identity is Layer 2 principal source)
-from remediate.identity.python.komainu_identity.models import UserPrincipal
+from remediate.identity.python.komagu_identity.models import UserPrincipal
 

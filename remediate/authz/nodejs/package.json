@@ -1,7 +1,7 @@
 {
-  "name": "@komainu/security-authz",
+  "name": "@hoanghainh/komagu-authz",
   "version": "1.2.1",
-  "description": "Komainu Object-Level Authorization & BOLA Defense Library for Node.js (NestJS & Express)",
+  "description": "Komagu Object-Level Authorization & BOLA Defense Library for Node.js (NestJS & Express)",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "scripts": {
@@ -15,7 +15,7 @@
     "nestjs",
     "express"
   ],
-  "author": "Komainu Contributors",
+  "author": "Komagu Contributors",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=16.0.0"

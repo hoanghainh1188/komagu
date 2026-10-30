@@ -1,7 +1,7 @@
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
-    container_name: komainu-keycloak
+    container_name: komagu-keycloak
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
@@ -9,7 +9,7 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_METRICS_ENABLED: "true"
     volumes:
-      - ./realm-komainu.json:/opt/keycloak/data/import/realm-komainu.json:ro
+      - ./realm-komagu.json:/opt/keycloak/data/import/realm-komagu.json:ro
     ports:
       - "8080:8080"
     healthcheck:

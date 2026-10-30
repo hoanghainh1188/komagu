@@ -1,7 +1,7 @@
 services:
   kong:
     image: kong:3.6
-    container_name: komainu-kong-gateway
+    container_name: komagu-kong-gateway
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
@@ -11,7 +11,7 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KOMAINU_JWT_SECRET: ${KOMAINU_JWT_SECRET:-komainu-default-test-jwt-secret-key-32chars}
+      KOMAGU_JWT_SECRET: ${KOMAGU_JWT_SECRET:-${KOMAINU_JWT_SECRET:-komagu-default-test-jwt-secret-key-32chars}}
     volumes:
       - ./kong/kong.yaml:/kong/declarative/kong.yaml:ro
     ports:
@@ -24,7 +24,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: komainu-redis
+    container_name: komagu-redis
     expose:
       - "6379"
     restart: unless-stopped
@@ -32,8 +32,8 @@ services:
   coraza-waf:
     build:
       context: ./coraza
-    image: komainu-coraza-caddy:local
-    container_name: komainu-coraza-waf
+    image: komagu-coraza-caddy:local
+    container_name: komagu-coraza-waf
     volumes:
       - ./coraza/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./coraza/coraza.conf:/etc/coraza/coraza.conf:ro
@@ -47,7 +47,7 @@ services:
   mock-backend:
     build:
       context: ./mock-backend
-    container_name: komainu-mock-backend
+    container_name: komagu-mock-backend
     expose:
       - "5000"
     restart: unless-stopped

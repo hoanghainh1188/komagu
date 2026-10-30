@@ -8,20 +8,20 @@ const {
   NotFoundException,
   UnauthorizedException,
   InMemorySecurityAuditSink,
-  KomainuSecurityService,
-  KOMAINU_REQUIRE_OWNERSHIP_KEY,
+  KomaguSecurityService,
+  KOMAGU_REQUIRE_OWNERSHIP_KEY,
   RequireOwnership,
   OwnershipGuard,
   OwnershipInterceptor,
-  komainuOwnershipMiddleware,
+  komaguOwnershipMiddleware,
 } = require('../src/index');
 
-test('KomainuSecurityService: allows owner access', async () => {
+test('KomaguSecurityService: allows owner access', async () => {
   const auditSink = new InMemorySecurityAuditSink();
-  const service = new KomainuSecurityService(auditSink);
+  const service = new KomaguSecurityService(auditSink);
 
-  const alice = { userId: 'user-a', tenantId: 'tenant-komainu' };
-  const order = { id: 'ord-01', ownerUserId: 'user-a', tenantId: 'tenant-komainu' };
+  const alice = { userId: 'user-a', tenantId: 'tenant-komagu' };
+  const order = { id: 'ord-01', ownerUserId: 'user-a', tenantId: 'tenant-komagu' };
 
   const decision = await service.authorize(alice, order, ResourceOperation.READ);
   assert.strictEqual(decision.succeeded, true);
@@ -33,12 +33,12 @@ test('KomainuSecurityService: allows owner access', async () => {
   });
 });
 
-test('KomainuSecurityService: denies attacker with 404 and emits audit', async () => {
+test('KomaguSecurityService: denies attacker with 404 and emits audit', async () => {
   const auditSink = new InMemorySecurityAuditSink();
-  const service = new KomainuSecurityService(auditSink);
+  const service = new KomaguSecurityService(auditSink);
 
-  const bob = { userId: 'user-b', tenantId: 'tenant-komainu' };
-  const order = { id: 'ord-01', ownerUserId: 'user-a', tenantId: 'tenant-komainu' };
+  const bob = { userId: 'user-b', tenantId: 'tenant-komagu' };
+  const order = { id: 'ord-01', ownerUserId: 'user-a', tenantId: 'tenant-komagu' };
 
   const decision = await service.authorize(bob, order, ResourceOperation.READ);
   assert.strictEqual(decision.succeeded, false);
@@ -61,16 +61,16 @@ test('KomainuSecurityService: denies attacker with 404 and emits audit', async (
   const event = auditSink.events[0];
   assert.strictEqual(event.eventName, 'Komainu.Authorization.Denied');
   assert.strictEqual(event.actorUserId, 'user-b');
-  assert.strictEqual(event.actorTenantId, 'tenant-komainu');
+  assert.strictEqual(event.actorTenantId, 'tenant-komagu');
   assert.strictEqual(event.resourceId, 'ord-01');
 });
 
-test('KomainuSecurityService: denies cross-tenant access', async () => {
+test('KomaguSecurityService: denies cross-tenant access', async () => {
   const auditSink = new InMemorySecurityAuditSink();
-  const service = new KomainuSecurityService(auditSink);
+  const service = new KomaguSecurityService(auditSink);
 
   const charlie = { userId: 'user-c', tenantId: 'tenant-other' };
-  const order = { id: 'ord-01', ownerUserId: 'user-a', tenantId: 'tenant-komainu' };
+  const order = { id: 'ord-01', ownerUserId: 'user-a', tenantId: 'tenant-komagu' };
 
   const decision = await service.authorize(charlie, order, ResourceOperation.READ);
   assert.strictEqual(decision.succeeded, false);
@@ -79,10 +79,10 @@ test('KomainuSecurityService: denies cross-tenant access', async () => {
 
 test('NestJS OwnershipGuard: allows owner and throws 404 on attacker', async () => {
   const auditSink = new InMemorySecurityAuditSink();
-  const service = new KomainuSecurityService(auditSink);
+  const service = new KomaguSecurityService(auditSink);
 
   const ordersDb = {
-    'ord-100': { id: 'ord-100', ownerUserId: 'user-a', tenantId: 'tenant-komainu', title: 'Private Doc' },
+    'ord-100': { id: 'ord-100', ownerUserId: 'user-a', tenantId: 'tenant-komagu', title: 'Private Doc' },
   };
 
   class TestController {
@@ -102,7 +102,7 @@ test('NestJS OwnershipGuard: allows owner and throws 404 on attacker', async () 
     getClass: () => TestController,
     switchToHttp: () => ({
       getRequest: () => ({
-        user: { userId: 'user-a', tenantId: 'tenant-komainu' },
+        user: { userId: 'user-a', tenantId: 'tenant-komagu' },
         params: { id: 'ord-100' },
       }),
     }),
@@ -117,7 +117,7 @@ test('NestJS OwnershipGuard: allows owner and throws 404 on attacker', async () 
     getClass: () => TestController,
     switchToHttp: () => ({
       getRequest: () => ({
-        user: { userId: 'user-b', tenantId: 'tenant-komainu' },
+        user: { userId: 'user-b', tenantId: 'tenant-komagu' },
         params: { id: 'ord-100' },
       }),
     }),
@@ -137,19 +137,19 @@ test('NestJS OwnershipGuard: allows owner and throws 404 on attacker', async () 
 
 test('NestJS OwnershipInterceptor: verifies returned entity', async () => {
   const auditSink = new InMemorySecurityAuditSink();
-  const service = new KomainuSecurityService(auditSink);
+  const service = new KomaguSecurityService(auditSink);
   const interceptor = new OwnershipInterceptor(null, service);
 
   // 1. Owner returns order
   const aliceContext = {
     switchToHttp: () => ({
       getRequest: () => ({
-        user: { userId: 'user-a', tenantId: 'tenant-komainu' },
+        user: { userId: 'user-a', tenantId: 'tenant-komagu' },
       }),
     }),
   };
   const aliceNext = {
-    handle: async () => ({ id: 'ord-200', ownerUserId: 'user-a', tenantId: 'tenant-komainu' }),
+    handle: async () => ({ id: 'ord-200', ownerUserId: 'user-a', tenantId: 'tenant-komagu' }),
   };
   const result = await interceptor.intercept(aliceContext, aliceNext);
   assert.strictEqual(result.id, 'ord-200');
@@ -158,12 +158,12 @@ test('NestJS OwnershipInterceptor: verifies returned entity', async () => {
   const bobContext = {
     switchToHttp: () => ({
       getRequest: () => ({
-        user: { userId: 'user-b', tenantId: 'tenant-komainu' },
+        user: { userId: 'user-b', tenantId: 'tenant-komagu' },
       }),
     }),
   };
   const bobNext = {
-    handle: async () => ({ id: 'ord-200', ownerUserId: 'user-a', tenantId: 'tenant-komainu' }),
+    handle: async () => ({ id: 'ord-200', ownerUserId: 'user-a', tenantId: 'tenant-komagu' }),
   };
 
   await assert.rejects(
@@ -178,33 +178,33 @@ test('NestJS OwnershipInterceptor: verifies returned entity', async () => {
   );
 });
 
-test('Express komainuOwnershipMiddleware: enforces BOLA check', async () => {
+test('Express komaguOwnershipMiddleware: enforces BOLA check', async () => {
   const auditSink = new InMemorySecurityAuditSink();
-  const service = new KomainuSecurityService(auditSink);
+  const service = new KomaguSecurityService(auditSink);
 
-  const middleware = komainuOwnershipMiddleware({
+  const middleware = komaguOwnershipMiddleware({
     operation: ResourceOperation.READ,
     idParamName: 'id',
-    resourceLoader: async (id) => (id === 'ord-300' ? { id: 'ord-300', ownerUserId: 'user-a', tenantId: 'tenant-komainu' } : null),
+    resourceLoader: async (id) => (id === 'ord-300' ? { id: 'ord-300', ownerUserId: 'user-a', tenantId: 'tenant-komagu' } : null),
     securityService: service,
   });
 
   // Owner Alice succeeds -> next() called
   let nextCalled = false;
   const aliceReq = {
-    user: { userId: 'user-a', tenantId: 'tenant-komainu' },
+    user: { userId: 'user-a', tenantId: 'tenant-komagu' },
     params: { id: 'ord-300' },
   };
   const dummyRes = {};
   await middleware(aliceReq, dummyRes, () => { nextCalled = true; });
   assert.strictEqual(nextCalled, true);
-  assert.strictEqual(aliceReq.komainuResource.id, 'ord-300');
+  assert.strictEqual(aliceReq.komaguResource.id, 'ord-300');
 
   // Attacker Bob denied -> res.status(404).json(...)
   let responseStatus = null;
   let responseData = null;
   const bobReq = {
-    user: { userId: 'user-b', tenantId: 'tenant-komainu' },
+    user: { userId: 'user-b', tenantId: 'tenant-komagu' },
     params: { id: 'ord-300' },
   };
   const mockRes = {
@@ -225,8 +225,8 @@ test('Express komainuOwnershipMiddleware: enforces BOLA check', async () => {
   assert.strictEqual(responseData.message, 'Resource not found');
 });
 
-test('KomainuSecurityService: claim semantics and edge cases', async () => {
-  const service = new KomainuSecurityService();
+test('KomaguSecurityService: claim semantics and edge cases', async () => {
+  const service = new KomaguSecurityService();
 
   // 1. Accepts generic "id" claim and trims whitespace
   const userWithId = {

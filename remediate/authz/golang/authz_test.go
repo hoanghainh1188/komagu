@@ -22,12 +22,12 @@ func TestAuthorizer_OwnerAllowed(t *testing.T) {
 
 	claims := map[string]interface{}{
 		"sub":       "user-a",
-		"tenant_id": "tenant-komainu",
+		"tenant_id": "tenant-komagu",
 	}
 	order := &TestOrder{
 		ID:          "ord-1",
 		OwnerUserID: "user-a",
-		TenantID:    "tenant-komainu",
+		TenantID:    "tenant-komagu",
 	}
 
 	allowed, reason, err := auth.Authorize(claims, order, OpRead)
@@ -48,12 +48,12 @@ func TestAuthorizer_AttackerDeniedWith404AndAudit(t *testing.T) {
 
 	attackerClaims := map[string]interface{}{
 		"sub":       "user-b",
-		"tenant_id": "tenant-komainu",
+		"tenant_id": "tenant-komagu",
 	}
 	order := &TestOrder{
 		ID:          "ord-1",
 		OwnerUserID: "user-a",
-		TenantID:    "tenant-komainu",
+		TenantID:    "tenant-komagu",
 	}
 
 	allowed, reason, _ := auth.Authorize(attackerClaims, order, OpRead)
@@ -91,7 +91,7 @@ func TestAuthorizer_CrossTenantDenied(t *testing.T) {
 	order := &TestOrder{
 		ID:          "ord-1",
 		OwnerUserID: "user-a",
-		TenantID:    "tenant-komainu",
+		TenantID:    "tenant-komagu",
 	}
 
 	allowed, _, _ := auth.Authorize(crossTenantClaims, order, OpUpdate)
@@ -105,16 +105,16 @@ func TestAuthorizer_HTTPMiddleware(t *testing.T) {
 	auth := NewAuthorizer(sink)
 
 	orders := map[string]*TestOrder{
-		"ord-1": {ID: "ord-1", OwnerUserID: "user-a", TenantID: "tenant-komainu"},
+		"ord-1": {ID: "ord-1", OwnerUserID: "user-a", TenantID: "tenant-komagu"},
 	}
 
 	claimsExtractor := func(r *http.Request) map[string]interface{} {
 		token := r.Header.Get("Authorization")
 		if token == "Bearer token-user-a" {
-			return map[string]interface{}{"sub": "user-a", "tenant_id": "tenant-komainu"}
+			return map[string]interface{}{"sub": "user-a", "tenant_id": "tenant-komagu"}
 		}
 		if token == "Bearer token-user-b" {
-			return map[string]interface{}{"sub": "user-b", "tenant_id": "tenant-komainu"}
+			return map[string]interface{}{"sub": "user-b", "tenant_id": "tenant-komagu"}
 		}
 		return nil
 	}
@@ -182,7 +182,7 @@ func TestAuthorizer_ClaimSemanticsAndEdgeCases(t *testing.T) {
 	}
 
 	// 3. Rejects empty/whitespace owner or tenant on resource
-	emptyOwnerOrder := &TestOrder{ID: "ord-1", OwnerUserID: "  ", TenantID: "tenant-komainu"}
+	emptyOwnerOrder := &TestOrder{ID: "ord-1", OwnerUserID: "  ", TenantID: "tenant-komagu"}
 	allowed, _, _ := auth.Authorize(claimsWithId, emptyOwnerOrder, OpRead)
 	if allowed {
 		t.Fatalf("expected denial on resource with empty owner")

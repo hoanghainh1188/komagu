@@ -35,7 +35,7 @@ if HAS_CRYPTOGRAPHY:
     from remediate.ekyc.server.mock_jlis_ca import MockJLISCertificateAuthority
 
 # Production-like environment: CI and test-framework imports must not enable simulation.
-NO_OPT_IN = {"CI": "true", "KOMAINU_ENV": "dev", SIMULATION_ENV_FLAG: ""}
+NO_OPT_IN = {"CI": "true", "KOMAGU_ENV": "dev", SIMULATION_ENV_FLAG: ""}
 
 
 def _simulated_signature(nonce: str) -> str:

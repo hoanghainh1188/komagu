@@ -1,4 +1,4 @@
-"""Komainu Safe Query & Parameterized Query Remediation Engine."""
+"""Komagu Safe Query & Parameterized Query Remediation Engine."""
 
 from __future__ import annotations
 

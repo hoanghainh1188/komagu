@@ -58,7 +58,7 @@ resource "aws_iam_role" "security_officer" {
 # 1. KMS CMK in Secondary Region (Osaka) with Strict Role Separation
 resource "aws_kms_key" "worm_backup_key" {
   provider                = aws.secondary
-  description             = "KMS Key for Komainu WORM Immutable Backups in Osaka"
+  description             = "KMS Key for Komagu WORM Immutable Backups in Osaka"
   deletion_window_in_days = 30
   enable_key_rotation     = true
 
@@ -134,7 +134,7 @@ resource "aws_s3_bucket" "worm_access_logs" {
   bucket   = "${var.project_name}-${var.environment}-worm-logs-${var.secondary_region}"
 
   tags = {
-    Name        = "Komainu WORM Access Logs"
+    Name        = "Komagu WORM Access Logs"
     Environment = var.environment
   }
 }
@@ -221,7 +221,7 @@ resource "aws_s3_bucket" "immutable_worm_backup" {
   object_lock_enabled = true
 
   tags = {
-    Name        = "Komainu Immutable WORM Backup"
+    Name        = "Komagu Immutable WORM Backup"
     Compliance  = "S3-Object-Lock-Compliance"
     Environment = var.environment
   }
@@ -350,7 +350,7 @@ resource "aws_s3_bucket" "primary_backup" {
   bucket   = "${var.project_name}-${var.environment}-primary-state-${var.primary_region}"
 
   tags = {
-    Name        = "Komainu Primary Active State"
+    Name        = "Komagu Primary Active State"
     Environment = var.environment
   }
 }

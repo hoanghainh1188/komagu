@@ -1,6 +1,6 @@
-# Komainu Safe Query Helpers & Linters (D3)
+# Komagu Safe Query Helpers & Linters (D3)
 
-The **Komainu Safe Query Helpers & Linters** component implements **Layer 5: Scoped Database Access & Safe Query Construction** in the 5-layer STRIDE defense model of Boilerplate 1.
+The **Komagu Safe Query Helpers & Linters** component implements **Layer 5: Scoped Database Access & Safe Query Construction** in the 5-layer STRIDE defense model of Boilerplate 1.
 
 It combines **runtime defensive helpers** (allow-lists for dynamic sorting and column names) with **compile-time / build-time static linters** (Roslyn Analyzer for C# and detekt rule for Kotlin) to eliminate SQL/JPQL injection (**CWE-89**) by design.
 
@@ -71,7 +71,7 @@ dbContext.Orders.FromSqlInterpolated($"SELECT * FROM orders WHERE id = {orderId}
 The `komagu-security-query` module provides the custom detekt rule `StringBuiltSqlQueryRule`:
 
 - **Rule ID:** `StringBuiltSqlQuery`
-- **RuleSet:** `komainu-security`
+- **RuleSet:** `komagu-security`
 - **Severity:** `Security` / `Debt.FIVE_MINS`
 - **Target APIs:** `em.createQuery`, `em.createNativeQuery`, `jdbcTemplate.query`, `jdbcClient.sql`.
 

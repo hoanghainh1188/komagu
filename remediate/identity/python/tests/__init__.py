@@ -1,1 +1,1 @@
-"""Unit tests for Komainu Identity package."""
+"""Unit tests for Komagu Identity package."""

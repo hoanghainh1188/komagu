@@ -1,7 +1,7 @@
 'use strict';
 
 const { NotFoundException, UnauthorizedException } = require('../interfaces');
-const { KOMAINU_REQUIRE_OWNERSHIP_KEY, getMetadata } = require('./decorators');
+const { KOMAGU_REQUIRE_OWNERSHIP_KEY, getMetadata } = require('./decorators');
 
 /**
  * NestJS Guard evaluating object-level authorization before route handler execution.
@@ -18,12 +18,12 @@ class OwnershipGuard {
 
     let meta = null;
     if (this.reflector && typeof this.reflector.get === 'function') {
-      meta = this.reflector.get(KOMAINU_REQUIRE_OWNERSHIP_KEY, handler) ||
-             this.reflector.get(KOMAINU_REQUIRE_OWNERSHIP_KEY, targetClass);
+      meta = this.reflector.get(KOMAGU_REQUIRE_OWNERSHIP_KEY, handler) ||
+             this.reflector.get(KOMAGU_REQUIRE_OWNERSHIP_KEY, targetClass);
     }
     if (!meta) {
-      meta = (handler && getMetadata(KOMAINU_REQUIRE_OWNERSHIP_KEY, handler)) ||
-             (targetClass && getMetadata(KOMAINU_REQUIRE_OWNERSHIP_KEY, targetClass));
+      meta = (handler && getMetadata(KOMAGU_REQUIRE_OWNERSHIP_KEY, handler)) ||
+             (targetClass && getMetadata(KOMAGU_REQUIRE_OWNERSHIP_KEY, targetClass));
     }
 
     if (!meta) {
@@ -66,7 +66,7 @@ class OwnershipGuard {
     // Enforce ownership: throws NotFoundException on BOLA violation
     await this.securityService.requireOwnership(user, resource, meta.operation, meta.options);
 
-    req.komainuResource = resource;
+    req.komaguResource = resource;
     return true;
   }
 }
