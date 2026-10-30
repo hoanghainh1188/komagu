@@ -1,1 +1,1 @@
-rootProject.name = "komainu-security-spring"
+rootProject.name = "komagu-security-spring"

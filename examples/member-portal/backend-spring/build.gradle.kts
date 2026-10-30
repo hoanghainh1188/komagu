@@ -6,7 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
 }
 
-group = "io.komainu.portal"
+group = "io.komagu.portal"
 version = "1.0.0"
 
 repositories {
@@ -28,10 +28,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("com.h2database:h2")
 
-    // Komainu Remediate Libraries
-    implementation("io.komainu:komainu-security-spring")
-    implementation("io.komainu:komainu-security-identity")
-    implementation("io.komainu:komainu-security-query")
+    // Komagu Remediate Libraries
+    implementation("io.komagu:komagu-security-spring")
+    implementation("io.komagu:komagu-security-identity")
+    implementation("io.komagu:komagu-security-query")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(kotlin("test"))

@@ -1,1 +1,1 @@
-rootProject.name = "komainu-security-query"
+rootProject.name = "komagu-security-query"

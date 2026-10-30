@@ -88,8 +88,8 @@ komainu:
 ```
 
 The auto-configuration registers:
-1. `KomainuAudienceValidator`: Enforces `aud == komainu-api`.
-2. `KomainuJwtAuthenticationConverter`: Maps `sub` to principal and `tenant_id` claim to authentication details.
+1. `KomaguAudienceValidator`: Enforces `aud == komainu-api`.
+2. `KomaguJwtAuthenticationConverter`: Maps `sub` to principal and `tenant_id` claim to authentication details.
 3. Stateless `SecurityFilterChain` permitting public endpoints and enforcing authentication on all other APIs.
 
 ---

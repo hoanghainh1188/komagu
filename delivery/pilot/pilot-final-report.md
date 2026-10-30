@@ -63,7 +63,7 @@ The Pilot phase (Weeks 9–12) of Project Komainu was executed on Deliverable D6
 |         │     • D3: EF Core FromSqlInterpolated Parameterization                                   |
 |         │                                                                                          |
 |         └── Kotlin Spring Boot 3 Backend                                                           |
-|               • D1: KomainuSecurityManager (Resource ownership check -> HTTP 404)                   |
+|               • D1: KomaguSecurityManager (Resource ownership check -> HTTP 404)                   |
 |               • D3: JPA Parameterized Criteria Queries                                             |
 |                                                                                                    |
 |    [Continuous CI Verification]                                                                    |

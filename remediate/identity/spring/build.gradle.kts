@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
 }
 
-group = "io.komainu"
+group = "io.komagu"
 version = "1.0.0-SNAPSHOT"
 
 repositories {
