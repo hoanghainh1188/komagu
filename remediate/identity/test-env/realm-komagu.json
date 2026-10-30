@@ -37,7 +37,7 @@
       ]
     },
     {
-      "clientId": "komainu-api",
+      "clientId": "komagu-api",
       "name": "Komagu Resource Server API",
       "enabled": true,
       "bearerOnly": true,

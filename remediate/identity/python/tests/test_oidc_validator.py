@@ -44,7 +44,7 @@ class TestOidcTokenValidator(unittest.TestCase):
         cls.attacker_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
         cls.issuer = "https://identity.komagu.test"
-        cls.audience = "komainu-api"
+        cls.audience = "komagu-api"
 
     def _create_token(
         self,

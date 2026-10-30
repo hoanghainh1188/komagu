@@ -11,7 +11,6 @@ from __future__ import annotations
 import math
 import os
 import sys
-import warnings
 from typing import Any, Dict, List, Optional, Union
 
 import jwt
@@ -33,13 +32,8 @@ from .models import UserPrincipal
 
 
 def _env(name: str, default: Optional[str] = None) -> Optional[str]:
-    """Read KOMAGU_<name>, falling back to the deprecated KOMAINU_<name> (#290)."""
-    value = os.environ.get("KOMAGU_" + name)
-    if value is None:
-        value = os.environ.get("KOMAINU_" + name)
-        if value is not None:
-            warnings.warn(f"KOMAINU_{name} is deprecated, set KOMAGU_{name} instead", DeprecationWarning, stacklevel=2)
-    return default if value is None else value
+    """Read KOMAGU_<name>."""
+    return os.environ.get("KOMAGU_" + name, default)
 
 
 # Standard test/dev personas matching Komagu cross-user test fixtures

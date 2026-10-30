@@ -319,7 +319,7 @@ def to_sarif(
 
         fingerprints = {"lsaFindingId": f.get("finding_id", f"LSA-{len(results)+1}")}
         if f.get("fingerprint"):
-            fingerprints["komainu/v1"] = f["fingerprint"]
+            fingerprints["komagu/v1"] = f["fingerprint"]
 
         result_taxa = []
         for c in norm_cwes:

@@ -208,7 +208,7 @@ class TestCrossUserPipeline(unittest.TestCase):
 
         # Check BOLA result mapping
         bola_res = run["results"][0]
-        self.assertEqual(bola_res["ruleId"], "KOMAINU-BOLA-CWE639")
+        self.assertEqual(bola_res["ruleId"], "KOMAGU-BOLA-CWE639")
         self.assertEqual(bola_res["level"], "error")
         loc = bola_res["locations"][0]["physicalLocation"]
         self.assertEqual(loc["artifactLocation"]["uri"], "legacy/orders.php")
@@ -217,7 +217,7 @@ class TestCrossUserPipeline(unittest.TestCase):
 
         # Check SQLi result mapping
         sqli_res = run["results"][1]
-        self.assertEqual(sqli_res["ruleId"], "KOMAINU-INJ-CWE89")
+        self.assertEqual(sqli_res["ruleId"], "KOMAGU-INJ-CWE89")
         self.assertEqual(sqli_res["level"], "error")
 
     def test_sarif_cli_execution(self) -> None:

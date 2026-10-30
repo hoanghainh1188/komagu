@@ -165,13 +165,8 @@ Examples:
 
 
 def _default_suppressions_file(target_path: Path) -> Path:
-    """TARGET/.komagu/suppressions.json, or the pre-rename .komainu/ copy with a warning."""
-    current = target_path / ".komagu" / "suppressions.json"
-    legacy = target_path / ".komainu" / "suppressions.json"
-    if not current.is_file() and legacy.is_file():
-        print(f"warning: {legacy} is deprecated, move it to {current}", file=sys.stderr)
-        return legacy
-    return current
+    """TARGET/.komagu/suppressions.json."""
+    return target_path / ".komagu" / "suppressions.json"
 
 
 def execute_scan(args: argparse.Namespace) -> int:

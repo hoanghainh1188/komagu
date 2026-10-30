@@ -11,7 +11,7 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KOMAGU_JWT_SECRET: ${KOMAGU_JWT_SECRET:-${KOMAINU_JWT_SECRET:-komagu-default-test-jwt-secret-key-32chars}}
+      KOMAGU_JWT_SECRET: ${KOMAGU_JWT_SECRET:-komagu-default-test-jwt-secret-key-32chars}
     volumes:
       - ./kong/kong.yaml:/kong/declarative/kong.yaml:ro
     ports:

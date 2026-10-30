@@ -18,12 +18,12 @@
     <cfargument name="idValue" type="any" required="true">
 
     <cfif isNull(arguments.idValue)>
-      <cfthrow type="Komainu.InvalidId" message="Identifier cannot be null.">
+      <cfthrow type="Komagu.InvalidId" message="Identifier cannot be null.">
     </cfif>
 
     <cfset var s = trim(toString(arguments.idValue))>
     <cfif len(s) EQ 0 OR NOT reFind("^[1-9][0-9]{0,18}$", s)>
-      <cfthrow type="Komainu.InvalidId" message="Identifier must be a positive canonical decimal integer.">
+      <cfthrow type="Komagu.InvalidId" message="Identifier must be a positive canonical decimal integer.">
     </cfif>
 
     <cfreturn s>
@@ -59,10 +59,10 @@
     <cfargument name="allowList" type="array" required="true">
 
     <cfif NOT arrayFind(arguments.allowList, arguments.identifier)>
-      <cfthrow type="Komainu.DisallowedIdentifier" message="Disallowed SQL identifier.">
+      <cfthrow type="Komagu.DisallowedIdentifier" message="Disallowed SQL identifier.">
     </cfif>
     <cfif NOT reFind("^[a-zA-Z_][a-zA-Z0-9_]*$", arguments.identifier)>
-      <cfthrow type="Komainu.InvalidIdentifier" message="Invalid SQL identifier format.">
+      <cfthrow type="Komagu.InvalidIdentifier" message="Invalid SQL identifier format.">
     </cfif>
     <cfreturn arguments.identifier>
   </cffunction>
@@ -99,7 +99,7 @@
       </cfquery>
 
       <cfif qOwnership.recordCount EQ 0>
-        <cfthrow type="Komainu.AccessDenied" message="Record not found or not owned.">
+        <cfthrow type="Komagu.AccessDenied" message="Record not found or not owned.">
       </cfif>
 
       <cfreturn normResId>

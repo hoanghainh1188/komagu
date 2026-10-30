@@ -10,7 +10,7 @@
     <Version>1.0.0-preview.1</Version>
     <Authors>Komagu Contributors</Authors>
     <Company>Komagu Security</Company>
-    <Description>Roslyn analyzer rule KOMAINU001 detecting SQL injection from string-built queries in C#.</Description>
+    <Description>Roslyn analyzer rule KOMAGU001 detecting SQL injection from string-built queries in C#.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>

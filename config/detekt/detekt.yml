@@ -4,9 +4,9 @@ build:
   # Report-only phase: never fail the build on the number of issues.
   maxIssues: -1
 
-# Komagu custom rule set (remediate/query/spring); id kept as komainu-security (#290). Third-party rule sets are
+# Komagu custom rule set (remediate/query/spring). Third-party rule sets are
 # inactive unless they are enabled explicitly.
-komainu-security:
+komagu-security:
   active: true
   StringBuiltSqlQuery:
     active: true

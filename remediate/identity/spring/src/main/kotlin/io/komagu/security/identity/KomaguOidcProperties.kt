@@ -13,10 +13,10 @@ data class KomaguOidcProperties(
     var issuer: String = "",
 
     /**
-     * Expected resource server audience (default: "komainu-api"). Must not be blank.
+     * Expected resource server audience (default: "komagu-api"). Must not be blank.
      * The pre-rename default is kept so issued tokens stay valid (#290).
      */
-    var audience: String = "komainu-api",
+    var audience: String = "komagu-api",
 
     /**
      * JSON Web Key Set (JWKS) endpoint URI. Must use HTTPS unless allowInsecureHttpJwks is true.

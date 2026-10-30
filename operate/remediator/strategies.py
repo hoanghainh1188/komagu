@@ -139,7 +139,7 @@ class DependencyVulnerabilityRemediationStrategy(BaseRemediationStrategy):
             return True
         if any(code in cwe for code in ("CWE-1395", "CWE-1104", "CWE-937")):
             return True
-        if finding_id.startswith(("CVE-", "GHSA-", "OSV-", "KOMAINU-SCA-", "DEP-")):
+        if finding_id.startswith(("CVE-", "GHSA-", "OSV-", "KOMAGU-SCA-", "DEP-")):
             return True
         if base_name in self.MANIFEST_FILES or base_name.endswith(".csproj"):
             return True

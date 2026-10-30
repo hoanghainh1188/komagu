@@ -191,10 +191,6 @@ class RemediationRunner:
             self.target_dir / "out" / "findings.json",
             self.target_dir / ".komagu-devsecops" / "sca.sarif",
             self.target_dir / ".komagu-devsecops" / "komagu-devsecops.sarif",
-            # Pre-rename output locations (#290)
-            self.target_dir / "komainu-out" / "findings.json",
-            self.target_dir / ".komainu-devsecops" / "sca.sarif",
-            self.target_dir / ".komainu-devsecops" / "komainu-devsecops.sarif",
         ]
         for candidate in candidates:
             if candidate.is_file():
@@ -236,7 +232,7 @@ class RemediationRunner:
                     rule_upper = rule_id.upper()
 
                     if (
-                        rule_upper.startswith(("CVE-", "GHSA-", "OSV-", "KOMAINU-SCA-", "DEP-"))
+                        rule_upper.startswith(("CVE-", "GHSA-", "OSV-", "KOMAGU-SCA-", "DEP-"))
                         or base_name in self.MANIFEST_FILENAMES
                         or base_name.endswith(".csproj")
                         or any(k in driver_name for k in ("trivy", "sca", "dependency", "osv", "pip-audit", "govulncheck"))

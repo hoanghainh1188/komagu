@@ -7,8 +7,7 @@ import java.time.Instant
  */
 data class SecurityAuditEvent(
     val timestamp: Instant = Instant.now(),
-    // Kept as "Komainu.*" after the rename so existing SIEM rules still match (#290).
-    val eventName: String = "Komainu.Authorization.Denied",
+    val eventName: String = "Komagu.Authorization.Denied",
     val traceId: String? = null,
     val actorUserId: String? = null,
     val actorTenantId: String? = null,

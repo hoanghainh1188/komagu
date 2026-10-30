@@ -182,7 +182,7 @@ class DefaultKomaguSecurityManager(
 
             val auditEvent = SecurityAuditEvent(
                 timestamp = Instant.now(),
-                eventName = "Komainu.Authorization.Denied",
+                eventName = "Komagu.Authorization.Denied",
                 actorUserId = actorUserId,
                 actorTenantId = actorTenantId,
                 resourceType = resource?.let { it::class.java.simpleName } ?: "Unknown",

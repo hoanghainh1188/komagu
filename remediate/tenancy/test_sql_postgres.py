@@ -16,7 +16,7 @@ import psycopg2
 from psycopg2 import sql
 
 # Paths to the SQL scripts relative to the repository root.
-REPO_ROOT = Path("/Users/hoanghainh/Projects/komainu")
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_SQL = REPO_ROOT / "remediate" / "tenancy" / "sql" / "schema_per_tenant.sql"
 RLS_SQL = REPO_ROOT / "remediate" / "tenancy" / "sql" / "rls_isolation.sql"
 

@@ -210,7 +210,7 @@ func (a *Authorizer) emitDenial(userId, tenantId string, resource IOwnedResource
 
 	a.Sink.Emit(SecurityAuditEvent{
 		Timestamp:     time.Now().UTC(),
-		EventName:     "Komainu.Authorization.Denied",
+		EventName:     "Komagu.Authorization.Denied",
 		ActorUserID:   userId,
 		ActorTenantID: tenantId,
 		ResourceType:  resType,

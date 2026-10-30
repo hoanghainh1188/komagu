@@ -15,7 +15,7 @@ Every incoming request bearing an access token is validated against 5 mandatory 
 | **Missing Token** | No `Authorization: Bearer <token>` header supplied. | **HTTP 401 Unauthorized** |
 | **Token Expiry** | Current timestamp > `exp` claim (`ClockSkew` enforced to 0s or strict delta). | **HTTP 401 Unauthorized** |
 | **Issuer Validation** | Token `iss` claim does not match configured trusted IdP authority. | **HTTP 401 Unauthorized** |
-| **Audience Validation** | Token `aud` claim does not include the target resource server ID (`komainu-api`). | **HTTP 401 Unauthorized** |
+| **Audience Validation** | Token `aud` claim does not include the target resource server ID (`komagu-api`). | **HTTP 401 Unauthorized** |
 | **Cryptographic Signature** | Token signed by untrusted key or payload tampered with. | **HTTP 401 Unauthorized** |
 
 ---
@@ -36,7 +36,7 @@ Keycloak starts at `http://localhost:8080` with the `komagu` realm pre-loaded:
 - **Realm Discovery URL:** `http://localhost:8080/realms/komagu/.well-known/openid-configuration`
 - **Clients:**
   - `komagu-portal`: Public SPA client (Standard Flow + PKCE enforced)
-  - `komainu-api`: Resource server bearer-only client (`aud`: `komainu-api`)
+  - `komagu-api`: Resource server bearer-only client (`aud`: `komagu-api`)
 - **Test Personas:**
   - `alice` (Password: `password123`, Tenant: `tenant-alpha`, Role: `Member`)
   - `bob` (Password: `password123`, Tenant: `tenant-alpha`, Role: `Member`)
@@ -58,7 +58,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddKomaguJwtAuthentication(options =>
 {
     options.Issuer = builder.Configuration["Authentication:Issuer"] ?? "https://auth.komagu.test/realms/komagu";
-    options.Audience = "komainu-api";
+    options.Audience = "komagu-api";
     options.RequireHttpsMetadata = builder.Environment.IsProduction();
     options.ClockSkew = TimeSpan.Zero;
 });
@@ -82,13 +82,13 @@ komagu:
   security:
     oidc:
       issuer: "https://auth.komagu.test/realms/komagu"
-      audience: "komainu-api"
+      audience: "komagu-api"
       jwk-set-uri: "https://auth.komagu.test/realms/komagu/protocol/openid-connect/certs"
       clock-skew-seconds: 0
 ```
 
 The auto-configuration registers:
-1. `KomaguAudienceValidator`: Enforces `aud == komainu-api`.
+1. `KomaguAudienceValidator`: Enforces `aud == komagu-api`.
 2. `KomaguJwtAuthenticationConverter`: Maps `sub` to principal and `tenant_id` claim to authentication details.
 3. Stateless `SecurityFilterChain` permitting public endpoints and enforcing authentication on all other APIs.
 

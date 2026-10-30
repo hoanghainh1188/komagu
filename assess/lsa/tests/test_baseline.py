@@ -198,6 +198,14 @@ class TestLoadBaseline(unittest.TestCase):
         entries = load_baseline(self.dir / "prev.sarif")
         self.assertEqual(entries["kfp1:" + "e" * 64]["state"], "open")
 
+    def test_loads_pre_2_0_sarif_fingerprint_key(self) -> None:
+        sarif = to_sarif({"findings": [{**_finding(), "fingerprint": "kfp1:" + "f" * 64}]})
+        for result in sarif["runs"][0]["results"]:
+            fps = result["partialFingerprints"]
+            fps["komainu/v1"] = fps.pop("komagu/v1")
+        write_json(self.dir / "old.sarif", sarif)
+        self.assertIn("kfp1:" + "f" * 64, load_baseline(self.dir / "old.sarif"))
+
     def test_invalid_file_raises(self) -> None:
         (self.dir / "bad.json").write_text("{not json", encoding="utf-8")
         with self.assertRaises(BaselineError):

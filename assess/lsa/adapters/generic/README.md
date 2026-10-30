@@ -8,7 +8,7 @@ komagu init --ai generic ./lsa-bundle
 ```
 
 It writes `system-prompts/`, `kit/` and `contract.json` into that folder.
-The contract carries `"generator": "komainu-lsa"`. Re-running refreshes a
+The contract carries `"generator": "komagu-lsa"`. Re-running refreshes a
 bundle that has this marker. The generator refuses, before writing anything,
 when the folder has a `contract.json` without the marker, or a `kit/` or
 `system-prompts/` folder but no `contract.json`. This keeps a project's own

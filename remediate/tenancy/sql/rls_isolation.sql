@@ -8,16 +8,16 @@
 --    In autocommit connection pools, session state expires immediately after set_current_tenant().
 -- 2. ROLE RESTRICTION: FORCE ROW LEVEL SECURITY enforces policies on table owners
 --    and standard users, but NEVER applies to PostgreSQL superusers or roles with BYPASSRLS.
---    Applications MUST connect using a non-owner, non-BYPASSRLS application role (komainu_app).
+--    Applications MUST connect using a non-owner, non-BYPASSRLS application role (komagu_app).
 
 -- 0. Provision Dedicated Non-Owner Application Role (without hard-coded password)
 -- NOTE: In production environments requiring LOGIN connections, configure passwords
--- exclusively via deployment orchestration or vault parameters (ALTER ROLE komainu_app WITH LOGIN PASSWORD ...),
+-- exclusively via deployment orchestration or vault parameters (ALTER ROLE komagu_app WITH LOGIN PASSWORD ...),
 -- NEVER hard-code credentials in committed migration scripts.
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'komainu_app') THEN
-        CREATE ROLE komainu_app WITH NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOLOGIN;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'komagu_app') THEN
+        CREATE ROLE komagu_app WITH NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOLOGIN;
     END IF;
 END;
 $$;
@@ -55,7 +55,7 @@ ALTER TABLE orders FORCE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS tenant_org_isolation_policy ON tenant_organizations;
 CREATE POLICY tenant_org_isolation_policy ON tenant_organizations
     FOR ALL
-    TO komainu_app
+    TO komagu_app
     USING (
         id = NULLIF(current_setting('app.current_tenant_id', true), '')
     )
@@ -67,7 +67,7 @@ CREATE POLICY tenant_org_isolation_policy ON tenant_organizations
 DROP POLICY IF EXISTS tenant_isolation_policy ON orders;
 CREATE POLICY tenant_isolation_policy ON orders
     FOR ALL
-    TO komainu_app
+    TO komagu_app
     USING (
         tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')
     )
@@ -126,11 +126,11 @@ CREATE TRIGGER trg_orders_tenant_injection
 
 -- 6. Grant Least-Privilege Access to Application Role & Revoke Public Execution
 REVOKE ALL ON FUNCTION trg_inject_current_tenant() FROM PUBLIC;
-GRANT USAGE ON SCHEMA public TO komainu_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON tenant_organizations TO komainu_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON orders TO komainu_app;
+GRANT USAGE ON SCHEMA public TO komagu_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON tenant_organizations TO komagu_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON orders TO komagu_app;
 
 REVOKE ALL ON FUNCTION set_current_tenant(VARCHAR) FROM PUBLIC;
 REVOKE ALL ON FUNCTION reset_current_tenant() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION set_current_tenant(VARCHAR) TO komainu_app;
-GRANT EXECUTE ON FUNCTION reset_current_tenant() TO komainu_app;
+GRANT EXECUTE ON FUNCTION set_current_tenant(VARCHAR) TO komagu_app;
+GRANT EXECUTE ON FUNCTION reset_current_tenant() TO komagu_app;

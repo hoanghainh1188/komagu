@@ -26,7 +26,7 @@ class TestJwtFactory {
 
     fun createToken(
         issuer: String = "https://auth.komagu.test/realms/komagu",
-        audience: String = "komainu-api",
+        audience: String = "komagu-api",
         subject: String? = "alice-100",
         tenantId: String = "tenant-alpha",
         issueTime: Instant = Instant.now(),

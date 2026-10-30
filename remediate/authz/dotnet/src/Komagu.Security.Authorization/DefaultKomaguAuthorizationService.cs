@@ -220,7 +220,7 @@ public sealed class DefaultKomaguAuthorizationService : IKomaguAuthorizationServ
             var auditEvent = new SecurityAuditEvent
             {
                 Timestamp = DateTimeOffset.UtcNow,
-                EventName = "Komainu.Authorization.Denied",
+                EventName = "Komagu.Authorization.Denied",
                 ActorUserId = actorUserId,
                 ActorTenantId = actorTenantId,
                 ResourceType = typeof(T).Name,

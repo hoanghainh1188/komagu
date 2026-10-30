@@ -13,10 +13,10 @@ public sealed class KomaguOidcOptions
     public string Issuer { get; set; } = string.Empty;
 
     /// <summary>
-    /// Expected resource server audience identifier (e.g. "komainu-api").
+    /// Expected resource server audience identifier (e.g. "komagu-api").
     /// The pre-rename default is kept so issued tokens stay valid (#290).
     /// </summary>
-    public string Audience { get; set; } = "komainu-api";
+    public string Audience { get; set; } = "komagu-api";
 
     /// <summary>
     /// OIDC well-known configuration endpoint URI.

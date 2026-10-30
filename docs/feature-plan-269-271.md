@@ -60,7 +60,7 @@ sha256( category | subtype | METHOD normalized_path | handler_file | sink_symbol
 - Không dùng số dòng → thêm/xóa dòng phía trên không đổi fingerprint.
 - `normalized_sink_line`: dòng sink bỏ khoảng trắng, comment và literal số.
 - Không dùng `finding_id` hay text do LLM sinh ra (Tier 2 không ổn định giữa các lần chạy).
-- Ghi vào cả `finding.fingerprint` và SARIF `partialFingerprints["komainu/v1"]`.
+- Ghi vào cả `finding.fingerprint` và SARIF `partialFingerprints["komagu/v1"]`.
 
 **Baseline** — file `baseline.json` (schema mới `contracts/schemas/baseline.schema.json`):
 

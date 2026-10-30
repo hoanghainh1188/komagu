@@ -156,9 +156,9 @@ class TestLsaSarifExport(unittest.TestCase):
         by_rule = {r["ruleId"]: r for r in self.run["results"]}
         mass_fp = by_rule["lsa/mass_assignment/whole_object_binding"]["partialFingerprints"]
         bfla_fp = by_rule["lsa/bfla/missing_role_check"]["partialFingerprints"]
-        self.assertEqual(mass_fp["komainu/v1"], FINGERPRINT)
+        self.assertEqual(mass_fp["komagu/v1"], FINGERPRINT)
         self.assertEqual(mass_fp["lsaFindingId"], "MASS-R-0002-1")
-        self.assertNotIn("komainu/v1", bfla_fp)
+        self.assertNotIn("komagu/v1", bfla_fp)
 
 
 class TestOperateSarifExport(unittest.TestCase):
@@ -166,16 +166,16 @@ class TestOperateSarifExport(unittest.TestCase):
         sarif = convert_findings_to_sarif([_finding(cwe=285), {**_mass_assignment(), "cwe": 915}])
         run = sarif["runs"][0]
         rule_ids = {r["id"] for r in run["tool"]["driver"]["rules"]}
-        self.assertEqual(rule_ids, {"KOMAINU-BFLA-CWE285", "KOMAINU-MASS-CWE915"})
-        mass = next(r for r in run["results"] if r["ruleId"] == "KOMAINU-MASS-CWE915")
-        self.assertEqual(mass["partialFingerprints"], {"komainu/v1": FINGERPRINT})
-        bfla = next(r for r in run["results"] if r["ruleId"] == "KOMAINU-BFLA-CWE285")
+        self.assertEqual(rule_ids, {"KOMAGU-BFLA-CWE285", "KOMAGU-MASS-CWE915"})
+        mass = next(r for r in run["results"] if r["ruleId"] == "KOMAGU-MASS-CWE915")
+        self.assertEqual(mass["partialFingerprints"], {"komagu/v1": FINGERPRINT})
+        bfla = next(r for r in run["results"] if r["ruleId"] == "KOMAGU-BFLA-CWE285")
         self.assertNotIn("partialFingerprints", bfla)
 
     def test_default_cwe_for_new_categories(self) -> None:
         sarif = convert_findings_to_sarif([_finding(cwe=None), {**_mass_assignment(), "cwe": None}])
         rule_ids = {r["id"] for r in sarif["runs"][0]["tool"]["driver"]["rules"]}
-        self.assertEqual(rule_ids, {"KOMAINU-BFLA-CWE285", "KOMAINU-MASS-CWE915"})
+        self.assertEqual(rule_ids, {"KOMAGU-BFLA-CWE285", "KOMAGU-MASS-CWE915"})
 
 
 class TestSummaryAndReports(unittest.TestCase):

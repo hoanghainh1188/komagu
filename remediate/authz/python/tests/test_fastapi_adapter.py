@@ -67,7 +67,7 @@ class TestFastApiAdapter(unittest.TestCase):
         self.authz_service = KomaguAuthorizationService(audit_sink=self.audit_sink)
         self.validator = OidcTokenValidator(
             issuer="https://auth.komagu.test",
-            audience="komainu-api",
+            audience="komagu-api",
             allow_dev_tokens=True,
         )
 

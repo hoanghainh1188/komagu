@@ -34,7 +34,7 @@ A Disaster Recovery failover is declared by the Incident Commander / Principal A
 ### Phase 2: Secondary Cluster Activation (大阪スタンバイ環境起動)
 1. Scale Osaka ECS tasks from 0 (warm standby) to production capacity:
    ```bash
-   aws ecs update-service --cluster komainu-production-standby-dr-cluster \
+   aws ecs update-service --cluster komagu-production-standby-dr-cluster \
      --service api-gateway --desired-count 4 --region ap-northeast-3
    ```
 2. Rehydrate relational state from S3 Object Lock Compliance WORM bucket:
@@ -43,7 +43,7 @@ A Disaster Recovery failover is declared by the Incident Commander / Principal A
    ```
 
 ### Phase 3: Route53 Traffic Cutover (DNS切替)
-1. Update DNS failover record to point to Osaka ALB (`osaka-dr-alb.komainu.internal`).
+1. Update DNS failover record to point to Osaka ALB (`osaka-dr-alb.komagu.internal`).
 2. Verify smoke test health check returns HTTP 200 on all core endpoints.
 
 ---

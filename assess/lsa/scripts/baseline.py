@@ -35,7 +35,9 @@ from trend import append_history, mttr_by_severity, snapshot  # noqa: E402
 
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 FAIL_ON = ("none", "new", "any")
-SARIF_FINGERPRINT_KEY = "komainu/v1"
+SARIF_FINGERPRINT_KEY = "komagu/v1"
+# SARIF baselines written before 2.0 use the old key; still read for one major release (#312)
+LEGACY_SARIF_FINGERPRINT_KEY = "komainu/v1"
 
 
 class BaselineError(Exception):
@@ -57,7 +59,8 @@ def _entries_from_sarif(doc: Dict) -> Dict[str, Dict]:
     entries: Dict[str, Dict] = {}
     for run in doc.get("runs") or []:
         for result in run.get("results") or []:
-            fp = (result.get("partialFingerprints") or {}).get(SARIF_FINGERPRINT_KEY)
+            fingerprints = result.get("partialFingerprints") or {}
+            fp = fingerprints.get(SARIF_FINGERPRINT_KEY) or fingerprints.get(LEGACY_SARIF_FINGERPRINT_KEY)
             if not fp:
                 continue
             props = result.get("properties") or {}

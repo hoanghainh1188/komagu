@@ -18,6 +18,7 @@ Business and planning documents that sit around the LSA kit. They are **internal
 | [Developer Community Articles (Qiita & Zenn)](articles/README.md) | Japanese developer community articles: published Qiita hands-on quickstart and Zenn technical architecture deep-dive for `komagu`. | Published & active; Closes #73 |
 | [Feature Plan: #269 · #270 · #271](feature-plan-269-271.md) | Implementation plan (Vietnamese) for BFLA + mass assignment, baseline / PR diff scanning, and the METI SCS evidence pack: order, design, PR breakdown, tests, risks, decisions. | Draft v0.1; Phase 0 in #272 |
 | [Komagu CLI Comprehensive User Guide](cli-guide.md) | Unified operator and developer guide for all 8 core CLI subcommands (`scan`, `init`, `protect`, `test`, `fix`, `simulate`, `devsecops`, `demo`), flags, exit codes, and CI/CD pipelines. | Active & verified |
+| [Migrating to Komagu 2.0](migration-2.0.md) | Old → new table for the identifiers renamed from "Komainu" in 2.0, removed 1.x shims, and update steps for suppressions, SIEM/WAF queries, token audience, PostgreSQL role and Terraform. | Active |
 
 ## How these files are maintained
 

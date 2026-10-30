@@ -101,7 +101,7 @@ class KomaguIdentityAutoConfigurationTest {
 
         val port = server.address.port
         val issuer = "https://auth.komagu.test/realms/komagu"
-        val audience = "komainu-api"
+        val audience = "komagu-api"
 
         try {
             contextRunner
@@ -255,7 +255,7 @@ class KomaguIdentityAutoConfigurationTest {
         }
         server.start()
 
-        val audience = "komainu-api"
+        val audience = "komagu-api"
 
         try {
             // Configure ONLY spring.security.oauth2.resourceserver.jwt.issuer-uri

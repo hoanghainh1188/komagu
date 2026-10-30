@@ -16,7 +16,7 @@ All implementations strictly enforce these architectural guarantees:
    - **Imperative (Programmatic):** Explicit service calls (`AuthorizeAsync` / `requireOwnership`) for complex business workflows and multi-condition rules.
    - **Declarative (Metadata/Attribute/Annotation):** Endpoint filter (`[RequireOwnership]`) or AOP Aspect (`@RequireOwnership`) for clean, declarative controller boundaries.
 4. **Scoped Data-Access Helpers:** Query pipeline extensions (EF Core `WithUserScope`, Spring Data `ScopedRepository`) automatically appending tenant and owner constraints to SQL queries before execution.
-5. **Structured Security Audit Logging:** Every denial emits a structured event (`Komainu.Authorization.Denied`) with `actorUserId`, `actorTenantId`, `resourceType`, `resourceId`, and failure rationale for SIEM and security monitoring.
+5. **Structured Security Audit Logging:** Every denial emits a structured event (`Komagu.Authorization.Denied`) with `actorUserId`, `actorTenantId`, `resourceType`, `resourceId`, and failure rationale for SIEM and security monitoring.
 
 ---
 

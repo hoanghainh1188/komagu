@@ -15,7 +15,7 @@ This creates:
   directory up to the repository root.
 - `.codex/agents/lsa-*.toml` — one project custom agent per role
   (`name`, `description`, `developer_instructions`).
-- `AGENTS.md` — an LSA section between `komainu-lsa:begin` / `komainu-lsa:end`
+- `AGENTS.md` — an LSA section between `komagu-lsa:begin` / `komagu-lsa:end`
   markers. Anything you write outside the markers is kept; re-running the
   generator only replaces the section.
 

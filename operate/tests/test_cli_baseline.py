@@ -58,7 +58,7 @@ class TestScanBaseline(unittest.TestCase):
     def test_default_scan_adds_fingerprint_and_passes(self) -> None:
         res = self.scan()
         self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
-        self.assertTrue(self.sarif_result()["partialFingerprints"]["komainu/v1"].startswith("kfp1:"))
+        self.assertTrue(self.sarif_result()["partialFingerprints"]["komagu/v1"].startswith("kfp1:"))
 
     def test_fail_on_new_without_baseline_fails(self) -> None:
         res = self.scan("--fail-on", "new")
@@ -114,14 +114,6 @@ class TestScanSuppressions(unittest.TestCase):
         self.write_suppressions(self.target / ".komagu" / "suppressions.json", "2999-12-31")
         res = self.scan("--fail-on", "new")
         self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
-        sarif = json.loads((self.out / "findings.sarif").read_text(encoding="utf-8"))
-        self.assertEqual(sarif["runs"][0]["results"][0]["suppressions"][0]["status"], "accepted")
-
-    def test_legacy_komainu_suppressions_dir_still_used(self) -> None:
-        self.write_suppressions(self.target / ".komainu" / "suppressions.json", "2999-12-31")
-        res = self.scan("--fail-on", "new")
-        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
-        self.assertIn(".komainu/suppressions.json is deprecated", res.stderr)
         sarif = json.loads((self.out / "findings.sarif").read_text(encoding="utf-8"))
         self.assertEqual(sarif["runs"][0]["results"][0]["suppressions"][0]["status"], "accepted")
 

@@ -85,10 +85,8 @@ class BOLAOwnershipPatcher:
     def ensure_imports(self, content: str, lang: str) -> Tuple[str, bool]:
         """Ensure necessary Komagu authorization import is present at the top of the file."""
         if lang in ("typescript", "javascript"):
-            # komainu-guard: package name before the rename (#290), already-patched files keep it
-            for pkg in ("@hoanghainh/komagu", "komainu-guard"):
-                if f"from '{pkg}'" in content or f'from "{pkg}"' in content:
-                    return content, False
+            if "from '@hoanghainh/komagu'" in content or 'from "@hoanghainh/komagu"' in content:
+                return content, False
             import_stmt = "import { RequireOwnership, OwnershipGuard, ResourceOperation } from '@hoanghainh/komagu';\n"
             return import_stmt + content, True
 
@@ -143,6 +141,7 @@ class BOLAOwnershipPatcher:
 
         # Check if guard is already present on or adjacent to this line
         surrounding = "".join(lines[max(0, idx - 3):min(len(lines), idx + 3)])
+        # [KOMAINU-FIX] is only read: nothing writes it since #216, but files patched before that still carry it (#312)
         if "RequireOwnership" in surrounding or "OwnershipGuard" in surrounding or "[KOMAINU-FIX]" in surrounding:
             return content, BOLARewriteResult(
                 original_line=target_line,

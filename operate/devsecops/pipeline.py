@@ -107,14 +107,14 @@ class DevSecOpsPipeline:
         results = []
         rules = [
             {
-                "id": "KOMAINU-SECRET-001",
+                "id": "KOMAGU-SECRET-001",
                 "name": "HardcodedCredentialDetected",
                 "shortDescription": {"text": "Potential hardcoded secret or API credential detected."},
                 "defaultConfiguration": {"level": "error"},
             }
         ]
 
-        skip_dirs = {".git", "node_modules", "bin", "obj", ".komagu", ".komagu-devsecops", ".komainu", ".komainu-devsecops", "dist", "build"}
+        skip_dirs = {".git", "node_modules", "bin", "obj", ".komagu", ".komagu-devsecops", "dist", "build"}
         skip_exts = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".tar", ".gz", ".db", ".sqlite"}
 
         for dirpath, dirnames, filenames in os.walk(self.target_dir):
@@ -137,7 +137,7 @@ class DevSecOpsPipeline:
                                 if re.search(pattern, line):
                                     results.append(
                                         {
-                                            "ruleId": "KOMAINU-SECRET-001",
+                                            "ruleId": "KOMAGU-SECRET-001",
                                             "level": "error",
                                             "message": {"text": f"{desc} found in {rel_path}"},
                                             "locations": [
@@ -324,7 +324,7 @@ class DevSecOpsPipeline:
         results = []
         rules = [
             {
-                "id": "KOMAINU-CONTAINER-001",
+                "id": "KOMAGU-CONTAINER-001",
                 "name": "DockerfileSecurityMisconfiguration",
                 "shortDescription": {"text": "Container configuration deviates from production hardening standards."},
                 "defaultConfiguration": {"level": "warning"},
@@ -343,7 +343,7 @@ class DevSecOpsPipeline:
                                     if re.search(pattern, line.strip()):
                                         results.append(
                                             {
-                                                "ruleId": "KOMAINU-CONTAINER-001",
+                                                "ruleId": "KOMAGU-CONTAINER-001",
                                                 "level": level,
                                                 "message": {"text": f"{msg} at {rel_path}:{line_no}"},
                                                 "locations": [
