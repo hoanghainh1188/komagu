@@ -1,15 +1,15 @@
-"""Command: komainu scan - End-to-end legacy security audit."""
+"""Command: komagu scan - End-to-end legacy security audit."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
+from operate.cli.env import getenv
 from operate.cli.ui import (
     BOLD,
     CYAN,
@@ -39,13 +39,13 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         epilog="""
 Examples:
   # Scan current directory and generate bilingual HTML & Markdown reports
-  komainu scan .
+  komagu scan .
 
   # Scan a legacy codebase with Japanese reports and custom output folder
-  komainu scan /path/to/legacy-php --out ./audit-results --lang ja --format html
+  komagu scan /path/to/legacy-php --out ./audit-results --lang ja --format html
 
   # Scan and generate all artifact formats (SARIF, Markdown, interactive HTML dashboard)
-  komainu scan /path/to/app --format all --project "Core Banking Migration"
+  komagu scan /path/to/app --format all --project "Core Banking Migration"
 """,
     )
     parser.add_argument("target", help="Path to the target source code repository to audit")
@@ -53,7 +53,7 @@ Examples:
         "--out",
         "-o",
         dest="out_dir",
-        help="Output directory for audit artifacts (default: ./komainu-out)",
+        help="Output directory for audit artifacts (default: ./komagu-out)",
     )
     parser.add_argument(
         "--lang",
@@ -116,7 +116,7 @@ Examples:
     parser.add_argument(
         "--suppressions",
         metavar="PATH",
-        help="Approved accepted-risk suppressions JSON (default: TARGET/.komainu/suppressions.json if present)",
+        help="Approved accepted-risk suppressions JSON (default: TARGET/.komagu/suppressions.json if present)",
     )
     parser.add_argument(
         "--fail-on",
@@ -147,13 +147,13 @@ Examples:
     parser.add_argument(
         "--model",
         "-m",
-        default=os.environ.get("KOMAINU_AI_MODEL", "llama3.1"),
-        help="LLM model name for headless AI execution (default: $KOMAINU_AI_MODEL or llama3.1)",
+        default=getenv("AI_MODEL", "llama3.1"),
+        help="LLM model name for headless AI execution (default: $KOMAGU_AI_MODEL or llama3.1)",
     )
     parser.add_argument(
         "--api-key",
-        default=os.environ.get("KOMAINU_AI_API_KEY", "ollama"),
-        help="Bearer API key for headless AI endpoint (default: $KOMAINU_AI_API_KEY or 'ollama')",
+        default=getenv("AI_API_KEY", "ollama"),
+        help="Bearer API key for headless AI endpoint (default: $KOMAGU_AI_API_KEY or 'ollama')",
     )
     parser.add_argument(
         "--ai-timeout",
@@ -164,6 +164,16 @@ Examples:
     parser.set_defaults(func=execute_scan)
 
 
+def _default_suppressions_file(target_path: Path) -> Path:
+    """TARGET/.komagu/suppressions.json, or the pre-rename .komainu/ copy with a warning."""
+    current = target_path / ".komagu" / "suppressions.json"
+    legacy = target_path / ".komainu" / "suppressions.json"
+    if not current.is_file() and legacy.is_file():
+        print(f"warning: {legacy} is deprecated, move it to {current}", file=sys.stderr)
+        return legacy
+    return current
+
+
 def execute_scan(args: argparse.Namespace) -> int:
     """Execute the end-to-end scan pipeline."""
     target_path = Path(args.target).resolve()
@@ -172,7 +182,7 @@ def execute_scan(args: argparse.Namespace) -> int:
         return 2
 
     project_name = args.project or target_path.name
-    out_dir = Path(args.out_dir).resolve() if args.out_dir else (Path.cwd() / "komainu-out")
+    out_dir = Path(args.out_dir).resolve() if args.out_dir else (Path.cwd() / "komagu-out")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     step(f"Scanning target repository {color(str(target_path), BOLD)}")
@@ -343,7 +353,7 @@ def execute_scan(args: argparse.Namespace) -> int:
     suppressions_file = (
         Path(args.suppressions).resolve()
         if getattr(args, "suppressions", None)
-        else target_path / ".komainu" / "suppressions.json"
+        else _default_suppressions_file(target_path)
     )
     if getattr(args, "suppressions", None) or suppressions_file.is_file():
         baseline_cmd.extend(["--suppressions", str(suppressions_file)])
@@ -439,7 +449,7 @@ def execute_scan(args: argparse.Namespace) -> int:
         summary_rows.append(("Diff Scope", f"{len(diff_scope['selected'])} file(s) vs {diff_ref}"))
 
     print_summary_table(
-        title="Komainu Security Audit Summary",
+        title="Komagu Security Audit Summary",
         rows=summary_rows,
         footer="Open report.html in any browser for interactive charts & remediation patches.",
     )
@@ -454,7 +464,7 @@ def execute_scan(args: argparse.Namespace) -> int:
     else:
         print(f"  {color('💡 Mode: Tier 1 Deterministic Engine', CYAN, BOLD)} (Regex & AST candidate extraction, no LLM required)")
         print("  To run Tier 2 Cognitive Multi-Agent Audit (BOLA semantic reasoning & Skeptic Verifier):")
-        print(f"    • Headless CLI: {color('komainu scan ' + str(target_path) + ' --headless-ai http://localhost:11434/v1 --model llama3.1', BOLD)}")
+        print(f"    • Headless CLI: {color('komagu scan ' + str(target_path) + ' --headless-ai http://localhost:11434/v1 --model llama3.1', BOLD)}")
         print(f"    • Claude Code : {color('python3 assess/lsa/adapters/build_adapters.py claude-code .', BOLD)}")
         print(f"    • Cursor      : {color('python3 assess/lsa/adapters/build_adapters.py cursor .', BOLD)}")
         print(f"    • Custom LLM  : see {color('assess/lsa/adapters/generic/README.md', BOLD)} (BYO-LLM: OpenAI, Gemini, Ollama)\n")

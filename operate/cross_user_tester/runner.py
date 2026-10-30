@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Komainu Cross-User Authorization Test Runner.
+"""Komagu Cross-User Authorization Test Runner.
 
 Continuous security verification engine for detecting Broken Object Level
 Authorization (BOLA / IDOR) vulnerabilities in CI/CD pipelines.
@@ -9,7 +9,7 @@ Verifies the 3 core operations (Read, Update, Delete):
 - PUT/PATCH /resource/{id}
 - DELETE /resource/{id}
 
-Enforces the Komainu security invariant:
+Enforces the Komagu security invariant:
 When an attacker (Persona B) attempts to access Persona A's resource,
 the endpoint MUST respond with HTTP 404 Not Found.
 Any 2xx response indicates a BOLA breach (CWE-639 / CWE-284).
@@ -267,7 +267,7 @@ def generate_test_cases_from_findings(
 
     test_cases: List[TestCase] = []
 
-    # 1. Native Komainu findings format
+    # 1. Native Komagu findings format
     if (isinstance(data, dict) and "findings" in data) or isinstance(data, list):
         items = data if isinstance(data, list) else data.get("findings", [])
         for item in items:
@@ -324,7 +324,7 @@ def generate_test_cases_from_findings(
             for m in methods:
                 payload = None
                 if m in ("POST", "PUT", "PATCH"):
-                    payload = {"status": "tampered_by_attacker", "note": "Komainu BOLA exploit verification"}
+                    payload = {"status": "tampered_by_attacker", "note": "Komagu BOLA exploit verification"}
 
                 tc_name = f"[{fid}] {item.get('title', target_path)} ({m})"
                 test_cases.append(
@@ -398,7 +398,7 @@ def format_report(results: List[TestResult], base_url: str) -> Tuple[str, bool]:
     """Format human-readable CLI report and determine overall pass/fail status."""
     lines: List[str] = [
         "============================================================",
-        "  KOMAINU CROSS-USER AUTHORIZATION TEST REPORT",
+        "  KOMAGU CROSS-USER AUTHORIZATION TEST REPORT",
         "============================================================",
         f"Target Base URL: {base_url}",
         f"Total Tests Executed: {len(results)}",
@@ -445,7 +445,7 @@ def format_report(results: List[TestResult], base_url: str) -> Tuple[str, bool]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Komainu Cross-User Authorization Test Runner"
+        description="Komagu Cross-User Authorization Test Runner"
     )
     parser.add_argument("--base-url", required=True, help="Target API base URL")
     parser.add_argument("--config", help="Path to JSON test suite configuration file")

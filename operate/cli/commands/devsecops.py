@@ -1,4 +1,4 @@
-"""Command: komainu devsecops - DevSecOps, SCA & SBOM Supply Chain Security Pipeline."""
+"""Command: komagu devsecops - DevSecOps, SCA & SBOM Supply Chain Security Pipeline."""
 
 from __future__ import annotations
 
@@ -37,16 +37,16 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         epilog="""
 Examples:
   # Run full DevSecOps scan and generate unified SARIF and SBOMs
-  komainu devsecops run .
+  komagu devsecops run .
 
   # Generate CycloneDX 1.5 JSON SBOM for an application
-  komainu devsecops sbom . --format cyclonedx -o ./sbom.json
+  komagu devsecops sbom . --format cyclonedx -o ./sbom.json
 
   # Generate SPDX 2.3 JSON SBOM
-  komainu devsecops sbom . --format spdx -o ./spdx-sbom.json
+  komagu devsecops sbom . --format spdx -o ./spdx-sbom.json
 
   # Merge multiple SARIF reports into unified GitHub Code Scanning report
-  komainu devsecops merge-sarif --inputs sast.sarif sca.sarif -o unified.sarif
+  komagu devsecops merge-sarif --inputs sast.sarif sca.sarif -o unified.sarif
 """,
     )
 
@@ -71,8 +71,8 @@ Examples:
     run_parser.add_argument(
         "--output-dir",
         "-o",
-        default=".komainu-devsecops",
-        help="Output directory for reports (default: .komainu-devsecops)",
+        default=".komagu-devsecops",
+        help="Output directory for reports (default: .komagu-devsecops)",
     )
     run_parser.add_argument(
         "--app-name",
@@ -158,7 +158,7 @@ def handle_devsecops_command(args: argparse.Namespace) -> int:
 
 def _handle_run(args: argparse.Namespace) -> int:
     target_path = Path(getattr(args, "target", ".")).resolve()
-    output_dir = Path(getattr(args, "output_dir", ".komainu-devsecops")).resolve()
+    output_dir = Path(getattr(args, "output_dir", ".komagu-devsecops")).resolve()
     app_name = getattr(args, "app_name", "Application")
     app_version = getattr(args, "app_version", "1.0.0")
 
@@ -180,7 +180,7 @@ def _handle_run(args: argparse.Namespace) -> int:
 
     step("[5/5] Evaluating container hardening and aggregating SARIF reports")
     c_res = pipeline.run_container_scan()
-    sarif_path = os.path.join(str(output_dir), "komainu-devsecops.sarif")
+    sarif_path = os.path.join(str(output_dir), "komagu-devsecops.sarif")
     pipeline.aggregator.save(sarif_path)
     summary = pipeline.aggregator.get_summary()
 

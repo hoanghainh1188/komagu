@@ -21,7 +21,7 @@ SARIF_SCHEMA_URI = (
 class SARIFReportAggregator:
     """Aggregates multiple SARIF files into a unified, deduplicated SARIF report."""
 
-    def __init__(self, suite_name: str = "Komainu DevSecOps Security Gate"):
+    def __init__(self, suite_name: str = "Komagu DevSecOps Security Gate"):
         self.suite_name = suite_name
         self.rules: Dict[str, Dict[str, Any]] = {}
         self.results: List[Dict[str, Any]] = []
@@ -76,7 +76,7 @@ class SARIFReportAggregator:
 
                 # Enrich result properties with source tag
                 props = result.setdefault("properties", {})
-                props["komainu_source"] = source_tag
+                props["komagu_source"] = source_tag
 
                 self.results.append(result)
                 added_count += 1
@@ -103,8 +103,8 @@ class SARIFReportAggregator:
                 {
                     "tool": {
                         "driver": {
-                            "name": "Komainu DevSecOps Pipeline",
-                            "organization": "Komainu Security",
+                            "name": "Komagu DevSecOps Pipeline",
+                            "organization": "Komagu Security",
                             "semanticVersion": "1.0.0",
                             "informationUri": "https://github.com/hoanghainh1188/komainu",
                             "rules": list(self.rules.values()),

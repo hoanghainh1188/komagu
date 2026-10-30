@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end tests for komainu scan baseline flags (Issue #270, part a).
+"""End-to-end tests for komagu scan baseline flags (Issue #270, part a).
 
 Validates --baseline, --update-baseline, --fail-on and --fail-severity on a
 real fixture: fingerprints reach findings.json and SARIF, a rescan against its
@@ -16,7 +16,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BIN_KOMAINU = REPO_ROOT / "bin" / "komainu"
+BIN_KOMAGU = REPO_ROOT / "bin" / "komagu"
 FIXTURE_PATH = REPO_ROOT / "assess" / "lsa" / "tests" / "fixtures" / "php-plain"
 
 FINDING = {
@@ -46,7 +46,7 @@ class TestScanBaseline(unittest.TestCase):
 
     def scan(self, *extra: str) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [sys.executable, str(BIN_KOMAINU), "scan", str(FIXTURE_PATH), "--out", str(self.out), "--format", "sarif", *extra],
+            [sys.executable, str(BIN_KOMAGU), "scan", str(FIXTURE_PATH), "--out", str(self.out), "--format", "sarif", *extra],
             capture_output=True,
             text=True,
         )
@@ -98,7 +98,7 @@ class TestScanSuppressions(unittest.TestCase):
 
     def scan(self, *extra: str) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [sys.executable, str(BIN_KOMAINU), "scan", str(self.target), "--out", str(self.out), "--format", "sarif", *extra],
+            [sys.executable, str(BIN_KOMAGU), "scan", str(self.target), "--out", str(self.out), "--format", "sarif", *extra],
             capture_output=True,
             text=True,
         )
@@ -111,9 +111,17 @@ class TestScanSuppressions(unittest.TestCase):
         path.write_text(json.dumps({"version": 1, "suppressions": [entry]}), encoding="utf-8")
 
     def test_default_suppressions_file_in_target_is_used(self) -> None:
+        self.write_suppressions(self.target / ".komagu" / "suppressions.json", "2999-12-31")
+        res = self.scan("--fail-on", "new")
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        sarif = json.loads((self.out / "findings.sarif").read_text(encoding="utf-8"))
+        self.assertEqual(sarif["runs"][0]["results"][0]["suppressions"][0]["status"], "accepted")
+
+    def test_legacy_komainu_suppressions_dir_still_used(self) -> None:
         self.write_suppressions(self.target / ".komainu" / "suppressions.json", "2999-12-31")
         res = self.scan("--fail-on", "new")
         self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        self.assertIn(".komainu/suppressions.json is deprecated", res.stderr)
         sarif = json.loads((self.out / "findings.sarif").read_text(encoding="utf-8"))
         self.assertEqual(sarif["runs"][0]["results"][0]["suppressions"][0]["status"], "accepted")
 
@@ -133,7 +141,7 @@ if __name__ == "__main__":
     unittest.main()
 
 
-GIT = ["git", "-c", "user.name=komainu-test", "-c", "user.email=test@komainu.invalid", "-c", "init.defaultBranch=main"]
+GIT = ["git", "-c", "user.name=komagu-test", "-c", "user.email=test@komagu.invalid", "-c", "init.defaultBranch=main"]
 
 
 class TestScanDiffMode(unittest.TestCase):
@@ -150,7 +158,7 @@ class TestScanDiffMode(unittest.TestCase):
 
     def scan(self, *extra: str) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [sys.executable, str(BIN_KOMAINU), "scan", str(self.target), "--out", str(self.out), "--format", "sarif", *extra],
+            [sys.executable, str(BIN_KOMAGU), "scan", str(self.target), "--out", str(self.out), "--format", "sarif", *extra],
             capture_output=True,
             text=True,
         )

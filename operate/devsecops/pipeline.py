@@ -2,7 +2,7 @@
 """DevSecOps Pipeline Orchestrator.
 
 Coordinates multi-stage DevSecOps scans and compliance checks:
-1. SAST (Static Application Security Testing via Semgrep / Komainu static engine)
+1. SAST (Static Application Security Testing via Semgrep / Komagu static engine)
 2. Secret Detection (Gitleaks / Native high-entropy secret scanner)
 3. SCA (Software Composition Analysis & Vulnerability Scanning via Trivy / manifest parser)
 4. SBOM Export (CycloneDX 1.5 & SPDX 2.3)
@@ -43,9 +43,9 @@ class DevSecOpsPipeline:
 
     def __init__(self, target_dir: str, output_dir: Optional[str] = None):
         self.target_dir = os.path.abspath(target_dir)
-        self.output_dir = os.path.abspath(output_dir or os.path.join(self.target_dir, ".komainu-devsecops"))
+        self.output_dir = os.path.abspath(output_dir or os.path.join(self.target_dir, ".komagu-devsecops"))
         os.makedirs(self.output_dir, exist_ok=True)
-        self.aggregator = SARIFReportAggregator(suite_name="Komainu Unified DevSecOps Gate")
+        self.aggregator = SARIFReportAggregator(suite_name="Komagu Unified DevSecOps Gate")
 
     def run_all(self, app_name: str = "App", app_version: str = "1.0.0") -> Dict[str, Any]:
         """Execute full DevSecOps pipeline and output aggregated reports."""
@@ -58,7 +58,7 @@ class DevSecOpsPipeline:
         }
 
         # Generate combined SARIF
-        sarif_path = os.path.join(self.output_dir, "komainu-devsecops.sarif")
+        sarif_path = os.path.join(self.output_dir, "komagu-devsecops.sarif")
         self.aggregator.save(sarif_path)
         findings_summary["sarif_report"] = sarif_path
         findings_summary["overall_summary"] = self.aggregator.get_summary()
@@ -114,7 +114,7 @@ class DevSecOpsPipeline:
             }
         ]
 
-        skip_dirs = {".git", "node_modules", "bin", "obj", ".komainu", ".komainu-devsecops", "dist", "build"}
+        skip_dirs = {".git", "node_modules", "bin", "obj", ".komagu", ".komagu-devsecops", ".komainu", ".komainu-devsecops", "dist", "build"}
         skip_exts = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".tar", ".gz", ".db", ".sqlite"}
 
         for dirpath, dirnames, filenames in os.walk(self.target_dir):
@@ -161,7 +161,7 @@ class DevSecOpsPipeline:
                 {
                     "tool": {
                         "driver": {
-                            "name": "Komainu Secret Detection Engine",
+                            "name": "Komagu Secret Detection Engine",
                             "semanticVersion": "1.0.0",
                             "rules": rules,
                         }
@@ -203,7 +203,7 @@ class DevSecOpsPipeline:
                 {
                     "tool": {
                         "driver": {
-                            "name": "Komainu SAST Analyzer",
+                            "name": "Komagu SAST Analyzer",
                             "semanticVersion": "1.0.0",
                             "rules": [],
                         }
@@ -287,7 +287,7 @@ class DevSecOpsPipeline:
                 {
                     "tool": {
                         "driver": {
-                            "name": "Komainu Dependency Inspector",
+                            "name": "Komagu Dependency Inspector",
                             "semanticVersion": "1.0.0",
                             "rules": rules,
                         }
@@ -366,7 +366,7 @@ class DevSecOpsPipeline:
                 {
                     "tool": {
                         "driver": {
-                            "name": "Komainu Container Hardening Linter",
+                            "name": "Komagu Container Hardening Linter",
                             "semanticVersion": "1.0.0",
                             "rules": rules,
                         }

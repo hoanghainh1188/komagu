@@ -1,4 +1,4 @@
-"""Data models for the Komainu remediation engine."""
+"""Data models for the Komagu remediation engine."""
 
 from __future__ import annotations
 

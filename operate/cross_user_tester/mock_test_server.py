@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mock HTTP Server for Komainu Cross-User Authorization Testing.
+"""Mock HTTP Server for Komagu Cross-User Authorization Testing.
 
 Simulates both:
 1. Vulnerable legacy endpoints (Planted BOLA / IDOR):

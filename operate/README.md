@@ -1,4 +1,4 @@
-# Komainu Operate: Continuous Security Verification Pipeline
+# Komagu Operate: Continuous Security Verification Pipeline
 
 Part of Boilerplate 1 (Deliverable B1-D5).
 
@@ -10,9 +10,9 @@ This directory provides CI/CD components for automated security verification, pr
 
 1. **Cross-User Authorization Test Runner (`cross-user-tester/runner.py`)**:
    - Executes multi-method security tests (`GET`, `PUT`, `DELETE`) simulating cross-user access attempts (Persona B accessing Persona A's resources).
-   - Invariant: Endpoints protected by Komainu D1 return **HTTP 404 Not Found**. Any `2xx` response is flagged as a BOLA breach (CWE-639 / CWE-284) and fails the pipeline (exit code 1).
+   - Invariant: Endpoints protected by Komagu D1 return **HTTP 404 Not Found**. Any `2xx` response is flagged as a BOLA breach (CWE-639 / CWE-284) and fails the pipeline (exit code 1).
    - Standard library only (Python 3.8+).
-   - **Persona matrix (`cross_user_tester/persona_matrix.py`)**: suite `"version": 2` lists personas (tokens from environment variables only) and the personas allowed per route. Other personas must be refused, otherwise it is a BFLA breach (CWE-285). An optional mass assignment probe checks that privileged fields such as `role` are not stored (CWE-915). Run it with `komainu test --suite personas.json`; see `docs/cli-guide.md` §3.4.
+   - **Persona matrix (`cross_user_tester/persona_matrix.py`)**: suite `"version": 2` lists personas (tokens from environment variables only) and the personas allowed per route. Other personas must be refused, otherwise it is a BFLA breach (CWE-285). An optional mass assignment probe checks that privileged fields such as `role` are not stored (CWE-915). Run it with `komagu test --suite personas.json`; see `docs/cli-guide.md` §3.4.
 
 2. **LSA-to-SARIF Converter (`lsa-sarif/lsa_to_sarif.py`)**:
    - Converts LSA audit output (`findings.json`) into OASIS SARIF v2.1.0 format.
@@ -22,7 +22,7 @@ This directory provides CI/CD components for automated security verification, pr
    - `github/cross-user-authz.yml`: Reusable GitHub Actions workflow.
    - `gitlab/cross-user-authz.gitlab-ci.yml`: GitLab CI security template.
 
-4. **Automated Remediation Runner (`remediator/runner.py` / `komainu fix`)**:
+4. **Automated Remediation Runner (`remediator/runner.py` / `komagu fix`)**:
    - Parses audit findings (`findings.json` or SARIF) and generates automated code fixes for BOLA/IDOR and SQLi vulnerabilities.
    - Supports dry-run simulation, unified patch export, and direct in-place remediation.
 
@@ -58,18 +58,18 @@ python3 operate/cross-user-tester/runner.py \
 ```bash
 python3 operate/lsa-sarif/lsa_to_sarif.py \
   --input findings.json \
-  --output komainu-lsa.sarif
+  --output komagu-lsa.sarif
 ```
 
-### 4. Run Automated Remediation (`komainu fix`)
+### 4. Run Automated Remediation (`komagu fix`)
 
 ```bash
 # Preview planned fixes without modifying code (dry-run)
-komainu fix . --dry-run
+komagu fix . --dry-run
 
 # Apply fixes from audit report
-komainu fix /path/to/legacy-app --findings ./komainu-out/findings.json
+komagu fix /path/to/legacy-app --findings ./komagu-out/findings.json
 
 # Export fixes as a unified .patch file
-komainu fix . --findings findings.json --dry-run -p ./security-fixes.patch
+komagu fix . --findings findings.json --dry-run -p ./security-fixes.patch
 ```

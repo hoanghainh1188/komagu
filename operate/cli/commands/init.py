@@ -1,4 +1,4 @@
-"""Command: komainu init - Install Tier 2 LSA agents into your AI runtime (Claude Code, Codex, Cursor, generic)."""
+"""Command: komagu init - Install Tier 2 LSA agents into your AI runtime (Claude Code, Codex, Cursor, generic)."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         description=(
             "Generates Tier 2 (BYO-LLM) files for your own AI runtime: the legacy-security-audit skill, "
             "one agent per audit role, and the shared knowledge base and schemas. "
-            "Komainu makes no LLM calls itself; your runtime runs the agents."
+            "Komagu makes no LLM calls itself; your runtime runs the agents."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -34,13 +34,13 @@ Runtimes and generated files:
 
 Examples:
   # Prepare an audit workspace for OpenAI Codex
-  komainu init --ai codex ~/audits/acme-2026-10
+  komagu init --ai codex ~/audits/acme-2026-10
 
   # Prepare the current folder for Claude Code
-  komainu init --ai claude
+  komagu init --ai claude
 
   # Export prompts and a pipeline contract for a private LLM runner
-  komainu init --ai generic ./lsa-bundle
+  komagu init --ai generic ./lsa-bundle
 
 DEST should be an audit workspace that contains or sits next to the code under
 audit, not the customer repository itself. Re-running refreshes the generated files.
@@ -65,7 +65,7 @@ generic refuses a DEST whose contract.json, kit/ or system-prompts/ it did not g
 
 def load_adapter_builder() -> ModuleType:
     """Load the stdlib-only adapter builder that ships inside the LSA kit."""
-    spec = importlib.util.spec_from_file_location("komainu_lsa_build_adapters", ADAPTER_SCRIPT)
+    spec = importlib.util.spec_from_file_location("komagu_lsa_build_adapters", ADAPTER_SCRIPT)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load adapter builder from {ADAPTER_SCRIPT}")
     module = importlib.util.module_from_spec(spec)

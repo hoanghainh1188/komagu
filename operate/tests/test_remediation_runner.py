@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Automated verification tests for Komainu Remediation Runner and CLI Fix Subcommand (Issue #186 & #208)."""
+"""Automated verification tests for Komagu Remediation Runner and CLI Fix Subcommand (Issue #186 & #208)."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ class TestRemediationRunner(unittest.TestCase):
     """Test suite verifying the remediation orchestrator, safety guards, and CLI fix subcommand."""
 
     def setUp(self) -> None:
-        self.temp_dir = tempfile.mkdtemp(prefix="komainu_fix_test_")
+        self.temp_dir = tempfile.mkdtemp(prefix="komagu_fix_test_")
         self.target_path = Path(self.temp_dir).resolve()
 
     def tearDown(self) -> None:
@@ -234,7 +234,7 @@ class TestRemediationRunner(unittest.TestCase):
 
     def test_path_traversal_defense(self) -> None:
         """Paths escaping target directory (e.g. sub/../../victim.py) must be rejected with error."""
-        outside_file = Path(self.temp_dir).parent / "komainu_outside_victim.py"
+        outside_file = Path(self.temp_dir).parent / "komagu_outside_victim.py"
         outside_file.write_text("# innocent victim", encoding="utf-8")
 
         try:
@@ -245,7 +245,7 @@ class TestRemediationRunner(unittest.TestCase):
                         {
                             "finding_id": "TRAV-001",
                             "category": "sql_injection",
-                            "location": {"file": "sub/../../komainu_outside_victim.py", "start_line": 1},
+                            "location": {"file": "sub/../../komagu_outside_victim.py", "start_line": 1},
                         }
                     ]
                 }),
@@ -414,7 +414,7 @@ class TestRemediationRunner(unittest.TestCase):
         self.assertNotIn("[KOMAINU-FIX]", complex_sql_file.read_text(encoding="utf-8"))
 
     def test_cli_fix_command_dry_run(self) -> None:
-        """CLI: komainu fix <target> --dry-run must execute successfully and report planned counts."""
+        """CLI: komagu fix <target> --dry-run must execute successfully and report planned counts."""
         _, findings_file = self._create_sample_repo()
 
         out = io.StringIO()
@@ -428,14 +428,14 @@ class TestRemediationRunner(unittest.TestCase):
             ])
         self.assertEqual(code, 0)
         output = out.getvalue()
-        self.assertIn("Komainu Remediation Summary", output)
+        self.assertIn("Komagu Remediation Summary", output)
         self.assertIn("Mode: DRY-RUN (Simulated)", output)
         self.assertIn("Patches planned", output)
         self.assertIn("Patches applied", output)
         self.assertIn("0 (dry-run)", output)
 
     def test_cli_fix_command_json_format(self) -> None:
-        """CLI: komainu fix <target> --format json must output valid JSON."""
+        """CLI: komagu fix <target> --format json must output valid JSON."""
         _, findings_file = self._create_sample_repo()
 
         out = io.StringIO()
@@ -457,12 +457,12 @@ class TestRemediationRunner(unittest.TestCase):
         self.assertTrue(data["dry_run"])
 
     def test_cli_fix_help_subcommand(self) -> None:
-        """CLI: komainu help fix and komainu fix --help must show usage."""
+        """CLI: komagu help fix and komagu fix --help must show usage."""
         out = io.StringIO()
         with redirect_stdout(out):
             code = main(["help", "fix"])
         self.assertEqual(code, 0)
-        self.assertIn("usage: komainu fix", out.getvalue())
+        self.assertIn("usage: komagu fix", out.getvalue())
         self.assertIn("Examples:", out.getvalue())
 
 

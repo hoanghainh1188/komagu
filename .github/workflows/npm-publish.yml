@@ -1,4 +1,4 @@
-# Komainu — Hardened npmjs Publication Workflow via Pure OIDC
+# Komagu — Hardened npmjs Publication Workflow via Pure OIDC
 #
 # Release Security Gate & Repository Visibility Note:
 # - environment: npm-release is configured for deployment tracking, protection rules, and auditability.
@@ -80,10 +80,10 @@ jobs:
 
       - name: Verify CLI wrapper
         run: |
-          node bin/komainu.js --version
-          node bin/komainu.js scan --help
-          node bin/komainu.js protect --dry-run
-          node bin/komainu.js demo --dry-run
+          node bin/komagu.js --version
+          node bin/komagu.js scan --help
+          node bin/komagu.js protect --dry-run
+          node bin/komagu.js demo --dry-run
 
       - name: Publish package to npmjs via OIDC
         run: |

@@ -1,4 +1,4 @@
-"""Komainu Breach & Attack Simulation (BAS) Engine."""
+"""Komagu Breach & Attack Simulation (BAS) Engine."""
 
 from __future__ import annotations
 

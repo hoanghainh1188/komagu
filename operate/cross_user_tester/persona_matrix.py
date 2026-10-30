@@ -445,7 +445,7 @@ def format_matrix_report(results: List[MatrixResult], deny_status: Tuple[int, ..
     """Human-readable report and overall pass/fail."""
     lines = [
         "============================================================",
-        "  KOMAINU PERSONA MATRIX REPORT (BFLA / MASS ASSIGNMENT)",
+        "  KOMAGU PERSONA MATRIX REPORT (BFLA / MASS ASSIGNMENT)",
         "============================================================",
     ]
     breaches = errors = passed = 0

@@ -1,4 +1,4 @@
-"""Komainu Remediation Engine — Automated security patching and guard injection."""
+"""Komagu Remediation Engine — Automated security patching and guard injection."""
 
 from __future__ import annotations
 

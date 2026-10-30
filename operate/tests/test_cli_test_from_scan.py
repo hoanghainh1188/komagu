@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for Komainu Test Ingestion from LSA Scan Output (TASK-1.3, TASK-1.4, TASK-1.6).
+"""Tests for Komagu Test Ingestion from LSA Scan Output (TASK-1.3, TASK-1.4, TASK-1.6).
 
 Validates:
 1. Parsing BOLA endpoints from native findings.json and OASIS SARIF 2.1.0.
@@ -196,7 +196,7 @@ class TestCliTestFromScan(unittest.TestCase):
             out_file = Path(td) / "test_out.json"
             scan_file.write_text(json.dumps(self.sample_findings), encoding="utf-8")
 
-            # Run komainu test pointing to our mock server
+            # Run komagu test pointing to our mock server
             # BOLA-vulnerable-order targets /api/legacy-orders/1 which returns 200 (Breach)
             exit_code = cli_main([
                 "--no-banner",

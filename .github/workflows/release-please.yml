@@ -1,4 +1,4 @@
-# Komainu — Automated Release PRs, Changelog & GitHub Releases via release-please
+# Komagu — Automated Release PRs, Changelog & GitHub Releases via release-please
 #
 # Flow:
 # - Every push to main updates (or opens) a "chore(release): bump platform version to X" PR that

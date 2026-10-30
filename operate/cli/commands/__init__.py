@@ -1,3 +1,3 @@
-"""Komainu CLI subcommand implementations."""
+"""Komagu CLI subcommand implementations."""
 
 from __future__ import annotations

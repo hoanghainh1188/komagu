@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the persona matrix (komainu test suite v2, #269d).
+"""Tests for the persona matrix (komagu test suite v2, #269d).
 
 Validates:
 1. Suite v2 loading: tokens only from token_env, persona names checked.
@@ -285,7 +285,7 @@ class TestPocExport(unittest.TestCase):
         self.assertIn("/api/admin/users/7", arts["BFLA-R-0001-1"].python_script)
         self.assertEqual(arts["MASS-M-0001-1"].category, "mass_assignment")
         self.assertIn('"role": "admin"', arts["MASS-M-0001-1"].python_script)
-        self.assertIn("KOMAINU_TOKEN", arts["MASS-M-0001-1"].python_script)
+        self.assertIn("KOMAGU_TOKEN", arts["MASS-M-0001-1"].python_script)
         self.assertNotIn("BFLA-R-0002-1", arts)
         for art in arts.values():
             compile(art.python_script, art.finding_id, "exec")

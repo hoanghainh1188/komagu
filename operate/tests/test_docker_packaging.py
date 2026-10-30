@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Automated verification test for Komainu Docker container packaging (Issue #52)."""
+"""Automated verification test for Komagu Docker container packaging (Issue #52)."""
 
 from __future__ import annotations
 
@@ -22,9 +22,9 @@ class TestDockerPackaging(unittest.TestCase):
 
         self.assertRegex(content, r"(?m)^FROM python:3\.\d+-slim\b")
         self.assertIn("useradd", content)
-        self.assertIn("USER komainu", content)
+        self.assertIn("USER komagu", content)
         self.assertIn("WORKDIR /workspace", content)
-        self.assertIn('ENTRYPOINT ["/app/bin/komainu"]', content)
+        self.assertIn('ENTRYPOINT ["/app/bin/komagu"]', content)
         self.assertIn('CMD ["--help"]', content)
         self.assertIn("PYTHONPATH=/app", content)
         self.assertIn("COPY examples/ /app/examples/", content)
@@ -44,8 +44,8 @@ class TestDockerPackaging(unittest.TestCase):
         content = WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn("docker/build-push-action", content)
-        self.assertIn("docker run --rm komainu:test --version", content)
-        self.assertIn("docker run --rm komainu:test scan --help", content)
+        self.assertIn("docker run --rm komagu:test --version", content)
+        self.assertIn("docker run --rm komagu:test scan --help", content)
         self.assertIn("ghcr.io", content)
 
 

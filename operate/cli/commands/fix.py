@@ -1,4 +1,4 @@
-"""Command: komainu fix - Automated security vulnerability remediation and guard injection."""
+"""Command: komagu fix - Automated security vulnerability remediation and guard injection."""
 
 from __future__ import annotations
 
@@ -35,19 +35,19 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
         epilog="""
 Examples:
   # Dry-run remediation against current repository using default findings.json
-  komainu fix . --dry-run
+  komagu fix . --dry-run
 
   # Automatically scan manifest files for vulnerable dependencies (CVEs) and patch versions
-  komainu fix . --sca
+  komagu fix . --sca
 
   # Apply fixes from a specific findings report or SARIF file
-  komainu fix /path/to/legacy-app --findings ./komainu-out/findings.json
+  komagu fix /path/to/legacy-app --findings ./komagu-out/findings.json
 
   # Generate unified patch file without modifying source code directly
-  komainu fix . --sca --dry-run -p ./security-fixes.patch
+  komagu fix . --sca --dry-run -p ./security-fixes.patch
 
   # Output machine-readable JSON remediation report
-  komainu fix . --sca --format json
+  komagu fix . --sca --format json
 """,
     )
     parser.add_argument(
@@ -60,7 +60,7 @@ Examples:
         "--findings",
         "-f",
         dest="findings_path",
-        help="Path to findings.json or SARIF report (default: auto-detected under target/komainu-out)",
+        help="Path to findings.json or SARIF report (default: auto-detected under target/komagu-out)",
     )
     parser.add_argument(
         "--sca",
@@ -166,7 +166,7 @@ def run_fix(args: argparse.Namespace) -> int:
     if report.patch_file:
         summary_rows.append(("Patch file exported", report.patch_file))
 
-    print_summary_table(f"Komainu Remediation Summary", summary_rows)
+    print_summary_table(f"Komagu Remediation Summary", summary_rows)
 
     if args.dry_run and report.planned_count > 0:
         step_info("Run without --dry-run to apply changes directly to the codebase.")

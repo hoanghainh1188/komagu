@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Integration and Unit Tests for Komainu Operate Continuous Verification Pipeline.
+"""Integration and Unit Tests for Komagu Operate Continuous Verification Pipeline.
 
 Validates:
 1. Cross-user test runner correctly catches planted BOLA breaches (GET, PUT, DELETE).
@@ -191,7 +191,7 @@ class TestCrossUserPipeline(unittest.TestCase):
                 "severity": "high",
                 "confidence": "high",
                 "cwe": 89,
-                "recommendation": "Use parameterized queries or Komainu query helpers.",
+                "recommendation": "Use parameterized queries or Komagu query helpers.",
                 "status": "confirmed",
             },
         ]
@@ -202,7 +202,7 @@ class TestCrossUserPipeline(unittest.TestCase):
         self.assertEqual(len(sarif["runs"]), 1)
 
         run = sarif["runs"][0]
-        self.assertEqual(run["tool"]["driver"]["name"], "Komainu LSA")
+        self.assertEqual(run["tool"]["driver"]["name"], "Komagu LSA")
         self.assertEqual(len(run["tool"]["driver"]["rules"]), 2)
         self.assertEqual(len(run["results"]), 2)
 
