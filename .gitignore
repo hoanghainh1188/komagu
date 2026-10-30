@@ -8,8 +8,10 @@ l sa-eval*/
 # .NET
 bin/
 !/bin/
+!/bin/komagu
+!/bin/komagu.js
 !/bin/komainu
-!/bin/komainu.js
+!/bin/komainu-legacy.js
 obj/
 *.user
 *.suo

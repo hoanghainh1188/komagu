@@ -1,18 +1,18 @@
-# Komainu CLI Comprehensive User Guide
+# Komagu CLI Comprehensive User Guide
 
-> **Komainu — Security-First Legacy Modernization Platform**  
+> **Komagu — Security-First Legacy Modernization Platform**  
 > Unified CLI for Automated Auditing, Perimeter Virtual Patching, Offensive Exploit Verification, In-Place Remediation, and Breach Simulation.
 
 ---
 
 ## 1. Overview & Execution Models
 
-Komainu provides a unified command-line interface adhering strictly to **Zero Third-Party Dependency** standards (Python 3.8+ standard library only per [ADR-0006](docs/adr/0006-remediation-architecture-standard-library-only.md)). It can be executed across developer workstations, air-gapped enterprise environments, and CI/CD runners using three flexible execution models.
+Komagu provides a unified command-line interface adhering strictly to **Zero Third-Party Dependency** standards (Python 3.8+ standard library only per [ADR-0006](docs/adr/0006-remediation-architecture-standard-library-only.md)). It can be executed across developer workstations, air-gapped enterprise environments, and CI/CD runners using three flexible execution models.
 
 ### 1.1 Zero-Install via Node.js (`npx`)
 Requires Node.js 16+ or higher. No global installation needed:
 ```bash
-npx komainu-guard <command> [options]
+npx @hoanghainh/komagu <command> [options]
 ```
 
 ### 1.2 Containerized via Docker
@@ -26,7 +26,7 @@ docker run --rm -v $(pwd):/workspace \
 Requires Python 3.8+ or higher with zero external pip dependencies:
 ```bash
 # Via wrapper script
-./bin/komainu <command> [options]
+./bin/komagu <command> [options]
 
 # Via Python module execution
 python3 -m operate.cli.main <command> [options]
@@ -36,26 +36,26 @@ python3 -m operate.cli.main <command> [options]
 
 ## 2. The 7-Step Modernization Journey
 
-Komainu transforms legacy monolith modernization from a high-risk multi-year rewrite into an incremental, verified, day-by-day progression:
+Komagu transforms legacy monolith modernization from a high-risk multi-year rewrite into an incremental, verified, day-by-day progression:
 
 ```mermaid
 flowchart TD
     subgraph Day1["Day 1: Non-Invasive Audit"]
-        A["1. komainu scan<br/>Deterministic 10-stack pre-scan"] --> B["2. komainu init<br/>Multi-AI Consensus Verification"]
+        A["1. komagu scan<br/>Deterministic 10-stack pre-scan"] --> B["2. komagu init<br/>Multi-AI Consensus Verification"]
     end
 
     subgraph Day2["Day 2: Zero-Code Defense & Proof"]
-        B --> C["3. komainu protect --virtual-patch<br/>Edge Coraza WAF Virtual Patching"]
-        C --> D["4. komainu test --from-scan --export-poc<br/>Active Cross-User Verification"]
+        B --> C["3. komagu protect --virtual-patch<br/>Edge Coraza WAF Virtual Patching"]
+        C --> D["4. komagu test --from-scan --export-poc<br/>Active Cross-User Verification"]
     end
 
     subgraph Week12["Week 1-2: Code Remediation"]
-        D --> E["5. komainu fix<br/>AST in-place code patcher & diff"]
+        D --> E["5. komagu fix<br/>AST in-place code patcher & diff"]
     end
 
     subgraph Continuous["Continuous DevSecOps & Governance"]
-        E --> F["6. komainu simulate<br/>Breach & Attack Simulation (BAS)"]
-        F --> G["7. komainu devsecops<br/>CycloneDX SBOM & SARIF CI Gating"]
+        E --> F["6. komagu simulate<br/>Breach & Attack Simulation (BAS)"]
+        F --> G["7. komagu devsecops<br/>CycloneDX SBOM & SARIF CI Gating"]
     end
 
     style Day1 fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
@@ -68,25 +68,25 @@ flowchart TD
 
 ## 3. Subcommand Reference
 
-### 3.1 `komainu scan` — Legacy Codebase Security Audit
+### 3.1 `komagu scan` — Legacy Codebase Security Audit
 
 Audits monolithic repositories across 10 legacy stacks (Classic ASP, ColdFusion, PHP Plain/CodeIgniter, Java Servlet/JSP/Struts1/Spring MVC, .NET WebForms/MVC, Node Express, Perl CGI, Python Flask, SQL Procedures) for Broken Object-Level Authorization (BOLA/IDOR), dynamic string SQL/NoSQL injection, Broken Function-Level Authorization (BFLA) and mass assignment.
 
 ```bash
-komainu scan <target> [options]
+komagu scan <target> [options]
 ```
 
 #### Flags & Arguments
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `<target>` | | *Required* | Path to legacy application directory to audit |
-| `--out` | `-o` | `./komainu-out` | Output directory for report files and SARIF |
+| `--out` | `-o` | `./komagu-out` | Output directory for report files and SARIF |
 | `--format` | | `all` | Output format (`html`, `md`, `sarif`, `all`) |
 | `--lang` | | `all` | Report language (`en`, `ja`, `all`) |
 | `--sarif-out` | | `OUT/findings.sarif` | Designated path for OASIS SARIF v2.1.0 output |
 | `--baseline` | | `None` | Previous `baseline.json` or SARIF file; findings become `new`, `unchanged` or `regressed` (SARIF `baselineState`) and `OUT/baseline-diff.json` lists fixed ones |
 | `--update-baseline` | | `false` | Write the updated baseline to `--baseline` (default `OUT/baseline.json`) |
-| `--suppressions` | | `TARGET/.komainu/suppressions.json` if present | Approved accepted-risk suppressions; matched findings are marked accepted in SARIF and never fail `--fail-on` |
+| `--suppressions` | | `TARGET/.komagu/suppressions.json` if present (legacy `.komainu/` is still read, with a warning) | Approved accepted-risk suppressions; matched findings are marked accepted in SARIF and never fail `--fail-on` |
 | `--diff` | | `None` | PR mode: scan only files changed since the merge base with `BASE_REF` (git) plus files that reference them; writes `OUT/diff-scope.json` |
 | `--fail-on` | | `none` (`new` with `--diff`) | Exit `1` when findings match: `new` (new or regressed), `any` (all active), `none` |
 | `--fail-severity` | | `low` | Minimum severity counted by `--fail-on` (`info` … `critical`) |
@@ -98,17 +98,17 @@ komainu scan <target> [options]
 #### Examples
 ```bash
 # Tier 1: Deterministic offline scan (Zero LLM, regex/AST candidates only)
-komainu scan ./legacy-monolith --lang ja --format html --out ./reports
+komagu scan ./legacy-monolith --lang ja --format html --out ./reports
 
 # Tier 2: Fully autonomous headless cognitive audit via local Ollama / vLLM (0 false positives)
-komainu scan ./legacy-monolith --headless-ai http://localhost:11434/v1 --model llama3.1
+komagu scan ./legacy-monolith --headless-ai http://localhost:11434/v1 --model llama3.1
 
 # Export machine-readable OASIS SARIF v2.1.0 for GitHub Code Scanning
-komainu scan ./legacy-monolith --format sarif --out ./reports/audit.sarif
+komagu scan ./legacy-monolith --format sarif --out ./reports/audit.sarif
 
 # Continuous scanning: record a baseline, then fail CI only on new or regressed high+ findings
-komainu scan ./legacy-monolith --baseline .komainu/baseline.json --update-baseline
-komainu scan ./legacy-monolith --baseline .komainu/baseline.json --fail-on new --fail-severity high
+komagu scan ./legacy-monolith --baseline .komagu/baseline.json --update-baseline
+komagu scan ./legacy-monolith --baseline .komagu/baseline.json --fail-on new --fail-severity high
 ```
 
 Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerprints["komainu/v1"]`), so moving code does not turn old findings into new ones. A missing or unreadable `--baseline` is a usage error (exit `2`) unless `--update-baseline` is set, which starts a fresh baseline.
@@ -126,7 +126,7 @@ Every finding gets a line-independent `kfp1:` fingerprint (SARIF `partialFingerp
 - Tier 1 (`--format`, no `--headless-ai`) marks BFLA and mass assignment **candidates** only; Tier 2 (an AI runtime or `--headless-ai`) decides them in phase 4c and writes the findings.
 - `report.md`, `report.ja.md` and `report.html` list the new categories, show how many privileged routes and mass assignment candidates were reviewed, and add `bfla` / `mass_assignment` to the HTML category filter when the scan found any. A report from a scan without them looks as before.
 - SARIF results carry the CWE taxonomy and the OWASP API tags above, so GitHub Code Scanning shows them as separate rules.
-- Confirm them on a running app with `komainu test` (§3.4): persona matrix for BFLA, `mass_assignment_probe` for mass assignment.
+- Confirm them on a running app with `komagu test` (§3.4): persona matrix for BFLA, `mass_assignment_probe` for mass assignment.
 
 #### Trend and time to fix
 Each full scan with `--baseline` adds one point per day to `history` in `baseline.json` (a same-day rerun replaces it; at most 365 points). Diff scans add none, because they see only part of the tree. Commit `baseline.json` so the history follows the repository.
@@ -138,7 +138,7 @@ Each full scan with `--baseline` adds one point per day to `history` in `baselin
 #### PR diff mode
 ```bash
 # In a pull request: scan what changed against main, fail only on new or regressed findings
-komainu scan . --diff origin/main --baseline .komainu/baseline.json --fail-severity high
+komagu scan . --diff origin/main --baseline .komagu/baseline.json --fail-severity high
 ```
 
 - Changed files = committed, staged, unstaged, untracked and deleted files since `git merge-base BASE_REF HEAD`, limited to the scan target.
@@ -149,7 +149,7 @@ komainu scan . --diff origin/main --baseline .komainu/baseline.json --fail-sever
 - **Limitation:** changes deeper than one level (a helper of a helper) are not followed. Keep a scheduled full scan (for example nightly) as well. In CI, fetch enough history for the merge base (`actions/checkout` with `fetch-depth: 0`).
 
 #### Accepted-risk suppressions
-Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["komainu/v1"]`) into `.komainu/suppressions.json` in the scanned repository. JSON is used instead of YAML so Tier 1 stays standard-library only.
+Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["komainu/v1"]`) into `.komagu/suppressions.json` in the scanned repository. JSON is used instead of YAML so Tier 1 stays standard-library only.
 
 ```json
 {
@@ -172,12 +172,12 @@ Copy the `fingerprint` from `findings.json` (or SARIF `partialFingerprints["koma
 
 ---
 
-### 3.2 `komainu init` — AI Auditor Skill & Adapter Installer
+### 3.2 `komagu init` — AI Auditor Skill & Adapter Installer
 
-Installs Tier 2 semantic audit prompts, schemas, and adapters into your AI developer environment under a Bring-Your-Own-LLM (BYO-LLM) model. Komainu **never makes direct LLM calls** and retains zero client code.
+Installs Tier 2 semantic audit prompts, schemas, and adapters into your AI developer environment under a Bring-Your-Own-LLM (BYO-LLM) model. Komagu **never makes direct LLM calls** and retains zero client code.
 
 ```bash
-komainu init --ai <runtime> [destination]
+komagu init --ai <runtime> [destination]
 ```
 
 #### Flags & Arguments
@@ -190,20 +190,20 @@ komainu init --ai <runtime> [destination]
 #### Examples
 ```bash
 # Setup Tier 2 audit agents for Claude Code / Antigravity workspace
-komainu init --ai claude-code ./my-audit-project
+komagu init --ai claude-code ./my-audit-project
 
 # Setup adapter for OpenAI Codex CLI
-komainu init --ai codex ~/audits/client-repo
+komagu init --ai codex ~/audits/client-repo
 ```
 
 ---
 
-### 3.3 `komainu protect` — Edge Gateway & Coraza WAF Perimeter
+### 3.3 `komagu protect` — Edge Gateway & Coraza WAF Perimeter
 
 Deploys and manages the zero-code perimeter security layer (Kong API Gateway & Coraza WAF with OWASP Core Rule Set v4). Features instant **Virtual Patching** to block newly discovered vulnerabilities before legacy code can be refactored.
 
 ```bash
-komainu protect [action] [options]
+komagu protect [action] [options]
 ```
 
 #### Actions & Flags
@@ -218,23 +218,23 @@ komainu protect [action] [options]
 #### Examples
 ```bash
 # Launch edge perimeter proxy in front of legacy application
-komainu protect --up
+komagu protect --up
 
 # Automatically generate and deploy virtual patches from audit findings
-komainu protect --virtual-patch ./audit-output/findings.json
+komagu protect --virtual-patch ./audit-output/findings.json
 
 # Export virtual patch rules to custom path
-komainu protect --virtual-patch findings.json --patch-out /etc/coraza/rules/custom.conf
+komagu protect --virtual-patch findings.json --patch-out /etc/coraza/rules/custom.conf
 ```
 
 ---
 
-### 3.4 `komainu test` — Offensive Exploit Verification, BOLA Invariant & Persona Matrix
+### 3.4 `komagu test` — Offensive Exploit Verification, BOLA Invariant & Persona Matrix
 
 Performs active, cross-user authorization tests against live APIs to verify tenant isolation. Automatically converts scan findings into active exploits, evaluates Multi-AI Consensus scores, and verifies the **HTTP 404 Not Found invariant**.
 
 ```bash
-komainu test --url <base-url> [options]
+komagu test --url <base-url> [options]
 ```
 
 #### Flags & Arguments
@@ -269,13 +269,13 @@ inconclusive.
   "version": 2,
   "personas": {
     "anonymous": {},
-    "user":  { "token_env": "KOMAINU_TOKEN_USER" },
-    "admin": { "token_env": "KOMAINU_TOKEN_ADMIN" }
+    "user":  { "token_env": "KOMAGU_TOKEN_USER" },
+    "admin": { "token_env": "KOMAGU_TOKEN_ADMIN" }
   },
   "routes": [
     { "method": "DELETE", "path": "/api/admin/users/{id}", "params": { "id": "42" }, "allow": ["admin"] },
     { "method": "PUT", "path": "/api/profile", "allow": ["user", "admin"],
-      "payload": { "name": "Komainu probe" },
+      "payload": { "name": "Komagu probe" },
       "mass_assignment_probe": { "fields": { "role": "admin" }, "readback": "GET /api/profile" } }
   ]
 }
@@ -293,31 +293,31 @@ inconclusive.
 - `--from-scan` also turns `bfla` and `mass_assignment` findings into cases
   (normal user from `--token-env`; probe fields from `attack_vector.fields`,
   default `role` / `is_admin`). `--export-poc` writes PoC scripts for both;
-  they read the token from `KOMAINU_TOKEN`.
+  they read the token from `KOMAGU_TOKEN`.
 
 #### Examples
 ```bash
 # Persona matrix: BFLA + mass assignment checks
-KOMAINU_TOKEN_USER=... KOMAINU_TOKEN_ADMIN=... komainu test --url http://staging-api:8000 --suite personas.json
+KOMAGU_TOKEN_USER=... KOMAGU_TOKEN_ADMIN=... komagu test --url http://staging-api:8000 --suite personas.json
 
 # Ingest LSA findings and verify only findings with >= 80% AI Consensus
-komainu test --url http://staging-api:8000 --from-scan findings.json --min-consensus 0.8
+komagu test --url http://staging-api:8000 --from-scan findings.json --min-consensus 0.8
 
 # Verify and export reproducible Python & cURL PoC exploit scripts
-komainu test --url http://staging-api:8000 --from-scan findings.json --export-poc ./pocs
+komagu test --url http://staging-api:8000 --from-scan findings.json --export-poc ./pocs
 
 # Test a single endpoint directly
-komainu test --url http://localhost:8000 --auto-crud-path /api/v1/orders/{id} --resource-id 101
+komagu test --url http://localhost:8000 --auto-crud-path /api/v1/orders/{id} --resource-id 101
 ```
 
 ---
 
-### 3.5 `komainu fix` — In-Place AST Code Remediation
+### 3.5 `komagu fix` — In-Place AST Code Remediation
 
 Automatically refactors legacy code in-place to remediate BOLA/IDOR and SQL injection vulnerabilities by rewriting dynamic string queries into parameterized prepared statements and injecting ownership checks.
 
 ```bash
-komainu fix <target> [options]
+komagu fix <target> [options]
 ```
 
 #### Flags & Arguments
@@ -331,20 +331,20 @@ komainu fix <target> [options]
 #### Examples
 ```bash
 # Safe preview: generate a unified diff patch without changing source files
-komainu fix ./legacy-monolith --dry-run -p ./security-fixes.patch
+komagu fix ./legacy-monolith --dry-run -p ./security-fixes.patch
 
 # Apply verified fixes directly to codebase
-komainu fix ./legacy-monolith
+komagu fix ./legacy-monolith
 ```
 
 ---
 
-### 3.6 `komainu simulate` — Breach & Attack Simulation (BAS) Suite
+### 3.6 `komagu simulate` — Breach & Attack Simulation (BAS) Suite
 
 Simulates catastrophic real-world cyber incidents modeled after notable enterprise disasters to empirically measure defensive resilience and compute the **Platform Resilience Index (%)**.
 
 ```bash
-komainu simulate [options]
+komagu simulate [options]
 ```
 
 #### Flags & Arguments
@@ -366,58 +366,58 @@ komainu simulate [options]
 #### Examples
 ```bash
 # Run all breach simulations and generate Executive Board of Directors Report
-komainu simulate --target http://staging-api:8000 --output ./executive-bas-report.md --format markdown
+komagu simulate --target http://staging-api:8000 --output ./executive-bas-report.md --format markdown
 
 # Simulate specifically the Times Car IDOR account harvesting probe
-komainu simulate --scenario times-car-breach --target http://localhost:8000 --endpoint /api/orders/{id}
+komagu simulate --scenario times-car-breach --target http://localhost:8000 --endpoint /api/orders/{id}
 ```
 
 ---
 
-### 3.7 `komainu devsecops` — SBOM Generation & CI Gating
+### 3.7 `komagu devsecops` — SBOM Generation & CI Gating
 
 Manages continuous software supply chain security, CycloneDX/SPDX Software Bill of Materials (SBOM) generation, SARIF result deduplication, and automated SAST/SCA execution.
 
 ```bash
-komainu devsecops <action> [options]
+komagu devsecops <action> [options]
 ```
 
 #### Actions
-- **`komainu devsecops sbom <target>`**: Generates CycloneDX 1.5 (`--format cyclonedx`) or SPDX 2.3 (`--format spdx`) SBOM across npm, PyPI, NuGet, Maven, and Go.
-- **`komainu devsecops merge-sarif <files...>`**: Merges and deduplicates multiple OASIS SARIF v2.1.0 scan results into a single consolidated file for GitHub Security Code Scanning.
-- **`komainu devsecops run <target>`**: Runs complete DevSecOps scan suite (SAST, secret scanning via Gitleaks, SCA dependency audit).
+- **`komagu devsecops sbom <target>`**: Generates CycloneDX 1.5 (`--format cyclonedx`) or SPDX 2.3 (`--format spdx`) SBOM across npm, PyPI, NuGet, Maven, and Go.
+- **`komagu devsecops merge-sarif <files...>`**: Merges and deduplicates multiple OASIS SARIF v2.1.0 scan results into a single consolidated file for GitHub Security Code Scanning.
+- **`komagu devsecops run <target>`**: Runs complete DevSecOps scan suite (SAST, secret scanning via Gitleaks, SCA dependency audit).
 
 #### Examples
 ```bash
 # Export CycloneDX 1.5 SBOM for enterprise compliance
-komainu devsecops sbom . --format cyclonedx -o ./sbom-cyclonedx.json
+komagu devsecops sbom . --format cyclonedx -o ./sbom-cyclonedx.json
 
 # Merge SARIF results from multiple scanners
-komainu devsecops merge-sarif lsa.sarif trivy.sarif gitleaks.sarif -o ./reports/merged.sarif
+komagu devsecops merge-sarif lsa.sarif trivy.sarif gitleaks.sarif -o ./reports/merged.sarif
 
 # Run full DevSecOps audit pipeline
-komainu devsecops run .
+komagu devsecops run .
 ```
 
 ---
 
-### 3.8 `komainu demo` — Interactive Member Portal Reference App
+### 3.8 `komagu demo` — Interactive Member Portal Reference App
 
 Launches the reference modern architecture application (`examples/member-portal/`) demonstrating secure multi-tenant isolation, cross-user 404 enforcement, and comparison against planted legacy vulnerabilities.
 
 ```bash
 # Spin up reference demo environment (React 18 + .NET 8 / Spring Boot 3 + Kong)
-komainu demo --up
+komagu demo --up
 
 # Tear down demo environment
-komainu demo --down
+komagu demo --down
 ```
 
 ---
 
 ## 4. Exit Codes & Invariants Matrix
 
-Komainu CLI returns standardized POSIX exit codes to guarantee seamless gating in CI/CD pipelines:
+Komagu CLI returns standardized POSIX exit codes to guarantee seamless gating in CI/CD pipelines:
 
 | Exit Code | Status | Meaning |
 | :---: | :--- | :--- |
@@ -432,10 +432,10 @@ Komainu CLI returns standardized POSIX exit codes to guarantee seamless gating i
 
 ## 5. CI/CD Integration Examples
 
-### 5.1 GitHub Actions Pipeline (`.github/workflows/komainu-verification.yml`)
+### 5.1 GitHub Actions Pipeline (`.github/workflows/komagu-verification.yml`)
 
 ```yaml
-name: Komainu Security Verification
+name: Komagu Security Verification
 
 on:
   pull_request:
@@ -461,11 +461,11 @@ jobs:
 
       - name: Run LSA Deterministic Audit
         run: |
-          npx komainu-guard scan ./backend --format sarif -o ./audit.sarif
+          npx @hoanghainh/komagu scan ./backend --format sarif -o ./audit.sarif
 
       - name: Run Offensive Exploit Verification
         run: |
-          npx komainu-guard test \
+          npx @hoanghainh/komagu test \
             --url http://localhost:8000 \
             --from-scan ./audit.sarif \
             --min-consensus 0.8 \
@@ -473,7 +473,7 @@ jobs:
 
       - name: Run Breach & Attack Simulation (BAS)
         run: |
-          npx komainu-guard simulate \
+          npx @hoanghainh/komagu simulate \
             --target http://localhost:8000 \
             --output ./bas-report.md \
             --format markdown
@@ -492,43 +492,43 @@ stages:
   - security-audit
   - offensive-verification
 
-komainu-audit:
+komagu-audit:
   stage: security-audit
   image: ghcr.io/hoanghainh1188/komagu:latest
   script:
-    - komainu scan . --format sarif -o audit.sarif
-    - komainu devsecops sbom . --format cyclonedx -o sbom.json
+    - komagu scan . --format sarif -o audit.sarif
+    - komagu devsecops sbom . --format cyclonedx -o sbom.json
   artifacts:
     reports:
       sast: audit.sarif
       cyclonedx: sbom.json
 
-komainu-exploit-gating:
+komagu-exploit-gating:
   stage: offensive-verification
   image: ghcr.io/hoanghainh1188/komagu:latest
   script:
-    - komainu test --url $STAGING_API_URL --from-scan audit.sarif --min-consensus 0.8
-    - komainu simulate --target $STAGING_API_URL --format table
+    - komagu test --url $STAGING_API_URL --from-scan audit.sarif --min-consensus 0.8
+    - komagu simulate --target $STAGING_API_URL --format table
 ```
 
 ---
 
 ## 6. Troubleshooting & FAQ
 
-#### Q: Does Komainu send source code or customer data to third-party LLMs?
-**A:** No. Komainu operates strictly under the **BYO-LLM and Local Execution Protocol**. Deterministic scanning, testing, WAF patching, and breach simulations execute 100% locally with zero external network transmission.
+#### Q: Does Komagu send source code or customer data to third-party LLMs?
+**A:** No. Komagu operates strictly under the **BYO-LLM and Local Execution Protocol**. Deterministic scanning, testing, WAF patching, and breach simulations execute 100% locally with zero external network transmission.
 
 #### Q: How do I suppress the ASCII banner in automated CI scripts?
 **A:** Place `--no-banner` before any subcommand:
 ```bash
-komainu --no-banner test --url http://localhost:8000
+komagu --no-banner test --url http://localhost:8000
 ```
 
 #### Q: How do I test APIs protected behind custom auth headers?
 **A:** Provide the token via `--attacker-token`:
 ```bash
-komainu test --url http://localhost:8000 --auto-crud-path /api/v1/orders/{id} --attacker-token "eyJhbGciOi..."
+komagu test --url http://localhost:8000 --auto-crud-path /api/v1/orders/{id} --attacker-token "eyJhbGciOi..."
 ```
 
 ---
-*Komainu — The Paired Guardian Lion-Dogs of Legacy Modernization.*
+*Komagu — The Paired Guardian Lion-Dogs of Legacy Modernization.*

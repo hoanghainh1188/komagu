@@ -76,7 +76,7 @@ Examples:
   KOMAGU_TOKEN_USER=... KOMAGU_TOKEN_ADMIN=... komagu test --url http://staging:8000 --suite ./personas.json
 
 Documentation:
-  See docs/cli-guide.md#34-komainu-test--offensive-exploit-verification-bola-invariant--persona-matrix
+  See docs/cli-guide.md#34-komagu-test--offensive-exploit-verification-bola-invariant--persona-matrix
 """,
     )
     parser.add_argument(

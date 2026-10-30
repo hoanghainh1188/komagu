@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "lsa/baseline.schema.json",
-  "title": "Komainu scan baseline",
+  "title": "Komagu scan baseline",
   "type": "object",
   "required": [
     "version",

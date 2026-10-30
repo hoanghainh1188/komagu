@@ -20,7 +20,7 @@ materials (`docs/`) must not be exposed if the repository is made public.
 
 ## Decision
 
-We adopt **Option C: Open Core** as the official intellectual property strategy for Komainu.
+We adopt **Option C: Open Core** as the official intellectual property strategy for Komagu.
 
 ### 1. Open / Closed Boundary Definition
 
@@ -40,7 +40,7 @@ We adopt **Option C: Open Core** as the official intellectual property strategy 
 1. **Private during Stage 1 MVP:** The current repository (`hoanghainh1188/komagu`) remains **Private**
    throughout the development of Boilerplate 1 (Weeks 1–8) and the pilot run (Weeks 9–12).
 2. **Public release split at M3 / v0.1:** When ready for external publication:
-   - The public repository (`komainu`) will contain the Open Core elements (`assess/`, `contracts/`, `governance/`, public examples).
+   - The public repository (`komagu`) will contain the Open Core elements (`assess/`, `contracts/`, `governance/`, public examples).
    - Confidential documents (`docs/modernization-boilerplates-proposal.md`, `docs/boilerplate-1-delivery-plan.md`) and commercial delivery assets (`delivery/`, closed fix modules) will be maintained in a separate private repository or internal team workspace.
 
 ## Consequences

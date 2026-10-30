@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-**Komainu**: Security-first modernization framework for legacy web systems organized by lifecycle:
+**Komagu**: Security-first modernization framework for legacy web systems organized by lifecycle:
 - [`assess/`](assess/lsa/README.md): Legacy Security Audit Kit (LSA) for BOLA/IDOR and dynamic query injection detection.
 - `remediate/`: Drop-in authorization, multi-tenancy, eKYC, and resilience modules (.NET, Go, Spring Boot, Node.js).
-- [`operate/`](operate/README.md): DevSecOps CLI (`komainu-guard`), cross-user authorization tester, and SARIF/SBOM integrations.
+- [`operate/`](operate/README.md): DevSecOps CLI (`komagu`), cross-user authorization tester, and SARIF/SBOM integrations.
 - [`contracts/`](contracts/README.md): Shared JSON Schemas joining audit findings, route inventories, and verification verdicts.
 - `governance/`: Usage policies, human-in-the-loop sign-off procedures, and metric baselines.
 

@@ -569,7 +569,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Komainu Security Audit Dashboard — {html.escape(project)}</title>
+<title>Komagu Security Audit Dashboard — {html.escape(project)}</title>
 <style>
   :root {{
     --bg: #f8fafc;
@@ -919,7 +919,7 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
   <header class="exec-header">
     <div class="header-top">
       <div>
-        <div class="brand-kicker">Komainu Legacy Security Assessment (LSA v{html.escape(KIT_VERSION)})</div>
+        <div class="brand-kicker">Komagu Legacy Security Assessment (LSA v{html.escape(KIT_VERSION)})</div>
         <h1 class="exec-title" data-en="Security Audit Dashboard — {html.escape(project)}" data-ja="セキュリティ監査ダッシュボード — {html.escape(project)}">Security Audit Dashboard — {html.escape(project)}</h1>
         <span class="conf-banner" data-en="CONFIDENTIAL — HUMAN REVIEW REQUIRED BEFORE EXTERNAL SHARING" data-ja="社外秘 (CONFIDENTIAL) — 外部共有前に必ず人間によるレビュー・承認が必要">CONFIDENTIAL — HUMAN REVIEW REQUIRED BEFORE EXTERNAL SHARING</span>
       </div>

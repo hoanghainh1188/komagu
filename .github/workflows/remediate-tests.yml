@@ -44,7 +44,7 @@ jobs:
           KOMAGU_REQUIRE_WAF_TEST: "1"
         run: python3 -m unittest discover -s remediate/edge/tests -p "test_*.py"
 
-      - name: Verify Komainu DevSecOps & SBOM CLI pipeline
+      - name: Verify Komagu DevSecOps & SBOM CLI pipeline
         run: |
           python3 -m operate.cli.main devsecops sbom examples/member-portal --format cyclonedx -o /tmp/cyclonedx.json
           python3 -m operate.cli.main devsecops sbom examples/member-portal --format spdx -o /tmp/spdx.json

@@ -1,4 +1,4 @@
-# セキュリティ監査報告書 — Komainu Multi-Stack Benchmark (Run 3)
+# セキュリティ監査報告書 — Komagu Multi-Stack Benchmark (Run 3)
 
 > **機密区分: 社外秘 (CONFIDENTIAL)** 本報告書はAI支援による静的コードレビュー結果です。外部共有前に必ず人間のレビュー担当者による確認・承認が必要です（判定結果は `review-log.md` に記録）。
 

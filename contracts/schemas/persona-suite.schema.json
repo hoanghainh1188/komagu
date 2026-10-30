@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "operate/persona-suite.schema.json",
-  "title": "Komainu test suite v2 (persona matrix)",
+  "title": "Komagu test suite v2 (persona matrix)",
   "description": "Personas and, per route, the personas allowed to call it. Every other persona must be refused (BFLA). Tokens come only from environment variables.",
   "type": "object",
   "required": [

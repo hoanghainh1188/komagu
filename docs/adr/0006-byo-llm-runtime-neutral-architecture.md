@@ -4,20 +4,20 @@ Date: 2026-10-24 · Status: accepted · Owner: Harry
 
 ## Context
 
-Komainu is designed for enterprise legacy modernization and security audits. Legacy source code often contains proprietary business logic, sensitive customer records, and confidential algorithms subject to non-disclosure agreements (NDAs) and regulatory compliance (e.g. financial institutions, healthcare, government).
+Komagu is designed for enterprise legacy modernization and security audits. Legacy source code often contains proprietary business logic, sensitive customer records, and confidential algorithms subject to non-disclosure agreements (NDAs) and regulatory compliance (e.g. financial institutions, healthcare, government).
 
-A critical architectural question is whether the Komainu core CLI and audit engine should directly embed external LLM SDKs (e.g., `openai`, `anthropic`, `google-generativeai`) and make direct network calls to commercial cloud LLM APIs.
+A critical architectural question is whether the Komagu core CLI and audit engine should directly embed external LLM SDKs (e.g., `openai`, `anthropic`, `google-generativeai`) and make direct network calls to commercial cloud LLM APIs.
 
 ## Decision
 
-Komainu adopts a **Two-Tier Architecture** with a strictly **Runtime-Neutral** and **Bring-Your-Own-LLM (BYO-LLM)** execution model:
+Komagu adopts a **Two-Tier Architecture** with a strictly **Runtime-Neutral** and **Bring-Your-Own-LLM (BYO-LLM)** execution model:
 
 ### 1. Two-Tier Separation
 
 ```text
 ┌────────────────────────────────────────────────────────┐
 │ Tier 1: Deterministic Engine (Offline & Local)          │
-│ - CLI (komainu scan, fix, protect, test)               │
+│ - CLI (komagu scan, fix, protect, test)               │
 │ - Python 3.8+ Standard Library Only (Zero dependencies)│
 │ - Fast regex/AST pre-scan, candidate extraction        │
 │ - Edge WAF generation, AST query rewriting             │
@@ -42,7 +42,7 @@ Komainu adopts a **Two-Tier Architecture** with a strictly **Runtime-Neutral** a
 
 ### 3. Integration via Standardized Adapters
 
-Instead of locking into one model provider, Komainu provides adapter generators (`assess/lsa/adapters/build_adapters.py`, exposed in the CLI as `komainu init --ai <runtime> [DEST]`):
+Instead of locking into one model provider, Komagu provides adapter generators (`assess/lsa/adapters/build_adapters.py`, exposed in the CLI as `komagu init --ai <runtime> [DEST]`):
 - **Claude Code**: Produces `.claude/skills/` and `.claude/agents/` subagent files.
 - **OpenAI Codex**: Produces a repo-scoped skill in `.agents/skills/`, custom agents in `.codex/agents/*.toml`, and a managed section in `AGENTS.md`.
 - **Cursor**: Produces `.cursor/rules/` rule files.

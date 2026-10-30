@@ -1,4 +1,4 @@
-# AGENTS.md — Komainu
+# AGENTS.md — Komagu
 
 Repository layout: see `README.md` and `docs/adr/0001-name-and-repository-structure.md`.
 

@@ -101,7 +101,7 @@ privileged, and a hinted route can be safe.
   be written in `impact`.
 - Severity: `knowledge/bfla-patterns.md` §6 and
   `knowledge/mass-assignment-patterns.md` §5.
-- For mass assignment findings, set `attack_vector` so `komainu test
+- For mass assignment findings, set `attack_vector` so `komagu test
   --from-scan` can probe the route: `method`, `path`, `fields` (the
   privileged fields with a value the caller should not be able to set, e.g.
   `{"role": "admin"}`) and `readback` (the request that returns the stored

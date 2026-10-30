@@ -1,6 +1,6 @@
 # ADR-0001: Name the product Komainu and structure the repository by lifecycle
 
-Date: 2026-10-16 · Status: accepted; structure applied 2026-10-16 (assess/lsa, contracts) · Owner: Harry
+Date: 2026-10-16 · Status: accepted; structure applied 2026-10-16 (assess/lsa, contracts) · Owner: Harry · Name superseded by [ADR-0007](0007-rename-to-komagu.md)
 
 ## Context
 

@@ -3,7 +3,7 @@
 ## Install into an audit workspace
 
 ```bash
-komainu init --ai codex ~/audits/acme-2026-10
+komagu init --ai codex ~/audits/acme-2026-10
 # or, from the kit:
 python3 adapters/build_adapters.py codex ~/audits/acme-2026-10
 ```

@@ -5,7 +5,7 @@
 Runtime adapters (#244).
 
 - **Codex Adapter:** `build_adapters.py codex DEST` generates a repo-scoped skill in `.agents/skills/legacy-security-audit/`, one custom agent per role in `.codex/agents/lsa-*.toml`, and an idempotent LSA section in `AGENTS.md` that keeps user content outside its markers.
-- **`komainu init --ai <runtime> [DEST]`:** CLI entry point for the adapter generators (`claude-code`/`claude`, `codex`, `cursor`, `generic`/`openhands`). No LLM SDKs or network calls (ADR-0006).
+- **`komagu init --ai <runtime> [DEST]`:** CLI entry point for the adapter generators (`claude-code`/`claude`, `codex`, `cursor`, `generic`/`openhands`). No LLM SDKs or network calls (ADR-0006).
 - **Builder API:** `build(runtime, dest)` and `resolve_runtime(name)` shared by the script and the CLI; unknown runtimes exit with code 2.
 - **Packaging:** `governance/` now ships in the npm package and Docker image, since every adapter bundles the usage policy.
 
@@ -36,8 +36,8 @@ Platform release (v0.2.0 / v0.2.1).
   (`60-reporter-ja.md`, `report.ja.md` compliant with IPA/NISC terminology) and
   zero-dependency interactive HTML audit dashboard (`report.html`) with inline
   SVG charts and instant English/Japanese toggle.
-- **Unified CLI & Zero-Install Distribution:** Packaged into `komainu` CLI
-  (`bin/komainu`), all-in-one Docker image, and `komainu-guard` on npmjs.
+- **Unified CLI & Zero-Install Distribution:** Packaged into `komagu` CLI
+  (`bin/komagu`), all-in-one Docker image, and `komagu` on npmjs.
 
 ## 0.1.0 — 2026-10-16
 

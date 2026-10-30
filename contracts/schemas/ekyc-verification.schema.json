@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "ekyc/verification.schema.json",
-  "title": "Komainu Zero-PII eKYC Verification Result and Token Assertion",
+  "title": "Komagu Zero-PII eKYC Verification Result and Token Assertion",
   "type": "object",
   "required": [
     "verification_id",

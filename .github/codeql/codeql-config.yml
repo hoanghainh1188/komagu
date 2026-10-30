@@ -1,4 +1,4 @@
-name: Komainu CodeQL config
+name: Komagu CodeQL config
 
 queries:
   - uses: security-extended

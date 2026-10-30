@@ -1,4 +1,4 @@
-# Security Audit Report — Komainu Multi-Stack Benchmark (Run 3)
+# Security Audit Report — Komagu Multi-Stack Benchmark (Run 3)
 
 > **Classification: CONFIDENTIAL.** AI-assisted static review. All findings require human review (record decisions in `review-log.md`, created from `templates/review-log.md`) before they are shared outside the team.
 

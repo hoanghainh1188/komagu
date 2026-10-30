@@ -378,7 +378,7 @@ def to_sarif(
     end_iso = (end_time or datetime.datetime.now(datetime.timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     driver: Dict[str, Any] = {
-        "name": "Komainu LSA Security Audit",
+        "name": "Komagu LSA Security Audit",
         "version": KIT_VERSION,
         "informationUri": "https://github.com/hoanghainh1188/komagu",
         "rules": rules,

@@ -6,7 +6,7 @@ Validates:
 2. CWE taxonomy (taxa) and relationships mapping.
 3. OWASP Top 10 tags and GitHub CodeQL tag conventions.
 4. Code snippet extraction from target codebase with evidence fallback.
-5. CLI integration (--target-dir, --sarif-out, komainu scan --sarif-out).
+5. CLI integration (--target-dir, --sarif-out, komagu scan --sarif-out).
 """
 from __future__ import annotations
 

@@ -12,7 +12,7 @@ yourself, using the role prompt for that phase).
 - `OUT` — audit workspace directory (default `<TARGET>/../lsa-out/<repo-name>`).
   Never write audit output inside `TARGET`.
 - `CONFIG` — optional `audit-config.json` (see `templates/audit-config.json`).
-- `KIT` — path to this kit (`assess/lsa/` in the Komainu repository, or the
+- `KIT` — path to this kit (`assess/lsa/` in the Komagu repository, or the
   folder a generated adapter bundle was copied to). Schemas referred to as
   `schemas/...` are in `contracts/schemas/` at the repository root; generated
   bundles copy them to `KIT/schemas/`.

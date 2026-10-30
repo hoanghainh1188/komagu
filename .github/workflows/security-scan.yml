@@ -327,12 +327,12 @@ jobs:
       # (slower) image scan runs on main and on the weekly schedule, not on every PR.
       - name: Build Docker image
         if: github.event_name != 'pull_request'
-        run: docker build -t komainu:scan .
+        run: docker build -t komagu:scan .
 
       - name: Trivy image scan
         if: github.event_name != 'pull_request'
         run: |
-          trivy image komainu:scan \
+          trivy image komagu:scan \
             --scanners vuln,secret \
             --severity HIGH,CRITICAL \
             --exit-code 0 \
