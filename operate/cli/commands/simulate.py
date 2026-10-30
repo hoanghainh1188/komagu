@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, List
 
@@ -140,7 +141,10 @@ def execute_simulate(args: argparse.Namespace) -> int:
                 step_fail(f"Metabase Zero-Day Simulation: SQLi probes unhandled ({res.resilience_score}% resilient)")
 
         elif sc == "idc-frontier-ransomware":
-            storage_path = args.target if not args.target.startswith("http") else "/tmp/komagu-backup-sim"
+            # A fresh private dir, not a fixed /tmp path another local user could pre-create or symlink
+            storage_path = (
+                args.target if not args.target.startswith("http") else tempfile.mkdtemp(prefix="komagu-backup-sim-")
+            )
             step_info(f"Launching Scenario: IDC Frontier Cloud Storage Ransomware Simulation ({storage_path})")
             runner = IDCFrontierRansomwareScenario(target_dir=storage_path)
             res = runner.run()
