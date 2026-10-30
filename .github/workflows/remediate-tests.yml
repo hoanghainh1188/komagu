@@ -140,3 +140,7 @@ jobs:
       - name: Test D3 Safe Query & Detekt Rule (Spring Boot 3)
         working-directory: remediate/query/spring
         run: gradle test --no-daemon
+
+      - name: Build D6 member-portal Spring example against the modules
+        working-directory: examples/member-portal/backend-spring
+        run: gradle build --no-daemon

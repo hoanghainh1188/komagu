@@ -23,8 +23,8 @@ npm test
 
 # Remediate modules (run relevant suite when touching language modules)
 dotnet test remediate/authz/dotnet/tests/Komagu.Security.Authorization.Tests/Komagu.Security.Authorization.Tests.csproj
-(cd remediate/authz/go && go test ./...)
-(cd remediate/authz/spring && ./mvnw test)
+(cd remediate/authz/golang && go test ./...)
+(cd remediate/authz/spring && gradle test)
 ```
 
 ## Workflow & Development Guidelines
