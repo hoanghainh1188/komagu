@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-10-30
+
+SARIF replay properties (#289).
+
+- **`findings_to_sarif.py`:** each SARIF result's `properties` now carries `finding_id`, `category`, `endpoint`, `attack_vector` (`method`, `path`, `fields`, `readback`, `target_param`) and `consensus_score`, so `komagu test --from-scan` and `--export-poc` can replay BFLA and mass assignment findings from SARIF. `suggested_payload` is not exported, to keep attack strings out of code scanning.
+
 ## 0.2.3 — 2026-10-26
 
 Runtime adapters (#244).

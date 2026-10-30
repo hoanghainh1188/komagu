@@ -132,6 +132,28 @@ OWASP_TAGS = {
 }
 
 
+# Attack-vector keys that `komagu test --from-scan` and `--export-poc` need to replay a
+# finding from SARIF. suggested_payload is left out so attack strings stay out of code scanning.
+REPLAY_KEYS = ("method", "path", "fields", "readback", "target_param")
+
+
+def replay_properties(f: Dict[str, Any]) -> Dict[str, Any]:
+    """Result properties that let a SARIF result be replayed like a findings.json entry."""
+    props: Dict[str, Any] = {"finding_id": f.get("finding_id"), "category": f.get("category", "bola")}
+    ep = f.get("endpoint")
+    if isinstance(ep, dict) and ep.get("path"):
+        props["endpoint"] = {k: ep[k] for k in ("method", "path") if ep.get(k)}
+    av = f.get("attack_vector")
+    if isinstance(av, dict):
+        kept = {k: av[k] for k in REPLAY_KEYS if av.get(k) not in (None, "", {})}
+        if kept:
+            props["attack_vector"] = kept
+    cons = f.get("consensus")
+    if isinstance(cons, dict) and isinstance(cons.get("score"), (int, float)):
+        props["consensus_score"] = cons["score"]
+    return props
+
+
 def normalize_cwe_id(cwe_val: Any) -> str:
     """Normalize numeric or prefixed CWE ID to standard 'CWE-XXX' format."""
     s = str(cwe_val).strip()
@@ -352,6 +374,7 @@ def to_sarif(
                 "confidence": f.get("confidence", "high"),
                 "status": f.get("status", "unverified"),
                 "cwe": norm_cwes,
+                **replay_properties(f),
             },
         }
         state = f.get("baseline_state")

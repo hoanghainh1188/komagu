@@ -72,6 +72,27 @@ def _get_rule_id(category: str, cwe: int) -> str:
     return f"KOMAINU-{cat_prefix}-CWE{cwe}"
 
 
+# Same replay properties as assess/lsa/scripts/findings_to_sarif.py, so `komagu test --from-scan`
+# and `--export-poc` can read either exporter's SARIF. suggested_payload is left out on purpose.
+_REPLAY_KEYS = ("method", "path", "fields", "readback", "target_param")
+
+
+def _replay_properties(finding: Dict[str, Any]) -> Dict[str, Any]:
+    props: Dict[str, Any] = {}
+    ep = finding.get("endpoint")
+    if isinstance(ep, dict) and ep.get("path"):
+        props["endpoint"] = {k: ep[k] for k in ("method", "path") if ep.get(k)}
+    av = finding.get("attack_vector")
+    if isinstance(av, dict):
+        kept = {k: av[k] for k in _REPLAY_KEYS if av.get(k) not in (None, "", {})}
+        if kept:
+            props["attack_vector"] = kept
+    cons = finding.get("consensus")
+    if isinstance(cons, dict) and isinstance(cons.get("score"), (int, float)):
+        props["consensus_score"] = cons["score"]
+    return props
+
+
 def convert_findings_to_sarif(
     findings: List[Dict[str, Any]],
     tool_version: str = "0.1.0",
@@ -172,6 +193,7 @@ def convert_findings_to_sarif(
                 "confidence": finding.get("confidence"),
                 "cwe": cwe,
                 "status": finding.get("status", "new"),
+                **_replay_properties(finding),
             },
         }
 
