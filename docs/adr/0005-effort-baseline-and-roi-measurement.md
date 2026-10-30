@@ -2,7 +2,7 @@
 
 Date: 2026-10-18 · Status: accepted · Owner: Harry (BOD / Principal Architect)  
 Related Issue: [hoanghainh1188/komagu#4](https://github.com/hoanghainh1188/komagu/issues/4)  
-Parent Documents: [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komainu/docs/boilerplate-1-delivery-plan.md), [Modernization Proposal](file:///Users/hoanghainh/Projects/komainu/docs/modernization-boilerplates-proposal.md)
+Parent Documents: [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komagu/docs/boilerplate-1-delivery-plan.md), [Modernization Proposal](file:///Users/hoanghainh/Projects/komagu/docs/modernization-boilerplates-proposal.md)
 
 ---
 
@@ -31,7 +31,7 @@ We formally decide to adopt a **Dual-Baseline Measurement Framework (Khung tham 
 |                                    (Standard baseline for 30–150 endpoint enterprise systems)   |
 |                                                                                                 |
 |  [Tier 2: Reference Baseline]   -> Benchmark modeled on Deliverable D6 (24 endpoints)           |
-|                                    (Scratch Implementation vs. Komainu Boilerplate D1–D5)       |
+|                                    (Scratch Implementation vs. Komagu Boilerplate D1–D5)       |
 +-------------------------------------------------------------------------------------------------+
                                                 |
                                                 v
@@ -61,10 +61,10 @@ For enterprise client proposals and board-level reporting, we benchmark against 
 
 To provide an initial engineering baseline hypothesis prior to live client execution, we modeled the effort required to implement the identical secure API scope on **Deliverable D6** (24 endpoints: 12 in ASP.NET Core .NET 8 and 12 in Kotlin Spring Boot 3, PostgreSQL):
 
-| Phase / Engineering Workstream | Manual Scratch Implementation (Person-Days) | Komainu Accelerated Implementation (Person-Days) | Komainu Components Leveraged |
+| Phase / Engineering Workstream | Manual Scratch Implementation (Person-Days) | Komagu Accelerated Implementation (Person-Days) | Komagu Components Leveraged |
 |---|:---:|:---:|---|
 | **1. Security Audit & Threat Modeling** | 3.5 | **0.5** | LSA Phase 1–5 pre-scan, AST route mapping, automated finding verification |
-| **2. Object-Level Authorization (D1)** | 6.0 | **1.0** | Drop-in NuGet (`Komainu.Authorization`) & Gradle (`komainu-spring-boot-starter`) |
+| **2. Object-Level Authorization (D1)** | 6.0 | **1.0** | Drop-in NuGet (`Komagu.Authorization`) & Gradle (`komagu-spring-boot-starter`) |
 | **3. Identity & OIDC Integration (D2)** | 3.0 | **0.5** | Pre-configured Keycloak/Entra ID templates, RFC 9700 PKCE validation |
 | **4. Safe Query & Static Analyzers (D3)** | 2.5 | **0.5** | Pre-packaged Roslyn analyzer & detekt rule + parameterized query templates |
 | **5. Edge Gateway & WAF Deployment (D4)** | 1.5 | **0.5** | Declarative Kong config (`deck.yaml`) + Docker Compose Coraza WAF sidecar |
@@ -117,4 +117,4 @@ $$\text{Cost Savings (JPY)} = (\text{Baseline Person-Days} - \text{Actual Pilot 
 - [IPA Software Development Data Whitebook 2024–2025](https://www.ipa.go.jp/digital/data/whitebook.html)
 - [ADR-0002 — IP Position: Open Core Model](0002-ip-position-open-core.md)
 - [ADR-0004 — B1 Design Review](0004-b1-design-review-d1-threat-model-demo-app.md)
-- [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komainu/docs/boilerplate-1-delivery-plan.md)
+- [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komagu/docs/boilerplate-1-delivery-plan.md)

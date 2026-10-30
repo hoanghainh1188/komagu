@@ -269,7 +269,7 @@ flowchart TD
 1. **BOLA / IDOR Attack Scenario:**
    - *Attacker Action:* Authenticates as User B (Tenant 1), then sends `GET /api/v1/orders/00000000-0000-0000-0000-000000000001` (owned by User A).
    - *System Response:* Request passes Layer 1 (within rate limits), Layer 2 (valid format), Layer 3 (valid token for User B). At Layer 4, D1 checks `order.ownerUserId == token.sub`. Evaluation fails.
-   - *Outcome:* Backend immediately returns `HTTP 404 Not Found`. An audit event `KomainuSecurityAuditEvent.OwnershipDenied` is recorded with `actor: User B`, `targetResource: Order/1`. User B cannot confirm if Order 1 exists.
+   - *Outcome:* Backend immediately returns `HTTP 404 Not Found`. An audit event `KomaguSecurityAuditEvent.OwnershipDenied` is recorded with `actor: User B`, `targetResource: Order/1`. User B cannot confirm if Order 1 exists.
 
 2. **SQL Injection Probe Scenario:**
    - *Attacker Action:* Sends `GET /api/v1/orders?sort=status;DROP+TABLE+orders;--`.

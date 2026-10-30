@@ -1,5 +1,5 @@
 ---
-title: "なぜ従来のSASTはBOLAを見逃すのか？マルチエージェントAI×静的解析によるレガシーAPIセキュリティ監査基盤「Komainu」の設計思想"
+title: "なぜ従来のSASTはBOLAを見逃すのか？マルチエージェントAI×静的解析によるレガシーAPIセキュリティ監査基盤「Komagu」の設計思想"
 emoji: "🛡️"
 type: "tech"
 topics: ["security", "api", "nodejs", "architecture", "owasp"]
@@ -14,9 +14,9 @@ OWASP API Security Top 10 において、2019年版に続き2023年版でも不�
 
 特に日本国内のエンタープライズ領域では、10〜20年前に開発された **レガシーシステム（PHP、Java Struts/Spring、ASP.NET WebForms など）** が現役で稼働しており、DX や API 化の波の中で認可不備が潜んだまま外部へ公開されるリスクが急増しています。
 
-筆者はこの課題を解決するため、**「AST（抽象構文木）による決定論的プリスキャン」×「敵対的マルチエージェントAI（監査役と懐疑派レビュアー）」** を組み合わせたセキュリティ監査基盤 **「Komainu（狛犬）」** を設計・開発し、その CLI ツールである [`komainu-guard`](https://www.npmjs.com/package/komainu-guard) を OSS として npm に公開しました。
+筆者はこの課題を解決するため、**「AST（抽象構文木）による決定論的プリスキャン」×「敵対的マルチエージェントAI（監査役と懐疑派レビュアー）」** を組み合わせたセキュリティ監査基盤 **「Komagu（狛犬）」** を設計・開発し、その CLI ツールである [`komagu`](https://www.npmjs.com/package/komagu) を OSS として npm に公開しました。
 
-この記事では、**「なぜ従来の SAST は BOLA を見逃すのか？」** という技術的本質から、Komainu がそれをいかにして解決したのか、そのアーキテクチャと設計思想を共有します。
+この記事では、**「なぜ従来の SAST は BOLA を見逃すのか？」** という技術的本質から、Komagu がそれをいかにして解決したのか、そのアーキテクチャと設計思想を共有します。
 
 ---
 
@@ -73,9 +73,9 @@ LLM（大規模言語モデル）の登場により、「コードの意味や�
 
 ---
 
-## 3. Komainu のハイブリッド・アーキテクチャ
+## 3. Komagu のハイブリッド・アーキテクチャ
 
-Komainu では、**「静的解析の決定論的スピード」** と **「LLMの文脈理解力」** を直列・並列にハイブリッド構成し、さらに **「敵対的マルチエージェント（Auditor vs Skeptic Verifier）」** によって誤検知を極小化する多層パイプラインを採用しました。
+Komagu では、**「静的解析の決定論的スピード」** と **「LLMの文脈理解力」** を直列・並列にハイブリッド構成し、さらに **「敵対的マルチエージェント（Auditor vs Skeptic Verifier）」** によって誤検知を極小化する多層パイプラインを採用しました。
 
 ```mermaid
 flowchart TD
@@ -129,11 +129,11 @@ AI の出力はドラフトであり、最終的な確定情報ではありま�
 
 ---
 
-## 4. npm パッケージ「komainu-guard」としての提供
+## 4. npm パッケージ「komagu」としての提供
 
 この監査基盤の価値を即座に体験できるよう、Node.js の CLI パッケージとして npm に公開しました。
 
-- **Package:** `komainu-guard` (Dual-alias: `komainu` / `komainu-guard`)
+- **Package:** `komagu` (Dual-alias: `komagu` / `komagu`)
 - **Version:** `0.2.1`
 
 ### 実行例
@@ -141,15 +141,15 @@ AI の出力はドラフトであり、最終的な確定情報ではありま�
 
 ```bash
 # ヘルプと使用可能なサブコマンド一覧
-npx --yes komainu-guard help
+npx --yes komagu help
 
 # リポジトリのスキャン（スタック検出、ルート候補抽出、日本語HTML＆Markdownレポート生成）
-npx --yes komainu-guard scan ./my-legacy-app --out ./audit-out --lang ja --format all
+npx --yes komagu scan ./my-legacy-app --out ./audit-out --lang ja --format all
 ```
 
 :::message
 **CLI とマルチエージェント AI パイプラインの役割分担：**  
-`komainu-guard scan` は完全ローカルで高速に Phase 1（決定論的プリスキャン）を実行し、機密情報をマスキングした上で AST 解析結果と構造化レポートを生成します。深層監査（Phase 4–5 の Auditor / Skeptic Verifier）は、このプリスキャン成果物をインプットとしてエージェントワークフローにより精密に実行されます。
+`komagu scan` は完全ローカルで高速に Phase 1（決定論的プリスキャン）を実行し、機密情報をマスキングした上で AST 解析結果と構造化レポートを生成します。深層監査（Phase 4–5 の Auditor / Skeptic Verifier）は、このプリスキャン成果物をインプットとしてエージェントワークフローにより精密に実行されます。
 :::
 
 ### ベンチマーク実績（Evaluation Run 3）
@@ -161,7 +161,7 @@ npx --yes komainu-guard scan ./my-legacy-app --out ./audit-out --lang ja --forma
 
 ## 5. 今後の展望：発見（Assess）から自動修復（Remediate）へ
 
-Komainu プロジェクトは、脆弱性を指摘して終わり（Assess）ではありません。
+Komagu プロジェクトは、脆弱性を指摘して終わり（Assess）ではありません。
 指摘された BOLA や SQLi を、標準化されたセキュアコンポーネントで短工期かつ安全に塞ぐ **「Remediate & Operate」** への展開を進めています。
 
 1. **D1: Object-Level Authorization Library:**  
@@ -178,9 +178,9 @@ Komainu プロジェクトは、脆弱性を指摘して終わり（Assess）で
 Web API のセキュリティモダン化において、BOLA の撲滅は避けて通れない最大の壁です。
 「AST による高速な決定論的絞り込み」と「マルチエージェント AI による深い意味論的検証」を組み合わせることで、これまで熟練エンジニアの属人的な目視レビューに頼っていた領域を、再現性のある自動化パイプラインへと昇華させることができました。
 
-まずはぜひ、ご自身のプロジェクトやレガシーコードに対して `npx komainu-guard` を試してみてください！
+まずはぜひ、ご自身のプロジェクトやレガシーコードに対して `npx @hoanghainh/komagu` を試してみてください！
 
-- **npm:** [https://www.npmjs.com/package/komainu-guard](https://www.npmjs.com/package/komainu-guard)
+- **npm:** [https://www.npmjs.com/package/komagu](https://www.npmjs.com/package/komagu)
 - **GitHub Repository:** [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 
 フィードバックやディスカッションを歓迎いたします！

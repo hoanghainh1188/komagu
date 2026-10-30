@@ -1,7 +1,7 @@
 # Kế hoạch triển khai: #269 · #270 · #271
 
 **Phạm vi:** 3 tính năng đề xuất sau đợt nghiên cứu thị trường ngày 2026-10-29.
-**Phiên bản nền:** `komainu-guard` v1.6.0 · LSA kit v1.3.0
+**Phiên bản nền:** `komagu` v1.6.0 · LSA kit v1.3.0
 **Trạng thái:** Bản nháp v0.1 — chờ duyệt thứ tự ưu tiên
 
 | Issue | Tính năng | Giá trị chính |
@@ -20,7 +20,7 @@ flowchart LR
     P0 --> B1["#269a/b<br/>Tier 1 BFLA + mass assignment"]
     A1 --> A2["#270b/c<br/>Suppression + diff mode"]
     B1 --> B2["#269c/d<br/>Tier 2 prompts + persona matrix"]
-    M["#271a<br/>Bảng mapping SCS/CSF<br/>(tài liệu, làm song song)"] --> C1["#271b/c<br/>komainu evidence + báo cáo JA"]
+    M["#271a<br/>Bảng mapping SCS/CSF<br/>(tài liệu, làm song song)"] --> C1["#271b/c<br/>komagu evidence + báo cáo JA"]
     A2 --> C1
     B2 --> C1
 ```
@@ -79,7 +79,7 @@ sha256( category | subtype | METHOD normalized_path | handler_file | sink_symbol
 
 Chấp nhận cả SARIF cũ làm baseline (đọc `partialFingerprints`), nhưng chỉ `baseline.json` mới phát hiện được `regressed`.
 
-**Suppression** — `.komainu/suppressions.json` (**JSON thay vì YAML** như issue ghi, vì Tier 1 bắt buộc stdlib-only, Python không có parser YAML sẵn):
+**Suppression** — `.komagu/suppressions.json` (**JSON thay vì YAML** như issue ghi, vì Tier 1 bắt buộc stdlib-only, Python không có parser YAML sẵn):
 
 ```json
 [{ "fingerprint": "kfp1:…", "reason": "Route chỉ mở trong mạng nội bộ",
@@ -90,7 +90,7 @@ Chấp nhận cả SARIF cũ làm baseline (đọc `partialFingerprints`), nhưn
 - Hết hạn → finding hoạt động lại và có cảnh báo trong báo cáo.
 - Bắt buộc `approved_by`, nối với quy trình sign-off trong `governance/`.
 
-**Diff mode** — `komainu scan --diff <base-ref>`:
+**Diff mode** — `komagu scan --diff <base-ref>`:
 
 1. `git diff --name-only <base-ref>...HEAD` (subprocess, không thêm dependency).
 2. Tập file quét = file thay đổi + file route có tham chiếu tới basename/module của file thay đổi (heuristic v1).
@@ -98,13 +98,13 @@ Chấp nhận cả SARIF cũ làm baseline (đọc `partialFingerprints`), nhưn
 4. Mặc định `--fail-on new` trong diff mode.
 5. **Giới hạn v1 (ghi rõ trong docs):** thay đổi gián tiếp sâu hơn 1 cấp (helper của helper) có thể bị bỏ sót → khuyến nghị full scan hằng đêm.
 
-**CLI mới cho `komainu scan`**
+**CLI mới cho `komagu scan`**
 
 | Flag | Ý nghĩa |
 |---|---|
 | `--baseline PATH` | So sánh với baseline (JSON hoặc SARIF) |
 | `--update-baseline` | Ghi baseline mới sau khi quét |
-| `--suppressions PATH` | Mặc định `.komainu/suppressions.json` nếu tồn tại |
+| `--suppressions PATH` | Mặc định `.komagu/suppressions.json` nếu tồn tại |
 | `--diff REF` | Chỉ quét phần thay đổi so với `REF` |
 | `--fail-on {none,new,any}` | Điều kiện exit code ≠ 0 |
 | `--fail-severity {low,medium,high,critical}` | Ngưỡng severity khi gate |
@@ -127,7 +127,7 @@ Chấp nhận cả SARIF cũ làm baseline (đọc `partialFingerprints`), nhưn
 - Sửa lỗi trong fixture → `fixed`; đưa lỗi trở lại → `regressed`.
 - Suppression hết hạn → finding hoạt động lại.
 - Diff 1 file trên bộ benchmark (`test_performance.py`) nhanh hơn rõ rệt so với full scan.
-- Upload SARIF lên GitHub code scanning của chính repo Komainu (workflow sẵn có).
+- Upload SARIF lên GitHub code scanning của chính repo Komagu (workflow sẵn có).
 
 ---
 
@@ -164,7 +164,7 @@ Knowledge mới: `assess/lsa/knowledge/mass-assignment-patterns.md`.
 - Wire vào `build_adapters.py` cho đủ 5 runtime (claude-code, codex, cursor, generic, openhands) + agent `lsa-privilege-auditor`.
 - `--headless-ai` (`operate/ai/runner.py`) gửi thêm batch privilege.
 
-### 4.3 Persona matrix cho `komainu test`
+### 4.3 Persona matrix cho `komagu test`
 
 Suite v2 (giữ nguyên tương thích suite v1 và `--token`):
 
@@ -173,9 +173,9 @@ Suite v2 (giữ nguyên tương thích suite v1 và `--token`):
   "version": 2,
   "personas": {
     "anonymous": {},
-    "user":  { "token_env": "KOMAINU_TOKEN_USER" },
-    "admin": { "token_env": "KOMAINU_TOKEN_ADMIN" },
-    "other_tenant": { "token_env": "KOMAINU_TOKEN_TENANT_B" }
+    "user":  { "token_env": "KOMAGU_TOKEN_USER" },
+    "admin": { "token_env": "KOMAGU_TOKEN_ADMIN" },
+    "other_tenant": { "token_env": "KOMAGU_TOKEN_TENANT_B" }
   },
   "routes": [
     { "method": "DELETE", "path": "/api/admin/users/{id}", "allow": ["admin"] },
@@ -223,17 +223,17 @@ Suite v2 (giữ nguyên tương thích suite v1 và `--token`):
 **Mapping (open core — `governance/compliance/`)**
 
 - `scs-mapping.json` (dữ liệu) + `scs-mapping.md` (bản đọc, EN + JA).
-- Mỗi control gồm: `control_id`, `framework_refs` (SCS ★ level, NIST CSF 2.0 subcategory, nghĩa vụ ACD), `evidence_sources` (tên artifact Komainu), `coverage` (`covered` · `partial` · `organizational`), `notes`.
-- Ví dụ: `ID.AM` ← route inventory + SBOM; `PR.AA` ← kết quả BOLA/BFLA + persona matrix; `PR.PS` ← `komainu fix` + SCA; `DE.CM` ← CI gate + trend; `RS.MI` ← WAF virtual patch + MTTR.
+- Mỗi control gồm: `control_id`, `framework_refs` (SCS ★ level, NIST CSF 2.0 subcategory, nghĩa vụ ACD), `evidence_sources` (tên artifact Komagu), `coverage` (`covered` · `partial` · `organizational`), `notes`.
+- Ví dụ: `ID.AM` ← route inventory + SBOM; `PR.AA` ← kết quả BOLA/BFLA + persona matrix; `PR.PS` ← `komagu fix` + SCA; `DE.CM` ← CI gate + trend; `RS.MI` ← WAF virtual patch + MTTR.
 
-**`komainu evidence` (operate — closed)**
+**`komagu evidence` (operate — closed)**
 
 ```
-npx komainu-guard evidence --scan-dir ./audit-output --devsecops-dir ./devsecops-out \
+npx @hoanghainh/komagu evidence --scan-dir ./audit-output --devsecops-dir ./devsecops-out \
     --test-results ./test-results.json --out ./evidence-2026-11.zip --lang ja
 ```
 
-- Thu thập: SARIF, `findings.json`, `baseline.json`/`history.json`, suppression đã duyệt, SBOM (CycloneDX/SPDX), kết quả SCA/secret scan, kết quả `komainu test`, phiên bản ruleset WAF.
+- Thu thập: SARIF, `findings.json`, `baseline.json`/`history.json`, suppression đã duyệt, SBOM (CycloneDX/SPDX), kết quả SCA/secret scan, kết quả `komagu test`, phiên bản ruleset WAF.
 - `manifest.json` (schema `contracts/schemas/evidence-manifest.schema.json`): sha256 từng file, phiên bản tool, git commit của target, thời điểm, phạm vi.
 - Báo cáo gap `evidence-report.html` (EN/JA): trạng thái từng control, link tới bằng chứng, việc tổ chức còn phải làm.
 - Tuyên bố miễn trừ rõ ràng: hỗ trợ chuẩn bị, **không thay thế** đánh giá của tổ chức được công nhận.
@@ -244,7 +244,7 @@ npx komainu-guard evidence --scan-dir ./audit-output --devsecops-dir ./devsecops
 | PR | Nội dung | Ước lượng |
 |---|---|---|
 | #271a | Mapping SCS/CSF/ACD (JSON + MD, EN/JA) | 3 ngày + thời gian review |
-| #271b | `komainu evidence` + manifest schema + kiểm tra hash | 3–4 ngày |
+| #271b | `komagu evidence` + manifest schema + kiểm tra hash | 3–4 ngày |
 | #271c | Báo cáo gap HTML EN/JA | 2–3 ngày |
 | #271d | Job CI chạy end-to-end trên demo app (scan → test → devsecops → evidence) | 1–2 ngày |
 

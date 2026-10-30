@@ -25,7 +25,7 @@ Write max 8 bullets in plain, professional Business Japanese for business manage
 Suggest max 5 architectural and framework-level remediations that eliminate entire vulnerability classes:
 - 例: アプリケーション共通の所有権チェックフィルター/ヘルパーの導入、パラメータバインディングを強制する基底DAO層の構築、WAFによる境界防御。
 - For each fix, provide:
-  - **対策概要**: 具体的な設計方針・ライブラリ活用案（Komainu D1/D3等）。
+  - **対策概要**: 具体的な設計方針・ライブラリ活用案（Komagu D1/D3等）。
   - **想定工数 (Effort)**: S / M / L (S ≤ 1日, M ≤ 1週間, L > 1週間)。
   - **解消される検出事項**: 対応する `finding_id` のリスト。
 

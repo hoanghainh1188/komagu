@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "lsa/suppressions.schema.json",
-  "title": "Komainu approved finding suppressions",
+  "title": "Komagu approved finding suppressions",
   "type": "object",
   "required": [
     "version",

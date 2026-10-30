@@ -5,7 +5,7 @@ Business and planning documents that sit around the LSA kit. They are **internal
 | Document | What it is | Status |
 |---|---|---|
 | [Modernization Boilerplates — Proposal](modernization-boilerplates-proposal.md) | Assessment-first modernization package for Japanese clients: context, offer, roadmap, business model, risks, decisions. Includes a client-facing summary. | Approved by BOD (2026-10-17) |
-| [ADR-0001 — Name and repository structure](adr/0001-name-and-repository-structure.md) | Product name Komainu; repository organised by lifecycle (assess / remediate / operate) | Accepted; applied to assess/ and contracts/ |
+| [ADR-0001 — Name and repository structure](adr/0001-name-and-repository-structure.md) | Product name Komagu; repository organised by lifecycle (assess / remediate / operate) | Accepted; applied to assess/ and contracts/ |
 | [ADR-0002 — IP Position: Open Core Model](adr/0002-ip-position-open-core.md) | Open Core boundary: assess/, contracts/, governance/ open; remediate/, operate/, delivery/, docs/ closed | Accepted (2026-10-17) |
 | [ADR-0003 — WAF Engine Selection for D4](adr/0003-waf-engine-coraza.md) | OWASP Coraza WAF (pure Go, CRS v4, proxy-wasm / Kong sidecar) for D4 | Accepted (2026-10-17) |
 | [ADR-0004 — B1 Design Review](adr/0004-b1-design-review-d1-threat-model-demo-app.md) | B1 design review: D1 public interface (.NET & Spring), request path threat model, D6 demo app scope | Accepted (2026-10-17) |
@@ -15,9 +15,9 @@ Business and planning documents that sit around the LSA kit. They are **internal
 | [Pilot: Client AI Processing Approval & Data Governance Protocol](pilot-client-ai-approval-consent.md) | AI code processing data governance, security guarantees (ZDR, no training), bilingual Japanese/English consent application form, and fallback system protocol for the AMS pilot. | Ready for client submission; Closes #5 |
 | [Pilot: 4-Week Execution Runbook (Weeks 9–12)](pilot-execution-runbook.md) | Comprehensive step-by-step operational runbook for Weeks 9–12: kickoff, consent gate, LSA audit, Person B sign-off, Kong WAF, D1-D3 fixes, D5 CI, and ROI measurement. | Ready for execution; Closes #75 |
 | [Security Scanning in CI](security-scanning.md) | Architecture, tool matrix (Bandit, pip-audit, golangci-lint, govulncheck, Roslyn, Detekt, CodeQL, Trivy), suppression conventions, and gating roadmap for `.github/workflows/security-scan.yml`. | Active on `main` (#232) |
-| [Developer Community Articles (Qiita & Zenn)](articles/README.md) | Japanese developer community articles: published Qiita hands-on quickstart and Zenn technical architecture deep-dive for `komainu-guard`. | Published & active; Closes #73 |
+| [Developer Community Articles (Qiita & Zenn)](articles/README.md) | Japanese developer community articles: published Qiita hands-on quickstart and Zenn technical architecture deep-dive for `komagu`. | Published & active; Closes #73 |
 | [Feature Plan: #269 · #270 · #271](feature-plan-269-271.md) | Implementation plan (Vietnamese) for BFLA + mass assignment, baseline / PR diff scanning, and the METI SCS evidence pack: order, design, PR breakdown, tests, risks, decisions. | Draft v0.1; Phase 0 in #272 |
-| [Komainu CLI Comprehensive User Guide](cli-guide.md) | Unified operator and developer guide for all 8 core CLI subcommands (`scan`, `init`, `protect`, `test`, `fix`, `simulate`, `devsecops`, `demo`), flags, exit codes, and CI/CD pipelines. | Active & verified |
+| [Komagu CLI Comprehensive User Guide](cli-guide.md) | Unified operator and developer guide for all 8 core CLI subcommands (`scan`, `init`, `protect`, `test`, `fix`, `simulate`, `devsecops`, `demo`), flags, exit codes, and CI/CD pipelines. | Active & verified |
 
 ## How these files are maintained
 

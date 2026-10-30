@@ -1,9 +1,9 @@
-# Komainu (狛犬) — Pitching Deck & Sales Enablement Kit
+# Komagu (狛犬) — Pitching Deck & Sales Enablement Kit
 
 **Tài liệu:** Bộ công cụ Thuyết trình & Hỗ trợ Kinh doanh (Sales Enablement Kit)  
 **Đối tượng mục tiêu:** Ban Giám đốc (BOD), CISO, CIO, Trưởng ban Chuyển đổi số (DX Division), và Giám đốc Quản lý Ứng dụng (AMS / SIers) tại thị trường Nhật Bản.  
 **Tác giả & Diễn giả:** Harry (Principal Architect / BrSE / Lead Oversight)  
-**Phiên bản nền tảng:** Komainu `v1.2.1` (`komainu-guard` trên npmjs & Docker Hub/GHCR)  
+**Phiên bản nền tảng:** Komagu `v1.2.1` (`komagu` trên npmjs & Docker Hub/GHCR)  
 
 ---
 
@@ -29,8 +29,8 @@
    - *Muốn sửa:* Sợ chạm vào code cũ không có tài liệu sẽ làm gãy nghiệp vụ đang chạy.
    - *Muốn quét lỗi:* Các công cụ SAST truyền thống (Fortify, Checkmarx, SonarQube) báo hàng nghìn cảnh báo giả (False Positives) nhưng lại bỏ sót lỗi phân quyền đối tượng **BOLA / IDOR** và các chuỗi ghép SQL động phức tạp.
 
-### 1.2. Giá trị Cốt lõi của Komainu (The Komainu Value Proposition)
-Komainu mang hình tượng **Cặp thần thú hộ vệ Shinto A–Un (阿吽)**:
+### 1.2. Giá trị Cốt lõi của Komagu (The Komagu Value Proposition)
+Komagu mang hình tượng **Cặp thần thú hộ vệ Shinto A–Un (阿吽)**:
 - **Há miệng (A - 阿) $\rightarrow$ Đánh giá (Assess):** Rà soát quét sâu không chạm vào code (Read-only), phát hiện chính xác lỗ hổng BOLA và SQLi với bằng chứng `file:line` cụ thể, không báo động giả.
 - **Ngậm miệng (Un - 吽) $\rightarrow$ Khóa chặt (Protect & Remediate):** Ngay lập tức đặt lá chắn Kong Gateway + Coraza WAF ở tầng biên mà **không cần sửa một dòng code di sản nào**, sau đó vá bằng các thư viện chuẩn hóa hoặc shims.
 
@@ -48,12 +48,12 @@ flowchart LR
 ---
 
 ### SLIDE 1: Title & Positioning
-- **Tiêu đề Slide:** **Komainu (狛犬) — Security-First Legacy Modernization Platform**
+- **Tiêu đề Slide:** **Komagu (狛犬) — Security-First Legacy Modernization Platform**
 - **Phụ đề:** *Chuyển dịch Hệ thống Di sản Sang Kiến trúc Hiện đại An toàn: Rà soát Chính xác, Bảo vệ Tức thì, Khắc phục Triệt để.*
-- **Key Visual:** Biểu tượng cặp thần thú Shinto Komainu (A–Un) bảo vệ cổng đền linh thiêng.
+- **Key Visual:** Biểu tượng cặp thần thú Shinto Komagu (A–Un) bảo vệ cổng đền linh thiêng.
 - **Thông điệp chính:** Cầu nối giữa kiểm toán an ninh tĩnh và hiện đại hóa phần mềm thực dụng cho doanh nghiệp Nhật Bản.
 - **Speaker Notes (Harry):**
-  > *"Kính thưa Ban Giám đốc và quý đối tác. Trong truyền thống Thần đạo Nhật Bản, Komainu là linh vật hộ vệ đứng trước đền thờ, một con há miệng gọi là 'A' để nhận diện nguy nan, một con ngậm miệng gọi là 'Un' để khóa chặt cổng biên. Nền tảng Komainu của chúng tôi ra đời với cùng một triết lý: Giúp doanh nghiệp bảo vệ và tái thiết những hệ thống phần mềm di sản quý báu nhất mà không phải đánh đổi bằng sự gián đoạn kinh doanh."*
+  > *"Kính thưa Ban Giám đốc và quý đối tác. Trong truyền thống Thần đạo Nhật Bản, Komagu là linh vật hộ vệ đứng trước đền thờ, một con há miệng gọi là 'A' để nhận diện nguy nan, một con ngậm miệng gọi là 'Un' để khóa chặt cổng biên. Nền tảng Komagu của chúng tôi ra đời với cùng một triết lý: Giúp doanh nghiệp bảo vệ và tái thiết những hệ thống phần mềm di sản quý báu nhất mà không phải đánh đổi bằng sự gián đoạn kinh doanh."*
 
 ---
 
@@ -75,7 +75,7 @@ flowchart LR
 - **Tiêu đề Slide:** **Tại sao các Công cụ Quét Code Truyền thống Không Giải quyết Được?**
 - **Bảng so sánh:**
 
-| Vấn đề | Công cụ SAST truyền thống (Fortify, Checkmarx, Sonar) | Nền tảng Komainu |
+| Vấn đề | Công cụ SAST truyền thống (Fortify, Checkmarx, Sonar) | Nền tảng Komagu |
 | :--- | :--- | :--- |
 | **BOLA / IDOR (CWE-639)** | ❌ **Bỏ sót:** Không hiểu mô hình sở hữu dữ liệu (Ai sở hữu bản ghi nào). | ✅ **Phát hiện 100%:** Mô hình hóa đối tượng và truy vết quyền sở hữu per-route. |
 | **Báo động giả (False Positives)** | ❌ **Quá tải:** Báo hàng nghìn cảnh báo giả, làm tê liệt đội ngũ kỹ thuật. | ✅ **Zero False Positives:** Có Agent phản biện (*Skeptic Verifier*) bác bỏ lỗi sai. |
@@ -87,7 +87,7 @@ flowchart LR
 
 ---
 
-### SLIDE 4: The Komainu 4-Stage Lifecycle
+### SLIDE 4: The Komagu 4-Stage Lifecycle
 - **Tiêu đề Slide:** **Giải pháp Toàn diện: Vòng đời Hiện đại hóa 4 Giai đoạn**
 - **Nội dung sơ đồ Mermaid:**
 
@@ -102,7 +102,7 @@ flowchart LR
 ```
 
 - **Speaker Notes (Harry):**
-  > *"Komainu không phải là một công cụ quét đơn thuần, mà là một quy trình hiện đại hóa hoàn chỉnh. Bước 1: Quét và chỉ ra đúng dòng code có nguy cơ. Bước 2: Dựng ngay lá chắn Kong Gateway và Coraza WAF ở tầng biên để chặn đứng tấn công trong khi chưa cần sửa code. Bước 3: Vá dần từng module bằng thư viện mẫu hoặc shim nhúng. Bước 4: Đưa kiểm thử tự động vào CI/CD để lỗi này vĩnh viễn không tái phát."*
+  > *"Komagu không phải là một công cụ quét đơn thuần, mà là một quy trình hiện đại hóa hoàn chỉnh. Bước 1: Quét và chỉ ra đúng dòng code có nguy cơ. Bước 2: Dựng ngay lá chắn Kong Gateway và Coraza WAF ở tầng biên để chặn đứng tấn công trong khi chưa cần sửa code. Bước 3: Vá dần từng module bằng thư viện mẫu hoặc shim nhúng. Bước 4: Đưa kiểm thử tự động vào CI/CD để lỗi này vĩnh viễn không tái phát."*
 
 ---
 
@@ -118,7 +118,7 @@ flowchart LR
     - **Pha 5 — Trọng tài Hoài nghi (Skeptic Verifier):** *Cố tình tìm lý lẽ để chứng minh Auditor sai* (nhận diện enum mapping, `switch/case`, allow-list). Nếu có cơ chế kiểm tra quyền, lập tức hủy finding để đảm bảo không có báo động giả!
     - Pha 6: Xuất báo cáo Markdown, SARIF v2.1.0 và HTML Dashboard.
 - **Speaker Notes (Harry):**
-  > *"Điểm đột phá nhất của Komainu là vai trò của Agent Phản biện (Skeptic Verifier). Giống như trong một phiên tòa, Auditor đóng vai công tố viên buộc tội, còn Skeptic đóng vai luật sư bào chữa cho đoạn code của khách hàng. Chỉ khi bằng chứng lỗ hổng rõ mười mươi không thể bào chữa, lỗi đó mới được ghi vào báo cáo. Nhờ đó, chúng tôi triệt tiêu hoàn toàn báo động giả."*
+  > *"Điểm đột phá nhất của Komagu là vai trò của Agent Phản biện (Skeptic Verifier). Giống như trong một phiên tòa, Auditor đóng vai công tố viên buộc tội, còn Skeptic đóng vai luật sư bào chữa cho đoạn code của khách hàng. Chỉ khi bằng chứng lỗ hổng rõ mười mươi không thể bào chữa, lỗi đó mới được ghi vào báo cáo. Nhờ đó, chúng tôi triệt tiêu hoàn toàn báo động giả."*
 
 ---
 
@@ -149,7 +149,7 @@ flowchart LR
     - **Nút chuyển đổi ngôn ngữ tức thì (`EN` $\leftrightarrow$ `日本語`)** cho phép chuyên gia quốc tế và quản lý Nhật Bản xem chung một tài liệu.
   - **OASIS SARIF v2.1.0:** Tích hợp trực tiếp vào GitHub Security Code Scanning & CI/CD.
 - **Speaker Notes (Harry):**
-  > *"Chúng tôi hiểu rằng một báo cáo an ninh dù tốt đến đâu nhưng viết bằng tiếng Anh hàn lâm sẽ rất khó để các nhà quản trị Nhật Bản đưa ra quyết định ngân sách. Báo cáo của Komainu được chuẩn hóa song ngữ hoàn chỉnh, tuân thủ hướng dẫn của IPA và NISC, và có một bảng điều khiển HTML có thể mở ngoại tuyến ở bất kỳ đâu chỉ với một cú nhấp chuột."*
+  > *"Chúng tôi hiểu rằng một báo cáo an ninh dù tốt đến đâu nhưng viết bằng tiếng Anh hàn lâm sẽ rất khó để các nhà quản trị Nhật Bản đưa ra quyết định ngân sách. Báo cáo của Komagu được chuẩn hóa song ngữ hoàn chỉnh, tuân thủ hướng dẫn của IPA và NISC, và có một bảng điều khiển HTML có thể mở ngoại tuyến ở bất kỳ đâu chỉ với một cú nhấp chuột."*
 
 ---
 
@@ -165,9 +165,9 @@ flowchart LR
     - **BP2 — Zero-PII eKYC & NFC (Tuân thủ Luật Nhật Bản 04/2027):** Xác thực chữ ký số JPKI (My Number Card) và chip IC bằng lái; từ chối 100% ảnh giấy tờ thô (`HTTP 422`), lưu trữ bằng Blind-Index Tokenization.
     - **BP3 — Multi-Region Resilience & Immutable WORM Backup:** Terraform IaC thiết lập S3 Object Lock (`COMPLIANCE` mode) chống Ransomware, khóa KMS CMK chống xóa, và CLI kiểm thử phục hồi thảm họa (`dr_manager.py`).
     - **BP4 — Tenant-Isolated SaaS & BYOK Encryption:** Cô lập PostgreSQL bằng RLS & Schema-per-tenant, mã hóa phong bì AES-256-GCM với khóa riêng từng khách hàng (BYOK & Crypto-shredding), và chuỗi nhật ký kiểm toán HMAC-SHA256 chống giả mạo.
-    - **BP5 — DevSecOps, SBOM & Auto-Remediator:** Xuất SBOM CycloneDX 1.5 / SPDX 2.3, tự động sinh bản vá (`komainu fix`), và pipeline 6-job CI Security Scan.
+    - **BP5 — DevSecOps, SBOM & Auto-Remediator:** Xuất SBOM CycloneDX 1.5 / SPDX 2.3, tự động sinh bản vá (`komagu fix`), và pipeline 6-job CI Security Scan.
 - **Speaker Notes (Harry):**
-  > *"Điểm cốt lõi giúp Komainu thắng thầu là: Chúng tôi không chỉ tìm ra lỗi mà đã xây dựng sẵn trọn bộ 5 Boilerplates giải quyết đúng các bài toán sống còn tại Nhật Bản: từ phân quyền BOLA trên 5 ngôn ngữ hiện đại và 4 ngôn ngữ cổ điển, cho đến eKYC không lưu ảnh giấy tờ theo luật tháng 4/2027, sao lưu bất biến WORM chống Ransomware, và cô lập đa khách hàng với khóa BYOK."*
+  > *"Điểm cốt lõi giúp Komagu thắng thầu là: Chúng tôi không chỉ tìm ra lỗi mà đã xây dựng sẵn trọn bộ 5 Boilerplates giải quyết đúng các bài toán sống còn tại Nhật Bản: từ phân quyền BOLA trên 5 ngôn ngữ hiện đại và 4 ngôn ngữ cổ điển, cho đến eKYC không lưu ảnh giấy tờ theo luật tháng 4/2027, sao lưu bất biến WORM chống Ransomware, và cô lập đa khách hàng với khóa BYOK."*
 
 ---
 
@@ -180,14 +180,14 @@ flowchart LR
   - **Phân phối Chuẩn Quốc tế — Zero-Install Experience:**
     - **Qua npmjs:** Chỉ cần một dòng lệnh chạy tức thì:
       ```bash
-      npx komainu-guard scan /path/to/legacy-repo --lang ja --format html
+      npx @hoanghainh/komagu scan /path/to/legacy-repo --lang ja --format html
       ```
     - **Qua Docker Container:** Khép kín không cần cài đặt môi trường host:
       ```bash
       docker run --rm -v $(pwd):/workspace ghcr.io/hoanghainh1188/komagu:latest scan ...
       ```
 - **Speaker Notes (Harry):**
-  > *"Không có công cụ nào phát huy tác dụng nếu việc cài đặt quá phức tạp. Với Komainu, các kỹ sư không cần cài đặt thư viện rườm rà. Chỉ cần gõ lệnh `npx komainu-guard scan` hoặc chạy Docker, toàn bộ quy trình phân tích và tạo báo cáo sẽ hoàn tất trong vài giây."*
+  > *"Không có công cụ nào phát huy tác dụng nếu việc cài đặt quá phức tạp. Với Komagu, các kỹ sư không cần cài đặt thư viện rườm rà. Chỉ cần gõ lệnh `npx @hoanghainh/komagu scan` hoặc chạy Docker, toàn bộ quy trình phân tích và tạo báo cáo sẽ hoàn tất trong vài giây."*
 
 ---
 
@@ -202,7 +202,7 @@ flowchart LR
     - **Người B (Principal Architect / Human Reviewer - Harry):** Chuyên gia an ninh độc lập ký duyệt trên từng finding trước khi gửi báo cáo cho khách hàng.
     - Đảm bảo tính pháp lý và trách nhiệm giải trình tuyệt đối trước pháp luật Nhật Bản.
 - **Speaker Notes (Harry):**
-  > *"Chúng tôi hiểu sâu sắc rằng đối với các doanh nghiệp Nhật Bản, việc đưa AI vào xử lý mã nguồn đòi hỏi sự an tâm tuyệt đối về bảo mật dữ liệu. Komainu tuân thủ nghiêm ngặt Quy tắc Hai Người (Two-Person Rule): Mọi kết quả do AI phân tích bắt buộc phải được chuyên gia an ninh con người ký duyệt. Không một dòng code nào của khách hàng bị lưu trữ hay sử dụng để huấn luyện mô hình."*
+  > *"Chúng tôi hiểu sâu sắc rằng đối với các doanh nghiệp Nhật Bản, việc đưa AI vào xử lý mã nguồn đòi hỏi sự an tâm tuyệt đối về bảo mật dữ liệu. Komagu tuân thủ nghiêm ngặt Quy tắc Hai Người (Two-Person Rule): Mọi kết quả do AI phân tích bắt buộc phải được chuyên gia an ninh con người ký duyệt. Không một dòng code nào của khách hàng bị lưu trữ hay sử dụng để huấn luyện mô hình."*
 
 ---
 
@@ -212,7 +212,7 @@ flowchart LR
 
 | Gói Dịch vụ | Hình thức Chi phí | Giá trị Bàn giao cho Khách hàng | Thời gian |
 | :--- | :--- | :--- | :--- |
-| **Gói 1: Legacy Security Assessment (LSA)** | **Phí Cố định** (Fixed-fee per scope) | Báo cáo kiểm toán song ngữ IPA/NISC, Dashboard HTML, SARIF, danh sách lỗi `file:line` và đề xuất vá tự động (`komainu fix`). | **1 – 2 Tuần** |
+| **Gói 1: Legacy Security Assessment (LSA)** | **Phí Cố định** (Fixed-fee per scope) | Báo cáo kiểm toán song ngữ IPA/NISC, Dashboard HTML, SARIF, danh sách lỗi `file:line` và đề xuất vá tự động (`komagu fix`). | **1 – 2 Tuần** |
 | **Gói 2: Edge Protection & Rapid Shim** | **Trọn gói** (Fixed-price project) | Triển khai Kong Gateway + Coraza WAF tầng biên và nhúng Shims vá ngay các lỗ hổng nghiêm trọng. | **2 – 4 Tuần** |
 | **Gói 3: Modernization by 5 Boilerplates** | **Theo Gói Công việc** (Milestone-based) | Chuyển dịch sang 5 ngôn ngữ (.NET 8, Spring Boot 3, Go, Node.js, Python) với BP1 (Authz/OIDC), BP2 (Zero-PII eKYC 2027), BP3 (WORM Backup/DR), BP4 (Multi-Tenant RLS & BYOK). | **6 – 12 Tuần** |
 | **Gói 4: Continuous DevSecOps Retainer (BP5)** | **Duy trì Hàng tháng** (Monthly Retainer) | Tích hợp LSA, Cross-User Test, SBOM (CycloneDX/SPDX) & 6-job CI Security Scan, định kỳ rà soát chống hồi quy lỗi. | **Hàng tháng** |
@@ -227,11 +227,11 @@ flowchart LR
 - **Kế hoạch hành động 3 bước:**
   1. **Bước 1 — Chọn phạm vi nhỏ (Scope Selection):** Chọn 1 ứng dụng di sản (khoảng 30–50 endpoints) đang cần đánh giá an ninh.
   2. **Bước 2 — Ký kết Thỏa thuận Bảo mật & Chấp thuận AI (NDA & Written Approval):** Tuân thủ chính sách bảo mật nội bộ của khách hàng.
-  3. **Bước 3 — Thực hiện Audit & Bàn giao Báo cáo (1 tuần):** Chạy `npx komainu-guard`, chuyên gia Person B rà soát và thuyết trình báo cáo Dashboard trực tiếp cho Ban Lãnh đạo.
+  3. **Bước 3 — Thực hiện Audit & Bàn giao Báo cáo (1 tuần):** Chạy `npx @hoanghainh/komagu`, chuyên gia Person B rà soát và thuyết trình báo cáo Dashboard trực tiếp cho Ban Lãnh đạo.
 - **Thông tin liên hệ & Q&A:**
   - Harry — Principal Architect & Modernization Lead
   - GitHub: [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
-  - npmjs: [https://www.npmjs.com/package/komainu-guard](https://www.npmjs.com/package/komainu-guard)
+  - npmjs: [https://www.npmjs.com/package/komagu](https://www.npmjs.com/package/komagu)
 - **Speaker Notes (Harry):**
   > *"Để bắt đầu, quý vị không cần phải cam kết bất kỳ một dự án triệu đô nào. Hãy cùng chúng tôi chọn ra một ứng dụng di sản nhỏ đang vận hành. Trong vòng 1 tuần, chúng tôi sẽ bàn giao cho quý vị một bức tranh an ninh rõ ràng nhất mà quý vị từng thấy. Xin trân trọng cảm ơn quý vị và tôi rất sẵn lòng giải đáp mọi câu hỏi."*
 
@@ -244,23 +244,23 @@ flowchart LR
 ### Phút 0:00 – 0:45: Giới thiệu & Kích hoạt Chế độ Zero-Install
 - **Thao tác:** Mở terminal rỗng, gõ lệnh:
   ```bash
-  npx --yes komainu-guard --version
-  npx --yes komainu-guard help
+  npx --yes komagu --version
+  npx --yes komagu help
   ```
 - **Lời thoại của Harry:**
-  > *"Xin quý vị lưu ý, máy tính của tôi hoàn toàn là một môi trường sạch, không hề cài đặt trước bất kỳ phần mềm chuyên dụng nào. Nhờ việc đã phân phối chính thức trên npmjs toàn cầu, tôi chỉ cần gõ `npx komainu-guard`. Hệ thống sẵn sàng hoạt động ngay lập tức."*
+  > *"Xin quý vị lưu ý, máy tính của tôi hoàn toàn là một môi trường sạch, không hề cài đặt trước bất kỳ phần mềm chuyên dụng nào. Nhờ việc đã phân phối chính thức trên npmjs toàn cầu, tôi chỉ cần gõ `npx @hoanghainh/komagu`. Hệ thống sẵn sàng hoạt động ngay lập tức."*
 
 ### Phút 0:45 – 1:45: Thực thi Quét Trực tiếp trên Mã nguồn Di sản
 - **Thao tác:** Chạy lệnh audit trên một thư mục code mẫu (ví dụ PHP/Java legacy):
   ```bash
-  npx komainu-guard scan ./legacy-app --lang all --format all --out ./demo-audit
+  npx @hoanghainh/komagu scan ./legacy-app --lang all --format all --out ./demo-audit
   ```
 - **Hiện tượng trên màn hình:**
-  - Banner ASCII Komainu hiện lên.
+  - Banner ASCII Komagu hiện lên.
   - Các bước phát hiện framework (Classic ASP, PHP, Java...), lập danh mục route, phân tích chuỗi SQL ghép động diễn ra trong 2–3 giây.
   - Kết xuất thông báo: `Report generated: ./demo-audit/report.html`.
 - **Lời thoại của Harry:**
-  > *"Chỉ trong 3 giây, Komainu đã quét qua toàn bộ các tệp mã nguồn, định vị toàn bộ các route và các vị trí ghép chuỗi SQL nguy hiểm. Đặc biệt, Komainu hoàn toàn chỉ đọc (Read-only), không sửa đổi bất kỳ byte nào trong mã nguồn gốc của quý vị."*
+  > *"Chỉ trong 3 giây, Komagu đã quét qua toàn bộ các tệp mã nguồn, định vị toàn bộ các route và các vị trí ghép chuỗi SQL nguy hiểm. Đặc biệt, Komagu hoàn toàn chỉ đọc (Read-only), không sửa đổi bất kỳ byte nào trong mã nguồn gốc của quý vị."*
 
 ### Phút 1:45 – 3:00: Trình chiếu Bảng điều khiển HTML Tương tác & Chuyển ngữ
 - **Thao tác:** Mở file `demo-audit/report.html` trên trình duyệt Chrome.
@@ -269,7 +269,7 @@ flowchart LR
   2. Bấm vào nút chuyển ngôn ngữ **`[日本語]`** trên thanh tiêu đề $\rightarrow$ Toàn bộ giao diện, bảng lỗi, khuyến nghị tự động đổi sang tiếng Nhật chuẩn IPA/NISC.
   3. Bấm lọc theo `BOLA / IDOR` $\rightarrow$ Bấm mở một finding: Cho khách hàng thấy rõ đường dẫn `file:line`, đoạn code gốc không kiểm tra quyền sở hữu, và đoạn code gợi ý khắc phục.
 - **Lời thoại của Harry:**
-  > *"Đây chính là bảng điều khiển tương tác offline độc quyền của Komainu. Quý vị có thể thấy rõ ràng từng lỗ hổng với bằng chứng file và dòng code xác thực. Khi nhấp vào nút tiếng Nhật, toàn bộ nội dung chuyển thành ngôn ngữ bản địa chuẩn IPA/NISC để các sếp có thể duyệt ngay. Đây là giá trị khác biệt hoàn toàn so với những tệp PDF vô cảm hàng nghìn trang của các công cụ khác."*
+  > *"Đây chính là bảng điều khiển tương tác offline độc quyền của Komagu. Quý vị có thể thấy rõ ràng từng lỗ hổng với bằng chứng file và dòng code xác thực. Khi nhấp vào nút tiếng Nhật, toàn bộ nội dung chuyển thành ngôn ngữ bản địa chuẩn IPA/NISC để các sếp có thể duyệt ngay. Đây là giá trị khác biệt hoàn toàn so với những tệp PDF vô cảm hàng nghìn trang của các công cụ khác."*
 
 ---
 
@@ -279,7 +279,7 @@ flowchart LR
 
 ```text
 ========================================================================================
-KOMAINU (狛犬) — EXECUTIVE BRIEFING: SECURITY-FIRST LEGACY MODERNIZATION
+KOMAGU (狛犬) — EXECUTIVE BRIEFING: SECURITY-FIRST LEGACY MODERNIZATION
 ========================================================================================
 MỤC TIÊU:
 Giải quyết triệt để rủi ro an ninh mạng của hệ thống di sản (BOLA/IDOR, SQLi) và mở đường 
@@ -290,7 +290,7 @@ VẤN ĐỀ CỦA DOANH NGHIỆP:
 2. Lỗ hổng BOLA (người dùng xem trộm dữ liệu nhau) và Dynamic SQLi gây rò rỉ dữ liệu nghiêm trọng.
 3. Các công cụ quét mã nguồn SAST truyền thống báo quá nhiều cảnh báo giả và không thể tự vá lỗi.
 
-GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAINU (A-UN LIFECYCLE):
+GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAGU (A-UN LIFECYCLE):
 ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
 │  1. ASSESS   │──>│  2. PROTECT  │──>│ 3. REMEDIATE │──>│  4. OPERATE  │
 │  (LSA Kit)   │   │  (Edge WAF)  │   │(Boilerplate) │   │ (CI Testing) │
@@ -298,7 +298,7 @@ GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAINU (A-UN LIFECYCLE):
 • Assess: Phân tích sâu 10 stack di sản; đạt 100% Recall và 0% False Positives (Run 3).
 • Protect: Đặt Kong Gateway + Coraza WAF che chắn tầng biên trong 10 phút, không sửa code cũ.
 • Remediate: 5 Boilerplates (.NET 8, Spring 3, Go, Node, Python; Zero-PII eKYC 2027; WORM Backup; Multi-Tenant BYOK; Legacy Shims).
-• Operate: Kiểm thử chéo User A-B, tự động vá lỗi (komainu fix), xuất SBOM & 6-job CI Security Scan.
+• Operate: Kiểm thử chéo User A-B, tự động vá lỗi (komagu fix), xuất SBOM & 6-job CI Security Scan.
 
 KẾT QUẢ ĐÃ ĐƯỢC CHỨNG MINH THỰC NGHIỆM:
 • Recall phát hiện BOLA/IDOR: 100% (25/25 vectors)
@@ -313,7 +313,7 @@ CHÍNH SÁCH BẢO MẬT & QUẢN TRỊ (TWO-PERSON RULE):
 
 CÁCH THỨC BẮT ĐẦU:
 • Triển khai thử nghiệm (Pilot) trên 1 module/ứng dụng nhỏ (30-50 endpoints) trong 1 tuần.
-• Trải nghiệm Zero-Install ngay lập tức: npx komainu-guard scan <repo>
+• Trải nghiệm Zero-Install ngay lập tức: npx @hoanghainh/komagu scan <repo>
 ========================================================================================
 ```
 
@@ -321,18 +321,18 @@ CÁCH THỨC BẮT ĐẦU:
 
 ## 5. Cẩm nang Xử lý Từ chối & Câu hỏi Thường gặp (Objection Handling & FAQ)
 
-### Q1: Khách hàng Nhật hỏi: "Chúng tôi đã mua bản quyền Fortify / SonarQube rồi, tại sao phải cần thêm Komainu?"
+### Q1: Khách hàng Nhật hỏi: "Chúng tôi đã mua bản quyền Fortify / SonarQube rồi, tại sao phải cần thêm Komagu?"
 - **Cách trả lời của Harry:**
-  > *"Fortify hay SonarQube là những công cụ tuyệt vời cho việc quét cú pháp chuẩn (code smells) và các lỗi tràn bộ nhớ mức thấp. Tuy nhiên, điểm yếu lớn nhất của chúng là **hoàn toàn mù về mặt ngữ cảnh nghiệp vụ (Business Context Blind)**. Chúng không thể biết endpoint `/orders/{id}` có đang kiểm tra quyền sở hữu giữa người mua và người bán hay không. Đó là lý do tại sao BOLA/IDOR hiện đứng số 1 trong OWASP API Top 10 và các vụ rò rỉ dữ liệu lớn vẫn xảy ra dù các công ty đều đã chạy SAST. Komainu không thay thế hoàn toàn SAST, mà bổ khuyết đúng vào 2 lỗ hổng chí mạng nhất: BOLA và Dynamic Query Injection với độ chính xác tuyệt đối."*
+  > *"Fortify hay SonarQube là những công cụ tuyệt vời cho việc quét cú pháp chuẩn (code smells) và các lỗi tràn bộ nhớ mức thấp. Tuy nhiên, điểm yếu lớn nhất của chúng là **hoàn toàn mù về mặt ngữ cảnh nghiệp vụ (Business Context Blind)**. Chúng không thể biết endpoint `/orders/{id}` có đang kiểm tra quyền sở hữu giữa người mua và người bán hay không. Đó là lý do tại sao BOLA/IDOR hiện đứng số 1 trong OWASP API Top 10 và các vụ rò rỉ dữ liệu lớn vẫn xảy ra dù các công ty đều đã chạy SAST. Komagu không thay thế hoàn toàn SAST, mà bổ khuyết đúng vào 2 lỗ hổng chí mạng nhất: BOLA và Dynamic Query Injection với độ chính xác tuyệt đối."*
 
 ### Q2: Khách hàng Nhật lo ngại: "Việc sử dụng AI để đọc mã nguồn có làm lộ bí mật kinh doanh hay vi phạm NDA không?"
 - **Cách trả lời của Harry:**
   > *"Đây là mối quan tâm hoàn toàn chính đáng và chúng tôi đặt vấn đề bảo mật lên ưu tiên cao nhất:
-  > 1. Toàn bộ tiền xử lý (Pre-scan) của Komainu chạy cục bộ 100% trên hạ tầng nội bộ bằng Python standard library, không gửi bất kỳ dữ liệu nào ra ngoài.
+  > 1. Toàn bộ tiền xử lý (Pre-scan) của Komagu chạy cục bộ 100% trên hạ tầng nội bộ bằng Python standard library, không gửi bất kỳ dữ liệu nào ra ngoài.
   > 2. Khi chạy các Agent phân tích sâu, chúng tôi hỗ trợ phương án **Self-Hosted LLM chạy trên máy chủ riêng biệt (On-Premise / Private Cloud)** hoặc qua các cổng API doanh nghiệp bảo mật có cam kết Zero-Data Retention (không lưu trữ, không dùng để huấn luyện).
   > 3. Chúng tôi thực thi **Quy tắc Phê duyệt Hai Người (Two-Person Rule)**: Tôi và chuyên gia bảo mật con người trực tiếp ký xác nhận biên bản rà soát (`review-log.md`) trước khi báo cáo đến tay quý vị."*
 
-### Q3: Khách hàng hỏi: "Code legacy của chúng tôi viết từ 15 năm trước, không ai dám sửa vì sợ lỗi nghiệp vụ. Komainu giúp gì được?"
+### Q3: Khách hàng hỏi: "Code legacy của chúng tôi viết từ 15 năm trước, không ai dám sửa vì sợ lỗi nghiệp vụ. Komagu giúp gì được?"
 - **Cách trả lời của Harry:**
   > *"Đây chính là lý do chúng tôi thiết kế **Trụ cột số 2 (Protect at the Edge)**. Thay vì yêu cầu quý vị sửa code ngay, chúng tôi đặt một cổng bảo vệ Kong Gateway và Coraza WAF đứng trước hệ thống cũ. Cổng này tự động nhận diện và chặn đứng các chuỗi tấn công SQLi, XSS hoặc hành vi vét dữ liệu bất thường mà **không cần đụng tới một dòng code cũ nào**. Sau khi hệ thống đã an toàn ở tầng biên, chúng ta mới dùng các giải pháp Shims hoặc thư viện chuẩn để vá dần từng phần với rủi ro bằng 0."*
 

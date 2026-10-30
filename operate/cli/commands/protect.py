@@ -63,7 +63,7 @@ Examples:
   komagu protect --down
 
 Documentation:
-  See docs/cli-guide.md#33-komainu-protect--edge-gateway--coraza-waf-perimeter
+  See docs/cli-guide.md#33-komagu-protect--edge-gateway--coraza-waf-perimeter
 """,
     )
     parser.add_argument(

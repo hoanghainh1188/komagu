@@ -60,7 +60,7 @@ export const App: React.FC = () => {
       isVulnerable: false,
       explanation: isAlice
         ? 'SUCCESS: Alice is the verified owner of ord-001, so access is granted (200 OK).'
-        : 'SECURE: Komainu D1 intercepted the request. Because caller does not own ord-001, it returned 404 Not Found, preventing ID harvesting.',
+        : 'SECURE: Komagu D1 intercepted the request. Because caller does not own ord-001, it returned 404 Not Found, preventing ID harvesting.',
     });
   };
 
@@ -101,7 +101,7 @@ export const App: React.FC = () => {
       {/* Header & Persona Switcher */}
       <div className="header">
         <div>
-          <div className="brand">🛡️ Komainu Member Portal</div>
+          <div className="brand">🛡️ Komagu Member Portal</div>
           <small style={{ color: '#718096' }}>Boilerplate 1 Reference Implementation (B1-D6)</small>
         </div>
 

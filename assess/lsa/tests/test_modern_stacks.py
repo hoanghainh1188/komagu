@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for modern stack profiles in Komainu LSA (Rust, Go, FastAPI, NestJS).
+"""Tests for modern stack profiles in Komagu LSA (Rust, Go, FastAPI, NestJS).
 
 Validates:
 1. detect_stack.py correctly identifies modern stacks and data access libraries.

@@ -88,7 +88,7 @@ def load_baseline(path: Path) -> Dict[str, Dict]:
         return {e["fingerprint"]: dict(e) for e in doc["entries"] if isinstance(e, dict) and e.get("fingerprint")}
     if isinstance(doc, dict) and isinstance(doc.get("runs"), list):
         return _entries_from_sarif(doc)
-    raise BaselineError(f"{path} is neither a Komainu baseline nor a SARIF file")
+    raise BaselineError(f"{path} is neither a Komagu baseline nor a SARIF file")
 
 
 def load_history(path: Path) -> List[Dict]:

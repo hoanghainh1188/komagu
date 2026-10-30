@@ -3,7 +3,7 @@
 Generate the bundle into its own folder:
 
 ```
-komainu init --ai generic ./lsa-bundle
+komagu init --ai generic ./lsa-bundle
 # or: python3 assess/lsa/adapters/build_adapters.py generic ./lsa-bundle
 ```
 

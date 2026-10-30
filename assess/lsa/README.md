@@ -1,6 +1,6 @@
 # LSA — Legacy Security Audit Kit
 
-Part of [Komainu](../../README.md): the assessment tool (`assess/lsa/`). Run the commands below from this folder.
+Part of [Komagu](../../README.md): the assessment tool (`assess/lsa/`). Run the commands below from this folder.
 
 AI-agent kit that reviews the controllers / routers / pages of a **legacy web
 system** and finds:
@@ -64,7 +64,7 @@ python3 tests/run_tests.py
 python3 scripts/run_prescan.py /path/to/legacy-repo /path/to/lsa-out/legacy-repo \
         --config templates/audit-config.json
 
-# 2. Generate files for your AI tool (pick one; `komainu init --ai <tool> DEST` does the same)
+# 2. Generate files for your AI tool (pick one; `komagu init --ai <tool> DEST` does the same)
 python3 adapters/build_adapters.py claude-code /path/to/audit-workspace
 python3 adapters/build_adapters.py codex       /path/to/audit-workspace
 python3 adapters/build_adapters.py cursor      /path/to/audit-workspace

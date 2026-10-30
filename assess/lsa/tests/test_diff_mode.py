@@ -30,7 +30,7 @@ from lsa_common import iter_source_files, load_config  # noqa: E402
 from scan_cache import compute_config_hash  # noqa: E402
 
 RUN_PRESCAN = KIT / "scripts" / "run_prescan.py"
-GIT = ["git", "-c", "user.name=komainu-test", "-c", "user.email=test@komainu.invalid", "-c", "init.defaultBranch=main"]
+GIT = ["git", "-c", "user.name=komagu-test", "-c", "user.email=test@komagu.invalid", "-c", "init.defaultBranch=main"]
 
 FILES = {
     "orders.php": "<?php\ninclude 'inc/db.php';\n$id = $_GET['id'];\n$r = mysql_query(\"SELECT * FROM orders WHERE id=\" . $id);\n",

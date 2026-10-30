@@ -2,7 +2,7 @@
 """Remediation & Continuous Authorization CI Verification for Boilerplate 1 Demo App (B1-D6).
 
 Validates that all accepted security findings from Issue #76 (BOLA & SQLi)
-are completely remediated using Komainu D1 and D3 when running in standard (remediated) mode:
+are completely remediated using Komagu D1 and D3 when running in standard (remediated) mode:
 1. Launches .NET 8 Member Portal Backend with ENABLE_SECURITY_TEST_VULNERABILITIES=false.
 2. Validates legitimate owner (User A) can access their own orders.
 3. Runs D5 cross-user test runner against /api/v1/test/legacy-orders/{id} -> verifies exit code 0 ([PASS - SECURE]).

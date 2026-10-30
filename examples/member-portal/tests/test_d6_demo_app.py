@@ -156,7 +156,7 @@ class TestDemoAppVerification(unittest.TestCase):
         self.assertIn("[FAIL - BOLA BREACH]", proc.stdout)
 
     def test_03_d5_passes_on_d1_protected_orders(self) -> None:
-        """D5 test runner must pass cleanly (exit 0) on Komainu D1-protected endpoints."""
+        """D5 test runner must pass cleanly (exit 0) on Komagu D1-protected endpoints."""
         runner_script = os.path.join(
             PROJECT_ROOT, "operate", "cross_user_tester", "runner.py"
         )

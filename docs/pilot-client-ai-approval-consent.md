@@ -13,7 +13,7 @@
 ## 1. Executive Summary & Purpose (概要と目的)
 
 ### 1.1 Purpose (目的)
-Nhằm chuẩn bị cho giai đoạn **Thử nghiệm thực tế (Pilot: Tuần 9–12)** của dự án Komainu trên hệ thống đang bảo trì (**AMS - Application Maintenance Service**), tài liệu này thiết lập:
+Nhằm chuẩn bị cho giai đoạn **Thử nghiệm thực tế (Pilot: Tuần 9–12)** của dự án Komagu trên hệ thống đang bảo trì (**AMS - Application Maintenance Service**), tài liệu này thiết lập:
 1. **Khung quản trị dữ liệu và an toàn thông tin (Data Governance & Security Protocol)** khi áp dụng công nghệ Trí tuệ Nhân tạo (AI/LLM) để rà soát mã nguồn tự động (LSA - Legacy Security Assessment) và hỗ trợ hiện đại hóa API bảo mật.
 2. **Mẫu văn bản xin phê duyệt chính thức (Formal AI Processing Consent Letter / 稟議・利用許諾申請書)** song ngữ Nhật - Anh chuẩn mực, sẵn sàng trình ký Ban lãnh đạo và Bộ phận An toàn Thông tin của khách hàng AMS.
 3. **Kế hoạch dự phòng (Fallback Plan)** trong trường hợp khách hàng chưa kịp hoàn tất thủ tục phê duyệt trước hạn chót Tuần 6 (Week 6 deadline).
@@ -22,17 +22,17 @@ Nhằm chuẩn bị cho giai đoạn **Thử nghiệm thực tế (Pilot: Tuần
 Theo kế hoạch tại [Delivery Plan §Pilot](boilerplate-1-delivery-plan.md#pilot-assess-then-fix-with-the-boilerplate):
 - Hệ thống thuộc phạm vi hợp đồng bảo trì AMS hiện hữu.
 - Quy mô kiến trúc: Web API xử lý dữ liệu định danh người dùng (per-user/multi-tenant data) với quy mô từ **30 đến 150 endpoints**.
-- Ngăn xếp công nghệ ưu tiên: Các ngôn ngữ legacy được bộ công cụ Komainu LSA hỗ trợ đầy đủ (PHP, Java/Spring, ASP.NET Core/.NET Framework).
+- Ngăn xếp công nghệ ưu tiên: Các ngôn ngữ legacy được bộ công cụ Komagu LSA hỗ trợ đầy đủ (PHP, Java/Spring, ASP.NET Core/.NET Framework).
 
 ---
 
 ## 2. Core Security & Data Governance Guarantees (セキュリティおよびデータガバナンス誓約)
 
-Doanh nghiệp Nhật Bản đặc biệt coi trọng an toàn thông tin, bảo vệ tài sản sở hữu trí tuệ (IP) và tuân thủ Đạo luật bảo vệ thông tin cá nhân (APPI - 個人情報保護法) cũng như Tiêu chuẩn Quản lý An toàn Thông tin (JIS Q 27001 / ISO/IEC 27001). Komainu đưa ra 6 cam kết kỹ thuật bất biến sau:
+Doanh nghiệp Nhật Bản đặc biệt coi trọng an toàn thông tin, bảo vệ tài sản sở hữu trí tuệ (IP) và tuân thủ Đạo luật bảo vệ thông tin cá nhân (APPI - 個人情報保護法) cũng như Tiêu chuẩn Quản lý An toàn Thông tin (JIS Q 27001 / ISO/IEC 27001). Komagu đưa ra 6 cam kết kỹ thuật bất biến sau:
 
 ```
 +---------------------------------------------------------------------------------------+
-|                       KOMAINU AI DATA GOVERNANCE FRAMEWORK                             |
+|                       KOMAGU AI DATA GOVERNANCE FRAMEWORK                             |
 +---------------------------------------------------------------------------------------+
 |  [1] Zero Model Training     -> Tuyệt đối KHÔNG dùng code khách hàng để huấn luyện AI |
 |  [2] Zero Data Retention     -> Xóa bộ nhớ đệm ngay sau khi phân tích (No Persistence)|
@@ -58,7 +58,7 @@ Doanh nghiệp Nhật Bản đặc biệt coi trọng an toàn thông tin, bảo
   - Toàn bộ kết quả phân tích, log và báo cáo chỉ được ghi ra thư mục chỉ định riêng biệt (`OUT/`), nằm ngoài cây thư mục dự án.
 
 ### 2.4 Không tiếp cận CSDL và dữ liệu người dùng (Zero Database & PII Access)
-- Komainu chỉ phân tích cấu trúc mã nguồn tĩnh (Static AST & Source Structure: định nghĩa route, controller, truy vấn SQL, logic kiểm tra quyền).
+- Komagu chỉ phân tích cấu trúc mã nguồn tĩnh (Static AST & Source Structure: định nghĩa route, controller, truy vấn SQL, logic kiểm tra quyền).
 - **Không yêu cầu và không bao giờ kết nối** tới CSDL Production/Staging của khách hàng.
 - Không thu thập, không truyền tải bất kỳ thông tin cá nhân (PII) nào của người dùng cuối.
 
@@ -76,7 +76,7 @@ Doanh nghiệp Nhật Bản đặc biệt coi trọng an toàn thông tin, bảo
 
 ## 3. Model Hosting & Execution Options (モデル稼働環境の選択肢)
 
-Nhằm đáp ứng linh hoạt theo chính sách bảo mật nội bộ của từng khách hàng Nhật Bản, Komainu cung cấp 2 phương án hạ tầng:
+Nhằm đáp ứng linh hoạt theo chính sách bảo mật nội bộ của từng khách hàng Nhật Bản, Komagu cung cấp 2 phương án hạ tầng:
 
 | Đặc tính kỹ thuật | **Phương án A: On-Premises / Air-Gapped (Khuyên dùng cho khối tài chính/y tế)** | **Phương án B: Private Enterprise Cloud (Khuyên dùng cho khối thương mại/dịch vụ)** |
 |---|---|---|
@@ -106,9 +106,9 @@ Dưới đây là mẫu văn bản thỏa thuận chính thức được chuẩn
 ---
 
 #### 1. 申請の趣旨および目的 (Purpose of Application)
-貴社より受託しておりますソフトウェア保守・運用業務（AMS）におきまして、潜在的なセキュリティ脆弱性（オブジェクトレベル認可不備／BOLA、SQLインジェクション等）を迅速に特定し、安全なAPIモダナイゼーションを推進するため、専用のAIコード解析支援ツール「Komainu LSA」のパイロット適用をご承認いただきたく申請いたします。
+貴社より受託しておりますソフトウェア保守・運用業務（AMS）におきまして、潜在的なセキュリティ脆弱性（オブジェクトレベル認可不備／BOLA、SQLインジェクション等）を迅速に特定し、安全なAPIモダナイゼーションを推進するため、専用のAIコード解析支援ツール「Komagu LSA」のパイロット適用をご承認いただきたく申請いたします。
 
-*We hereby request your approval to conduct a pilot engagement utilizing the "Komainu LSA" AI-assisted code analysis kit for the ongoing Application Maintenance Services (AMS). This initiative aims to rapidly identify latent security vulnerabilities (such as Broken Object Level Authorization/BOLA and SQL Injection) and support secure API modernization.*
+*We hereby request your approval to conduct a pilot engagement utilizing the "Komagu LSA" AI-assisted code analysis kit for the ongoing Application Maintenance Services (AMS). This initiative aims to rapidly identify latent security vulnerabilities (such as Broken Object Level Authorization/BOLA and SQL Injection) and support secure API modernization.*
 
 #### 2. 対象システムおよび範囲 (Target System & Scope)
 - **対象システム名 (System Name):** [Tên hệ thống khách hàng AMS chỉ định]
@@ -194,4 +194,4 @@ Nhằm đảm bảo tiến độ bàn giao của [Delivery Plan §Pilot](boilerp
 
 | Phiên bản | Ngày | Tác giả | Tóm tắt thay đổi |
 |---|---|---|---|
-| **1.0** | 2026-10-18 | Harry & Komainu Lead Agent | Khởi tạo tài liệu quy chế quản trị dữ liệu AI, cam kết bảo mật và mẫu đơn xin phê duyệt song ngữ Nhật - Anh phục vụ Issue #5. |
+| **1.0** | 2026-10-18 | Harry & Komagu Lead Agent | Khởi tạo tài liệu quy chế quản trị dữ liệu AI, cam kết bảo mật và mẫu đơn xin phê duyệt song ngữ Nhật - Anh phục vụ Issue #5. |

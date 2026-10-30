@@ -23,7 +23,7 @@ scanning** (repository → *Security* → *Code scanning*).
 | `go` | govulncheck 1.9.0 | `govulncheck` | `remediate/authz/golang` |
 | `dotnet` | Roslyn analyzers (`latest-recommended`, security = all) | `roslyn` | `remediate/*/dotnet/src`, member-portal backend |
 | `dotnet` | `dotnet list package --vulnerable` | job summary only | Same projects |
-| `kotlin` | Detekt 1.23.8 CLI + Komainu `StringBuiltSqlQuery` rule | `detekt` | `remediate/*/spring`, member-portal Spring backend |
+| `kotlin` | Detekt 1.23.8 CLI + Komagu `StringBuiltSqlQuery` rule | `detekt` | `remediate/*/spring`, member-portal Spring backend |
 | `codeql` | CodeQL `security-extended` | `/language:<lang>` | python, go, csharp, javascript-typescript, actions |
 | `trivy` | Trivy 0.76.0 `fs` (vuln, secret, misconfig) | `trivy-fs` | Repository, minus exclusions |
 | `trivy` | Trivy 0.76.0 `image` | `trivy-image` | Root `Dockerfile` (not on PRs) |
@@ -33,7 +33,7 @@ Notes:
 - **Kotlin is not analysed by CodeQL**, because the modules use Kotlin 2.4 and
   CodeQL cannot extract that version yet. Detekt covers Kotlin until it can.
 - **Detekt runs as a CLI**, not as a Gradle plugin, because the Detekt 1.x Gradle
-  plugin does not support Kotlin 2.4. The Komainu rule set has to be enabled
+  plugin does not support Kotlin 2.4. The Komagu rule set has to be enabled
   explicitly in `config/detekt/detekt.yml`; third-party rule sets are inactive
   by default.
 - **The Go scanners use the latest stable Go toolchain.** Stdlib CVEs of

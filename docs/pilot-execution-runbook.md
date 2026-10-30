@@ -12,11 +12,11 @@
 
 ## 1. Overview & 4-Week Flight Path (概要と全体スケジュール)
 
-Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho **Giai đoạn Thử nghiệm Pilot (Tuần 9–12)** của dự án Komainu trên hệ thống đang bảo trì (**AMS** hoặc **Hệ thống Thay thế Nội bộ D6**).
+Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho **Giai đoạn Thử nghiệm Pilot (Tuần 9–12)** của dự án Komagu trên hệ thống đang bảo trì (**AMS** hoặc **Hệ thống Thay thế Nội bộ D6**).
 
 ```
 +-------------------------------------------------------------------------------------------------+
-|                                 KOMAINU PILOT 4-WEEK TIMELINE                                    |
+|                                 KOMAGU PILOT 4-WEEK TIMELINE                                    |
 +-------------------------------------------------------------------------------------------------+
 |  [Tuần 9]      -> KICKOFF & GOVERNANCE: Kiểm tra phê duyệt AI / Quyết định Fallback            |
 |                   Hạ tầng AI (Local GPU/Cloud ZDR), Thiết lập Timesheet 4 tags (ADR-0005)       |
@@ -61,7 +61,7 @@ Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho *
   - Cấu hình Azure OpenAI Service (Japan East/West) với hợp đồng Enterprise Zero Data Retention (ZDR).
   - Khai báo API Key và Endpoint vào biến môi trường:
     ```bash
-    export AZURE_OPENAI_ENDPOINT="https://komainu-pilot.openai.azure.com/"
+    export AZURE_OPENAI_ENDPOINT="https://komagu-pilot.openai.azure.com/"
     export AZURE_OPENAI_API_KEY="<secure-secret>"
     ```
 
@@ -88,10 +88,10 @@ Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho *
 ## 3. Phase 2: Tuần 9–10 — Rà soát An ninh & Thẩm định Person B
 
 ### Bước 2.1: Chạy Rà soát Cú pháp Tĩnh & Sinh Báo cáo Ban đầu (Scan)
-Sử dụng gói `komainu-guard` đã phát hành để quét tự động toàn bộ mã nguồn mục tiêu:
+Sử dụng gói `komagu` đã phát hành để quét tự động toàn bộ mã nguồn mục tiêu:
 ```bash
 # Thực hiện quét tĩnh, trích xuất route candidates và sinh báo cáo song ngữ
-npx --yes komainu-guard scan /path/to/target-repo --out ./pilot-out --lang all --format all
+npx --yes komagu scan /path/to/target-repo --out ./pilot-out --lang all --format all
 ```
 - **Kiểm tra đầu ra trong `./pilot-out`:**
   - `stack-profile.json`: Xác nhận đúng ngôn ngữ/framework (PHP, Java, .NET...).
@@ -147,14 +147,14 @@ deck gateway sync --konnect-token <token> deck.yaml
 
 ### Bước 5.1: Tích hợp Thư viện Phân quyền D1 & Định danh D2
 - Với các endpoint thuộc ngăn xếp .NET 8:
-  - Nhúng gói NuGet `Komainu.Authorization`.
+  - Nhúng gói NuGet `Komagu.Authorization`.
   - Khai báo middleware kiểm tra quyền sở hữu đối tượng:
     ```csharp
     [AuthorizeOwner(ResourceParam = "orderId", OwnerClaim = "sub")]
     public async Task<IActionResult> GetOrder(string orderId) { ... }
     ```
 - Với các endpoint thuộc ngăn xếp Kotlin / Spring Boot 3:
-  - Nhúng dependency `komainu-spring-boot-starter`.
+  - Nhúng dependency `komagu-spring-boot-starter`.
   - Sử dụng annotation `@PreAuthorize("@ownerCheck.isOwner(#orderId, authentication)")`.
 
 ### Bước 5.2: Khắc phục Truy vấn SQL An toàn (D3)

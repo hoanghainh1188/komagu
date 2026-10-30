@@ -3,17 +3,17 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: komainu-demo-postgres
+    container_name: komagu-demo-postgres
     environment:
       POSTGRES_DB: member_portal
-      POSTGRES_USER: komainu
-      POSTGRES_PASSWORD: komainu_secure_password
+      POSTGRES_USER: komagu
+      POSTGRES_PASSWORD: komagu_secure_password
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U komainu -d member_portal"]
+      test: ["CMD-SHELL", "pg_isready -U komagu -d member_portal"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
     build:
       context: ../..
       dockerfile: examples/member-portal/backend-dotnet/Dockerfile
-    container_name: komainu-demo-dotnet
+    container_name: komagu-demo-dotnet
     environment:
       ASPNETCORE_URLS: "http://+:5001"
       ENABLE_SECURITY_TEST_VULNERABILITIES: "true"
@@ -36,7 +36,7 @@ services:
     build:
       context: ../..
       dockerfile: examples/member-portal/backend-spring/Dockerfile
-    container_name: komainu-demo-spring
+    container_name: komagu-demo-spring
     environment:
       SERVER_PORT: "5002"
       ENABLE_SECURITY_TEST_VULNERABILITIES: "true"
@@ -47,7 +47,7 @@ services:
     build:
       context: frontend
       dockerfile: Dockerfile
-    container_name: komainu-demo-frontend
+    container_name: komagu-demo-frontend
     ports:
       - "3000:80"
     depends_on:

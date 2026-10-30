@@ -1,6 +1,6 @@
-# Komainu Member Portal Demo App (Deliverable B1-D6)
+# Komagu Member Portal Demo App (Deliverable B1-D6)
 
-The **Komainu Member Portal** is the canonical reference application demonstrating the full integration of Boilerplate 1 security deliverables (**D1 through D5**) across both frontend and backend layers.
+The **Komagu Member Portal** is the canonical reference application demonstrating the full integration of Boilerplate 1 security deliverables (**D1 through D5**) across both frontend and backend layers.
 
 ---
 
@@ -34,7 +34,7 @@ flowchart TD
     DotNet & Spring --> DB
 
     subgraph CI["Continuous Verification (operate/ - D5)"]
-        D5["Komainu Cross-User Test Runner"] --> DotNet & Spring
+        D5["Komagu Cross-User Test Runner"] --> DotNet & Spring
     end
 ```
 
@@ -91,7 +91,7 @@ Open the Member Portal in your browser (`http://localhost:3000`).
 2. Bob only sees his own order (`ord-003`).
 3. Click **1. Test Standard API (D1 Protected)** to attempt reading Alice's `ord-001`.
 4. **Result:** `HTTP 404 Not Found`.
-   - *Why 404 instead of 403?* Komainu enforces a strict information disclosure invariant: returning 404 prevents the attacker from confirming whether `ord-001` exists (preventing ID harvesting and resource enumeration).
+   - *Why 404 instead of 403?* Komagu enforces a strict information disclosure invariant: returning 404 prevents the attacker from confirming whether `ord-001` exists (preventing ID harvesting and resource enumeration).
 
 ### Scenario 3: Planted BOLA Vulnerability Leak (Bob)
 1. Keeping **Bob** as the active persona, click **2. Test Legacy API (Planted BOLA)**.
@@ -123,9 +123,9 @@ OK
 
 ---
 
-## 4. Adoption Guide: Migrating Legacy Systems Behind Komainu
+## 4. Adoption Guide: Migrating Legacy Systems Behind Komagu
 
-For organizations with legacy applications (Classic ASP, PHP, .NET Framework, Java Struts/Spring 3), adopt Komainu in 4 progressive stages:
+For organizations with legacy applications (Classic ASP, PHP, .NET Framework, Java Struts/Spring 3), adopt Komagu in 4 progressive stages:
 
 ### Stage 1: Perimeter Shielding (Zero Code Changes)
 Deploy **Kong Gateway 3.6+** with **OWASP Coraza WAF** (`remediate/edge`):
@@ -138,12 +138,12 @@ Integrate **Keycloak** or Enterprise IdP (`remediate/identity`):
 - Extract verified claims (`sub`, `tenant_id`) into request headers passed to backends.
 
 ### Stage 3: Object-Level Authorization (Remediation)
-Incorporate **Komainu D1 Authorization Library** into modernizing services:
+Incorporate **Komagu D1 Authorization Library** into modernizing services:
 - **.NET 8**: Add `Komagu.Security.AspNetCore` and `Komagu.Security.EntityFrameworkCore`. Use `[RequireOwnership]` or `.WithUserScope(userId, tenantId)`.
 - **Spring Boot 3**: Add `komagu-security-spring`. Use `@RequireOwnership` or `KomaguSecurityManager.requireOwnership()`.
 - Ensure all authorization rejections return **HTTP 404 Not Found**.
 
 ### Stage 4: Continuous CI/CD Verification
-Add **Komainu D5 Pipeline** to GitHub Actions or GitLab CI (`operate/ci`):
+Add **Komagu D5 Pipeline** to GitHub Actions or GitLab CI (`operate/ci`):
 - Run `operate/cross_user_tester/runner.py` on pull requests to test cross-user CRUD operations.
 - Convert LSA audit findings to SARIF using `operate/lsa_sarif/lsa_to_sarif.py` to display security findings inline in PR reviews.
