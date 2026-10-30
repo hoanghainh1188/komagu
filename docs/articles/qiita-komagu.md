@@ -25,7 +25,7 @@ Web API のセキュリティ診断を行う際、最も厄介で深刻な脆弱
 そこで今回、**「AST（抽象構文木）による静的解析」×「マルチエージェントAI（監査役と懐疑派レビュアー）」** を融合させ、インストール不要でローカルから即座に実行できる CLI ツール **「komagu」** を開発し、npm に OSS として公開しました！
 
 :::note info
-**npm パッケージ:** [`komagu`](https://www.npmjs.com/package/komagu)  
+**npm パッケージ:** [`@hoanghainh/komagu`](https://www.npmjs.com/package/@hoanghainh/komagu)  
 **実行コマンド:** `npx @hoanghainh/komagu --help`
 :::
 
@@ -163,7 +163,7 @@ AI に脆弱性を探させると、存在しない欠陥を過剰に報告し�
 
 まずはぜひ、お手元のレガシープロジェクトやサンプルコードで試してみてください！
 
-- **npm:** [https://www.npmjs.com/package/komagu](https://www.npmjs.com/package/komagu)
+- **npm:** [https://www.npmjs.com/package/@hoanghainh/komagu](https://www.npmjs.com/package/@hoanghainh/komagu)
 - **GitHub:** [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 
 フィードバックや Issue、スターをいただけると大変励みになります！

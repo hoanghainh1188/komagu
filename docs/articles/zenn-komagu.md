@@ -14,7 +14,7 @@ OWASP API Security Top 10 において、2019年版に続き2023年版でも不�
 
 特に日本国内のエンタープライズ領域では、10〜20年前に開発された **レガシーシステム（PHP、Java Struts/Spring、ASP.NET WebForms など）** が現役で稼働しており、DX や API 化の波の中で認可不備が潜んだまま外部へ公開されるリスクが急増しています。
 
-筆者はこの課題を解決するため、**「AST（抽象構文木）による決定論的プリスキャン」×「敵対的マルチエージェントAI（監査役と懐疑派レビュアー）」** を組み合わせたセキュリティ監査基盤 **「Komagu（狛犬）」** を設計・開発し、その CLI ツールである [`komagu`](https://www.npmjs.com/package/komagu) を OSS として npm に公開しました。
+筆者はこの課題を解決するため、**「AST（抽象構文木）による決定論的プリスキャン」×「敵対的マルチエージェントAI（監査役と懐疑派レビュアー）」** を組み合わせたセキュリティ監査基盤 **「Komagu（狛犬）」** を設計・開発し、その CLI ツールである [`@hoanghainh/komagu`](https://www.npmjs.com/package/@hoanghainh/komagu) を OSS として npm に公開しました。
 
 この記事では、**「なぜ従来の SAST は BOLA を見逃すのか？」** という技術的本質から、Komagu がそれをいかにして解決したのか、そのアーキテクチャと設計思想を共有します。
 
@@ -180,7 +180,7 @@ Web API のセキュリティモダン化において、BOLA の撲滅は避け�
 
 まずはぜひ、ご自身のプロジェクトやレガシーコードに対して `npx @hoanghainh/komagu` を試してみてください！
 
-- **npm:** [https://www.npmjs.com/package/komagu](https://www.npmjs.com/package/komagu)
+- **npm:** [https://www.npmjs.com/package/@hoanghainh/komagu](https://www.npmjs.com/package/@hoanghainh/komagu)
 - **GitHub Repository:** [https://github.com/hoanghainh1188/komagu](https://github.com/hoanghainh1188/komagu)
 
 フィードバックやディスカッションを歓迎いたします！
