@@ -27,6 +27,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from operate.lsa_sarif.sarif_findings import findings_from_sarif, is_sarif
+
 SUITE_VERSION = 2
 DENY_STATUS = (401, 403, 404)
 STRICT_DENY_STATUS = (404,)
@@ -278,12 +280,14 @@ def generate_matrix_cases_from_findings(
     default_id: str = "12345",
     min_consensus: float = 0.0,
 ) -> List[MatrixCase]:
-    """Turn BFLA and mass assignment findings into matrix cases.
+    """Turn BFLA and mass assignment findings (findings.json or SARIF) into matrix cases.
 
     BFLA findings are replayed by a normal user (``token_env``) who must be
     refused. Mass assignment findings are probed by the same user with the
     privileged fields from ``attack_vector.fields`` (default: role / is_admin).
     """
+    if is_sarif(data):
+        data = findings_from_sarif(data)
     items = data if isinstance(data, list) else (data.get("findings", []) if isinstance(data, dict) else [])
     persona = Persona(name="user", token_env=token_env)
     cases: List[MatrixCase] = []

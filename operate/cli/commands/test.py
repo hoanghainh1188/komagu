@@ -297,7 +297,7 @@ def execute_test(args: argparse.Namespace) -> int:
 
 
 def _matrix_cases_from_scan(scan_file: Path, args: argparse.Namespace, min_consensus: float) -> List[MatrixCase]:
-    """BFLA and mass assignment findings from findings.json (SARIF is not read here)."""
+    """BFLA and mass assignment findings from findings.json or SARIF."""
     try:
         data = json.loads(scan_file.read_text(encoding="utf-8"))
     except (OSError, ValueError):

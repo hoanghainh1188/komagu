@@ -241,7 +241,7 @@ komagu test --url <base-url> [options]
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--url` | `-u` | *Required* | Base URL of target API (`http://localhost:8000`) |
-| `--from-scan` | | `None` | Ingest BOLA routes from `findings.json` or SARIF; BFLA and mass assignment findings from `findings.json` |
+| `--from-scan` | | `None` | Ingest BOLA, BFLA and mass assignment findings from `findings.json` or SARIF (`komagu scan` SARIF carries the endpoint, attack vector and consensus score per result) |
 | `--min-consensus` | | `0.0` | Minimum Multi-AI Consensus score threshold (0.0 – 1.0) |
 | `--export-poc` | | `None` | Export verified exploit scripts (`.py` & `.sh`) to directory |
 | `--auto-crud-path` | | `None` | Direct endpoint path pattern (e.g., `/api/v1/orders/{id}`) |
@@ -293,7 +293,9 @@ inconclusive.
 - `--from-scan` also turns `bfla` and `mass_assignment` findings into cases
   (normal user from `--token-env`; probe fields from `attack_vector.fields`,
   default `role` / `is_admin`). `--export-poc` writes PoC scripts for both;
-  they read the token from `KOMAGU_TOKEN`.
+  they read the token from `KOMAGU_TOKEN`. Both options accept `findings.json`
+  or the SARIF file from `komagu scan`. SARIF from older scans has no attack
+  vector, so mass assignment cases fall back to the default probe fields.
 
 #### Examples
 ```bash
