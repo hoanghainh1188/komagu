@@ -21,7 +21,8 @@ _TAG_CATEGORY = {
     "owasp-api5:2023-bfla": "bfla",
     "owasp-api3:2023-bopla": "mass_assignment",
 }
-# Rule id prefixes written by operate/lsa_sarif/lsa_to_sarif.py (KOMAINU-<PREFIX>-CWE<n>)
+# Rule id prefixes written by operate/lsa_sarif/lsa_to_sarif.py (KOMAGU-<PREFIX>-CWE<n>;
+# 1.x SARIF files use KOMAINU-, still read for one major release, #312)
 _LEGACY_PREFIX_CATEGORY = {"BOLA": "bola", "BFLA": "bfla", "MASS": "mass_assignment", "INJ": "sql_injection"}
 _ENDPOINT_IN_MESSAGE = re.compile(r"\[(GET|POST|PUT|PATCH|DELETE)(?:\|[A-Z]+)*\s+(/[^\]\s]*)\]")
 
