@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Komainu.Security.Query.Analyzers/Komainu.Security.Query.Analyzers.csproj" />
-    <Project Path="src/Komainu.Security.Query/Komainu.Security.Query.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Komainu.Security.Query.Tests/Komainu.Security.Query.Tests.csproj" />
-  </Folder>
-</Solution>

@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Komagu.Security.AspNetCore/Komagu.Security.AspNetCore.csproj" />
+    <Project Path="src/Komagu.Security.Authorization/Komagu.Security.Authorization.csproj" />
+    <Project Path="src/Komagu.Security.EntityFrameworkCore/Komagu.Security.EntityFrameworkCore.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Komagu.Security.Authorization.Tests/Komagu.Security.Authorization.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Komagu.Security.Query.Analyzers/Komagu.Security.Query.Analyzers.csproj" />
+    <Project Path="src/Komagu.Security.Query/Komagu.Security.Query.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Komagu.Security.Query.Tests/Komagu.Security.Query.Tests.csproj" />
+  </Folder>
+</Solution>

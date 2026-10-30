@@ -4,17 +4,17 @@ using MemberPortal.Backend.Data;
 using MemberPortal.Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Komainu.Security.Authorization;
-using Komainu.Security.EntityFrameworkCore;
+using Komagu.Security.Authorization;
+using Komagu.Security.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/v1/documents")]
 public class DocumentsController : ControllerBase
 {
     private readonly PortalDbContext _dbContext;
-    private readonly IKomainuAuthorizationService _authzService;
+    private readonly IKomaguAuthorizationService _authzService;
 
-    public DocumentsController(PortalDbContext dbContext, IKomainuAuthorizationService authzService)
+    public DocumentsController(PortalDbContext dbContext, IKomaguAuthorizationService authzService)
     {
         _dbContext = dbContext;
         _authzService = authzService;

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Komagu.Security.Identity</PackageId>
+    <Version>1.0.0-preview.1</Version>
+    <Authors>Komagu Contributors</Authors>
+    <Company>Komagu Security</Company>
+    <Description>OpenID Connect / JWT bearer authentication integration for Komagu Modernization Kit.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.32" />
+  </ItemGroup>
+
+</Project>

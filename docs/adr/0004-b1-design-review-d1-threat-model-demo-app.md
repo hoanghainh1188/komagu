@@ -41,10 +41,10 @@ All implementations of the D1 library across both .NET and JVM platforms must sa
 
 #### 1.2. .NET 8 (ASP.NET Core & EF Core) Interface Contract
 
-##### Core Abstractions (`Komainu.Security.Authorization`)
+##### Core Abstractions (`Komagu.Security.Authorization`)
 
 ```csharp
-namespace Komainu.Security.Authorization;
+namespace Komagu.Security.Authorization;
 
 using System.Security.Claims;
 
@@ -81,7 +81,7 @@ public interface IOwnedResource<TKey>
 /// <summary>
 /// Primary imperative authorization service for ASP.NET Core applications.
 /// </summary>
-public interface IKomainuAuthorizationService
+public interface IKomaguAuthorizationService
 {
     /// <summary>
     /// Evaluates if the current authenticated user owns and can access the given resource.
@@ -106,10 +106,10 @@ public interface IKomainuAuthorizationService
 }
 ```
 
-##### Declarative Attribute & Action Filter (`Komainu.Security.AspNetCore`)
+##### Declarative Attribute & Action Filter (`Komagu.Security.AspNetCore`)
 
 ```csharp
-namespace Komainu.Security.AspNetCore;
+namespace Komagu.Security.AspNetCore;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -128,10 +128,10 @@ public sealed class RequireOwnershipAttribute : TypeFilterAttribute
 }
 ```
 
-##### Scoped Data Access (EF Core Extensions) (`Komainu.Security.EntityFrameworkCore`)
+##### Scoped Data Access (EF Core Extensions) (`Komagu.Security.EntityFrameworkCore`)
 
 ```csharp
-namespace Komainu.Security.EntityFrameworkCore;
+namespace Komagu.Security.EntityFrameworkCore;
 
 using System.Linq;
 using System.Linq.Expressions;

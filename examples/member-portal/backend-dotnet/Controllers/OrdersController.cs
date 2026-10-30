@@ -4,22 +4,22 @@ using MemberPortal.Backend.Data;
 using MemberPortal.Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Komainu.Security.Authorization;
-using Komainu.Security.EntityFrameworkCore;
-using Komainu.Security.Query;
+using Komagu.Security.Authorization;
+using Komagu.Security.EntityFrameworkCore;
+using Komagu.Security.Query;
 
 [ApiController]
 [Route("api/v1/orders")]
 public class OrdersController : ControllerBase
 {
     private readonly PortalDbContext _dbContext;
-    private readonly IKomainuAuthorizationService _authzService;
+    private readonly IKomaguAuthorizationService _authzService;
 
     private static readonly SafeSortAllowList SortAllowList = new(
         new[] { "CreatedAt", "TotalAmount", "Status", "Id" }
     );
 
-    public OrdersController(PortalDbContext dbContext, IKomainuAuthorizationService authzService)
+    public OrdersController(PortalDbContext dbContext, IKomaguAuthorizationService authzService)
     {
         _dbContext = dbContext;
         _authzService = authzService;
