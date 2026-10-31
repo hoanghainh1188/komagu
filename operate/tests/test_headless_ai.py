@@ -91,9 +91,48 @@ class TestSanitizeFinding(unittest.TestCase):
         f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "admin_only", "status": "unverified"})
         self.assertEqual((f["subtype"], f["status"]), ("missing_role_check", "unverified"))
 
+    def test_null_evidence_line_and_missing_status_are_repaired(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "mass_assignment", "subtype": "whole_object_binding",
+                                                "location": {"file": "a.py", "start_line": 7},
+                                                "evidence": [{"file": "a.py", "line": None, "why": "binds body"}]})
+        self.assertEqual(f["evidence"][0]["line"], 7)
+        self.assertEqual(f["status"], "unverified")
+
     def test_valid_subtype_is_kept(self) -> None:
         f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "role_from_request"})
         self.assertEqual(f["subtype"], "role_from_request")
+
+
+class TestVerificationContext(unittest.TestCase):
+    """The headless verifier gets the code it judges, including server-side includes (#286)."""
+
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp(prefix="komagu_verify_ctx_"))
+        (self.tmp / "inc").mkdir()
+        (self.tmp / "admin").mkdir()
+        (self.tmp / "inc" / "auth.php").write_text("<?php\n// Login check only\nsession_start();\n", encoding="utf-8")
+        (self.tmp / "admin" / "delete_user.php").write_text(
+            "<?php\nrequire_once '../inc/auth.php';\n$db->prepare('DELETE FROM users WHERE id = ?');\n", encoding="utf-8")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_included_files_are_resolved(self) -> None:
+        from operate.ai.runner import _included_files
+        self.assertEqual(_included_files(self.tmp, "admin/delete_user.php"), ["inc/auth.php"])
+        self.assertEqual(_included_files(self.tmp, "missing.php"), [])
+
+    def test_context_has_site_and_included_code(self) -> None:
+        from operate.ai.runner import _verification_context
+        ctx = _verification_context(self.tmp, {"location": {"file": "admin/delete_user.php", "start_line": 3}})
+        self.assertIn("DELETE FROM users", ctx["location"])
+        self.assertEqual(ctx["included_files"][0]["file"], "inc/auth.php")
+        self.assertIn("Login check only", ctx["included_files"][0]["code"])
+
+    def test_include_outside_target_is_ignored(self) -> None:
+        from operate.ai.runner import _included_files
+        (self.tmp / "x.php").write_text("<?php include '../../etc/passwd';\n", encoding="utf-8")
+        self.assertEqual(_included_files(self.tmp, "x.php"), [])
 
 
 class TestHeadlessAIRunner(unittest.TestCase):
@@ -131,7 +170,7 @@ module.exports = app;
         # Mock LLM response dispatcher
         def mock_agent_responses(messages, model):
             user_msg = messages[-1]["content"]
-            if "Auth Model" in user_msg or "Pre-scan Stack Profile" in user_msg:
+            if ("Auth Model" in user_msg or "Pre-scan Stack Profile" in user_msg) and "Findings to Verify" not in user_msg:
                 return "# Mock Application Auth Model\n\n- Auth: Express session\n- Ownership: missing on /api/orders/:id\n"
             if "dynamic query string concatenation or interpolation" in user_msg:
                 return """```json
@@ -258,8 +297,11 @@ module.exports = app;
         """A broken verifier reply must not confirm findings (#286)."""
         self.server.server_close()
 
+        verifier_prompts = []
+
         def broken_verifier(messages, model):
             if "Findings to Verify & Challenge" in messages[-1]["content"]:
+                verifier_prompts.append(messages[-1]["content"])
                 return "I think these all look vulnerable."
             return self.mock_agent_responses(messages, model)
 
@@ -276,6 +318,10 @@ module.exports = app;
         self.assertEqual(sorted(coverage["findings_without_verification"]), sorted(f["finding_id"] for f in findings))
         stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
         self.assertEqual(stats["parse_failures"]["5-finding-verifier"], ["verified-1"])
+        # the verifier sees the code and the auth model, and is told not to assume unseen controls
+        self.assertIn("code_context", verifier_prompts[0])
+        self.assertIn("Mock Application Auth Model", verifier_prompts[0])
+        self.assertIn("Never assume a control", verifier_prompts[0])
         raw = self.out_dir / "ai-raw" / "5-finding-verifier-verified-1.txt"
         self.assertEqual(raw.read_text(encoding="utf-8"), "I think these all look vulnerable.")
         self.assertTrue(any(st == "warn" and "verified-1" in msg for st, msg in logs))

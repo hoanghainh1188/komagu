@@ -15,6 +15,7 @@ Standard-library only (Python 3.8+ compatible).
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -47,6 +48,57 @@ def _read_snippet(target_dir: Path, rel_file: str, line: int, radius: int = 15) 
         return "\n".join(numbered)
     except Exception as e:
         return f"[Error reading {rel_file}: {e}]"
+
+
+# Server-side includes whose content a verifier must see to judge a control (PHP, Classic ASP, ColdFusion)
+_INCLUDE_RE = re.compile(
+    r"(?:require|include)(?:_once)?\s*\(?\s*['\"]([^'\"]+)['\"]"
+    r"|<!--\s*#include\s+(?:file|virtual)\s*=\s*\"([^\"]+)\""
+    r"|<cfinclude\s+template\s*=\s*\"([^\"]+)\"",
+    re.IGNORECASE,
+)
+VERIFY_BATCH_SIZE = 5
+AUTH_MODEL_LIMIT = 6000
+
+
+def _included_files(target_dir: Path, rel_file: str) -> List[str]:
+    """Repository-relative paths of files that rel_file includes, if they exist."""
+    target_dir = target_dir.resolve()
+    path = target_dir / rel_file
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8", errors="replace")
+    found: List[str] = []
+    for m in _INCLUDE_RE.finditer(text):
+        ref = next(g for g in m.groups() if g)
+        candidate = (path.parent / ref).resolve()
+        try:
+            rel = str(candidate.relative_to(target_dir))
+        except ValueError:
+            continue
+        if candidate.is_file() and rel not in found:
+            found.append(rel)
+    return found
+
+
+def _verification_context(target_dir: Path, finding: Dict[str, Any]) -> Dict[str, Any]:
+    """Code the verifier needs: the finding's site, its file header, evidence lines and included files."""
+    loc = finding.get("location") or {}
+    rel = str(loc.get("file") or "")
+    line = int(loc.get("start_line") or 1)
+    ctx: Dict[str, Any] = {"location": _read_snippet(target_dir, rel, line, radius=20)}
+    if line > 40:
+        ctx["file_header"] = _read_snippet(target_dir, rel, 13, radius=12)
+    others = []
+    for ev in finding.get("evidence") or []:
+        if isinstance(ev, dict) and ev.get("file") and ev.get("file") != rel:
+            others.append({"file": ev["file"], "code": _read_snippet(target_dir, str(ev["file"]), int(ev.get("line") or 1), radius=6)})
+    if others:
+        ctx["evidence"] = others[:3]
+    includes = [{"file": inc, "code": _read_snippet(target_dir, inc, 30, radius=30)} for inc in _included_files(target_dir, rel)[:3]]
+    if includes:
+        ctx["included_files"] = includes
+    return ctx
 
 
 class HeadlessAIRunner:
@@ -276,6 +328,9 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
                 f["status"] = f["subtype"]
             f["subtype"] = allowed[0]
 
+        if f.get("status") not in FINDING_STATUSES:
+            f["status"] = "unverified"
+
         # recommendation must be a string
         rec = f.get("recommendation")
         if isinstance(rec, dict):
@@ -294,8 +349,8 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
         else:
             for ev in evidence:
                 if isinstance(ev, dict):
-                    if "line" not in ev:
-                        ev["line"] = ev.get("start_line", default_line)
+                    if not isinstance(ev.get("line"), int):
+                        ev["line"] = ev.get("start_line") if isinstance(ev.get("start_line"), int) else default_line
                     if "file" not in ev:
                         ev["file"] = default_file
                     if "why" not in ev:
@@ -626,37 +681,46 @@ Write one finding for every "vulnerable" or "needs_review" verdict. A "needs_rev
             return
 
         verifier_prompt = (LSA_PROMPTS / "50-finding-verifier.md").read_text(encoding="utf-8", errors="replace") if (LSA_PROMPTS / "50-finding-verifier.md").is_file() else ""
+        auth_model_path = self.out_dir / "auth-model.md"
+        auth_model = auth_model_path.read_text(encoding="utf-8", errors="replace")[:AUTH_MODEL_LIMIT] if auth_model_path.is_file() else ""
 
-        # Batch up to 10 findings per verification
-        batch_size = 10
+        batch_size = VERIFY_BATCH_SIZE
         for idx in range(0, len(all_findings), batch_size):
             chunk = all_findings[idx : idx + batch_size]
-            user_prompt = f"""Findings to Verify & Challenge:
-{json.dumps(chunk, indent=2)}
+            # The headless verifier cannot open files, so it gets the code it must judge (#286)
+            to_verify = [{"finding": f, "code_context": _verification_context(self.target_dir, f)} for f in chunk]
+            user_prompt = f"""Auth Model:
+{auth_model}
+
+Findings to Verify & Challenge (each with the code you may rely on):
+{json.dumps(to_verify, indent=2)}
 
 Task:
-You are the skeptical security verifier. For each finding:
-1. Examine whether a compensating control (global filter, integer casting, ownership check, allow-list) neutralizes the vulnerability.
-2. Confirm or refute:
-   - "confirmed" (reason_code: "traced")
-   - "rejected" (reason_code: "control_found" | "not_reachable" | "evidence_mismatch")
+You are the skeptical security verifier. You cannot open files: judge only from the code_context given
+with each finding and the Auth Model above.
+For each finding:
+1. Look for a compensating control (role or ownership check, global filter, integer cast, allow-list,
+   parameter binding) in the code_context.
+2. Only use reason_code "control_found" when the control is visible in the code_context; quote its
+   file and line in "control_found". Never assume a control in a base class, include, config or
+   middleware you were not shown.
+3. If the code you would need is not shown, answer verdict "likely" with reason_code
+   "code_not_visible" or "config_not_visible".
+Verdicts: "confirmed" | "likely" | "rejected".
+reason_code is one of: "traced", "code_not_visible", "config_not_visible", "data_ownership_unclear",
+"control_found", "evidence_mismatch", "not_executed", "not_reachable", "not_attacker_controlled".
 Respond STRICTLY with a valid JSON object matching verification.schema.json:
 {{
   "batch_id": "verified-{(idx // batch_size) + 1}",
   "verifications": [
     {{
       "finding_id": "<finding_id>",
-      "verdict": "confirmed|rejected",
-      "reason_code": "traced|control_found",
-      "confidence": "high",
-      "checked": ["Checked server-side session binding and sanitizers"],
-      "notes": "<rationale for verdict>",
-      "consensus": {{
-        "score": 0.95,
-        "agreement_level": "unanimous",
-        "voted_models": ["{self.client.model}"],
-        "rationale": "Independently audited and refuted false-alarm candidates."
-      }}
+      "verdict": "confirmed|likely|rejected",
+      "reason_code": "<one of the reason codes above>",
+      "confidence": "high|medium|low",
+      "checked": ["<what you checked in the code_context>"],
+      "control_found": {{"file": "<file>", "line": <line>, "code": "<control>"}} or null,
+      "notes": "<rationale for verdict>"
     }}
   ]
 }}
