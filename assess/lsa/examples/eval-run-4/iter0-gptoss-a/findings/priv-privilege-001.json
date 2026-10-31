@@ -1,0 +1,822 @@
+{
+  "batch_id": "privilege-001",
+  "findings": [
+    {
+      "finding_id": "BFLA-0003-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Classic\u2011ASP member deletion without role check",
+      "route_id": "R-0003",
+      "endpoint": {
+        "method": "GET|POST",
+        "path": "/classic-asp/shop/member.asp?mode=delete"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 1,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 1,
+          "code": "<!--#include file=\"inc/auth.asp\"-->",
+          "why": "auth guard only checks session, no role"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 10,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "privileged action, no role check"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can delete any member by supplying a member_id in the query string.",
+      "impact": "Any authenticated user can delete arbitrary members, including administrators.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add a server\u2011side role check that ensures the current user has the 'Admin' role before executing the delete.",
+      "fix_example": "If Not CheckRole(\"Admin\") Then Response.Status = \"403 Forbidden\" : Response.End",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0007-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "ASP.NET MVC DeleteUser action lacks admin role check",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser"
+      },
+      "location": {
+        "file": "Web/Controllers/AdminController.cs",
+        "start_line": 6,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "Web/Controllers/AdminController.cs",
+          "line": 6,
+          "code": "[Authorize]",
+          "why": "ensures authentication only"
+        },
+        {
+          "file": "Web/Controllers/AdminController.cs",
+          "line": 12,
+          "code": "public ActionResult DeleteUser(int id)",
+          "why": "no role check on method"
+        }
+      ],
+      "attack_scenario": "Any authenticated user can delete any user account.",
+      "impact": "Privilege escalation to delete arbitrary user accounts.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add [Authorize(Roles = \"Admin\")] to the DeleteUser action.",
+      "fix_example": "[Authorize(Roles = \"Admin\")] public ActionResult DeleteUser(int id) { \u2026 }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0009-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "ASP.NET MVC Export action trusts request query for admin access",
+      "route_id": "R-0009",
+      "endpoint": {
+        "method": "GET",
+        "path": "/Admin/Export"
+      },
+      "location": {
+        "file": "Web/Controllers/AdminController.cs",
+        "start_line": 30,
+        "end_line": 37
+      },
+      "evidence": [
+        {
+          "file": "Web/Controllers/AdminController.cs",
+          "line": 32,
+          "code": "if (Request.QueryString[\"isAdmin\"] == \"true\") { \u2026 }",
+          "why": "role derived from client request"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can set ?isAdmin=true to export all users.",
+      "impact": "Unauthorized data export of all user records.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-269",
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Remove reliance on client query and enforce server\u2011side role check.",
+      "fix_example": "if (!User.IsInRole(\"Admin\")) { return new HttpStatusCodeResult(403); }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0023-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Spring MVC delete user action missing admin role check",
+      "route_id": "R-0023",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete"
+      },
+      "location": {
+        "file": "src/main/java/com/acme/web/AdminUserController.java",
+        "start_line": 13,
+        "end_line": 17
+      },
+      "evidence": [
+        {
+          "file": "src/main/java/com/acme/web/AdminUserController.java",
+          "line": 13,
+          "code": "@RequestMapping(value = \"/{id}/delete\", method = RequestMethod.POST)",
+          "why": "no @PreAuthorize on method"
+        }
+      ],
+      "attack_scenario": "Any authenticated user can delete any user account.",
+      "impact": "Privilege escalation to delete arbitrary user accounts.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add @PreAuthorize(\"hasRole('ADMIN')\") to the delete method.",
+      "fix_example": "@PreAuthorize(\"hasRole('ADMIN')\") @RequestMapping(value = \"/{id}/delete\", method = RequestMethod.POST) public String delete(@PathVariable(\"id\") Long id) { \u2026 }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0030-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Express admin delete user route missing admin guard",
+      "route_id": "R-0030",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/delete"
+      },
+      "location": {
+        "file": "routes/admin.js",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "routes/admin.js",
+          "line": 8,
+          "code": "router.post('/admin/users/:id/delete', ensureLoggedIn, function (req, res) { \u2026 }",
+          "why": "only ensures login, no admin check"
+        }
+      ],
+      "attack_scenario": "Any logged\u2011in user can delete any user account.",
+      "impact": "Privilege escalation to delete arbitrary user accounts.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add an admin guard middleware before the handler.",
+      "fix_example": "router.post('/admin/users/:id/delete', ensureLoggedIn, requireAdmin, function (req, res) { \u2026 }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0032-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Express export route trusts client query for admin access",
+      "route_id": "R-0032",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports/export"
+      },
+      "location": {
+        "file": "routes/admin.js",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "routes/admin.js",
+          "line": 17,
+          "code": "if (req.query.isAdmin === 'true') { res.json([]); }",
+          "why": "role derived from client query"
+        }
+      ],
+      "attack_scenario": "Any logged\u2011in user can export all user data by setting ?isAdmin=true.",
+      "impact": "Unauthorized data export of all user records.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-269",
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Remove client\u2011controlled isAdmin flag and enforce server\u2011side role check.",
+      "fix_example": "if (!req.user.isAdmin) { return res.sendStatus(403); }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0057-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "PHP admin view user without role check",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/admin.php?action=view"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 5,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 6,
+          "code": "case 'view': $uid = (int)$_GET['uid']; $r = mysql_query(\"SELECT * FROM users WHERE id = \" . $uid);",
+          "why": "privileged action, no role check"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can view any user record by supplying a uid.",
+      "impact": "Unauthorized disclosure of arbitrary user data.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add a role check that ensures the current user is an administrator before executing the query.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0058-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "PHP admin delete user without role check",
+      "route_id": "R-0058",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin.php?action=delete"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 10,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 10,
+          "code": "case 'delete': $id = $_POST['id']; mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "privileged action, no role check"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can delete any user record by posting an id.",
+      "impact": "Privilege escalation to delete arbitrary user accounts.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add a role check that ensures the current user is an administrator before executing the delete.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0066-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "PHP admin delete user without role check",
+      "route_id": "R-0066",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/delete_user.php"
+      },
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 1,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "line": 5,
+          "code": "$id = (int)$_POST['id']; $stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "privileged action, no role check"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can delete any user record by posting an id.",
+      "impact": "Privilege escalation to delete arbitrary user accounts.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add a role check that ensures the current user is an administrator before executing the delete.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0067-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "PHP admin promote user trusts client input for role change",
+      "route_id": "R-0067",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php"
+      },
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 5,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 5,
+          "code": "if ($_POST['is_admin'] == '1') { $stmt = $db->prepare(\"UPDATE users SET role = 'admin' WHERE id = ?\");",
+          "why": "role derived from client request"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can promote themselves to admin by posting is_admin=1.",
+      "impact": "Privilege escalation to admin role.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-269",
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Remove client\u2011controlled role assignment and enforce server\u2011side role check.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0067-2",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "PHP admin promote user missing role check",
+      "route_id": "R-0067",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php"
+      },
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 1,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 1,
+          "code": "<?php require_once '../inc/auth.php'; require_once '../inc/db.php';",
+          "why": "auth guard only checks session, no role"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can promote themselves to admin by posting is_admin=1.",
+      "impact": "Privilege escalation to admin role.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add a server\u2011side role check before executing the role update.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0059-1",
+      "category": "bfla",
+      "subtype": "client_side_role_check",
+      "title": "PHP manage users page uses client\u2011side role check for delete link",
+      "route_id": "R-0059",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/manage_users.php"
+      },
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 10,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "line": 11,
+          "code": "<?php if ($_SESSION['role'] == 'admin'): ?><li><a href=\"/manage_users.php\">Delete users</a></li><?php endif; ?>",
+          "why": "role check only in markup, not enforced server\u2011side"
+        }
+      ],
+      "attack_scenario": "A logged\u2011in user can submit a delete request even if the link is not shown.",
+      "impact": "Privilege escalation to delete arbitrary user accounts.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-602",
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Enforce role check on the delete handler, not just in the UI.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-0063-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "PHP profile update allows client to set role",
+      "route_id": "R-0063",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/profile.php"
+      },
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 6,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "code": "$user->role = $_POST['role'];",
+          "why": "role derived from client request"
+        }
+      ],
+      "attack_scenario": "A user can change their own role to admin.",
+      "impact": "Privilege escalation to admin role.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-269",
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Remove client\u2011controlled role assignment and enforce server\u2011side role check.",
+      "fix_example": "if ($_SESSION['role'] !== 'admin') { http_response_code(403); exit; }",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-0011-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "PHP profile update binds entire POST payload to user object",
+      "candidate_id": "M-0011",
+      "endpoint": null,
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 5,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 6,
+          "code": "foreach ($_POST as $field => $value) { $user->$field = $value; }",
+          "why": "binds all request fields"
+        },
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "code": "$user->role = $_POST['role'];",
+          "why": "privileged field bound"
+        }
+      ],
+      "attack_vector": {
+        "method": "POST",
+        "path": "/php-plain/profile.php",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /php-plain/profile.php"
+      },
+      "impact": "Privilege escalation via role field.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Copy only allowed fields from the request.",
+      "fix_example": "$user->name = $_POST['name']; $user->email = $_POST['email'];",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-0012-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "PHP profile update allows client to set role",
+      "candidate_id": "M-0012",
+      "endpoint": null,
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 5,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "code": "$user->role = $_POST['role'];",
+          "why": "privileged field writable"
+        }
+      ],
+      "attack_vector": {
+        "method": "POST",
+        "path": "/php-plain/profile.php",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /php-plain/profile.php"
+      },
+      "impact": "Privilege escalation via role field.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915",
+        "CWE-269"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Remove role field from client input and enforce server\u2011side role check.",
+      "fix_example": "$user->role = $_SESSION['role'];",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-0003-1",
+      "category": "mass_assignment",
+      "subtype": "needs_review",
+      "title": "Java Account update binds entire request body to Account entity",
+      "candidate_id": "M-0003",
+      "endpoint": null,
+      "location": {
+        "file": "src/main/java/com/acme/web/AccountController.java",
+        "start_line": 13,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "src/main/java/com/acme/web/AccountController.java",
+          "line": 14,
+          "code": "public String save(@ModelAttribute Account account) { accountDao.save(account); }",
+          "why": "binds all fields from request"
+        }
+      ],
+      "impact": "Potential privilege escalation if Account contains privileged fields such as balance or owner.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Limit binding to non\u2011privileged fields or use DTOs.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-0004-1",
+      "category": "mass_assignment",
+      "subtype": "needs_review",
+      "title": "Java Account update binds entire request body to Account entity",
+      "candidate_id": "M-0004",
+      "endpoint": null,
+      "location": {
+        "file": "src/main/java/com/acme/web/AccountController.java",
+        "start_line": 13,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "src/main/java/com/acme/web/AccountController.java",
+          "line": 14,
+          "code": "public String save(@ModelAttribute Account account) { accountDao.save(account); }",
+          "why": "binds all fields from request"
+        }
+      ],
+      "impact": "Potential privilege escalation if Account contains privileged fields such as balance or owner.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Limit binding to non\u2011privileged fields or use DTOs.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-0005-1",
+      "category": "mass_assignment",
+      "subtype": "needs_review",
+      "title": "Java BeanUtils.populate binds request parameters to Account entity",
+      "candidate_id": "M-0005",
+      "endpoint": null,
+      "location": {
+        "file": "src/main/java/com/acme/web/ProfileServlet.java",
+        "start_line": 10,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "src/main/java/com/acme/web/ProfileServlet.java",
+          "line": 12,
+          "code": "BeanUtils.populate(account, request.getParameterMap());",
+          "why": "binds all request parameters"
+        }
+      ],
+      "impact": "Potential privilege escalation if Account contains privileged fields such as balance or owner.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Limit binding to non\u2011privileged fields or use DTOs.",
+      "status": "needs_review"
+    }
+  ],
+  "privilege_route_verdicts": [
+    {
+      "route_id": "R-0003",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0003-1"
+      ]
+    },
+    {
+      "route_id": "R-0007",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0007-1"
+      ]
+    },
+    {
+      "route_id": "R-0009",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0009-1"
+      ]
+    },
+    {
+      "route_id": "R-0023",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0023-1"
+      ]
+    },
+    {
+      "route_id": "R-0030",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0030-1"
+      ]
+    },
+    {
+      "route_id": "R-0032",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0032-1"
+      ]
+    },
+    {
+      "route_id": "R-0057",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0057-1"
+      ]
+    },
+    {
+      "route_id": "R-0058",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0058-1"
+      ]
+    },
+    {
+      "route_id": "R-0066",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0066-1"
+      ]
+    },
+    {
+      "route_id": "R-0067",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0067-1",
+        "BFLA-0067-2"
+      ]
+    },
+    {
+      "route_id": "R-0059",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0059-1"
+      ]
+    },
+    {
+      "route_id": "R-0063",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-0063-1"
+      ]
+    }
+  ],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0011",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-0011-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0012",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-0012-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0001",
+      "verdict": "safe",
+      "reason": "no privileged field"
+    },
+    {
+      "candidate_id": "M-0002",
+      "verdict": "safe",
+      "reason": "no privileged field"
+    },
+    {
+      "candidate_id": "M-0003",
+      "verdict": "needs_review",
+      "finding_ids": [
+        "MASS-0003-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0004",
+      "verdict": "needs_review",
+      "finding_ids": [
+        "MASS-0004-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0005",
+      "verdict": "needs_review",
+      "finding_ids": [
+        "MASS-0005-1"
+      ]
+    }
+  ]
+}

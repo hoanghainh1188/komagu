@@ -1,0 +1,344 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds the entire request body to the User model",
+      "route_id": null,
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 8,
+          "code": "User.findByIdAndUpdate(req.user._id, req.body, function (e, u) { res.json(u); });",
+          "why": "whole body bound to update without field whitelist"
+        },
+        {
+          "file": "models/user.js",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any logged-in user can set role=admin and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Copy only editable fields (name, email) from the request.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds the entire request body to the User model",
+      "route_id": null,
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 8,
+          "code": "User.findByIdAndUpdate(req.user._id, req.body, function (e, u) { res.json(u); });",
+          "why": "whole body bound to update without field whitelist"
+        },
+        {
+          "file": "models/user.js",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any logged-in user can set role=admin and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Copy only editable fields (name, email) from the request.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds the entire request body to the User model",
+      "route_id": null,
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 13,
+          "code": "return User::create($request->all());",
+          "why": "whole body bound to create without field whitelist"
+        },
+        {
+          "file": "app/Models/User.php",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any user can set role=admin during registration and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Use a whitelist of allowed fields (name, email) instead of $request->all().",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Team creation binds the entire request body to the Team model",
+      "route_id": null,
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 23,
+          "code": "return Team::create($request->all());",
+          "why": "whole body bound to create without field whitelist"
+        },
+        {
+          "file": "app/Models/Team.php",
+          "line": null,
+          "code": "owner_id: { type: 'integer' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any user can set owner_id during team creation and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Use a whitelist of allowed fields (name, description) instead of $request->all().",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds the entire request body to the User model",
+      "route_id": null,
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 36,
+          "code": "$user->fill($request->all())->save();",
+          "why": "whole body bound to fill without field whitelist"
+        },
+        {
+          "file": "app/Models/User.php",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any user can set role=admin during profile update and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Use a whitelist of allowed fields (name, email) instead of $request->all().",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds the entire POST body via extract()",
+      "route_id": null,
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "perl-cgi/cgi-bin/users.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/users.php",
+          "line": 4,
+          "code": "extract($_POST);",
+          "why": "whole POST body extracted without field whitelist"
+        },
+        {
+          "file": "database/schema.sql",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any user can set role=admin during registration and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Use array_filter or explicit field mapping instead of extract().",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds the entire request body to the User model",
+      "route_id": null,
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 10,
+          "code": "user = User(**request.json)",
+          "why": "whole body bound to create without field whitelist"
+        },
+        {
+          "file": "models/user.py",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any user can set role=admin during registration and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Use a whitelist of allowed fields (name, email) instead of unpacking request.json.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User update binds the entire request body via setattr() loop",
+      "route_id": null,
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 28
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 28,
+          "code": "for key, value in request.json.items(): setattr(user, key, value)",
+          "why": "whole body bound to update without field whitelist"
+        },
+        {
+          "file": "models/user.py",
+          "line": null,
+          "code": "role: { type: String, default: 'member' }",
+          "why": "privileged field in the model"
+        }
+      ],
+      "impact": "Any user can set role=admin during profile update and escalate privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Use a whitelist of allowed fields (name, email) instead of iterating all request keys.",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "vulnerable"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "route_candidates": 74,
+  "inventoried": 74,
+  "rejected": 0,
+  "missing_from_inventory": [],
+  "bola_routes_to_audit": 74,
+  "bola_routes_without_verdict": [
+    "R-0001",
+    "R-0002",
+    "R-0003",
+    "R-0004",
+    "R-0005",
+    "R-0006",
+    "R-0007",
+    "R-0008",
+    "R-0009",
+    "R-0013",
+    "R-0014",
+    "R-0015",
+    "R-0017",
+    "R-0018",
+    "R-0019"
+  ],
+  "bfla_routes_to_audit": 0,
+  "bfla_routes_without_verdict": [],
+  "injection_candidates": 38,
+  "injection_candidates_without_verdict": [],
+  "mass_candidates": 15,
+  "mass_candidates_without_verdict": [],
+  "findings_without_verification": [],
+  "duplicates_removed": [
+    {
+      "kept": "INJ-I-0020",
+      "dropped": "INJ-I-0022"
+    },
+    {
+      "kept": "INJ-I-0021",
+      "dropped": "INJ-I-0023"
+    },
+    {
+      "kept": "INJ-I-0027",
+      "dropped": "INJ-I-0028"
+    },
+    {
+      "kept": "INJ-I-0029",
+      "dropped": "INJ-I-0030"
+    },
+    {
+      "kept": "MASS-M-0006-1",
+      "dropped": "MASS-M-0007-1"
+    },
+    {
+      "kept": "MASS-M-0011-1",
+      "dropped": "MASS-M-0012-1"
+    }
+  ],
+  "validation_errors": [
+    "bola-routes-004.json:BOLA-R-0055-needs_review: subtype: 'needs_review' not in ['missing_ownership_check', 'ownership_check_bypassable', 'id_from_request_used_as_identity', 'no_authentication', 'parent_checked_child_not', 'check_result_ignored', 'string_concatenation', 'string_interpolation', 'format_string', 'template_placeholder', 'dynamic_identifier', 'operator_injection', 'js_injection', 'second_order', 'stored_procedure_dynamic_sql', 'missing_role_check', 'role_from_request', 'client_side_role_check', 'whole_object_binding', 'privileged_field_writable']",
+    "bola-routes-004.json:BOLA-R-0056-needs_review: subtype: 'needs_review' not in ['missing_ownership_check', 'ownership_check_bypassable', 'id_from_request_used_as_identity', 'no_authentication', 'parent_checked_child_not', 'check_result_ignored', 'string_concatenation', 'string_interpolation', 'format_string', 'template_placeholder', 'dynamic_identifier', 'operator_injection', 'js_injection', 'second_order', 'stored_procedure_dynamic_sql', 'missing_role_check', 'role_from_request', 'client_side_role_check', 'whole_object_binding', 'privileged_field_writable']",
+    "bola-routes-004.json:BOLA-R-0052-needs_review: subtype: 'needs_review' not in ['missing_ownership_check', 'ownership_check_bypassable', 'id_from_request_used_as_identity', 'no_authentication', 'parent_checked_child_not', 'check_result_ignored', 'string_concatenation', 'string_interpolation', 'format_string', 'template_placeholder', 'dynamic_identifier', 'operator_injection', 'js_injection', 'second_order', 'stored_procedure_dynamic_sql', 'missing_role_check', 'role_from_request', 'client_side_role_check', 'whole_object_binding', 'privileged_field_writable']",
+    "bola-routes-004.json:BOLA-R-0053-needs_review: subtype: 'needs_review' not in ['missing_ownership_check', 'ownership_check_bypassable', 'id_from_request_used_as_identity', 'no_authentication', 'parent_checked_child_not', 'check_result_ignored', 'string_concatenation', 'string_interpolation', 'format_string', 'template_placeholder', 'dynamic_identifier', 'operator_injection', 'js_injection', 'second_order', 'stored_procedure_dynamic_sql', 'missing_role_check', 'role_from_request', 'client_side_role_check', 'whole_object_binding', 'privileged_field_writable']",
+    "bola-routes-004.json:BOLA-R-0054-needs_review: subtype: 'needs_review' not in ['missing_ownership_check', 'ownership_check_bypassable', 'id_from_request_used_as_identity', 'no_authentication', 'parent_checked_child_not', 'check_result_ignored', 'string_concatenation', 'string_interpolation', 'format_string', 'template_placeholder', 'dynamic_identifier', 'operator_injection', 'js_injection', 'second_order', 'stored_procedure_dynamic_sql', 'missing_role_check', 'role_from_request', 'client_side_role_check', 'whole_object_binding', 'privileged_field_writable']"
+  ],
+  "new_issues_from_verifier": [],
+  "out_of_scope_notes": []
+}

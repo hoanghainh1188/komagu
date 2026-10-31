@@ -1,0 +1,398 @@
+{
+  "routes": [
+    {
+      "route_id": "R-0072",
+      "method": [
+        "POST"
+      ],
+      "path": "/users",
+      "path_source": "declared",
+      "handler": {
+        "file": "python-flask/profile.py",
+        "line": 8
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0073",
+      "method": [
+        "POST"
+      ],
+      "path": "/users/<int:uid>/name",
+      "path_source": "declared",
+      "handler": {
+        "file": "python-flask/profile.py",
+        "line": 16
+      },
+      "id_inputs": [
+        {
+          "name": "uid",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0074",
+      "method": [
+        "PATCH"
+      ],
+      "path": "/users/<int:uid>",
+      "path_source": "declared",
+      "handler": {
+        "file": "python-flask/profile.py",
+        "line": 24
+      },
+      "id_inputs": [
+        {
+          "name": "uid",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0010",
+      "method": [
+        "POST"
+      ],
+      "path": "/Customer/Edit",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 12
+      },
+      "id_inputs": [
+        {
+          "name": "customer",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0011",
+      "method": [
+        "POST",
+        "POST"
+      ],
+      "path": "/Customer/EditName",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 20
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0012",
+      "method": [
+        "POST",
+        "POST"
+      ],
+      "path": "/Customer/Refresh",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 27
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0016",
+      "method": [
+        "ANY"
+      ],
+      "path": "/dotnet-legacy/Web/Handlers/GetFile.ashx",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "file_id",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0029",
+      "method": [
+        "POST"
+      ],
+      "path": "<see web.xml servlet-mapping>",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "line": 9
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0039",
+      "method": [
+        "PUT"
+      ],
+      "path": "/profile",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 7
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0040",
+      "method": [
+        "PUT"
+      ],
+      "path": "/profile/name",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 11
+      },
+      "id_inputs": [
+        {
+          "name": "name",
+          "source": "body"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0041",
+      "method": [
+        "POST"
+      ],
+      "path": "/signup",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 15
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0042",
+      "method": [
+        "POST"
+      ],
+      "path": "/profile/settings",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 20
+      },
+      "id_inputs": [
+        {
+          "name": "theme",
+          "source": "body"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0063",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/profile.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/profile.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "nickname",
+          "source": "form"
+        },
+        {
+          "name": "role",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0068",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/settings.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/admin/settings.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "value",
+          "source": "form"
+        },
+        {
+          "name": "name",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0060",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/mongo_find.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/mongo_find.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "login",
+          "source": "query"
+        },
+        {
+          "name": "pass",
+          "source": "query"
+        },
+        {
+          "name": "n",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    }
+  ],
+  "rejected": []
+}

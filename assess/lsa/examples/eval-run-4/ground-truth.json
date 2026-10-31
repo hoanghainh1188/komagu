@@ -1,0 +1,823 @@
+{
+  "items": [
+    {
+      "file": "php-plain/admin.php",
+      "line": 8,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL"
+    },
+    {
+      "file": "php-plain/admin.php",
+      "line": 8,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "php-plain/admin.php",
+      "line": 8,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "php-plain/admin.php",
+      "line": 12,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-plain/admin.php",
+      "line": 12,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "php-plain/admin.php",
+      "line": 12,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "php-plain/manage_users.php",
+      "line": 6,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "php-plain/mongo_find.php",
+      "line": 5,
+      "category": "nosql_injection",
+      "vulnerable": true,
+      "label": "NOSQL"
+    },
+    {
+      "file": "php-plain/mongo_find.php",
+      "line": 6,
+      "category": "nosql_injection",
+      "vulnerable": true,
+      "label": "NOSQL"
+    },
+    {
+      "file": "php-plain/order_detail.php",
+      "line": 6,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-plain/order_detail.php",
+      "line": 6,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "php-plain/order_detail_safe.php",
+      "line": 5,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "php-plain/order_detail_safe.php",
+      "line": 5,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "php-plain/profile.php",
+      "line": 6,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "php-plain/profile.php",
+      "line": 9,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "php-plain/profile.php",
+      "line": 10,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "php-plain/register.php",
+      "line": 4,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "php-plain/search.php",
+      "line": 8,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-plain/search.php",
+      "line": 9,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-plain/search.php",
+      "line": 14,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-plain/search.php",
+      "line": 17,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "php-plain/admin/delete_user.php",
+      "line": 6,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "php-plain/admin/promote.php",
+      "line": 5,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "php-plain/admin/settings.php",
+      "line": 9,
+      "category": "bfla",
+      "vulnerable": false,
+      "label": "SAFE-BFLA"
+    },
+    {
+      "file": "java-legacy/WebContent/order/detail.jsp",
+      "line": 5,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "java-legacy/WebContent/order/detail.jsp",
+      "line": 5,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+      "line": 13,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+      "line": 13,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 14,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 20,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 27,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+      "line": 15,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+      "line": 22,
+      "category": "bfla",
+      "vulnerable": false,
+      "label": "SAFE-BFLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+      "line": 17,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+      "line": 23,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+      "line": 29,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+      "line": 29,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+      "line": 15,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+      "line": 15,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+      "line": 17,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+      "line": 19,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+      "line": 12,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+      "line": 5,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+      "line": 9,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 13,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 18,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 23,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 29,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 36,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "perl-cgi/cgi-bin/order.cgi",
+      "line": 13,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "perl-cgi/cgi-bin/order.cgi",
+      "line": 13,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "perl-cgi/cgi-bin/order.cgi",
+      "line": 16,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "perl-cgi/cgi-bin/order.cgi",
+      "line": 16,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "perl-cgi/cgi-bin/order.cgi",
+      "line": 19,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "perl-cgi/cgi-bin/order.cgi",
+      "line": 19,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+      "line": 7,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+      "line": 8,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+      "line": 8,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+      "line": 13,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+      "line": 13,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+      "line": 16,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+      "line": 19,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+      "line": 20,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+      "line": 15,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+      "line": 24,
+      "category": "bfla",
+      "vulnerable": false,
+      "label": "SAFE-BFLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+      "line": 32,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 12,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 20,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 30,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+      "line": 13,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+      "line": 20,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+      "line": 28,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+      "line": 28,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+      "line": 10,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "python-flask/app.py",
+      "line": 12,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL"
+    },
+    {
+      "file": "python-flask/app.py",
+      "line": 12,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "python-flask/app.py",
+      "line": 20,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "python-flask/app.py",
+      "line": 20,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "python-flask/app.py",
+      "line": 29,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 10,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 19,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 27,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "php-codeigniter/application/controllers/Invoice.php",
+      "line": 10,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "php-codeigniter/application/controllers/Invoice.php",
+      "line": 10,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "php-codeigniter/application/controllers/Invoice.php",
+      "line": 16,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "php-codeigniter/application/controllers/Invoice.php",
+      "line": 23,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "php-codeigniter/application/controllers/Invoice.php",
+      "line": 23,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "sql-procs/sp_search_orders.sql",
+      "line": 5,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "sql-procs/sp_search_orders.sql",
+      "line": 6,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "classic-asp/shop/member.asp",
+      "line": 6,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL"
+    },
+    {
+      "file": "classic-asp/shop/member.asp",
+      "line": 7,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "classic-asp/shop/member.asp",
+      "line": 7,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "classic-asp/shop/member.asp",
+      "line": 10,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "classic-asp/shop/member.asp",
+      "line": 10,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "classic-asp/shop/order.asp",
+      "line": 6,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "classic-asp/shop/order.asp",
+      "line": 6,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "classic-asp/shop/order.asp",
+      "line": 12,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL"
+    },
+    {
+      "file": "classic-asp/shop/order.asp",
+      "line": 12,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "coldfusion/app/OrderService.cfc",
+      "line": 5,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "coldfusion/app/OrderService.cfc",
+      "line": 5,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "coldfusion/app/order.cfm",
+      "line": 3,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "coldfusion/app/order.cfm",
+      "line": 3,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "coldfusion/app/order.cfm",
+      "line": 7,
+      "category": "sql_injection",
+      "vulnerable": false,
+      "label": "SAFE-SQL-NOFLAG"
+    },
+    {
+      "file": "node-express/routes/admin.js",
+      "line": 9,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "node-express/routes/admin.js",
+      "line": 13,
+      "category": "bfla",
+      "vulnerable": false,
+      "label": "SAFE-BFLA"
+    },
+    {
+      "file": "node-express/routes/admin.js",
+      "line": 17,
+      "category": "bfla",
+      "vulnerable": true,
+      "label": "BFLA"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 9,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 13,
+      "category": "bola",
+      "vulnerable": false,
+      "label": "SAFE-BOLA"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 17,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 21,
+      "category": "nosql_injection",
+      "vulnerable": true,
+      "label": "NOSQL"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 25,
+      "category": "nosql_injection",
+      "vulnerable": true,
+      "label": "NOSQL"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 29,
+      "category": "sql_injection",
+      "vulnerable": true,
+      "label": "SQLI"
+    },
+    {
+      "file": "node-express/routes/orders.js",
+      "line": 29,
+      "category": "bola",
+      "vulnerable": true,
+      "label": "BOLA"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 8,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 12,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 16,
+      "category": "mass_assignment",
+      "vulnerable": true,
+      "label": "MASS"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 21,
+      "category": "mass_assignment",
+      "vulnerable": false,
+      "label": "SAFE-MASS"
+    }
+  ]
+}

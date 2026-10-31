@@ -242,6 +242,36 @@ class TestScoring(unittest.TestCase):
             self.assertEqual(report["per_category"]["mass_assignment"]["recall"], 0.0)
             self.assertNotIn("bola", report["per_category"])
 
+    def test_verdict_level_ignores_misplaced_findings(self) -> None:
+        """--verdicts credits the auditor's route / candidate verdict even when the finding has a wrong path (#286)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            truth = Path(tmp) / "gt.json"
+            write_json(truth, {"items": [
+                {"file": "admin.js", "line": 9, "category": "bfla", "vulnerable": True, "label": "BFLA"},
+                {"file": "admin.js", "line": 13, "category": "bfla", "vulnerable": False, "label": "SAFE-BFLA"},
+                {"file": "p.php", "line": 6, "category": "mass_assignment", "vulnerable": True, "label": "MASS"},
+                {"file": "p.php", "line": 9, "category": "mass_assignment", "vulnerable": False, "label": "SAFE-MASS"},
+            ]})
+            out = Path(tmp) / "out"
+            write_json(out / "findings.json", {"findings": [
+                {"finding_id": "BFLA-R-1-1", "category": "bfla", "status": "confirmed",
+                 "location": {"file": "routes.js", "start_line": 1}, "evidence": []}]})
+            write_json(out / "routes" / "routes-001.json", {"routes": [
+                {"route_id": "R-1", "handler": {"file": "admin.js", "line": 8}},
+                {"route_id": "R-2", "handler": {"file": "admin.js", "line": 12}}]})
+            write_json(out / "mass-assignment.candidates.json", {"candidates": [
+                {"candidate_id": "M-1", "file": "p.php", "line": 6}]})
+            write_json(out / "findings" / "priv-privilege-001.json", {
+                "privilege_route_verdicts": [{"route_id": "R-1", "verdict": "vulnerable"}],
+                "candidate_verdicts": [{"candidate_id": "M-1", "verdict": "needs_review"}], "findings": []})
+            res = subprocess.run([sys.executable, str(SCORE), "--verdicts", str(truth), str(out)], capture_output=True, text=True)
+            report = json.loads(res.stdout)
+            self.assertEqual(report["per_category"]["bfla"]["found"], 0)
+            self.assertEqual(report["verdict_level"]["bfla"], {"truth_vulnerable": 1, "found": 1, "recall": 1.0,
+                                                              "flagged_safe": [], "missed": []})
+            self.assertEqual(report["verdict_level"]["mass_assignment"]["found"], 1)
+            self.assertEqual(report["verdict_level"]["mass_assignment"]["flagged_safe"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

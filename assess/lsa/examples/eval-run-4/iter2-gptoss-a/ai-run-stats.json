@@ -1,0 +1,50 @@
+{
+  "model": "gpt-oss:20b",
+  "endpoint": "http://localhost:11434/v1/chat/completions",
+  "phases": {
+    "2-stack-detector": {
+      "seconds": 93.222,
+      "calls": 1,
+      "prompt_tokens": 3118,
+      "completion_tokens": 3342
+    },
+    "3-route-mapper": {
+      "seconds": 0.009,
+      "calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+    },
+    "4a-bola-auditor": {
+      "seconds": 1073.073,
+      "calls": 6,
+      "prompt_tokens": 45569,
+      "completion_tokens": 34017
+    },
+    "4b-injection-auditor": {
+      "seconds": 525.525,
+      "calls": 2,
+      "prompt_tokens": 15801,
+      "completion_tokens": 16545
+    },
+    "4c-privilege-auditor": {
+      "seconds": 393.673,
+      "calls": 2,
+      "prompt_tokens": 17058,
+      "completion_tokens": 9693
+    },
+    "5-finding-verifier": {
+      "seconds": 1338.902,
+      "calls": 21,
+      "prompt_tokens": 130620,
+      "completion_tokens": 33730
+    }
+  },
+  "totals": {
+    "calls": 32,
+    "prompt_tokens": 212166,
+    "completion_tokens": 97327,
+    "seconds": 3421.285
+  },
+  "parse_failures": {},
+  "call_errors": {}
+}

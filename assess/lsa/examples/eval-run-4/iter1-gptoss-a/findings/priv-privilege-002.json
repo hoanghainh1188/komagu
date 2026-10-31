@@ -1,0 +1,287 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "route_id": null,
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "routes/user.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "routes/user.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body) binds the entire request body to the User model without an allowlist."
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to an allowlist; set privileged fields server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/profile",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /profile"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model (module export variant)",
+      "route_id": null,
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "routes/user.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "routes/user.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body) binds the entire request body to the User model without an allowlist."
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to an allowlist; set privileged fields server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/profile",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /profile"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration binds entire request body to User model",
+      "route_id": null,
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "User::create($request->all()) binds the entire request body to the User model without an allowlist."
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to an allowlist; set privileged fields server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "POST",
+        "path": "/register",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /profile"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows arbitrary owner_id to be set",
+      "route_id": null,
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()) binds the entire request body to the Team model, including the privileged field owner_id."
+        }
+      ],
+      "impact": "Owner ID can be set to arbitrary value, enabling ownership takeover",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915",
+        "CWE-269"
+      ],
+      "recommendation": "Limit fields to an allowlist; set owner_id server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "POST",
+        "path": "/team",
+        "fields": {
+          "owner_id": "999"
+        },
+        "readback": "GET /teams/999"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Team creation binds entire request body to Team model",
+      "route_id": null,
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()) binds the entire request body to the Team model without an allowlist."
+        }
+      ],
+      "impact": "Privilege escalation via role field or owner_id",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to an allowlist; set privileged fields server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "POST",
+        "path": "/team",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /teams/1"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "PATCH user updates binds arbitrary fields to User model",
+      "route_id": null,
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "app.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 27,
+          "why": "Loop over request.json items and set attributes on user; no allowlist."
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to an allowlist; set privileged fields server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "PATCH",
+        "path": "/users/123",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /users/123"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Create user binds entire request body to User model",
+      "route_id": null,
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "app.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 10,
+          "why": "User(**request.json) binds the entire request body to the User model without an allowlist."
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to an allowlist; set privileged fields server\u2011side.",
+      "status": "unverified",
+      "attack_vector": {
+        "method": "POST",
+        "path": "/users",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /users/123"
+      }
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "safe",
+      "reason": "no privileged field"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "vulnerable"
+    }
+  ]
+}

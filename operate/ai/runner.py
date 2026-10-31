@@ -7,7 +7,7 @@ LLM endpoint (Ollama, vLLM, private OpenAI server):
 3. Audits candidate routes for BOLA / IDOR (BOLA Auditor).
 4. Audits candidate queries for SQL/NoSQL Injection (Injection Auditor).
 5. Adversarial Skeptic Verification (Finding Verifier Council).
-6. Merges and schema-validates all findings with 0 false positives.
+6. Merges and schema-validates all findings; writes OUT/ai-run-stats.json.
 
 Standard-library only (Python 3.8+ compatible).
 """
@@ -15,9 +15,11 @@ Standard-library only (Python 3.8+ compatible).
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 from operate.ai.client import LLMClient
@@ -27,6 +29,10 @@ LSA_PROMPTS = REPO_ROOT / "assess" / "lsa" / "prompts"
 DEFAULT_CWE = {"bola": ["CWE-284"], "bfla": ["CWE-285"], "mass_assignment": ["CWE-915"],
                "sql_injection": ["CWE-89"], "nosql_injection": ["CWE-943"]}
 LSA_SCRIPTS = REPO_ROOT / "assess" / "lsa" / "scripts"
+# Valid subtypes per category (finding.schema.json); the first one is used when a model writes an invalid value
+CATEGORY_SUBTYPES = {"bfla": ["missing_role_check", "role_from_request", "client_side_role_check"],
+                     "mass_assignment": ["whole_object_binding", "privileged_field_writable"]}
+FINDING_STATUSES = {"unverified", "confirmed", "likely", "rejected", "needs_review"}
 
 
 def _read_snippet(target_dir: Path, rel_file: str, line: int, radius: int = 15) -> str:
@@ -44,6 +50,57 @@ def _read_snippet(target_dir: Path, rel_file: str, line: int, radius: int = 15) 
         return f"[Error reading {rel_file}: {e}]"
 
 
+# Server-side includes whose content a verifier must see to judge a control (PHP, Classic ASP, ColdFusion)
+_INCLUDE_RE = re.compile(
+    r"(?:require|include)(?:_once)?\s*\(?\s*['\"]([^'\"]+)['\"]"
+    r"|<!--\s*#include\s+(?:file|virtual)\s*=\s*\"([^\"]+)\""
+    r"|<cfinclude\s+template\s*=\s*\"([^\"]+)\"",
+    re.IGNORECASE,
+)
+VERIFY_BATCH_SIZE = 5
+AUTH_MODEL_LIMIT = 6000
+
+
+def _included_files(target_dir: Path, rel_file: str) -> List[str]:
+    """Repository-relative paths of files that rel_file includes, if they exist."""
+    target_dir = target_dir.resolve()
+    path = target_dir / rel_file
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8", errors="replace")
+    found: List[str] = []
+    for m in _INCLUDE_RE.finditer(text):
+        ref = next(g for g in m.groups() if g)
+        candidate = (path.parent / ref).resolve()
+        try:
+            rel = str(candidate.relative_to(target_dir))
+        except ValueError:
+            continue
+        if candidate.is_file() and rel not in found:
+            found.append(rel)
+    return found
+
+
+def _verification_context(target_dir: Path, finding: Dict[str, Any]) -> Dict[str, Any]:
+    """Code the verifier needs: the finding's site, its file header, evidence lines and included files."""
+    loc = finding.get("location") or {}
+    rel = str(loc.get("file") or "")
+    line = int(loc.get("start_line") or 1)
+    ctx: Dict[str, Any] = {"location": _read_snippet(target_dir, rel, line, radius=20)}
+    if line > 40:
+        ctx["file_header"] = _read_snippet(target_dir, rel, 13, radius=12)
+    others = []
+    for ev in finding.get("evidence") or []:
+        if isinstance(ev, dict) and ev.get("file") and ev.get("file") != rel:
+            others.append({"file": ev["file"], "code": _read_snippet(target_dir, str(ev["file"]), int(ev.get("line") or 1), radius=6)})
+    if others:
+        ctx["evidence"] = others[:3]
+    includes = [{"file": inc, "code": _read_snippet(target_dir, inc, 30, radius=30)} for inc in _included_files(target_dir, rel)[:3]]
+    if includes:
+        ctx["included_files"] = includes
+    return ctx
+
+
 class HeadlessAIRunner:
     """Orchestrates multi-agent cognitive security audits via headless LLM API."""
 
@@ -58,34 +115,85 @@ class HeadlessAIRunner:
         self.out_dir = Path(out_dir).resolve()
         self.client = client
         self.callback = step_callback or (lambda status, msg: None)
+        # Per-phase replies that could not be parsed as JSON; written to ai-run-stats.json
+        self.parse_failures: Dict[str, List[str]] = {}
+        # Per-phase batches whose model call failed (timeout, HTTP error); the run continues without them
+        self.call_errors: Dict[str, Dict[str, str]] = {}
+        self.phase_stats: Dict[str, Dict[str, Any]] = {}
 
     def _log(self, status: str, msg: str) -> None:
         self.callback(status, msg)
+
+    def _chat(self, phase: str, batch_id: str, messages: List[Dict[str, str]]) -> Optional[str]:
+        """One batch call; a failed call is recorded and returns None instead of aborting the run."""
+        try:
+            return self.client.chat(messages, temperature=0.1)
+        except Exception as e:
+            self.call_errors.setdefault(phase, {})[batch_id] = str(e)[:300]
+            self._log("warn", f"{phase}: model call failed for {batch_id} ({e}); batch left without verdicts")
+            return None
+
+    def _parse_failed(self, phase: str, batch_id: str, reply: Optional[str] = None) -> None:
+        if batch_id in self.call_errors.get(phase, {}):
+            return
+        self.parse_failures.setdefault(phase, []).append(batch_id)
+        if reply is not None:
+            raw_dir = self.out_dir / "ai-raw"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            (raw_dir / f"{phase}-{batch_id}.txt").write_text(reply, encoding="utf-8")
+        self._log("warn", f"{phase}: could not parse the model reply for {batch_id}; batch left without verdicts")
+
+    def _usage(self) -> Dict[str, Any]:
+        return dict(getattr(self.client, "usage", None) or {})
+
+    def _timed(self, phase: str, fn: Callable[[], Any]) -> None:
+        before, started = self._usage(), time.monotonic()
+        fn()
+        after = self._usage()
+        self.phase_stats[phase] = {
+            "seconds": round(time.monotonic() - started, 3),
+            **{k: after.get(k, 0) - before.get(k, 0) for k in ("calls", "prompt_tokens", "completion_tokens")},
+        }
+
+    def write_run_stats(self) -> Path:
+        """Write model, per-phase durations, token counts and parse failures to OUT/ai-run-stats.json."""
+        stats = {
+            "model": getattr(self.client, "model", None),
+            "endpoint": getattr(self.client, "endpoint", None),
+            "phases": self.phase_stats,
+            "totals": self._usage(),
+            "parse_failures": self.parse_failures,
+            "call_errors": self.call_errors,
+        }
+        path = self.out_dir / "ai-run-stats.json"
+        path.write_text(json.dumps(stats, indent=2), encoding="utf-8")
+        return path
 
     def run(self) -> Dict[str, Any]:
         """Execute all cognitive AI phases end-to-end."""
         self._log("step", "Starting Tier 2 Cognitive Multi-Agent Audit (Headless BYO-LLM)")
 
         # Phase 2: Stack & Auth Model Detector
-        self.infer_auth_model()
+        self._timed("2-stack-detector", self.infer_auth_model)
 
         # Phase 3: Route Inventory Mapping
-        self.map_routes_inventory()
+        self._timed("3-route-mapper", self.map_routes_inventory)
 
         # Phase 4a: BOLA / IDOR Cognitive Audit
-        self.audit_bola_routes()
+        self._timed("4a-bola-auditor", self.audit_bola_routes)
 
         # Phase 4b: SQL / NoSQL Injection Cognitive Audit
-        self.audit_injection_candidates()
+        self._timed("4b-injection-auditor", self.audit_injection_candidates)
 
         # Phase 4c: Privilege Audit (BFLA, mass assignment)
-        self.audit_privilege()
+        self._timed("4c-privilege-auditor", self.audit_privilege)
 
         # Phase 5: Adversarial Skeptic Verifier
-        self.verify_findings_skeptic()
+        self._timed("5-finding-verifier", self.verify_findings_skeptic)
 
         # Phase 6: Merge & Validate Outputs
         self.merge_and_validate()
+        self.write_run_stats()
 
         self._log("ok", "Tier 2 Cognitive Multi-Agent Audit completed successfully")
         return {"status": "success", "out_dir": str(self.out_dir)}
@@ -209,6 +317,20 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
         """Normalize finding fields to strictly comply with finding.schema.json."""
         if not isinstance(f, dict):
             return f
+        # impact must be a string; small models often return a list of consequences
+        if isinstance(f.get("impact"), list):
+            f["impact"] = "; ".join(str(i) for i in f["impact"])
+
+        # a verdict written into subtype belongs in status; fall back to the category's first subtype
+        allowed = CATEGORY_SUBTYPES.get(f.get("category"))
+        if allowed and f.get("subtype") not in allowed:
+            if f.get("subtype") in FINDING_STATUSES:
+                f["status"] = f["subtype"]
+            f["subtype"] = allowed[0]
+
+        if f.get("status") not in FINDING_STATUSES:
+            f["status"] = "unverified"
+
         # recommendation must be a string
         rec = f.get("recommendation")
         if isinstance(rec, dict):
@@ -227,8 +349,8 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
         else:
             for ev in evidence:
                 if isinstance(ev, dict):
-                    if "line" not in ev:
-                        ev["line"] = ev.get("start_line", default_line)
+                    if not isinstance(ev.get("line"), int):
+                        ev["line"] = ev.get("start_line") if isinstance(ev.get("start_line"), int) else default_line
                     if "file" not in ev:
                         ev["file"] = default_file
                     if "why" not in ev:
@@ -323,13 +445,14 @@ Respond STRICTLY with a valid JSON object matching:
                 {"role": "user", "content": user_prompt},
             ]
 
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("4a-bola-auditor", r_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
                 raw_findings = parsed.get("findings", [])
                 findings = [self._sanitize_finding(f) for f in raw_findings]
                 route_verdicts = parsed.get("route_verdicts", [])
             except Exception:
+                self._parse_failed("4a-bola-auditor", r_file.stem, reply)
                 findings = []
                 route_verdicts = []
 
@@ -409,13 +532,14 @@ Respond STRICTLY with a valid JSON object matching:
                 {"role": "user", "content": user_prompt},
             ]
 
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("4b-injection-auditor", b_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
                 raw_findings = parsed.get("findings", [])
                 findings = [self._sanitize_finding(f) for f in raw_findings]
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
+                self._parse_failed("4b-injection-auditor", b_file.stem, reply)
                 findings = []
                 candidate_verdicts = []
 
@@ -480,20 +604,49 @@ Mass Assignment Candidates:
 
 Task:
 Judge every route for BFLA and every candidate for mass assignment as described in your role.
-Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}"),
-"privilege_route_verdicts", "candidate_verdicts" and "findings" (category "bfla" or "mass_assignment").
+Respond STRICTLY with a valid JSON object matching:
+{{
+  "batch_id": "{b_file.stem}",
+  "privilege_route_verdicts": [
+    {{"route_id": "<route_id>", "verdict": "vulnerable|safe|needs_review"}}
+  ],
+  "candidate_verdicts": [
+    {{"candidate_id": "<candidate_id>", "verdict": "vulnerable|safe|needs_review"}}
+  ],
+  "findings": [
+    {{
+      "finding_id": "BFLA-<route_id>-1 or MASS-<candidate_id>-1",
+      "category": "bfla|mass_assignment",
+      "subtype": "missing_role_check|role_from_request|client_side_role_check (bfla) or whole_object_binding|privileged_field_writable (mass_assignment)",
+      "title": "<short title>",
+      "route_id": "<route_id, bfla only>",
+      "candidate_id": "<candidate_id, mass_assignment only>",
+      "location": {{"file": "<file>", "start_line": <line>}},
+      "evidence": [{{"file": "<file>", "line": <line>, "why": "<privileged action or binding, and the missing control>"}}],
+      "impact": "<one string naming the privileged action or fields>",
+      "severity": "critical|high|medium|low",
+      "confidence": "high|medium|low",
+      "cwe": ["CWE-285"],
+      "recommendation": "<one string>",
+      "status": "unverified|needs_review"
+    }}
+  ]
+}}
+Write one finding for every "vulnerable" or "needs_review" verdict. A "needs_review" verdict goes in
+"status", never in "subtype".
 """
             messages = [
                 {"role": "system", "content": auditor_prompt},
                 {"role": "user", "content": user_prompt},
             ]
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("4c-privilege-auditor", b_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
                 findings = [self._sanitize_finding(f) for f in parsed.get("findings", [])]
                 route_verdicts = parsed.get("privilege_route_verdicts", [])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
+                self._parse_failed("4c-privilege-auditor", b_file.stem, reply)
                 findings, route_verdicts, candidate_verdicts = [], [], []
 
             out_doc = {
@@ -528,37 +681,46 @@ Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}")
             return
 
         verifier_prompt = (LSA_PROMPTS / "50-finding-verifier.md").read_text(encoding="utf-8", errors="replace") if (LSA_PROMPTS / "50-finding-verifier.md").is_file() else ""
+        auth_model_path = self.out_dir / "auth-model.md"
+        auth_model = auth_model_path.read_text(encoding="utf-8", errors="replace")[:AUTH_MODEL_LIMIT] if auth_model_path.is_file() else ""
 
-        # Batch up to 10 findings per verification
-        batch_size = 10
+        batch_size = VERIFY_BATCH_SIZE
         for idx in range(0, len(all_findings), batch_size):
             chunk = all_findings[idx : idx + batch_size]
-            user_prompt = f"""Findings to Verify & Challenge:
-{json.dumps(chunk, indent=2)}
+            # The headless verifier cannot open files, so it gets the code it must judge (#286)
+            to_verify = [{"finding": f, "code_context": _verification_context(self.target_dir, f)} for f in chunk]
+            user_prompt = f"""Auth Model:
+{auth_model}
+
+Findings to Verify & Challenge (each with the code you may rely on):
+{json.dumps(to_verify, indent=2)}
 
 Task:
-You are the skeptical security verifier. For each finding:
-1. Examine whether a compensating control (global filter, integer casting, ownership check, allow-list) neutralizes the vulnerability.
-2. Confirm or refute:
-   - "confirmed" (reason_code: "traced")
-   - "rejected" (reason_code: "control_found" | "not_reachable" | "evidence_mismatch")
+You are the skeptical security verifier. You cannot open files: judge only from the code_context given
+with each finding and the Auth Model above.
+For each finding:
+1. Look for a compensating control (role or ownership check, global filter, integer cast, allow-list,
+   parameter binding) in the code_context.
+2. Only use reason_code "control_found" when the control is visible in the code_context; quote its
+   file and line in "control_found". Never assume a control in a base class, include, config or
+   middleware you were not shown.
+3. If the code you would need is not shown, answer verdict "likely" with reason_code
+   "code_not_visible" or "config_not_visible".
+Verdicts: "confirmed" | "likely" | "rejected".
+reason_code is one of: "traced", "code_not_visible", "config_not_visible", "data_ownership_unclear",
+"control_found", "evidence_mismatch", "not_executed", "not_reachable", "not_attacker_controlled".
 Respond STRICTLY with a valid JSON object matching verification.schema.json:
 {{
   "batch_id": "verified-{(idx // batch_size) + 1}",
   "verifications": [
     {{
       "finding_id": "<finding_id>",
-      "verdict": "confirmed|rejected",
-      "reason_code": "traced|control_found",
-      "confidence": "high",
-      "checked": ["Checked server-side session binding and sanitizers"],
-      "notes": "<rationale for verdict>",
-      "consensus": {{
-        "score": 0.95,
-        "agreement_level": "unanimous",
-        "voted_models": ["{self.client.model}"],
-        "rationale": "Independently audited and refuted false-alarm candidates."
-      }}
+      "verdict": "confirmed|likely|rejected",
+      "reason_code": "<one of the reason codes above>",
+      "confidence": "high|medium|low",
+      "checked": ["<what you checked in the code_context>"],
+      "control_found": {{"file": "<file>", "line": <line>, "code": "<control>"}} or null,
+      "notes": "<rationale for verdict>"
     }}
   ]
 }}
@@ -568,29 +730,15 @@ Respond STRICTLY with a valid JSON object matching verification.schema.json:
                 {"role": "user", "content": user_prompt},
             ]
 
-            reply = self.client.chat(messages, temperature=0.1)
+            reply = self._chat("5-finding-verifier", f"verified-{(idx // batch_size) + 1}", messages)
             try:
                 parsed = self.client.extract_json(reply)
                 verifs = parsed.get("verifications", [])
             except Exception:
-                # Default fallback verification for unverified items
-                verifs = [
-                    {
-                        "finding_id": f.get("finding_id", ""),
-                        "verdict": "confirmed",
-                        "reason_code": "traced",
-                        "confidence": "high",
-                        "checked": ["Audited data-flow"],
-                        "notes": "Traced via headless cognitive consensus.",
-                        "consensus": {
-                            "score": 0.90,
-                            "agreement_level": "majority",
-                            "voted_models": [self.client.model],
-                            "rationale": "Verified in headless pipeline.",
-                        },
-                    }
-                    for f in chunk
-                ]
+                # No verdicts: merge_findings.py lists these findings under
+                # coverage.findings_without_verification instead of confirming them
+                self._parse_failed("5-finding-verifier", f"verified-{(idx // batch_size) + 1}", reply)
+                verifs = []
 
             verif_doc = {
                 "batch_id": f"verified-{(idx // batch_size) + 1}",

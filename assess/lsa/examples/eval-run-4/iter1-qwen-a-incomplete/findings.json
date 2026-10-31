@@ -1,0 +1,3544 @@
+{
+  "generated_by": "lsa merge_findings.py 0.3.1",
+  "summary": {
+    "total_reported": 72,
+    "active": 72,
+    "rejected_by_verifier": 0,
+    "by_severity": {
+      "critical": 33,
+      "high": 39,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "by_category": {
+      "bola": 39,
+      "sql_injection": 33,
+      "nosql_injection": 0
+    },
+    "by_status": {
+      "unverified": 52,
+      "confirmed": 20,
+      "likely": 0,
+      "rejected": 0,
+      "needs_review": 0
+    }
+  },
+  "findings": [
+    {
+      "finding_id": "INJ-I-0001-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in member.asp via manual quote escaping",
+      "candidate_id": "I-0001",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 6,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 6,
+          "code": "sql = \"UPDATE members SET name = '\" & Replace(Request.Form(\"name\"), \"'\", \"''\") & \"'\"",
+          "why": "User input concatenated into SQL string"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 8,
+          "code": "conn.Execute sql",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request.Form(\"name\") (member.asp:6)",
+        "$u",
+        "$sql (member.asp:6)",
+        "conn.Execute (member.asp:8)"
+      ],
+      "attack_scenario": "A crafted username containing special characters bypasses the manual quote escaping and alters the SQL logic.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0002-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in member.asp via direct concatenation of form data",
+      "candidate_id": "I-0002",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 7,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 7,
+          "code": "sql = sql & \" WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "User input concatenated into SQL string"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 8,
+          "code": "conn.Execute sql",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request.Form(\"member_id\") (member.asp:7)",
+        "$sql (member.asp:7)",
+        "conn.Execute (member.asp:8)"
+      ],
+      "attack_scenario": "A crafted member_id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0003-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in member.asp via direct concatenation of query string data",
+      "candidate_id": "I-0003",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 10,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 10,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "User input concatenated into SQL string"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 10,
+          "code": "conn.Execute ...",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request.QueryString(\"member_id\") (member.asp:10)",
+        "$sql (member.asp:10)",
+        "conn.Execute (member.asp:10)"
+      ],
+      "attack_scenario": "A crafted member_id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0004-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in EditOrder.aspx.vb via direct concatenation of request data",
+      "candidate_id": "I-0004",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 6,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 5,
+          "code": "id = Request(\"id\")",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 6,
+          "code": "Set rs = conn.Execute(\"SELECT * FROM orders WHERE id = \" & id)",
+          "why": "User input concatenated into SQL string"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 12,
+          "code": "Set rs = conn.Execute(...)",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request(\"id\") (EditOrder.aspx.vb:5)",
+        "$id",
+        "$sql (EditOrder.aspx.vb:6)",
+        "conn.Execute (EditOrder.aspx.vb:12)"
+      ],
+      "attack_scenario": "A crafted id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0006-1",
+      "category": "sql_injection",
+      "subtype": "template_placeholder",
+      "title": "SQL Injection in OrderService.cfc via raw ColdFusion interpolation",
+      "candidate_id": "I-0006",
+      "location": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "start_line": 5,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 3,
+          "code": "<cfargument name=\"orderId\" type=\"string\" required=\"true\">",
+          "why": "Source: Function argument passed by caller"
+        },
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 5,
+          "code": "SELECT * FROM orders WHERE id = #arguments.orderId#",
+          "why": "User input interpolated into SQL string"
+        },
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 7,
+          "code": "<cfreturn q>",
+          "why": "Sink returns query result"
+        }
+      ],
+      "data_flow": [
+        "arguments.orderId (OrderService.cfc:3)",
+        "#arguments.orderId#",
+        "SELECT ... (OrderService.cfc:5)"
+      ],
+      "attack_scenario": "A malicious orderId passed to the remote function alters the SQL logic.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or cfqueryparam",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0007-1",
+      "category": "sql_injection",
+      "subtype": "template_placeholder",
+      "title": "SQL Injection in order.cfm via raw ColdFusion interpolation of URL parameter",
+      "candidate_id": "I-0007",
+      "location": {
+        "file": "coldfusion/app/order.cfm",
+        "start_line": 3,
+        "end_line": 4
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/order.cfm",
+          "line": 3,
+          "code": "SELECT * FROM orders WHERE id = #url.id#",
+          "why": "User input interpolated into SQL string"
+        },
+        {
+          "file": "coldfusion/app/order.cfm",
+          "line": 4,
+          "code": "</cfquery>",
+          "why": "Sink executes query"
+        }
+      ],
+      "data_flow": [
+        "url.id (order.cfm:3)",
+        "#url.id#",
+        "SELECT ... (order.cfm:3)"
+      ],
+      "attack_scenario": "A malicious id passed via URL alters the SQL logic.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or cfqueryparam",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0008",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in InvoiceController.cs:28 via POST parameter customer",
+      "candidate_id": "I-0008",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 26,
+        "end_line": 28
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 26,
+          "code": "public ActionResult Search(string customer)",
+          "why": "source: POST parameter"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 28,
+          "code": "var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();",
+          "why": "string concatenation into SQL without parameterization"
+        }
+      ],
+      "data_flow": [
+        "customer (InvoiceController.cs:26)",
+        "$customer",
+        "SqlQuery (InvoiceController.cs:28)"
+      ],
+      "attack_scenario": "A crafted customer parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with Entity Framework or raw SQL with parameters",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0009-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in OrderDetail.aspx.cs via direct concatenation of query string data",
+      "candidate_id": "I-0009",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 13,
+        "end_line": 15
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 10,
+          "code": "string id = Request.QueryString[\"id\"];",
+          "why": "Source: User input from query string"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 13,
+          "code": "var cmd = new SqlCommand(\"SELECT * FROM Orders WHERE OrderId = \" + id, conn);",
+          "why": "User input concatenated into SQL string"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 15,
+          "code": "var r = cmd.ExecuteReader();",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request.QueryString[\"id\"] (OrderDetail.aspx.cs:10)",
+        "$id",
+        "$cmd (OrderDetail.aspx.cs:13)",
+        "cmd.ExecuteReader (OrderDetail.aspx.cs:15)"
+      ],
+      "attack_scenario": "A crafted id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0010-1",
+      "category": "sql_injection",
+      "subtype": "format_string",
+      "title": "SQL Injection in OrderDetail.aspx.cs via string.Format interpolation of request data",
+      "candidate_id": "I-0010",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 19,
+        "end_line": 21
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 19,
+          "code": "string sql2 = string.Format(\"SELECT * FROM Logs WHERE Ref = '{0}'\", Request[\"ref\"]);",
+          "why": "User input interpolated into SQL string"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 21,
+          "code": "new SqlCommand(sql2, conn).ExecuteReader();",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request[\"ref\"] (OrderDetail.aspx.cs:19)",
+        "$sql2 (OrderDetail.aspx.cs:19)",
+        "SqlCommand(sql2) (OrderDetail.aspx.cs:21)"
+      ],
+      "attack_scenario": "A crafted ref changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0011-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in OrderDetail.aspx.cs via string interpolation of form data",
+      "candidate_id": "I-0011",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 20,
+        "end_line": 22
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 20,
+          "code": "string sql3 = $\"DELETE FROM Carts WHERE CartId = {Request.Form[\"cart\"]}\";",
+          "why": "User input interpolated into SQL string"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 22,
+          "code": "new SqlCommand(sql3, conn).ExecuteNonQuery();",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request.Form[\"cart\"] (OrderDetail.aspx.cs:20)",
+        "$sql3 (OrderDetail.aspx.cs:20)",
+        "SqlCommand(sql3) (OrderDetail.aspx.cs:22)"
+      ],
+      "attack_scenario": "A crafted cart changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0012-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in detail.jsp via direct concatenation of request parameter",
+      "candidate_id": "I-0012",
+      "location": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "start_line": 5,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "line": 3,
+          "code": "String no = request.getParameter(\"no\");",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "line": 5,
+          "code": "ResultSet rs = c.createStatement().executeQuery(\"SELECT * FROM orders WHERE order_no = '\" + no + \"'\");",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "request.getParameter(\"no\") (detail.jsp:3)",
+        "$no",
+        "$sql (detail.jsp:5)"
+      ],
+      "attack_scenario": "A crafted no changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0013-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in detail.jsp via direct concatenation of request parameter (duplicate flow)",
+      "candidate_id": "I-0013",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 20,
+        "end_line": 22
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 20,
+          "code": "string sql3 = $\"DELETE FROM Carts WHERE CartId = {Request.Form[\"cart\"]}\";",
+          "why": "User input interpolated into SQL string"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 22,
+          "code": "new SqlCommand(sql3, conn).ExecuteNonQuery();",
+          "why": "Sink executes constructed query"
+        }
+      ],
+      "data_flow": [
+        "Request.Form[\"cart\"] (OrderDetail.aspx.cs:20)",
+        "$sql3 (OrderDetail.aspx.cs:20)",
+        "SqlCommand(sql3) (OrderDetail.aspx.cs:22)"
+      ],
+      "attack_scenario": "A crafted cart changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0015",
+      "category": "sql_injection",
+      "subtype": "template_placeholder",
+      "title": "SQL Injection in OrderMapper.xml:9 via MyBatis ${orderBy} (dynamic ORDER BY)",
+      "candidate_id": "I-0015",
+      "location": {
+        "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+        "start_line": 9,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+          "line": 9,
+          "code": "ORDER BY ${orderBy}",
+          "why": "MyBatis ${} performs raw string substitution without parameterization"
+        }
+      ],
+      "data_flow": [
+        "${orderBy} (OrderMapper.xml:9)",
+        "ORDER BY clause"
+      ],
+      "attack_scenario": "A crafted orderBy parameter changes the ORDER BY clause to extract data or bypass filters.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use an explicit allow-list for allowed sort columns in MyBatis",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0016-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in EditUserAction.java via direct concatenation of request parameter",
+      "candidate_id": "I-0016",
+      "location": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "start_line": 13,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "line": 10,
+          "code": "String userId = request.getParameter(\"user_id\");",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "line": 13,
+          "code": "PreparedStatement ps = conn.prepareStatement(\"UPDATE users SET email = '\" + email + \"' WHERE id = \" + userId);",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "request.getParameter(\"user_id\") (EditUserAction.java:10)",
+        "$userId",
+        "$sql (EditUserAction.java:13)"
+      ],
+      "attack_scenario": "A crafted userId changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0017-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in InvoiceController.java via direct concatenation of request parameter in HQL",
+      "candidate_id": "I-0017",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 29,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 28,
+          "code": "public String search(@RequestParam(\"customer\") String customer, Model model) {",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 29,
+          "code": "model.addAttribute(\"list\", session.createQuery(\"from Invoice i where i.customer = '\" + customer + \"'\").list());",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "@RequestParam(\"customer\") (InvoiceController.java:28)",
+        "$customer",
+        "$sql (InvoiceController.java:29)"
+      ],
+      "attack_scenario": "A crafted customer changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or Criteria API",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0018",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in OrderServlet.java:15 via GET parameter orderId",
+      "candidate_id": "I-0018",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 11,
+        "end_line": 15
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 11,
+          "code": "String id = request.getParameter(\"orderId\");",
+          "why": "source: GET parameter"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "string concatenation into SQL without parameterization"
+        }
+      ],
+      "data_flow": [
+        "request.getParameter('orderId') (OrderServlet.java:11)",
+        "$id",
+        "stmt.executeQuery (OrderServlet.java:15)"
+      ],
+      "attack_scenario": "A crafted orderId parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use PreparedStatement with bound parameters",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0020-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in orders.js via direct concatenation of query parameter",
+      "candidate_id": "I-0020",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 17,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 16,
+          "code": "router.get('/reports', ensureLoggedIn, function (req, res) {",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 17,
+          "code": "db.query(\"SELECT * FROM reports WHERE month = '\" + req.query.month + \"'\", function (e, rows) { res.json(rows); });",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "req.query.month (orders.js:17)",
+        "$sql (orders.js:17)",
+        "db.query (orders.js:17)"
+      ],
+      "attack_scenario": "A crafted month changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0021-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in orders.js via template literal interpolation of query parameter",
+      "candidate_id": "I-0021",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 29,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 28,
+          "code": "router.get('/stats', function (req, res) {",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 29,
+          "code": "db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });",
+          "why": "User input interpolated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "req.query.shop (orders.js:29)",
+        "$sql (orders.js:29)",
+        "db.query (orders.js:29)"
+      ],
+      "attack_scenario": "A crafted shop_id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0022-1",
+      "category": "sql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in orders.js via direct passing of request body as filter",
+      "candidate_id": "I-0022",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 21,
+        "end_line": 22
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 20,
+          "code": "router.post('/login', function (req, res) {",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 21,
+          "code": "db.collection('users').findOne(req.body, function (e, u) { res.json(!!u); });",
+          "why": "User input passed directly as filter object"
+        }
+      ],
+      "data_flow": [
+        "req.body (orders.js:21)",
+        "$filter (orders.js:21)",
+        "db.collection.findOne (orders.js:21)"
+      ],
+      "attack_scenario": "A crafted req.body alters the MongoDB query logic and bypasses intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or explicit field mapping",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0023-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "NoSQL Injection in orders.js via direct concatenation of query parameter in $where",
+      "candidate_id": "I-0023",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 25,
+        "end_line": 26
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 24,
+          "code": "router.get('/search', ensureLoggedIn, function (req, res) {",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 25,
+          "code": "db.collection('items').find({ $where: \"this.name == '\" + req.query.n + \"'\" }).toArray(function (e, r) { res.json(r); });",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "req.query.n (orders.js:25)",
+        "$sql (orders.js:25)",
+        "db.collection.find (orders.js:25)"
+      ],
+      "attack_scenario": "A crafted name changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or explicit field mapping",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0024-1",
+      "category": "sql_injection",
+      "subtype": "template_placeholder",
+      "title": "SQL Injection in order.cgi via direct interpolation of CGI parameter",
+      "candidate_id": "I-0024",
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 13,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 11,
+          "code": "my $id = $q->param('id');",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 13,
+          "code": "my $sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "why": "User input interpolated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "$q->param('id') (order.cgi:11)",
+        "$id",
+        "$sql (order.cgi:13)"
+      ],
+      "attack_scenario": "A crafted id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0025-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in order.cgi via direct concatenation of CGI parameter",
+      "candidate_id": "I-0025",
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 19,
+        "end_line": 20
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 11,
+          "code": "my $id = $q->param('id');",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 19,
+          "code": "$dbh->do(\"DELETE FROM carts WHERE cart_id = \" . $q->param('cart'));",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "$q->param('cart') (order.cgi:19)",
+        "$sql (order.cgi:19)",
+        "$dbh->do (order.cgi:19)"
+      ],
+      "attack_scenario": "A crafted cart_id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0026",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in Invoice.php:10 via method parameter id (CodeIgniter Active Record)",
+      "candidate_id": "I-0026",
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 9,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 9,
+          "code": "public function view($id)",
+          "why": "source: method parameter"
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "variable interpolation into SQL without parameterization"
+        }
+      ],
+      "data_flow": [
+        "$id (Invoice.php:9)",
+        "$q (Invoice.php:10)",
+        "$this->db->query (Invoice.php:10)"
+      ],
+      "attack_scenario": "A crafted id parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with CodeIgniter's query builder or raw SQL with parameters",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0028-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in admin.php via direct concatenation of POST parameter",
+      "candidate_id": "I-0028",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 12,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "Source: User input from request"
+        },
+        {
+          "file": "php-plain/admin.php",
+          "line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "$_POST['id'] (admin.php:11)",
+        "$id",
+        "$sql (admin.php:12)"
+      ],
+      "attack_scenario": "A crafted id changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0029-1",
+      "category": "sql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in mongo_find.php via direct passing of GET parameters as filter",
+      "candidate_id": "I-0029",
+      "location": {
+        "file": "php-plain/mongo_find.php",
+        "start_line": 5,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/mongo_find.php",
+          "line": 4,
+          "code": "$doc = $coll->findOne(array('login' => $_GET['login'], 'pass' => $_GET['pass']));",
+          "why": "User input passed directly as filter object"
+        }
+      ],
+      "data_flow": [
+        "$_GET['login'] (mongo_find.php:5)",
+        "$filter (mongo_find.php:5)",
+        "$coll->findOne (mongo_find.php:5)"
+      ],
+      "attack_scenario": "A crafted login/pass changes the query logic and bypasses intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or explicit field mapping",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0030-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "NoSQL Injection in mongo_find.php via direct concatenation of GET parameter in $where",
+      "candidate_id": "I-0030",
+      "location": {
+        "file": "php-plain/mongo_find.php",
+        "start_line": 6,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "php-plain/mongo_find.php",
+          "line": 5,
+          "code": "$docs = $coll->find(array('$where' => \"this.name == '\" . $_GET['n'] . \"'\"));",
+          "why": "User input concatenated into SQL string"
+        }
+      ],
+      "data_flow": [
+        "$_GET['n'] (mongo_find.php:6)",
+        "$sql (mongo_find.php:6)",
+        "$coll->find (mongo_find.php:6)"
+      ],
+      "attack_scenario": "A crafted name changes the WHERE clause and bypasses the intended filtering.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or explicit field mapping",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0031",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in order_detail.php:6 via GET parameter id",
+      "candidate_id": "I-0031",
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 5,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "source: GET parameter"
+        },
+        {
+          "file": "php-plain/order_detail.php",
+          "line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "concatenated into query without sanitization"
+        }
+      ],
+      "data_flow": [
+        "$_GET['id'] (order_detail.php:5)",
+        "$id",
+        "mysql_query (order_detail.php:6)"
+      ],
+      "attack_scenario": "A crafted id parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with mysqli_prepare or PDO",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0032",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in search.php:8 via GET parameter q (addslashes is insufficient)",
+      "candidate_id": "I-0032",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 5,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 5,
+          "code": "$kw = addslashes($_GET['q']);",
+          "why": "source: GET parameter"
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 8,
+          "code": "$sql .= \" AND name LIKE '%\" . $kw . \"%'\";",
+          "why": "addslashes is not sufficient for SQL injection prevention"
+        }
+      ],
+      "data_flow": [
+        "$_GET['q'] (search.php:5)",
+        "$kw",
+        "$sql (search.php:8)",
+        "mysql_query (search.php:11)"
+      ],
+      "attack_scenario": "A crafted q parameter with special characters bypasses addslashes and injects SQL.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with mysqli_prepare or PDO",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0033",
+      "category": "sql_injection",
+      "subtype": "dynamic_identifier",
+      "title": "SQL Injection in search.php:9 via GET parameter sort (ORDER BY without allow-list)",
+      "candidate_id": "I-0033",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 6,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 6,
+          "code": "$sort = $_GET['sort'];",
+          "why": "source: GET parameter"
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "dynamic ORDER BY without allow-list validation"
+        }
+      ],
+      "data_flow": [
+        "$_GET['sort'] (search.php:6)",
+        "$sort",
+        "$sql (search.php:9)",
+        "mysql_query (search.php:11)"
+      ],
+      "attack_scenario": "A crafted sort parameter changes the ORDER BY clause to extract data or bypass filters.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use an explicit allow-list for allowed sort columns",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0034",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in search.php:14 via GET parameter cat (heredoc interpolation)",
+      "candidate_id": "I-0034",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 12,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 14,
+          "code": "WHERE category = '{$_GET['cat']}'",
+          "why": "direct interpolation of GET parameter into heredoc SQL"
+        }
+      ],
+      "data_flow": [
+        "$_GET['cat'] (search.php:14)",
+        "$q (search.php:12-16)",
+        "mysql_query (search.php:16)"
+      ],
+      "attack_scenario": "A crafted cat parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with mysqli_prepare or PDO",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0035",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in app.py:12 via route parameter order_id (string formatting)",
+      "candidate_id": "I-0035",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 8,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 8,
+          "code": "@app.route('/orders/<int:order_id>')",
+          "why": "source: route parameter"
+        },
+        {
+          "file": "python-flask/app.py",
+          "line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "string formatting with user input instead of parameterized query"
+        }
+      ],
+      "data_flow": [
+        "route param order_id (app.py:8)",
+        "$order_id",
+        "cur.execute (app.py:12)"
+      ],
+      "attack_scenario": "A crafted order_id parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with cursor.execute(query, params)",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0036",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in app.py:29 via GET parameter q (f-string interpolation)",
+      "candidate_id": "I-0036",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 27,
+        "end_line": 29
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 27,
+          "code": "q = request.args.get('q', '')",
+          "why": "source: GET parameter"
+        },
+        {
+          "file": "python-flask/app.py",
+          "line": 29,
+          "code": "cur.execute(f\"SELECT * FROM products WHERE name LIKE '%{q}%'\")",
+          "why": "f-string interpolation into SQL without parameterization"
+        }
+      ],
+      "data_flow": [
+        "request.args['q'] (app.py:27)",
+        "$q",
+        "cur.execute (app.py:29)"
+      ],
+      "attack_scenario": "A crafted q parameter changes the WHERE clause and bypasses the intended filter.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries with cursor.execute(query, params)",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0037",
+      "category": "sql_injection",
+      "subtype": "stored_procedure_dynamic_sql",
+      "title": "SQL Injection in sp_search_orders.sql:5 via stored procedure parameters (dynamic SQL)",
+      "candidate_id": "I-0037",
+      "location": {
+        "file": "sql-procs/sp_search_orders.sql",
+        "start_line": 5,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 5,
+          "code": "SET @sql = 'SELECT * FROM Orders WHERE Customer = ''' + @Customer + ''' ORDER BY ' + @Sort",
+          "why": "string concatenation into dynamic SQL variable"
+        },
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 6,
+          "code": "EXEC(@sql)",
+          "why": "execution of dynamic SQL"
+        }
+      ],
+      "data_flow": [
+        "@Customer (sp_search_orders.sql:1)",
+        "@Sort (sp_search_orders.sql:1)",
+        "@sql (sp_search_orders.sql:5)",
+        "EXEC (@sql) (sp_search_orders.sql:6)"
+      ],
+      "attack_scenario": "A crafted Customer or Sort parameter changes the WHERE or ORDER BY clause and bypasses filters.",
+      "impact": "Authentication bypass; read/modify any table the DB user can access.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries instead of dynamic SQL execution",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0001-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User edit vulnerable to IDOR - no ownership verification on user id",
+      "route_id": "R-0001",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/user/edit.do"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "start_line": 13,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "line": 10,
+          "code": "String userId = request.getParameter(\"user_id\");",
+          "why": "ID from request parameter (request-controlled)"
+        },
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "line": 13,
+          "code": "UPDATE users SET email = '\" + email + \"' WHERE id = \" + userId;",
+          "why": "No ownership check - updates any user by ID"
+        }
+      ],
+      "attack_scenario": "User A sends POST /edit.do?user_id=<user id of user B> and modifies user B's email.",
+      "impact": "Modify another user's profile data (email, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/struts/EditUserAction.java lines 10,13",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "SQL UPDATE with direct concatenation of userId without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct SQL construction with user-controlled userId parameter without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/user/edit.do?user_id={userId}",
+        "target_param": "user_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0002-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Member edit vulnerable to IDOR - no ownership verification on member_id",
+      "route_id": "R-0002",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=edit"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 6,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 6,
+          "code": "sql = \"UPDATE members SET name = '\" & Replace(Request.Form(\"name\"), \"'\", \"''\") & \"'\"",
+          "why": "ID from form (Request.Form) used directly"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 7,
+          "code": "WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "No ownership check - updates any member by ID"
+        }
+      ],
+      "attack_scenario": "User A sends POST /member.asp?mode=edit with member_id=<user B's ID> and modifies user B's name.",
+      "impact": "Modify another user's profile data (name, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp lines 6-7",
+          "Request.Form/QueryString usage pattern"
+        ],
+        "control_found": null,
+        "notes": "Classic ASP lacks global filter infrastructure. No session-based user ID binding found in evidence. Direct concatenation of member_id without ownership verification.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Classic ASP architecture lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/classic-asp/shop/member.asp?mode=edit",
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0003-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Member delete vulnerable to IDOR - no ownership verification on member_id",
+      "route_id": "R-0003",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=delete"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 10,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 10,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "No ownership check - deletes any member by ID"
+        }
+      ],
+      "attack_scenario": "User A sends GET /member.asp?mode=delete&member_id=<user B's ID> and deletes user B's account.",
+      "impact": "Delete another user's account record.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp line 10",
+          "Request.QueryString usage pattern"
+        ],
+        "control_found": null,
+        "notes": "Classic ASP lacks global filter infrastructure. No session-based user ID binding found in evidence. Direct concatenation of member_id without ownership verification.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Classic ASP architecture lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/classic-asp/shop/member.asp?mode=delete&member_id=",
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0004-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via id - no ownership verification",
+      "route_id": "R-0004",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/order.asp"
+      },
+      "location": {
+        "file": "classic-asp/shop/order.asp",
+        "start_line": 6,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/order.asp",
+          "line": 5,
+          "code": "id = Request(\"id\")",
+          "why": "ID from query string (request-controlled)"
+        },
+        {
+          "file": "classic-asp/shop/order.asp",
+          "line": 6,
+          "code": "SELECT * FROM orders WHERE id = \" & id",
+          "why": "No ownership check - reads any order by ID"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order.asp?id=<order id of user B> and receives user B's order details.",
+      "impact": "Read other customers' orders (address, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs line 5",
+          "Request id assignment pattern"
+        ],
+        "control_found": null,
+        "notes": ".NET controller lacks ownership verification. No session-based user ID binding found in evidence. Direct concatenation of order ID without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": ".NET controller lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/classic-asp/shop/order.asp?id=",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0005-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order service readable by any authenticated user via orderId - no ownership verification",
+      "route_id": "R-0005",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/OrderService.cfc?method=getOrder"
+      },
+      "location": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "start_line": 4,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 3,
+          "code": "<cfargument name=\"orderId\" type=\"string\" required=\"true\">",
+          "why": "ID from request argument (request-controlled)"
+        },
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 5,
+          "code": "SELECT * FROM orders WHERE id = #arguments.orderId#",
+          "why": "No ownership check - reads any order by ID"
+        }
+      ],
+      "attack_scenario": "User A sends GET /OrderService.cfc?method=getOrder&orderId=<order id of user B> and receives user B's order.",
+      "impact": "Read other customers' orders (full details).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "coldfusion/app/OrderService.cfc lines 3-5",
+          "cfargument usage pattern"
+        ],
+        "control_found": null,
+        "notes": "ColdFusion CFC lacks ownership verification. No session-based user ID binding found in evidence. Direct concatenation of orderId without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "ColdFusion CFC lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/coldfusion/app/OrderService.cfc?method=getOrder&orderId=",
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0006-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via url.id - no ownership verification on primary query",
+      "route_id": "R-0006",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/order.cfm"
+      },
+      "location": {
+        "file": "coldfusion/app/order.cfm",
+        "start_line": 3,
+        "end_line": 4
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/order.cfm",
+          "line": 2,
+          "code": "<cfif NOT structKeyExists(session, \"userID\")><cflocation url=\"/login.cfm\"></cfif>",
+          "why": "Only checks login, not ownership"
+        },
+        {
+          "file": "coldfusion/app/order.cfm",
+          "line": 3,
+          "code": "SELECT * FROM orders WHERE id = #url.id#",
+          "why": "No ownership check - reads any order by ID"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order.cfm?url.id=<order id of user B> and receives user B's order details.",
+      "impact": "Read other customers' orders (address, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "coldfusion/app/order.cfm lines 2-3",
+          "session check pattern"
+        ],
+        "control_found": null,
+        "notes": "ColdFusion page only checks login status, not ownership. No session-based user ID binding found in evidence. Direct concatenation of url.id without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "ColdFusion page lacks compensating controls; login-only check does not prevent IDOR."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/coldfusion/app/order.cfm?url.id=",
+        "target_param": "url.id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0007-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User delete accessible to any authenticated user - no ownership verification on user id",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 12,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 12,
+          "code": "[HttpPost]",
+          "why": "No ownership check on user being deleted"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 14,
+          "code": "var u = db.Users.Find(id);",
+          "why": "Finds any user by ID without verifying current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Admin/DeleteUser?id=<user id of user B> and deletes user B's account.",
+      "impact": "Delete another user's account record.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs lines 12-16",
+          "HttpPost attribute pattern"
+        ],
+        "control_found": null,
+        "notes": ".NET controller lacks ownership verification. No session-based user ID binding found in evidence. Direct Find() without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": ".NET controller lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser?id=",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0008-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User password reset accessible to any authenticated user - no ownership verification on user id",
+      "route_id": "R-0008",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/ResetPassword"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 22,
+        "end_line": 26
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 22,
+          "code": "[Authorize(Roles = \"Admin\")]",
+          "why": "Only checks admin role, not ownership of user"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 24,
+          "code": "var u = db.Users.Find(id);",
+          "why": "Finds any user by ID without verifying current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Admin/ResetPassword?id=<user id of user B> and resets user B's password.",
+      "impact": "Reset another user's password (account takeover).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs lines 22-26",
+          "Authorize attribute pattern"
+        ],
+        "control_found": null,
+        "notes": ".NET controller only checks Admin role, not ownership. No session-based user ID binding found in evidence. Direct Find() without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": ".NET controller lacks compensating controls; role-only check does not prevent IDOR."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/ResetPassword?id=",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0009-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "User export accessible to any authenticated user - no admin role verification on isAdmin parameter",
+      "route_id": "R-0009",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/Export"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 30,
+        "end_line": 35
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 32,
+          "code": "if (Request.QueryString[\"isAdmin\"] == \"true\")",
+          "why": "Checks query parameter instead of actual admin role"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 34,
+          "code": "return Json(db.Users.ToList(), JsonRequestBehavior.AllowGet);",
+          "why": "Returns all users without ownership verification"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Admin/Export?isAdmin=true and receives list of all users.",
+      "impact": "Read all user data (PII, credentials, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify actual admin role instead of query parameter",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-35",
+          "QueryString isAdmin check pattern"
+        ],
+        "control_found": null,
+        "notes": ".NET controller trusts query parameter instead of actual admin role. No session-based user ID binding found in evidence. Direct ToList() without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": ".NET controller lacks compensating controls; query parameter trust does not prevent IDOR."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/Export?isAdmin=true",
+        "target_param": "isAdmin"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0013-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice detail readable by any authenticated user via id - no ownership verification on Details endpoint",
+      "route_id": "R-0013",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/Invoice/Details"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 11,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 12,
+          "code": "public ActionResult Details(int id)",
+          "why": "No ownership check on invoice being read"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 13,
+          "code": "var inv = db.Invoices.Find(id);",
+          "why": "Finds any invoice by ID without verifying current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends GET /Invoice/Details?id=<invoice id of user B> and receives user B's invoice.",
+      "impact": "Read other customers' invoices (PII, amounts, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 11-14",
+          "Find() pattern"
+        ],
+        "control_found": null,
+        "notes": ".NET controller lacks ownership verification. No session-based user ID binding found in evidence. Direct Find() without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": ".NET controller lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/Invoice/Details?id=",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0015-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice search returns all invoices - no ownership verification on Search endpoint",
+      "route_id": "R-0015",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Invoice/Search"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 26,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 28,
+          "code": "SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'",
+          "why": "No ownership check - returns all invoices matching customer"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Invoice/Search with customer=<any customer name> and receives all matching invoices.",
+      "impact": "Read other customers' invoices (PII, amounts, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 26-30",
+          "Search pattern"
+        ],
+        "control_found": null,
+        "notes": ".NET controller lacks ownership verification. No session-based user ID binding found in evidence. Direct string concatenation without ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": ".NET controller lacks compensating controls; direct IDOR vulnerability confirmed."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Invoice/Search",
+        "target_param": "customer"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0017-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order update vulnerable to IDOR - no ownership verification on OrderId",
+      "route_id": "R-0017",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 8,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 8,
+          "code": "Dim sql As String = \"UPDATE Orders SET Note = '\" & txtNote.Text & \"'\"",
+          "why": "No ownership check on order being updated"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 9,
+          "code": "sql &= \" WHERE OrderId = \" & hfOrderId.Value",
+          "why": "Updates any order by ID without verifying current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /EditOrder.aspx with OrderId=<order id of user B> and modifies user B's order note.",
+      "impact": "Modify another customer's order data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 8-9",
+          "global filters in web.config",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "SQL UPDATE with direct concatenation of OrderId without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct SQL construction with user-controlled OrderId parameter without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx",
+        "target_param": "hfOrderId.Value"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0018-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via id - no ownership verification on primary query",
+      "route_id": "R-0018",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/OrderDetail.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 13,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 10,
+          "code": "string id = Request.QueryString[\"id\"];",
+          "why": "ID from query string (request-controlled)"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "line": 13,
+          "code": "var cmd = new SqlCommand(\"SELECT * FROM Orders WHERE OrderId = \" + id, conn);",
+          "why": "No ownership check - reads any order by ID"
+        }
+      ],
+      "attack_scenario": "User A sends GET /OrderDetail.aspx?id=<order id of user B> and receives user B's order details.",
+      "impact": "Read other customers' orders (address, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 10,13",
+          "global filters in web.config",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "SQL SELECT with direct concatenation of OrderId without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct SQL construction with user-controlled OrderId parameter without ownership check."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/dotnet-legacy/Web/Orders/OrderDetail.aspx?id={id}",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0019-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via no - no ownership verification",
+      "route_id": "R-0019",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/java-legacy/WebContent/order/detail.jsp"
+      },
+      "location": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "start_line": 3,
+        "end_line": 5
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "line": 3,
+          "code": "String no = request.getParameter(\"no\");",
+          "why": "ID from request parameter (request-controlled)"
+        },
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "line": 5,
+          "code": "SELECT * FROM orders WHERE order_no = '\" + no + \"'",
+          "why": "No ownership check - reads any order by ID"
+        }
+      ],
+      "attack_scenario": "User A sends GET /detail.jsp?no=<order id of user B> and receives user B's order details.",
+      "impact": "Read other customers' orders (address, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/WebContent/order/detail.jsp lines 3,5",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "SQL SELECT with direct concatenation of order_no without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct SQL construction with user-controlled order_no parameter without ownership check."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/java-legacy/WebContent/order/detail.jsp?no={no}",
+        "target_param": "no"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0020-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account save endpoint missing ownership verification - any user can modify another's account",
+      "route_id": "R-0020",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/save"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 13,
+        "end_line": 17
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 14,
+          "code": "public String save(@ModelAttribute Account account) {",
+          "why": "Account object bound from request without user_id verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 15,
+          "code": "accountDao.save(account);",
+          "why": "Saves account without checking if current user owns this account"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/save with User B's account data and successfully saves it as their own.",
+      "impact": "Users can modify any other user's account information (name, email, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java lines 14-17",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "DAO save() called with request-bound Account object without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct DAO save with user-controlled Account object without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/account/save",
+        "target_param": "Account object (request-bound)"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0021-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account rename endpoint missing ownership verification - any user can rename another's account",
+      "route_id": "R-0021",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 19,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 20,
+          "code": "public String rename(@ModelAttribute RenameForm form) {",
+          "why": "RenameForm bound from request without user_id verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 21,
+          "code": "accountDao.rename(form.getId(), form.getName());",
+          "why": "Renames account without checking if current user owns this account"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/rename with User B's account ID and new name, successfully renaming User B's account.",
+      "impact": "Users can rename any other user's account, potentially causing confusion or impersonation.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java lines 19-23",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "DAO rename() called with request-bound form without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct DAO rename with user-controlled form object without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/account/rename",
+        "target_param": "form.getId()"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0022-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account API update endpoint missing ownership verification - any user can modify another's account",
+      "route_id": "R-0022",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/account/api"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 25,
+        "end_line": 29
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 26,
+          "code": "public Account update(@RequestBody Account account) {",
+          "why": "Account object bound from request without user_id verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 27,
+          "code": "return accountDao.save(account);",
+          "why": "Saves account without checking if current user owns this account"
+        }
+      ],
+      "attack_scenario": "User A sends PUT /account/api with User B's account data and successfully updates it.",
+      "impact": "Users can modify any other user's account information via API.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java lines 25-29",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "DAO save() called with @RequestBody Account without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct DAO save with user-controlled @RequestBody object without ownership check."
+      },
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/account/api",
+        "target_param": "Account object (request-bound)"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0023-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user delete endpoint missing ownership verification - any admin can delete any user",
+      "route_id": "R-0023",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 13,
+        "end_line": 17
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 14,
+          "code": "public String delete(@PathVariable(\"id\") Long id) {",
+          "why": "User ID from path parameter without ownership verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 15,
+          "code": "userDao.deleteById(id);",
+          "why": "Deletes user without checking if current admin owns this user"
+        }
+      ],
+      "attack_scenario": "Admin A sends POST /admin/users/{id}/delete with User B's ID and successfully deletes User B.",
+      "impact": "Any logged-in admin can delete any other user, not just their own or assigned users.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add ownership verification before deletion",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AdminUserController.java lines 13-17",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "DAO deleteById() called with @PathVariable id without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct DAO delete with user-controlled path parameter without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0024-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user role change endpoint missing ownership verification - any admin can change any user's role",
+      "route_id": "R-0024",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/role"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 19,
+        "end_line": 24
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 20,
+          "code": "@PreAuthorize(\"hasRole('ADMIN')\")",
+          "why": "Only checks admin role, not ownership of the user being modified"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 21,
+          "code": "public String grant(@PathVariable(\"id\") Long id, @RequestParam(\"role\") String role) {",
+          "why": "User ID from path parameter without ownership verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 22,
+          "code": "userDao.updateRole(id, role);",
+          "why": "Updates user role without checking if current admin owns this user"
+        }
+      ],
+      "attack_scenario": "Admin A sends POST /admin/users/{id}/role with User B's ID and a different role, successfully changing User B's role.",
+      "impact": "Any logged-in admin can promote/demote any other user to any role.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add ownership verification before role change",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AdminUserController.java lines 19-24",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "DAO updateRole() called with @PathVariable id without ownership verification. Only role check present, not ownership.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Role-based authorization present but object-level ownership check missing."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/{id}/role",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0025-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice detail endpoint missing ownership verification - any user can view any invoice",
+      "route_id": "R-0025",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/{id}"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 15,
+        "end_line": 19
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 16,
+          "code": "public String show(@PathVariable(\"id\") Long id, Model model) {",
+          "why": "Invoice ID from path parameter without ownership verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 17,
+          "code": "model.addAttribute(\"invoice\", invoiceDao.findById(id));",
+          "why": "Loads invoice without checking if current user owns this invoice"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoices/{id} with User B's invoice ID and successfully views User B's invoice.",
+      "impact": "Users can view any other user's invoices (PII, payment info, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/InvoiceController.java lines 15-19",
+          "global filters in web.xml",
+          "session user binding"
+        ],
+        "control_found": null,
+        "notes": "DAO findById() called with @PathVariable id without ownership verification. No compensating control found.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "qwen3.5:9b"
+        ],
+        "rationale": "Direct DAO find with user-controlled path parameter without ownership check."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/invoices/{id}",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0027-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice search endpoint missing ownership verification - any user can search for any customer's invoices",
+      "route_id": "R-0027",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/search"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 27,
+        "end_line": 31
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 28,
+          "code": "public String search(@RequestParam(\"customer\") String customer, Model model) {",
+          "why": "Customer name from request parameter without ownership verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 29,
+          "code": "model.addAttribute(\"list\", session.createQuery(\"from Invoice i where i.customer = '\" + customer + \"'\").list());",
+          "why": "Searches invoices without checking if current user owns these invoices"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoices/search?customer=<any customer name> and successfully retrieves all invoices for that customer.",
+      "impact": "Users can search for and view any other customer's invoices (PII, payment info, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0028-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order view endpoint missing ownership verification - any user can view any order",
+      "route_id": "R-0028",
+      "endpoint": {
+        "method": "GET",
+        "path": "/order/view"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 8,
+        "end_line": 21
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 11,
+          "code": "String id = request.getParameter(\"orderId\");",
+          "why": "Order ID from request parameter without ownership verification"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "Loads order without checking if current user owns this order"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 17,
+          "code": "sb.append(\" AND order_id = \").append(id);",
+          "why": "Joins items table without ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order/view?orderId=<any order id> and successfully views any order.",
+      "impact": "Users can view any other user's orders (PII, shipping info, amounts, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0030-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user delete endpoint missing ownership verification - any logged-in user can delete any user",
+      "route_id": "R-0030",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/delete"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 5,
+          "code": "function ensureLoggedIn(req, res, next) { if (!req.user) return res.redirect('/login'); next(); }",
+          "why": "Only checks login status, not admin role or ownership"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 9,
+          "code": "User.deleteOne({ _id: req.params.id }, function () { res.sendStatus(204); });",
+          "why": "Deletes user without checking if current user owns this user"
+        }
+      ],
+      "attack_scenario": "Any logged-in user sends POST /admin/users/:id/delete with another user's ID and successfully deletes them.",
+      "impact": "Any authenticated user can delete any other user account.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add admin role check and ownership verification",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0031-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user ban endpoint missing ownership verification - any logged-in user can ban any user",
+      "route_id": "R-0031",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/ban"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 12,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 5,
+          "code": "function ensureLoggedIn(req, res, next) { if (!req.user) return res.redirect('/login'); next(); }",
+          "why": "Only checks login status, not admin role or ownership"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 13,
+          "code": "User.updateOne({ _id: req.params.id }, { banned: true }, function () { res.sendStatus(204); });",
+          "why": "Updates user without checking if current user owns this user"
+        }
+      ],
+      "attack_scenario": "Any logged-in user sends POST /admin/users/:id/ban with another user's ID and successfully bans them.",
+      "impact": "Any authenticated user can ban any other user account.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add admin role check and ownership verification",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0032-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Reports export endpoint missing ownership verification - any logged-in user can export reports",
+      "route_id": "R-0032",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports/export"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 5,
+          "code": "function ensureLoggedIn(req, res, next) { if (!req.user) return res.redirect('/login'); next(); }",
+          "why": "Only checks login status, not admin role"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 17,
+          "code": "if (req.query.isAdmin === 'true') { res.json([]); }",
+          "why": "Trusts client input for isAdmin flag instead of checking server-side identity"
+        }
+      ],
+      "attack_scenario": "Any logged-in user sends GET /reports/export?isAdmin=true and receives empty response, but without this check they could export all data.",
+      "impact": "Any authenticated user can access report export functionality by manipulating query parameter.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add admin role check instead of trusting client input",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0033-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any logged-in user via id",
+      "route_id": "R-0033",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/:id"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 8,
+          "code": "router.get('/orders/:id', ensureLoggedIn, function (req, res) {",
+          "why": "ID from path parameter"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 9,
+          "code": "Order.findById(req.params.id, function (err, order) { res.json(order); });",
+          "why": "No owner column in WHERE; no later comparison to session user"
+        }
+      ],
+      "attack_scenario": "User A sends GET /orders/:id?id=<order id of user B> and receives B's order.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0035-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Reports endpoint may expose user-specific data to all logged-in users",
+      "route_id": "R-0035",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 17,
+          "code": "db.query(\"SELECT * FROM reports WHERE month = '\" + req.query.month + \"'\", function (e, rows) { res.json(rows); });",
+          "why": "No user_id filter; query returns all matching reports without ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends GET /reports?month=2024-01 and receives reports that may contain other users' data.",
+      "impact": "Read other customers' report data if reports are per-user.",
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0037-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Item search may return other users' items without ownership filter",
+      "route_id": "R-0037",
+      "endpoint": {
+        "method": "GET",
+        "path": "/search"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 24,
+        "end_line": 26
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 25,
+          "code": "db.collection('items').find({ $where: \"this.name == '\" + req.query.n + \"'\" }).toArray(function (e, r) { res.json(r); });",
+          "why": "No user_id filter; query returns all matching items without ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends GET /search?n=<item name> and receives items that belong to other users.",
+      "impact": "Read other customers' item data if items are per-user.",
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0038-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Stats endpoint uses user-controlled shop_id without ownership verification",
+      "route_id": "R-0038",
+      "endpoint": {
+        "method": "GET",
+        "path": "/stats"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 28,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 29,
+          "code": "db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });",
+          "why": "shop_id from query string used directly without ownership check; SQL injection risk"
+        }
+      ],
+      "attack_scenario": "User A sends GET /stats?shop=<other_shop_id> and receives stats for another tenant's orders.",
+      "impact": "Read other tenants' order statistics; also SQL injection vulnerability.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-89"
+      ],
+      "recommendation": "Bind query to current session user and use parameterized queries",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0043-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Perl CGI order endpoint missing ownership check in SQL query",
+      "route_id": "R-0043",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/perl-cgi/cgi-bin/order.cgi"
+      },
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 13,
+        "end_line": 15
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 11,
+          "code": "my $id = $q->param('id');",
+          "why": "ID from request parameter"
+        },
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 13,
+          "code": "my $sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "why": "No user_id filter; query returns all matching orders without ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends GET /perl-cgi/cgi-bin/order.cgi?id=<order id of user B> and receives B's order.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0044-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice view missing ownership check in SQL query",
+      "route_id": "R-0044",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/view/{id}"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 9,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 9,
+          "code": "public function view($id)",
+          "why": "ID from path parameter"
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "No user_id filter; query returns all matching invoices without ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoice/view/{id}?id=<invoice id of user B> and receives B's invoice.",
+      "impact": "Read other customers' invoices (amount, customer info).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0046-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice update missing ownership check in SQL query",
+      "route_id": "R-0046",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/update"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 20,
+        "end_line": 24
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 21,
+          "code": "$id = $this->input->post('invoice_id');",
+          "why": "ID from POST parameter"
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 23,
+          "code": "$this->db->query(\"UPDATE invoices SET note = ? WHERE id = ?\", array($note, $id));",
+          "why": "No user_id filter; query updates any matching invoice without ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends POST /invoice/update with invoice_id=<invoice id of user B> and modifies B's invoice.",
+      "impact": "Modify other customers' invoices (notes, amounts).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0057-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Admin user view endpoint allows viewing any user's record via uid parameter",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "GET|POST",
+        "path": "/php-plain/admin.php?action=view"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 6,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 7,
+          "code": "$uid = (int)$_GET['uid'];",
+          "why": "ID from query string",
+          "line": 7
+        },
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 8,
+          "code": "mysql_query(\"SELECT * FROM users WHERE id = \" . $uid);",
+          "why": "No owner column in WHERE; no later comparison to session user",
+          "line": 8
+        }
+      ],
+      "attack_scenario": "User A sends GET /php-plain/admin.php?action=view&uid=<user id of user B> and receives B's user record.",
+      "impact": "Read other users' personal data (name, email, role).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0058-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Admin user delete endpoint allows deleting any user's record via id parameter",
+      "route_id": "R-0058",
+      "endpoint": {
+        "method": "GET|POST",
+        "path": "/php-plain/admin.php?action=delete"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 10,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "ID from POST body",
+          "line": 11
+        },
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "No owner column in WHERE; no later comparison to session user",
+          "line": 12
+        }
+      ],
+      "attack_scenario": "User A sends POST /php-plain/admin.php?action=delete&id=<user id of user B> and deletes B's account.",
+      "impact": "Delete other users' accounts (account takeover, data loss).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0059-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User management delete endpoint allows deleting any user's record via id parameter",
+      "route_id": "R-0059",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/manage_users.php"
+      },
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 6,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "No owner column in WHERE; no later comparison to session user",
+          "line": 6
+        },
+        {
+          "file": "php-plain/manage_users.php",
+          "start_line": 7,
+          "code": "$stmt->execute(array((int)$_POST['id']));",
+          "why": "ID from POST body used directly",
+          "line": 7
+        }
+      ],
+      "attack_scenario": "User A sends POST /php-plain/manage_users.php with id=<user id of user B> and deletes B's account.",
+      "impact": "Delete other users' accounts (account takeover, data loss).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0061-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail endpoint allows viewing any order via id parameter",
+      "route_id": "R-0061",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/order_detail.php"
+      },
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 5,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "ID from query string",
+          "line": 5
+        },
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 6,
+          "code": "mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "No owner column in WHERE; no later comparison to session user",
+          "line": 6
+        }
+      ],
+      "attack_scenario": "User A sends GET /php-plain/order_detail.php?id=<order id of user B> and receives B's order details.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0066-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Admin delete user endpoint allows deleting any user's record via id parameter",
+      "route_id": "R-0066",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/delete_user.php"
+      },
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 5,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "start_line": 5,
+          "code": "$id = (int)$_POST['id'];",
+          "why": "ID from POST body",
+          "line": 5
+        },
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "No owner column in WHERE; no later comparison to session user",
+          "line": 6
+        }
+      ],
+      "attack_scenario": "User A sends POST /php-plain/admin/delete_user.php with id=<user id of user B> and deletes B's account.",
+      "impact": "Delete other users' accounts (account takeover, data loss).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0067-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User promotion endpoint allows promoting any user's record via uid parameter",
+      "route_id": "R-0067",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php"
+      },
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 5,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"UPDATE users SET role = 'admin' WHERE id = ?\");",
+          "why": "No owner column in WHERE; no later comparison to session user",
+          "line": 6
+        },
+        {
+          "file": "php-plain/admin/promote.php",
+          "start_line": 7,
+          "code": "$stmt->execute(array((int)$_POST['uid']));",
+          "why": "ID from POST body used directly",
+          "line": 7
+        }
+      ],
+      "attack_scenario": "User A sends POST /php-plain/admin/promote.php with uid=<user id of user B> and promotes B to admin.",
+      "impact": "Elevate privileges for other users (privilege escalation).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0069-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order endpoint allows viewing any order via order_id parameter",
+      "route_id": "R-0069",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/<int:order_id>"
+      },
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 11,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 9,
+          "code": "@login_required",
+          "why": "Only verifies login, not ownership",
+          "line": 9
+        },
+        {
+          "file": "python-flask/app.py",
+          "start_line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "No user_id check in query; no later comparison to current_user.id",
+          "line": 12
+        }
+      ],
+      "attack_scenario": "User A sends GET /orders/<int:order_id> with order_id=<order id of user B> and receives B's order details.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "unverified"
+    }
+  ]
+}

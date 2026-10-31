@@ -1,0 +1,440 @@
+{
+  "batch_id": "privilege-001",
+  "findings": [
+    {
+      "finding_id": "BFLA-R-0007-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Authenticated users can delete any user",
+      "route_id": "R-0007",
+      "location": {
+        "file": "dotnet-mvc/Controllers/AdminController.cs",
+        "start_line": 11
+      },
+      "evidence": [
+        {
+          "file": "dotnet-mvc/Controllers/AdminController.cs",
+          "line": 12,
+          "why": "DeleteUser action has no role check; only [Authorize] allows any authenticated user"
+        }
+      ],
+      "impact": "Delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add [Authorize(Roles=\"Admin\")] to DeleteUser",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0009-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Export users without role check",
+      "route_id": "R-0009",
+      "location": {
+        "file": "dotnet-mvc/Controllers/AdminController.cs",
+        "start_line": 30
+      },
+      "evidence": [
+        {
+          "file": "dotnet-mvc/Controllers/AdminController.cs",
+          "line": 32,
+          "why": "Export action uses Request.QueryString[\"isAdmin\"] to allow export; no role check"
+        }
+      ],
+      "impact": "Export all user data",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add role check before exporting data",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0023-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0023",
+      "location": {
+        "file": "java-spring/Controllers/AdminUserController.java",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "java-spring/Controllers/AdminUserController.java",
+          "line": 13,
+          "why": "Delete mapping has no @PreAuthorize; any authenticated user can delete"
+        }
+      ],
+      "impact": "Delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add @PreAuthorize(\"hasRole('ADMIN')\") to delete method",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0030-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0030",
+      "location": {
+        "file": "node-express/routes.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes.js",
+          "line": 8,
+          "why": "Route uses ensureLoggedIn but no requireAdmin; any logged\u2011in user can delete"
+        }
+      ],
+      "impact": "Delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add requireAdmin middleware to delete route",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0032-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Export reports without admin check",
+      "route_id": "R-0032",
+      "location": {
+        "file": "node-express/routes.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes.js",
+          "line": 16,
+          "why": "Export route uses ensureLoggedIn but no requireAdmin; any logged\u2011in user can export"
+        }
+      ],
+      "impact": "Export all report data",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add requireAdmin middleware to export route",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0057-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "View user data without admin check",
+      "route_id": "R-0057",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 6,
+          "why": "Case 'view' executes without any role check; any logged\u2011in user can view any user"
+        }
+      ],
+      "impact": "View any user record",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add checkRole('admin') before executing view logic",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0058-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0058",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 10,
+          "why": "Case 'delete' executes without any role check; any logged\u2011in user can delete any user"
+        }
+      ],
+      "impact": "Delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add checkRole('admin') before executing delete logic",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0066-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0066",
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "line": 5,
+          "why": "Delete logic runs without any role check; any logged\u2011in user can delete any user"
+        }
+      ],
+      "impact": "Delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add checkRole('admin') before executing delete logic",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0067-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Promote user without admin check",
+      "route_id": "R-0067",
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 5,
+          "why": "Role promotion runs without any role check; any logged\u2011in user can promote themselves"
+        }
+      ],
+      "impact": "Promote any user to admin",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add checkRole('admin') before executing promotion logic",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0059-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0059",
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "line": 5,
+          "why": "POST handler deletes user without any role check; any logged\u2011in user can delete any user"
+        }
+      ],
+      "impact": "Delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add checkRole('admin') before executing delete logic",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0011-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Profile update allows role change",
+      "candidate_id": "M-0011",
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "why": "$user->role = $_POST['role']; no restriction on role field"
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Do not bind role field from request; set role server\u2011side only",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0012-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Profile update allows role change",
+      "candidate_id": "M-0012",
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "why": "$user->role = $_POST['role']; no restriction on role field"
+        }
+      ],
+      "impact": "Privilege escalation via role field",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Do not bind role field from request; set role server\u2011side only",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [
+    {
+      "route_id": "R-0003",
+      "verdict": "safe",
+      "reason": "checkRole('admin') in php-plain/inc/auth.php:45"
+    },
+    {
+      "route_id": "R-0007",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0007-1"
+      ]
+    },
+    {
+      "route_id": "R-0009",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0009-1"
+      ]
+    },
+    {
+      "route_id": "R-0023",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0023-1"
+      ]
+    },
+    {
+      "route_id": "R-0030",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0030-1"
+      ]
+    },
+    {
+      "route_id": "R-0032",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0032-1"
+      ]
+    },
+    {
+      "route_id": "R-0057",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0057-1"
+      ]
+    },
+    {
+      "route_id": "R-0058",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0058-1"
+      ]
+    },
+    {
+      "route_id": "R-0066",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0066-1"
+      ]
+    },
+    {
+      "route_id": "R-0067",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0067-1"
+      ]
+    },
+    {
+      "route_id": "R-0059",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BFLA-R-0059-1"
+      ]
+    },
+    {
+      "route_id": "R-0063",
+      "verdict": "safe",
+      "reason": "Profile update is user\u2011owned and does not modify privileged data"
+    }
+  ],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0011",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0011-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0012",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0012-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0001",
+      "verdict": "safe",
+      "reason": "No privileged fields in Customer model"
+    },
+    {
+      "candidate_id": "M-0002",
+      "verdict": "safe",
+      "reason": "No privileged fields in Customer model"
+    },
+    {
+      "candidate_id": "M-0003",
+      "verdict": "safe",
+      "reason": "No privileged fields in Account model"
+    },
+    {
+      "candidate_id": "M-0004",
+      "verdict": "safe",
+      "reason": "No privileged fields in Account model"
+    },
+    {
+      "candidate_id": "M-0005",
+      "verdict": "safe",
+      "reason": "No privileged fields in Account model"
+    }
+  ]
+}

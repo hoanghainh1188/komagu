@@ -100,7 +100,7 @@ komagu scan <target> [options]
 # Tier 1: Deterministic offline scan (Zero LLM, regex/AST candidates only)
 komagu scan ./legacy-monolith --lang ja --format html --out ./reports
 
-# Tier 2: Fully autonomous headless cognitive audit via local Ollama / vLLM (0 false positives)
+# Tier 2: Fully autonomous headless cognitive audit via local Ollama / vLLM (results by model: assess/lsa/tests/EVAL-RESULTS.md)
 komagu scan ./legacy-monolith --headless-ai http://localhost:11434/v1 --model llama3.1
 
 # Export machine-readable OASIS SARIF v2.1.0 for GitHub Code Scanning

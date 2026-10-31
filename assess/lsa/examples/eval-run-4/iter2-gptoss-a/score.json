@@ -1,0 +1,101 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 25,
+      "found": 24,
+      "recall": 0.96,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "perl-cgi/cgi-bin/order.cgi:19"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 34,
+      "recall": 1.0,
+      "false_positive_on_safe_code": [],
+      "missed": []
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 8,
+      "recall": 0.8,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "node-express/routes/admin.js:9",
+        "node-express/routes/admin.js:17"
+      ]
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 6,
+      "recall": 0.4,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "java-legacy/src/com/acme/web/AccountController.java:14",
+        "java-legacy/src/com/acme/web/AccountController.java:27",
+        "java-legacy/src/com/acme/web/ProfileServlet.java:12",
+        "php-laravel/app/Http/Controllers/AccountController.php:36",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30",
+        "python-flask/profile.py:10",
+        "python-flask/profile.py:27",
+        "node-express/routes/profile.js:16"
+      ]
+    }
+  },
+  "active_findings": 96,
+  "matched_findings": 70,
+  "precision": 0.729,
+  "unmatched_findings": [
+    "BFLA-R-0003-1",
+    "BFLA-R-0030-1",
+    "BFLA-R-0032-1",
+    "BFLA-R-0063-1",
+    "MASS-M-0014-1",
+    "MASS-M-0015-1",
+    "BOLA-R-0007-1",
+    "BOLA-R-0008-1",
+    "BOLA-R-0009-1",
+    "BOLA-R-0010",
+    "BOLA-R-0011",
+    "BOLA-R-0012",
+    "BOLA-R-0020",
+    "BOLA-R-0021",
+    "BOLA-R-0022",
+    "BOLA-R-0023",
+    "BOLA-R-0030",
+    "BOLA-R-0053",
+    "BOLA-R-0054",
+    "BOLA-R-0055",
+    "BOLA-R-0056",
+    "BOLA-R-0059",
+    "BOLA-R-0066",
+    "BOLA-R-0067",
+    "BOLA-R-0073",
+    "BOLA-R-0074"
+  ],
+  "needs_review_not_scored": [],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 10,
+      "recall": 0.667,
+      "flagged_safe": [],
+      "missed": [
+        "java-legacy/src/com/acme/web/AccountController.java:14",
+        "java-legacy/src/com/acme/web/AccountController.java:27",
+        "java-legacy/src/com/acme/web/ProfileServlet.java:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30"
+      ]
+    }
+  }
+}

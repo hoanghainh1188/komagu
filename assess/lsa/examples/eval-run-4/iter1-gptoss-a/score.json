@@ -1,0 +1,107 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 25,
+      "found": 21,
+      "recall": 0.84,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/admin.php:8",
+        "php-plain/admin.php:12",
+        "perl-cgi/cgi-bin/order.cgi:19",
+        "node-express/routes/orders.js:29"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 34,
+      "recall": 1.0,
+      "false_positive_on_safe_code": [],
+      "missed": []
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 1,
+      "recall": 0.1,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/admin.php:8",
+        "php-plain/admin.php:12",
+        "php-plain/admin/delete_user.php:6",
+        "php-plain/admin/promote.php:5",
+        "java-legacy/src/com/acme/web/AdminUserController.java:15",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:15",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:32",
+        "node-express/routes/admin.js:9",
+        "node-express/routes/admin.js:17"
+      ]
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 2,
+      "recall": 0.133,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/register.php:4",
+        "java-legacy/src/com/acme/web/AccountController.java:14",
+        "java-legacy/src/com/acme/web/AccountController.java:27",
+        "java-legacy/src/com/acme/web/ProfileServlet.java:12",
+        "php-laravel/app/Http/Controllers/AccountController.php:13",
+        "php-laravel/app/Http/Controllers/AccountController.php:23",
+        "php-laravel/app/Http/Controllers/AccountController.php:36",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30",
+        "python-flask/profile.py:10",
+        "python-flask/profile.py:27",
+        "node-express/routes/profile.js:8",
+        "node-express/routes/profile.js:16"
+      ]
+    }
+  },
+  "active_findings": 68,
+  "matched_findings": 52,
+  "precision": 0.765,
+  "unmatched_findings": [
+    "MASS-M-0006-1",
+    "MASS-M-0014-1",
+    "MASS-M-0015-1",
+    "BOLA-R-0007",
+    "BOLA-R-0009",
+    "BOLA-R-0010",
+    "BOLA-R-0011",
+    "BOLA-R-0012",
+    "BOLA-R-0020",
+    "BOLA-R-0021",
+    "BOLA-R-0022",
+    "BOLA-R-0023",
+    "BOLA-R-0029",
+    "BOLA-R-0059-1",
+    "BOLA-R-0073",
+    "BOLA-R-0074"
+  ],
+  "needs_review_not_scored": [
+    "MASS-M-0001-1",
+    "MASS-M-0002-1",
+    "MASS-M-0003-1",
+    "MASS-M-0004-1",
+    "MASS-M-0005-1"
+  ],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 14,
+      "recall": 0.933,
+      "flagged_safe": [],
+      "missed": [
+        "php-plain/register.php:4"
+      ]
+    }
+  }
+}

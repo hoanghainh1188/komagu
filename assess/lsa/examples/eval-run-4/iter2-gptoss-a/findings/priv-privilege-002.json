@@ -1,0 +1,238 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "routes/profile.js",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "routes/profile.js",
+          "line": 7,
+          "why": "ensureLoggedIn only checks authentication"
+        },
+        {
+          "file": "routes/profile.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body, ...) binds whole body"
+        }
+      ],
+      "impact": "Any authenticated user can set privileged fields such as role or admin flag via the profile update endpoint.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit bound fields to a whitelist and set privileged fields server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model (duplicate route)",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "routes/profile.js",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "routes/profile.js",
+          "line": 7,
+          "why": "ensureLoggedIn only checks authentication"
+        },
+        {
+          "file": "routes/profile.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body, ...) binds whole body"
+        }
+      ],
+      "impact": "Any authenticated user can set privileged fields such as role or admin flag via the profile update endpoint.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit bound fields to a whitelist and set privileged fields server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration binds entire request body to User model",
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 11
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "User::create($request->all()) binds whole body"
+        }
+      ],
+      "impact": "Any user can set privileged fields such as role or admin flag during registration.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Use $fillable or guarded properties to restrict writable fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows setting owner_id via request body",
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 21
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()) binds whole body, including owner_id"
+        }
+      ],
+      "impact": "Any user can set the owner_id of a team, effectively assigning ownership to themselves or others.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915",
+        "CWE-269"
+      ],
+      "recommendation": "Do not allow owner_id to be set from the request; set it server\u2011side to the authenticated user.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User insertion uses extract($_POST) to bind all POST fields",
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "register.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "register.php",
+          "line": 4,
+          "why": "extract($_POST) pulls all POST fields into variables"
+        },
+        {
+          "file": "register.php",
+          "line": 5,
+          "why": "INSERT uses $email and $name from extracted variables"
+        }
+      ],
+      "impact": "Any POST field can be inserted into the users table, including privileged columns if they exist.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Avoid extract(); explicitly bind only allowed fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "PATCH endpoint sets arbitrary attributes from request JSON",
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "app.py",
+        "start_line": 24
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 27,
+          "why": "for key, value in request.json.items(): setattr(user, key, value) binds all fields"
+        }
+      ],
+      "impact": "Any user can modify any attribute of the user record, including privileged fields.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist allowed fields or use a DTO.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds entire request JSON to User model",
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "app.py",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 10,
+          "why": "User(**request.json) binds all JSON fields"
+        }
+      ],
+      "impact": "Any user can set privileged fields such as role or admin flag during account creation.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Use a DTO or whitelist to restrict writable fields.",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "vulnerable"
+    }
+  ]
+}

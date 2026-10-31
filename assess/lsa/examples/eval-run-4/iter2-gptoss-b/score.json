@@ -1,0 +1,120 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 25,
+      "found": 11,
+      "recall": 0.44,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "java-legacy/WebContent/order/detail.jsp:5",
+        "java-legacy/src/com/acme/struts/EditUserAction.java:13",
+        "java-legacy/src/com/acme/web/OrderServlet.java:15",
+        "perl-cgi/cgi-bin/order.cgi:19",
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb:8",
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:13",
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:13",
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:28",
+        "classic-asp/shop/member.asp:7",
+        "classic-asp/shop/member.asp:10",
+        "classic-asp/shop/order.asp:6",
+        "coldfusion/app/OrderService.cfc:5",
+        "coldfusion/app/order.cfm:3",
+        "node-express/routes/orders.js:29"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 32,
+      "recall": 0.941,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "node-express/routes/orders.js:21",
+        "node-express/routes/orders.js:25"
+      ]
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 5,
+      "recall": 0.5,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "java-legacy/src/com/acme/web/AdminUserController.java:15",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:15",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:32",
+        "node-express/routes/admin.js:9",
+        "node-express/routes/admin.js:17"
+      ]
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 4,
+      "recall": 0.267,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/register.php:4",
+        "java-legacy/src/com/acme/web/AccountController.java:14",
+        "java-legacy/src/com/acme/web/AccountController.java:27",
+        "java-legacy/src/com/acme/web/ProfileServlet.java:12",
+        "php-laravel/app/Http/Controllers/AccountController.php:36",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30",
+        "python-flask/profile.py:10",
+        "python-flask/profile.py:27",
+        "node-express/routes/profile.js:8",
+        "node-express/routes/profile.js:16"
+      ]
+    }
+  },
+  "active_findings": 75,
+  "matched_findings": 52,
+  "precision": 0.693,
+  "unmatched_findings": [
+    "BFLA-R-0007-1",
+    "BFLA-R-0009-1",
+    "BFLA-R-0023-1",
+    "BFLA-R-0030-1",
+    "BFLA-R-0032-1",
+    "MASS-M-0006-1",
+    "MASS-M-0014-1",
+    "MASS-M-0015-1",
+    "BOLA-R-0010",
+    "BOLA-R-0011",
+    "BOLA-R-0012",
+    "BOLA-R-0020",
+    "BOLA-R-0021",
+    "BOLA-R-0022",
+    "BOLA-R-0023",
+    "BOLA-R-0028",
+    "BOLA-R-0029",
+    "BOLA-R-0030",
+    "BOLA-R-0059-manage_users",
+    "BOLA-R-0066-delete_user",
+    "BOLA-R-0067-promote",
+    "BOLA-R-0073",
+    "BOLA-R-0074"
+  ],
+  "needs_review_not_scored": [],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 9,
+      "recall": 0.6,
+      "flagged_safe": [],
+      "missed": [
+        "php-plain/register.php:4",
+        "java-legacy/src/com/acme/web/AccountController.java:14",
+        "java-legacy/src/com/acme/web/AccountController.java:27",
+        "java-legacy/src/com/acme/web/ProfileServlet.java:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30"
+      ]
+    }
+  }
+}

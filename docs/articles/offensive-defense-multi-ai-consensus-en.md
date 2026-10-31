@@ -10,7 +10,7 @@
 
 In Japanese Shinto tradition, **Komagu (狛犬)** are the majestic lion-dogs that guard shrine entrances in pairs. One is carved with its mouth closed (*Un*), symbolizing latent, unyielding inner strength; the other stands with its mouth wide open (*A*), poised to strike and ward off evil. They do not safeguard sacred grounds through passive stone walls, but through **vigilant claws and proactive offensive counter-force**.
 
-![Komagu Architecture Shield](https://img.shields.io/badge/Architecture-Offensive--Driven%20Verification-blueviolet?style=for-the-badge) ![Multi-AI Consensus](https://img.shields.io/badge/Engine-Multi--AI%20Consensus-orange?style=for-the-badge) ![Zero False Positive](https://img.shields.io/badge/Precision-1.000%20(Zero%20FP)-success?style=for-the-badge)
+![Komagu Architecture Shield](https://img.shields.io/badge/Architecture-Offensive--Driven%20Verification-blueviolet?style=for-the-badge) ![Multi-AI Consensus](https://img.shields.io/badge/Engine-Multi--AI%20Consensus-orange?style=for-the-badge)
 
 Today, global enterprise tech is facing a slow-burning crisis: **Legacy Systems**. In Japan, the Ministry of Economy, Trade and Industry (METI) sounded the alarm with its landmark **"2025 Digital Cliff"** report—warning that aging, sprawling monoliths written in Classic ASP, ColdFusion, Perl CGI, and legacy Java Struts could inflict up to **12 trillion yen (~$80 billion USD) in economic losses annually**. 
 
@@ -84,7 +84,7 @@ sequenceDiagram
     
     alt BOLA Vulnerability Truly Exists (Unprotected)
         Target-->>Bob: 200 OK [Returns Alice's Full Sensitive PII!]
-        Komagu->>Komagu: CONFIRMED 100% EXPLOITABLE! (Zero False Positive)
+        Komagu->>Komagu: CONFIRMED EXPLOITABLE (observed, not inferred)
     else Implicit Authorization Check Enforced (Protected)
         Target-->>Bob: 403 Forbidden / 404 Not Found
         Komagu->>Komagu: REJECT FALSE POSITIVE! (Zero Developer Distraction)
@@ -131,7 +131,7 @@ flowchart TD
         G --> R --> S
     end
 
-    S -->|"Consensus Verified Findings<br/>(OASIS SARIF v2.1.0 & HTML)"| Output["BREAKTHROUGH BENCHMARK:<br/>Precision: 1.000 (Zero False Positives)<br/>Recall: 100% across 10 Legacy Stacks"]
+    S -->|"Consensus Verified Findings<br/>(OASIS SARIF v2.1.0 & HTML)"| Output["Measured on 10 legacy fixture stacks:<br/>see EVAL-RESULTS.md (Runs 1–4)"]
 ```
 
 ### The Triangle of Power: Specialized Roles for Frontier Models
@@ -172,7 +172,7 @@ flowchart LR
     style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
-### Step 1: Autonomous Detection (Non-Invasive, Zero False Positives)
+### Step 1: Autonomous Detection (Non-Invasive)
 With a single CLI command:
 ```bash
 npx @hoanghainh/komagu scan ./legacy-app --format html --out ./audit-output

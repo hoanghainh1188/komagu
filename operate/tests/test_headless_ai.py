@@ -74,6 +74,67 @@ class TestLLMClient(unittest.TestCase):
         self.assertIn("Failed to connect to LLM endpoint", str(ctx.exception))
 
 
+class TestSanitizeFinding(unittest.TestCase):
+    """Format repairs for model output that would otherwise fail finding.schema.json (#286)."""
+
+    def test_impact_list_becomes_string(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "mass_assignment", "subtype": "whole_object_binding",
+                                                "impact": ["role escalation", "balance change"]})
+        self.assertEqual(f["impact"], "role escalation; balance change")
+
+    def test_verdict_in_subtype_moves_to_status(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "mass_assignment", "subtype": "needs_review", "status": "unverified"})
+        self.assertEqual(f["subtype"], "whole_object_binding")
+        self.assertEqual(f["status"], "needs_review")
+
+    def test_unknown_bfla_subtype_falls_back(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "admin_only", "status": "unverified"})
+        self.assertEqual((f["subtype"], f["status"]), ("missing_role_check", "unverified"))
+
+    def test_null_evidence_line_and_missing_status_are_repaired(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "mass_assignment", "subtype": "whole_object_binding",
+                                                "location": {"file": "a.py", "start_line": 7},
+                                                "evidence": [{"file": "a.py", "line": None, "why": "binds body"}]})
+        self.assertEqual(f["evidence"][0]["line"], 7)
+        self.assertEqual(f["status"], "unverified")
+
+    def test_valid_subtype_is_kept(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "role_from_request"})
+        self.assertEqual(f["subtype"], "role_from_request")
+
+
+class TestVerificationContext(unittest.TestCase):
+    """The headless verifier gets the code it judges, including server-side includes (#286)."""
+
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp(prefix="komagu_verify_ctx_"))
+        (self.tmp / "inc").mkdir()
+        (self.tmp / "admin").mkdir()
+        (self.tmp / "inc" / "auth.php").write_text("<?php\n// Login check only\nsession_start();\n", encoding="utf-8")
+        (self.tmp / "admin" / "delete_user.php").write_text(
+            "<?php\nrequire_once '../inc/auth.php';\n$db->prepare('DELETE FROM users WHERE id = ?');\n", encoding="utf-8")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_included_files_are_resolved(self) -> None:
+        from operate.ai.runner import _included_files
+        self.assertEqual(_included_files(self.tmp, "admin/delete_user.php"), ["inc/auth.php"])
+        self.assertEqual(_included_files(self.tmp, "missing.php"), [])
+
+    def test_context_has_site_and_included_code(self) -> None:
+        from operate.ai.runner import _verification_context
+        ctx = _verification_context(self.tmp, {"location": {"file": "admin/delete_user.php", "start_line": 3}})
+        self.assertIn("DELETE FROM users", ctx["location"])
+        self.assertEqual(ctx["included_files"][0]["file"], "inc/auth.php")
+        self.assertIn("Login check only", ctx["included_files"][0]["code"])
+
+    def test_include_outside_target_is_ignored(self) -> None:
+        from operate.ai.runner import _included_files
+        (self.tmp / "x.php").write_text("<?php include '../../etc/passwd';\n", encoding="utf-8")
+        self.assertEqual(_included_files(self.tmp, "x.php"), [])
+
+
 class TestHeadlessAIRunner(unittest.TestCase):
     """End-to-end tests for HeadlessAIRunner and multi-agent pipeline."""
 
@@ -109,7 +170,7 @@ module.exports = app;
         # Mock LLM response dispatcher
         def mock_agent_responses(messages, model):
             user_msg = messages[-1]["content"]
-            if "Auth Model" in user_msg or "Pre-scan Stack Profile" in user_msg:
+            if ("Auth Model" in user_msg or "Pre-scan Stack Profile" in user_msg) and "Findings to Verify" not in user_msg:
                 return "# Mock Application Auth Model\n\n- Auth: Express session\n- Ownership: missing on /api/orders/:id\n"
             if "dynamic query string concatenation or interpolation" in user_msg:
                 return """```json
@@ -196,6 +257,7 @@ module.exports = app;
 ```"""
             return '{"status": "ok"}'
 
+        self.mock_agent_responses = mock_agent_responses
         self.server, self.thread, self.base_url = start_mock_llm_server(
             port=0, response_generator=mock_agent_responses
         )
@@ -203,6 +265,86 @@ module.exports = app;
     def tearDown(self) -> None:
         self.server.server_close()
         shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _prescan(self) -> None:
+        import subprocess
+
+        prescan_script = PROJECT_ROOT / "assess" / "lsa" / "scripts" / "run_prescan.py"
+        res = subprocess.run(
+            [sys.executable, str(prescan_script), str(self.target_dir), str(self.out_dir)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(res.returncode, 0, f"Pre-scan failed: {res.stderr}")
+
+    def test_run_stats_record_tokens_and_phases(self) -> None:
+        self._prescan()
+        client = LLMClient(endpoint=self.base_url, model="mock-model", api_key="test")
+        HeadlessAIRunner(self.target_dir, self.out_dir, client).run()
+
+        stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
+        self.assertEqual(stats["model"], "mock-model")
+        self.assertGreater(stats["totals"]["calls"], 0)
+        # the mock server reports 100 prompt / 50 completion tokens per call
+        self.assertEqual(stats["totals"]["prompt_tokens"], 100 * stats["totals"]["calls"])
+        self.assertEqual(stats["totals"]["completion_tokens"], 50 * stats["totals"]["calls"])
+        self.assertEqual(sum(ph["calls"] for ph in stats["phases"].values()), stats["totals"]["calls"])
+        self.assertIn("5-finding-verifier", stats["phases"])
+        # the mock answers the BOLA prompt with the auth-model markdown, so that batch is a parse failure
+        self.assertEqual(stats["parse_failures"], {"4a-bola-auditor": ["routes-001"]})
+
+    def test_unparseable_verifier_reply_leaves_findings_unverified(self) -> None:
+        """A broken verifier reply must not confirm findings (#286)."""
+        self.server.server_close()
+
+        verifier_prompts = []
+
+        def broken_verifier(messages, model):
+            if "Findings to Verify & Challenge" in messages[-1]["content"]:
+                verifier_prompts.append(messages[-1]["content"])
+                return "I think these all look vulnerable."
+            return self.mock_agent_responses(messages, model)
+
+        self.server, self.thread, self.base_url = start_mock_llm_server(port=0, response_generator=broken_verifier)
+        self._prescan()
+        client = LLMClient(endpoint=self.base_url, model="mock-model", api_key="test")
+        logs = []
+        HeadlessAIRunner(self.target_dir, self.out_dir, client, step_callback=lambda st, msg: logs.append((st, msg))).run()
+
+        findings = json.loads((self.out_dir / "findings.json").read_text(encoding="utf-8"))["findings"]
+        self.assertGreaterEqual(len(findings), 1)
+        self.assertNotIn("confirmed", [f.get("status") for f in findings])
+        coverage = json.loads((self.out_dir / "coverage.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(coverage["findings_without_verification"]), sorted(f["finding_id"] for f in findings))
+        stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
+        self.assertEqual(stats["parse_failures"]["5-finding-verifier"], ["verified-1"])
+        # the verifier sees the code and the auth model, and is told not to assume unseen controls
+        self.assertIn("code_context", verifier_prompts[0])
+        self.assertIn("Mock Application Auth Model", verifier_prompts[0])
+        self.assertIn("Never assume a control", verifier_prompts[0])
+        raw = self.out_dir / "ai-raw" / "5-finding-verifier-verified-1.txt"
+        self.assertEqual(raw.read_text(encoding="utf-8"), "I think these all look vulnerable.")
+        self.assertTrue(any(st == "warn" and "verified-1" in msg for st, msg in logs))
+
+    def test_failed_batch_call_is_recorded_and_run_continues(self) -> None:
+        """A timeout on one batch must not abort the run or lose earlier phases (#286)."""
+
+        class TimeoutOnInjection(LLMClient):
+            def chat(self, messages, temperature=0.1, max_tokens=None):  # noqa: ANN001
+                if "dynamic query string concatenation or interpolation" in messages[-1]["content"]:
+                    raise RuntimeError("timed out")
+                return super().chat(messages, temperature=temperature, max_tokens=max_tokens)
+
+        self._prescan()
+        client = TimeoutOnInjection(endpoint=self.base_url, model="mock-model", api_key="test")
+        result = HeadlessAIRunner(self.target_dir, self.out_dir, client).run()
+        self.assertEqual(result["status"], "success")
+
+        stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
+        self.assertEqual(stats["call_errors"], {"4b-injection-auditor": {"injection-001": "timed out"}})
+        self.assertNotIn("4b-injection-auditor", stats["parse_failures"])
+        self.assertIn("5-finding-verifier", stats["phases"])
+        self.assertTrue((self.out_dir / "findings.json").is_file())
 
     def test_headless_ai_runner_full_cycle(self) -> None:
         # 1. Run deterministic pre-scan to populate OUT

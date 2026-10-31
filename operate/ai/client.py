@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional
@@ -30,6 +31,8 @@ class LLMClient:
         self.model = model
         self.api_key = api_key or "ollama"
         self.timeout = timeout
+        # Running totals across chat() calls, read by the runner for ai-run-stats.json
+        self.usage: Dict[str, float] = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "seconds": 0.0}
 
     def chat(
         self,
@@ -54,10 +57,12 @@ class LLMClient:
         }
 
         req = urllib.request.Request(self.endpoint, data=data, headers=headers, method="POST")
+        started = time.monotonic()
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 body = resp.read().decode("utf-8")
                 res_json = json.loads(body)
+                self._record_usage(res_json.get("usage") or {}, time.monotonic() - started)
                 choices = res_json.get("choices", [])
                 if not choices:
                     raise RuntimeError(f"LLM API returned no choices: {body}")
@@ -68,6 +73,14 @@ class LLMClient:
             raise RuntimeError(f"LLM API HTTP {e.code} error: {err_body}") from e
         except urllib.error.URLError as e:
             raise RuntimeError(f"Failed to connect to LLM endpoint at {self.endpoint}: {e.reason}") from e
+
+    def _record_usage(self, usage: Dict[str, Any], seconds: float) -> None:
+        self.usage = {
+            "calls": self.usage["calls"] + 1,
+            "prompt_tokens": self.usage["prompt_tokens"] + int(usage.get("prompt_tokens") or 0),
+            "completion_tokens": self.usage["completion_tokens"] + int(usage.get("completion_tokens") or 0),
+            "seconds": round(self.usage["seconds"] + seconds, 3),
+        }
 
     @staticmethod
     def extract_json(content: str) -> Any:
