@@ -15,7 +15,6 @@ Standard-library only (Python 3.8+ compatible).
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 import subprocess
 import sys
@@ -24,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from operate.ai.anchoring import Anchor, AnchorReport, anchor_findings, load_anchors
 from operate.ai.client import LLMClient
+from operate.ai.context import _included_files, _model_source, _read_snippet, _verification_context  # noqa: F401
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LSA_PROMPTS = REPO_ROOT / "assess" / "lsa" / "prompts"
@@ -36,72 +36,10 @@ CATEGORY_SUBTYPES = {"bfla": ["missing_role_check", "role_from_request", "client
 FINDING_STATUSES = {"unverified", "confirmed", "likely", "rejected", "needs_review"}
 
 
-def _read_snippet(target_dir: Path, rel_file: str, line: int, radius: int = 15) -> str:
-    """Read a window of code around target line from the audited repository."""
-    full_path = target_dir / rel_file
-    if not full_path.is_file():
-        return f"[File not found: {rel_file}]"
-    try:
-        lines = full_path.read_text(encoding="utf-8", errors="replace").splitlines()
-        start = max(0, line - radius - 1)
-        end = min(len(lines), line + radius)
-        numbered = [f"{i + 1:4d} | {lines[i]}" for i in range(start, end)]
-        return "\n".join(numbered)
-    except Exception as e:
-        return f"[Error reading {rel_file}: {e}]"
-
-
-# Server-side includes whose content a verifier must see to judge a control (PHP, Classic ASP, ColdFusion)
-_INCLUDE_RE = re.compile(
-    r"(?:require|include)(?:_once)?\s*\(?\s*['\"]([^'\"]+)['\"]"
-    r"|<!--\s*#include\s+(?:file|virtual)\s*=\s*\"([^\"]+)\""
-    r"|<cfinclude\s+template\s*=\s*\"([^\"]+)\"",
-    re.IGNORECASE,
-)
 VERIFY_BATCH_SIZE = 5
+AUTH_MODEL_LIMIT = 6000
 RETRY_REMINDER = ("Your previous reply was empty or not valid JSON. Answer again with the JSON object only, "
                   "exactly in the format requested above, with no other text.")
-AUTH_MODEL_LIMIT = 6000
-
-
-def _included_files(target_dir: Path, rel_file: str) -> List[str]:
-    """Repository-relative paths of files that rel_file includes, if they exist."""
-    target_dir = target_dir.resolve()
-    path = target_dir / rel_file
-    if not path.is_file():
-        return []
-    text = path.read_text(encoding="utf-8", errors="replace")
-    found: List[str] = []
-    for m in _INCLUDE_RE.finditer(text):
-        ref = next(g for g in m.groups() if g)
-        candidate = (path.parent / ref).resolve()
-        try:
-            rel = str(candidate.relative_to(target_dir))
-        except ValueError:
-            continue
-        if candidate.is_file() and rel not in found:
-            found.append(rel)
-    return found
-
-
-def _verification_context(target_dir: Path, finding: Dict[str, Any]) -> Dict[str, Any]:
-    """Code the verifier needs: the finding's site, its file header, evidence lines and included files."""
-    loc = finding.get("location") or {}
-    rel = str(loc.get("file") or "")
-    line = int(loc.get("start_line") or 1)
-    ctx: Dict[str, Any] = {"location": _read_snippet(target_dir, rel, line, radius=20)}
-    if line > 40:
-        ctx["file_header"] = _read_snippet(target_dir, rel, 13, radius=12)
-    others = []
-    for ev in finding.get("evidence") or []:
-        if isinstance(ev, dict) and ev.get("file") and ev.get("file") != rel:
-            others.append({"file": ev["file"], "code": _read_snippet(target_dir, str(ev["file"]), int(ev.get("line") or 1), radius=6)})
-    if others:
-        ctx["evidence"] = others[:3]
-    includes = [{"file": inc, "code": _read_snippet(target_dir, inc, 30, radius=30)} for inc in _included_files(target_dir, rel)[:3]]
-    if includes:
-        ctx["included_files"] = includes
-    return ctx
 
 
 class HeadlessAIRunner:
@@ -630,6 +568,7 @@ Respond STRICTLY with a valid JSON object matching:
                 "allowlist": c.get("allowlist"),
                 "sensitive_fields": c.get("sensitive_fields", []),
                 "code_context": _read_snippet(self.target_dir, c.get("file", ""), c.get("line") or 1),
+                "model_definition": _model_source(self.target_dir, c.get("target"), c.get("file", ""), c.get("line") or 1),
             } for c in mass]
 
             user_prompt = f"""Auth Model:
@@ -673,6 +612,8 @@ Respond STRICTLY with a valid JSON object matching:
 }}
 Write one finding for every "vulnerable" or "needs_review" verdict. A "needs_review" verdict goes in
 "status", never in "subtype".
+For mass assignment, judge the fields from "model_definition". If it says the definition was not found
+(or is null), you cannot know the fields: answer "needs_review", never "safe" for that reason alone.
 """
             messages = [
                 {"role": "system", "content": auditor_prompt},

@@ -69,7 +69,9 @@ privileged, and a hinted route can be safe.
 2. **Find the model's fields.** Read the model / entity / table. List the
    privileged fields it holds (role, admin flag, permissions, owner, user,
    tenant, price, amount, balance, status, verified, approved, plan).
-   No privileged field → `safe`, reason "no privileged field".
+   No privileged field → `safe`, reason "no privileged field". If you cannot
+   find or read the model's definition, you do not know its fields: answer
+   `needs_review` (reason "model fields not visible"), never `safe`.
 3. **Look for what limits the fields**, with `file:line`: explicit field
    copy, allow-list (`$fillable` without privileged fields, `permit(...)`,
    `[Bind(Include=...)]`, DTO with only editable fields), validation that

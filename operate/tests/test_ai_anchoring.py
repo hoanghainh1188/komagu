@@ -83,6 +83,41 @@ class TestAnchoring(unittest.TestCase):
         self.assertEqual(json.dumps(original, sort_keys=True), snapshot)
 
 
+class TestModelSource(unittest.TestCase):
+    """The privilege auditor sees the bound model's fields, from the same app and language (#319)."""
+
+    def setUp(self) -> None:
+        from operate.ai.runner import _model_source
+        self.model_source = _model_source
+        self.tmp = Path(tempfile.mkdtemp(prefix="komagu_model_"))
+        _write(self.tmp / "java-legacy/src/model/Account.java", "public class Account {\n    private String role;\n}\n")
+        _write(self.tmp / "java-legacy/src/web/ProfileServlet.java",
+               "class ProfileServlet {\n  void post() {\n    Account account = new Account();\n    BeanUtils.populate(account, params);\n  }\n}\n")
+        _write(self.tmp / "php-laravel/app/Models/User.php", "<?php\nclass User extends Model {\n  protected $guarded = [];\n}\n")
+        _write(self.tmp / "node-express/routes/profile.js", "router.post('/p', (req, res) => User.update(req.body));\n")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_target_class_is_found_with_its_fields(self) -> None:
+        m = self.model_source(self.tmp, "Account", "java-legacy/src/web/ProfileServlet.java", 4)
+        self.assertEqual(m["file"], "java-legacy/src/model/Account.java")
+        self.assertIn("private String role", m["code"])
+
+    def test_class_is_inferred_from_new_near_the_binding(self) -> None:
+        m = self.model_source(self.tmp, None, "java-legacy/src/web/ProfileServlet.java", 4)
+        self.assertEqual((m["class"], m["file"]), ("Account", "java-legacy/src/model/Account.java"))
+
+    def test_other_app_or_language_is_not_used(self) -> None:
+        m = self.model_source(self.tmp, "User", "node-express/routes/profile.js", 1)
+        self.assertEqual((m["class"], m["file"]), ("User", None))
+        self.assertIn("not found", m["code"])
+
+    def test_unknown_target_without_new_gives_none(self) -> None:
+        self.assertIsNone(self.model_source(self.tmp, None, "node-express/routes/profile.js", 1))
+        self.assertIsNone(self.model_source(self.tmp, "../etc", "node-express/routes/profile.js", 1))
+
+
 class _ScriptedClient:
     """Returns the scripted replies in order; an Exception item is raised."""
 
