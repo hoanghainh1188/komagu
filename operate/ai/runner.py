@@ -22,6 +22,7 @@ import sys
 import time
 from typing import Any, Callable, Dict, List, Optional
 
+from operate.ai.anchoring import Anchor, AnchorReport, anchor_findings, load_anchors
 from operate.ai.client import LLMClient
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -58,6 +59,8 @@ _INCLUDE_RE = re.compile(
     re.IGNORECASE,
 )
 VERIFY_BATCH_SIZE = 5
+RETRY_REMINDER = ("Your previous reply was empty or not valid JSON. Answer again with the JSON object only, "
+                  "exactly in the format requested above, with no other text.")
 AUTH_MODEL_LIMIT = 6000
 
 
@@ -119,19 +122,53 @@ class HeadlessAIRunner:
         self.parse_failures: Dict[str, List[str]] = {}
         # Per-phase batches whose model call failed (timeout, HTTP error); the run continues without them
         self.call_errors: Dict[str, Dict[str, str]] = {}
+        # Per-phase batches whose first reply was empty or unparseable and were asked again
+        self.retries: Dict[str, List[str]] = {}
+        # Findings whose location was taken from the Tier 1 inventory (#319)
+        self.anchor_report = AnchorReport()
+        self._anchors: Optional[Dict[str, Anchor]] = None
         self.phase_stats: Dict[str, Dict[str, Any]] = {}
 
     def _log(self, status: str, msg: str) -> None:
         self.callback(status, msg)
 
+    def _anchor(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if self._anchors is None:
+            self._anchors = load_anchors(self.out_dir, self.target_dir)
+        return anchor_findings(findings, self._anchors, self.target_dir, self.anchor_report)
+
     def _chat(self, phase: str, batch_id: str, messages: List[Dict[str, str]]) -> Optional[str]:
-        """One batch call; a failed call is recorded and returns None instead of aborting the run."""
+        """One batch call; a failed call is recorded and returns None instead of aborting the run.
+
+        An empty or unparseable reply is retried once with a reminder to answer with JSON only (#319).
+        """
         try:
-            return self.client.chat(messages, temperature=0.1)
+            reply = self.client.chat(messages, temperature=0.1)
         except Exception as e:
             self.call_errors.setdefault(phase, {})[batch_id] = str(e)[:300]
             self._log("warn", f"{phase}: model call failed for {batch_id} ({e}); batch left without verdicts")
             return None
+        if self._parses(reply):
+            return reply
+        self.retries.setdefault(phase, []).append(batch_id)
+        self._log("warn", f"{phase}: reply for {batch_id} was {'empty' if not (reply or '').strip() else 'not valid JSON'}; retrying once")
+        retry_messages = messages + ([{"role": "assistant", "content": reply}] if (reply or "").strip() else []) + [
+            {"role": "user", "content": RETRY_REMINDER}]
+        try:
+            second = self.client.chat(retry_messages, temperature=0.1)
+        except Exception as e:
+            self._log("warn", f"{phase}: retry for {batch_id} failed ({e})")
+            return reply
+        return second if self._parses(second) or not (reply or "").strip() else reply
+
+    def _parses(self, reply: Optional[str]) -> bool:
+        if not (reply or "").strip():
+            return False
+        try:
+            self.client.extract_json(reply)
+            return True
+        except Exception:
+            return False
 
     def _parse_failed(self, phase: str, batch_id: str, reply: Optional[str] = None) -> None:
         if batch_id in self.call_errors.get(phase, {}):
@@ -164,6 +201,8 @@ class HeadlessAIRunner:
             "totals": self._usage(),
             "parse_failures": self.parse_failures,
             "call_errors": self.call_errors,
+            "retries": self.retries,
+            "anchoring": {"moved": self.anchor_report.moved, "unanchored": self.anchor_report.unanchored},
         }
         path = self.out_dir / "ai-run-stats.json"
         path.write_text(json.dumps(stats, indent=2), encoding="utf-8")
@@ -449,7 +488,7 @@ Respond STRICTLY with a valid JSON object matching:
             try:
                 parsed = self.client.extract_json(reply)
                 raw_findings = parsed.get("findings", [])
-                findings = [self._sanitize_finding(f) for f in raw_findings]
+                findings = self._anchor([self._sanitize_finding(f) for f in raw_findings])
                 route_verdicts = parsed.get("route_verdicts", [])
             except Exception:
                 self._parse_failed("4a-bola-auditor", r_file.stem, reply)
@@ -536,7 +575,7 @@ Respond STRICTLY with a valid JSON object matching:
             try:
                 parsed = self.client.extract_json(reply)
                 raw_findings = parsed.get("findings", [])
-                findings = [self._sanitize_finding(f) for f in raw_findings]
+                findings = self._anchor([self._sanitize_finding(f) for f in raw_findings])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
                 self._parse_failed("4b-injection-auditor", b_file.stem, reply)
@@ -642,7 +681,7 @@ Write one finding for every "vulnerable" or "needs_review" verdict. A "needs_rev
             reply = self._chat("4c-privilege-auditor", b_file.stem, messages)
             try:
                 parsed = self.client.extract_json(reply)
-                findings = [self._sanitize_finding(f) for f in parsed.get("findings", [])]
+                findings = self._anchor([self._sanitize_finding(f) for f in parsed.get("findings", [])])
                 route_verdicts = parsed.get("privilege_route_verdicts", [])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:

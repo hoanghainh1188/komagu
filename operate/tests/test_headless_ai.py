@@ -290,8 +290,10 @@ module.exports = app;
         self.assertEqual(stats["totals"]["completion_tokens"], 50 * stats["totals"]["calls"])
         self.assertEqual(sum(ph["calls"] for ph in stats["phases"].values()), stats["totals"]["calls"])
         self.assertIn("5-finding-verifier", stats["phases"])
-        # the mock answers the BOLA prompt with the auth-model markdown, so that batch is a parse failure
-        self.assertEqual(stats["parse_failures"], {"4a-bola-auditor": ["routes-001"]})
+        # the mock answers the BOLA prompt with the auth-model markdown; the retry gets plain JSON (#319)
+        self.assertEqual(stats["retries"], {"4a-bola-auditor": ["routes-001"]})
+        self.assertEqual(stats["parse_failures"], {})
+        self.assertEqual(stats["anchoring"]["unanchored"], [])
 
     def test_unparseable_verifier_reply_leaves_findings_unverified(self) -> None:
         """A broken verifier reply must not confirm findings (#286)."""
@@ -300,7 +302,7 @@ module.exports = app;
         verifier_prompts = []
 
         def broken_verifier(messages, model):
-            if "Findings to Verify & Challenge" in messages[-1]["content"]:
+            if any("Findings to Verify & Challenge" in m["content"] for m in messages):
                 verifier_prompts.append(messages[-1]["content"])
                 return "I think these all look vulnerable."
             return self.mock_agent_responses(messages, model)
@@ -318,7 +320,10 @@ module.exports = app;
         self.assertEqual(sorted(coverage["findings_without_verification"]), sorted(f["finding_id"] for f in findings))
         stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
         self.assertEqual(stats["parse_failures"]["5-finding-verifier"], ["verified-1"])
+        self.assertEqual(stats["retries"]["5-finding-verifier"], ["verified-1"])
         # the verifier sees the code and the auth model, and is told not to assume unseen controls
+        self.assertEqual(len(verifier_prompts), 2, "one retry after the unparseable reply")
+        self.assertIn("Answer again with the JSON object only", verifier_prompts[1])
         self.assertIn("code_context", verifier_prompts[0])
         self.assertIn("Mock Application Auth Model", verifier_prompts[0])
         self.assertIn("Never assume a control", verifier_prompts[0])
