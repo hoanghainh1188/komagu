@@ -1,0 +1,121 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 25,
+      "found": 19,
+      "recall": 0.76,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/admin.php:8",
+        "php-plain/admin.php:12",
+        "php-plain/order_detail.php:6",
+        "java-legacy/src/com/acme/web/OrderServlet.java:15",
+        "perl-cgi/cgi-bin/order.cgi:19",
+        "python-flask/app.py:12"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 28,
+      "recall": 0.824,
+      "false_positive_on_safe_code": [
+        "python-flask/app.py:12"
+      ],
+      "missed": [
+        "classic-asp/shop/member.asp:7",
+        "classic-asp/shop/member.asp:10",
+        "classic-asp/shop/order.asp:6",
+        "node-express/routes/orders.js:21",
+        "node-express/routes/orders.js:25",
+        "node-express/routes/orders.js:29"
+      ]
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 5,
+      "recall": 0.5,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "java-legacy/src/com/acme/web/AdminUserController.java:15",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:15",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:32",
+        "node-express/routes/admin.js:9",
+        "node-express/routes/admin.js:17"
+      ]
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 5,
+      "recall": 0.333,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/register.php:4",
+        "java-legacy/src/com/acme/web/AccountController.java:14",
+        "java-legacy/src/com/acme/web/AccountController.java:27",
+        "java-legacy/src/com/acme/web/ProfileServlet.java:12",
+        "php-laravel/app/Http/Controllers/AccountController.php:36",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30",
+        "python-flask/profile.py:10",
+        "python-flask/profile.py:27",
+        "node-express/routes/profile.js:16"
+      ]
+    }
+  },
+  "active_findings": 84,
+  "matched_findings": 56,
+  "precision": 0.667,
+  "unmatched_findings": [
+    "BFLA-R-0003-1",
+    "BFLA-R-0007-1",
+    "BFLA-R-0009-1",
+    "BFLA-R-0023-1",
+    "BFLA-R-0030-1",
+    "BFLA-R-0032-1",
+    "BFLA-R-0063-1",
+    "INJ-I-0035",
+    "MASS-M-0014-1",
+    "MASS-M-0015-1",
+    "BOLA-R-0007",
+    "BOLA-R-0009",
+    "BOLA-R-0010",
+    "BOLA-R-0011",
+    "BOLA-R-0012",
+    "BOLA-R-0020",
+    "BOLA-R-0021",
+    "BOLA-R-0022",
+    "BOLA-R-0023",
+    "BOLA-R-0028",
+    "BOLA-R-0029",
+    "BOLA-R-0030",
+    "BOLA-R-0035",
+    "BOLA-R-0037",
+    "BOLA-R-0060",
+    "BOLA-R-0073",
+    "BOLA-R-0074",
+    "MASS-M-0001-1"
+  ],
+  "needs_review_not_scored": [
+    "MASS-M-0002-1",
+    "MASS-M-0003-1",
+    "MASS-M-0005-1"
+  ],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 14,
+      "recall": 0.933,
+      "flagged_safe": [],
+      "missed": [
+        "php-plain/register.php:4"
+      ]
+    }
+  }
+}

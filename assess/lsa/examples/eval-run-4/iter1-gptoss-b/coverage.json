@@ -1,0 +1,92 @@
+{
+  "route_candidates": 74,
+  "inventoried": 74,
+  "rejected": 0,
+  "missing_from_inventory": [],
+  "bola_routes_to_audit": 74,
+  "bola_routes_without_verdict": [
+    "R-0052",
+    "R-0053",
+    "R-0054",
+    "R-0055",
+    "R-0056",
+    "R-0057",
+    "R-0058",
+    "R-0059",
+    "R-0061",
+    "R-0062",
+    "R-0066",
+    "R-0067",
+    "R-0069",
+    "R-0070",
+    "R-0071"
+  ],
+  "bfla_routes_to_audit": 0,
+  "bfla_routes_without_verdict": [],
+  "injection_candidates": 38,
+  "injection_candidates_without_verdict": [],
+  "mass_candidates": 15,
+  "mass_candidates_without_verdict": [],
+  "findings_without_verification": [
+    "MASS-M-0002-1",
+    "MASS-M-0003-1",
+    "MASS-M-0005-1",
+    "MASS-M-0006-1",
+    "MASS-M-0008-1",
+    "MASS-M-0009-1",
+    "MASS-M-0014-1",
+    "MASS-M-0015-1"
+  ],
+  "duplicates_removed": [
+    {
+      "kept": "INJ-I-0018-1",
+      "dropped": "INJ-I-0019-1"
+    },
+    {
+      "kept": "INJ-I-0018-2",
+      "dropped": "INJ-I-0019-2"
+    },
+    {
+      "kept": "INJ-I-0020",
+      "dropped": "INJ-I-0021"
+    },
+    {
+      "kept": "INJ-I-0020",
+      "dropped": "INJ-I-0022"
+    },
+    {
+      "kept": "INJ-I-0020",
+      "dropped": "INJ-I-0023"
+    },
+    {
+      "kept": "INJ-I-0029",
+      "dropped": "INJ-I-0030"
+    },
+    {
+      "kept": "INJ-I-0032-2",
+      "dropped": "INJ-I-0034"
+    },
+    {
+      "kept": "MASS-M-0006-1",
+      "dropped": "MASS-M-0007-1"
+    },
+    {
+      "kept": "MASS-M-0009-1",
+      "dropped": "MASS-M-0010-1"
+    },
+    {
+      "kept": "MASS-M-0003-1",
+      "dropped": "MASS-M-0004-1"
+    }
+  ],
+  "validation_errors": [
+    "verified-4.json: verifications[0].reason_code: 'not_verified' not in ['traced', 'code_not_visible', 'config_not_visible', 'data_ownership_unclear', 'control_found', 'evidence_mismatch', 'not_executed', 'not_reachable', 'not_attacker_controlled']",
+    "verified-4.json: verifications[1].reason_code: 'not_verified' not in ['traced', 'code_not_visible', 'config_not_visible', 'data_ownership_unclear', 'control_found', 'evidence_mismatch', 'not_executed', 'not_reachable', 'not_attacker_controlled']",
+    "verified-4.json: verifications[2].reason_code: 'not_verified' not in ['traced', 'code_not_visible', 'config_not_visible', 'data_ownership_unclear', 'control_found', 'evidence_mismatch', 'not_executed', 'not_reachable', 'not_attacker_controlled']",
+    "verified-4.json: verifications[3].reason_code: 'not_verified' not in ['traced', 'code_not_visible', 'config_not_visible', 'data_ownership_unclear', 'control_found', 'evidence_mismatch', 'not_executed', 'not_reachable', 'not_attacker_controlled']",
+    "verified-4.json: verifications[4].reason_code: 'not_verified' not in ['traced', 'code_not_visible', 'config_not_visible', 'data_ownership_unclear', 'control_found', 'evidence_mismatch', 'not_executed', 'not_reachable', 'not_attacker_controlled']",
+    "verified-4.json: verifications[5].reason_code: 'not_verified' not in ['traced', 'code_not_visible', 'config_not_visible', 'data_ownership_unclear', 'control_found', 'evidence_mismatch', 'not_executed', 'not_reachable', 'not_attacker_controlled']"
+  ],
+  "new_issues_from_verifier": [],
+  "out_of_scope_notes": []
+}

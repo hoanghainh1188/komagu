@@ -1,0 +1,229 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unfiltered request body bound to User model in /profile",
+      "route_id": null,
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "routes/user.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "routes/user.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body, ...) binds the entire request body to the User model without filtering privileged fields such as role."
+        }
+      ],
+      "impact": "Privilege escalation via the role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist allowed fields or set privileged fields server\u2011side; do not bind the raw request body.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unfiltered request body bound to User model in /profile",
+      "route_id": null,
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "routes/user.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "routes/user.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body, ...) binds the entire request body to the User model without filtering privileged fields such as role."
+        }
+      ],
+      "impact": "Privilege escalation via the role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist allowed fields or set privileged fields server\u2011side; do not bind the raw request body.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unfiltered request body bound to User model in register",
+      "route_id": null,
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "User::create($request->all()) binds all request fields to the User model, including privileged fields such as role."
+        }
+      ],
+      "impact": "Privilege escalation via the role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Use a fillable/allowlist or explicitly set privileged fields server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Owner ID writable in Team creation",
+      "route_id": null,
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()) allows the owner_id field to be set by the client."
+        }
+      ],
+      "impact": "Arbitrary ownership assignment via owner_id",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Do not allow owner_id to be set by the client; set it server\u2011side based on the authenticated user.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unfiltered request body bound to Team model in team",
+      "route_id": null,
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()) binds all request fields, including privileged fields such as owner_id."
+        }
+      ],
+      "impact": "Privilege escalation via owner_id",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist allowed fields or set privileged fields server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unfiltered request body bound to User in PATCH /users/<uid>",
+      "route_id": null,
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "app.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 27,
+          "why": "for key, value in request.json.items(): setattr(user, key, value) binds all fields, including privileged ones such as role."
+        }
+      ],
+      "impact": "Privilege escalation via the role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist editable fields or set privileged fields server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unfiltered request body bound to User in POST /users",
+      "route_id": null,
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "app.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 10,
+          "why": "User(**request.json) binds all request fields, including privileged ones such as role."
+        }
+      ],
+      "impact": "Privilege escalation via the role field",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist allowed fields or set privileged fields server\u2011side.",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "safe"
+    }
+  ]
+}

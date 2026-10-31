@@ -152,3 +152,96 @@ Based on Qwen 3.5's findings, the following concrete improvements were implement
 | **False Positives on Safe Code** | 0 | 0 | 0 on safe markers | **0** |
 | **Precision (matched / active)** | 0.965 (55 / 57) | 0.965 (55 / 57) | 0.966 | **1.000 (57 / 57)** |
 | **Legacy Stack Shims** | None | None | Recommended | **4 Stacks (`remediate/legacy_shims/`)** |
+
+---
+
+## Run 4 — 2026-10-31, kit 0.3.1 (BFLA & mass assignment Tier 2, local Ollama)
+
+Issue #286. First end-to-end measurement of phase 4c (`35-privilege-auditor`) with real models, and a
+re-check of BOLA / injection on the same harness. All runs are **local only**: fixture code never left
+the machine, and no third-party LLM was used.
+
+### Setup
+
+| Item | Value |
+|---|---|
+| Eval repo | `tests/build_eval_repo.py` (10 fixture apps, markers stripped); ground truth 117 items: 25 BOLA, 34 SQL/NoSQL injection, 10 BFLA, 15 mass assignment, plus 33 SAFE markers |
+| Pipeline | `komagu scan <repo> --no-cache --headless-ai http://localhost:11434/v1 --model <model> --ai-timeout 3600` (`operate/ai/runner.py`, Tier 1 pre-scan + phases 2–6) |
+| Hosting | Ollama 0.40.13 on an Apple M4 Pro, 24 GB RAM, 100% GPU; context 32,768 tokens |
+| Models | `gpt-oss:20b` (MXFP4, reasoning effort default `medium`), `qwen3.5:9b` |
+| Scoring | `tests/score_findings.py --verdicts` (tolerance 3 lines); archived per run in [`assess/lsa/examples/eval-run-4/`](../examples/eval-run-4/) |
+
+**This is a floor, not a ceiling.** A 9–20B model on a laptop is much weaker than the models used in
+Runs 1–2. The numbers below say what a fully local deployment achieves today, not what the prompts can
+do with a stronger model.
+
+**Not comparable with Run 3.** Run 3 does not record its model, and the archived Run 1 / Run 2 / Qwen
+numbers were produced through agent runtimes that can open files, not through the headless runner.
+The BOLA / injection columns below are therefore a new baseline for the headless harness, not a
+regression check against Run 3.
+
+### Harness fixes found by this run
+
+Measuring with real models exposed defects in the headless runner that inflated or lost results.
+They were fixed before the numbers were trusted, in two iterations (the limit set in #286):
+
+| Iteration | Fix | Effect seen |
+|---|---|---|
+| 0 → 1 | Verifier no longer marks a whole batch `confirmed` when its reply cannot be parsed (it used to, with a made-up "consensus" note); such findings stay `unverified` | Results stopped being inflated by broken replies |
+| 0 → 1 | A failed call (timeout) is recorded per batch in `ai-run-stats.json` instead of aborting the run | A 25-candidate injection batch took > 15 min and used to kill the run |
+| 0 → 1 | Phase 4c gets the same JSON output template as 4a / 4b; sanitizer joins list `impact` values and moves a verdict written into `subtype` to `status`; unparseable replies saved to `OUT/ai-raw/` | Mass assignment findings stopped failing schema validation |
+| 1 → 2 | Verifier now receives the code it judges (finding site, file header, evidence lines, server-side includes) and the auth model, and may only cite controls that are visible; otherwise `likely` + `code_not_visible` | In iteration 1 it rejected 10 of 11 real BFLA findings by inventing an admin base class and a role check in a login-only `auth.php` |
+| 1 → 2 | Verifier batches of 5 instead of 10; sanitizer fills a `null` evidence line and a missing `status` | No verifier parse failures in iteration 2 |
+
+### Results after verification
+
+"Marker" columns use the normal location match. "Verdict" columns (BFLA / mass assignment only) count a
+truth item as found when the privilege auditor judged the route or candidate that contains it
+`vulnerable` or `needs_review`, whatever path and line the model then wrote into the finding.
+
+| Run | BOLA | Injection | BFLA marker | Mass marker | BFLA verdict | Mass verdict | FP on safe code | Precision | Rejected | Unverified | Parse fail | Min · calls · tokens |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| iter 0, gpt-oss A | 19/25 | 20/34 | 8/10 | 2/15 | 10/10 | 12/15 | 0 | 0.689 | 10 | 11 | 3 | 81 · 22 · 311K |
+| iter 1, gpt-oss A | 21/25 | 34/34 | 1/10 | 2/15 | 10/10 | 14/15 | 0 | 0.765 | 19 | 17 | 2 | 75 · 21 · 288K |
+| iter 1, gpt-oss B | 19/25 | 28/34 | 5/10 | 5/15 | 10/10 | 14/15 | 1 | 0.667 | 4 | 8 | 3 | 80 · 22 · 273K |
+| iter 1, qwen3.5 (incomplete) | 23/25 | 33/34 | 0/10 | 0/15 | 0/10 | 8/15 | 1 | 0.778 | 0 | 52 | — | stopped after 2 h 50 min |
+| **iter 2, gpt-oss A** | **24/25** | **34/34** | **8/10** | **6/15** | **10/10** | **10/15** | **0** | 0.729 | 1 | 0 | 0 | 57 · 32 · 309K |
+| **iter 2, gpt-oss B** | **11/25** | **32/34** | **5/10** | **4/15** | **10/10** | **9/15** | **0** | 0.693 | 1 | 0 | 1 | 56 · 29 · 318K |
+
+Final harness = iteration 2. Stated plainly for `gpt-oss:20b` on it:
+
+- **BFLA:** the auditor flagged the right route for **10 / 10** BFLA markers in both runs, with no SAFE-BFLA
+  route flagged. Only **8 / 10 and 5 / 10** survive as correctly located findings, because the model
+  writes wrong or non-existent paths into the finding (`dotnet-mvc/Controllers/AdminController.cs`,
+  `routes.js`).
+- **Mass assignment:** **10 / 15 and 9 / 15** at verdict level, **6 / 15 and 4 / 15** as located findings.
+  Five candidates in .NET (`CustomerController.cs`) and Java (`AccountController.java`,
+  `ProfileServlet.java`) were judged `safe` in both runs: real model misses.
+- **False positives on SAFE markers:** **0** in both iteration-2 runs, for all four categories.
+- **BOLA / injection:** 24 / 25 and 34 / 34 in run A. In run B, 11 of its 14 missed BOLA items sit in
+  one batch whose reply was empty (`routes-001`: `gpt-oss` returned no content, so 15 routes got no
+  verdict); the other 3 are real misses (`perl-cgi/cgi-bin/order.cgi:19` is missed in both runs).
+- **Run-to-run variance is large.** Two runs with the same model, harness and temperature 0.1 differ by
+  up to 13 BOLA items and 3 BFLA findings. Single-run numbers from a local model should not be quoted
+  as product capability.
+- **Precision ~0.7** is measured against markers only. Of the ~25 unmatched findings per run, most are BOLA
+  findings in files that carry BFLA / mass-assignment markers but no BOLA markers
+  (`CustomerController.cs`, `AccountController.java`, `AdminController.cs`), plus the misplaced BFLA /
+  mass findings above. They have not been triaged by a person and are not counted as false positives.
+
+**qwen3.5:9b** could not be measured on this machine: with a 32K context the MLX runner used 22 GB of the
+24 GB RAM, the system swapped (29.7 / 30 GB), and two calls hit the 1-hour timeout (the privilege batch
+holding all BFLA routes, and a verifier batch). The run was stopped after 2 h 50 min with 52 findings
+unverified. Its partial output is archived as `iter1-qwen-a-incomplete/` and says nothing about the
+model's ability.
+
+### Known gaps (follow-up)
+
+1. **Misplaced findings.** Take `file` / `line` of BFLA and mass assignment findings from the Tier 1 route
+   or candidate the auditor judged (`route_id` / `candidate_id`), not from the model's text. Expected to
+   close most of the gap between the marker and verdict columns.
+2. **Empty replies.** Retry a batch once when the reply is empty or unparseable (seen with `gpt-oss`).
+3. **Mass assignment on .NET / Java binding.** Review `knowledge/mass-assignment-patterns.md` for
+   `UpdateModel` / `TryUpdateModel` and Spring `@ModelAttribute` binding into entities.
+4. **Re-run qwen3.5:9b** with 16K context or on a machine with more memory.
+5. **Triage unmatched BOLA findings** and add markers to the fixtures where they are real.

@@ -1,0 +1,393 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds the entire request body to the User model",
+      "candidate_id": "M-0006",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/profile"
+      },
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/profile",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /profile"
+      },
+      "location": {
+        "file": "routes/user.js",
+        "start_line": 7,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "routes/user.js",
+          "line": 8,
+          "code": "User.findByIdAndUpdate(req.user._id, req.body, function (e, u) { res.json(u); });",
+          "why": "Whole request body is bound to the User model without an allowlist."
+        }
+      ],
+      "attack_scenario": "A normal authenticated user can set the role field to \"admin\" and become an administrator.",
+      "impact": [
+        "role"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Only copy allowed fields from the request, e.g. { name: req.body.name, email: req.body.email }.",
+      "fix_example": "User.findByIdAndUpdate(req.user._id, { name: req.body.name, email: req.body.email }, ...);",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds the entire request body to the User model (duplicate route)",
+      "candidate_id": "M-0007",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/profile"
+      },
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/profile",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /profile"
+      },
+      "location": {
+        "file": "routes/user.js",
+        "start_line": 7,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "routes/user.js",
+          "line": 8,
+          "code": "User.findByIdAndUpdate(req.user._id, req.body, function (e, u) { res.json(u); });",
+          "why": "Whole request body is bound to the User model without an allowlist."
+        }
+      ],
+      "attack_scenario": "A normal authenticated user can set the role field to \"admin\" and become an administrator.",
+      "impact": [
+        "role"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Only copy allowed fields from the request, e.g. { name: req.body.name, email: req.body.email }.",
+      "fix_example": "User.findByIdAndUpdate(req.user._id, { name: req.body.name, email: req.body.email }, ...);",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration binds the entire request body to the User model",
+      "candidate_id": "M-0008",
+      "endpoint": {
+        "method": "POST",
+        "path": "/register"
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/register",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /users/<id>"
+      },
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 11,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "code": "return User::create($request->all());",
+          "why": "Whole request body is bound to the User model without an allowlist."
+        }
+      ],
+      "attack_scenario": "A user can set the role field to \"admin\" during registration and gain administrative privileges.",
+      "impact": [
+        "role"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Use a fillable/guarded list or explicitly copy allowed fields.",
+      "fix_example": "return User::create($request->only(['name', 'email', 'password']));",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows arbitrary owner_id assignment",
+      "candidate_id": "M-0009",
+      "endpoint": {
+        "method": "POST",
+        "path": "/team"
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/team",
+        "fields": {
+          "owner_id": 999
+        },
+        "readback": "GET /teams/<id>"
+      },
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 21,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "code": "return Team::create($request->all());",
+          "why": "Whole request body is bound to the Team model; owner_id is a privileged field."
+        }
+      ],
+      "attack_scenario": "A user can create a team and set the owner_id to any user, effectively transferring ownership.",
+      "impact": [
+        "owner_id"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915",
+        "CWE-269"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Exclude owner_id from the bind or set it server\u2011side to the current user.",
+      "fix_example": "return Team::create($request->only(['name', 'description']));",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows arbitrary owner_id assignment (duplicate route)",
+      "candidate_id": "M-0010",
+      "endpoint": {
+        "method": "POST",
+        "path": "/team"
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/team",
+        "fields": {
+          "owner_id": 999
+        },
+        "readback": "GET /teams/<id>"
+      },
+      "location": {
+        "file": "app/Http/Controllers/AccountController.php",
+        "start_line": 21,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "code": "return Team::create($request->all());",
+          "why": "Whole request body is bound to the Team model; owner_id is a privileged field."
+        }
+      ],
+      "attack_scenario": "A user can create a team and set the owner_id to any user, effectively transferring ownership.",
+      "impact": [
+        "owner_id"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915",
+        "CWE-269"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Exclude owner_id from the bind or set it server\u2011side to the current user.",
+      "fix_example": "return Team::create($request->only(['name', 'description']));",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User patch route binds arbitrary fields to the User model",
+      "candidate_id": "M-0015",
+      "endpoint": {
+        "method": "PATCH",
+        "path": "/users/<int:uid>"
+      },
+      "attack_vector": {
+        "method": "PATCH",
+        "path": "/users/42",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /users/42"
+      },
+      "location": {
+        "file": "app.py",
+        "start_line": 24,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 27,
+          "code": "for key, value in request.json.items():\n    setattr(user, key, value)",
+          "why": "Whole request body is bound to the User model without an allowlist."
+        }
+      ],
+      "attack_scenario": "A user can set the role field to \"admin\" and gain administrative privileges.",
+      "impact": [
+        "role"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Only copy allowed fields from the request, e.g. { name: request.json.get('name') }.",
+      "fix_example": "if 'role' in request.json: del request.json['role']\nuser.update(request.json)",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds arbitrary fields to the User model",
+      "candidate_id": "M-0014",
+      "endpoint": {
+        "method": "POST",
+        "path": "/users"
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/users",
+        "fields": {
+          "role": "admin"
+        },
+        "readback": "GET /users/<id>"
+      },
+      "location": {
+        "file": "app.py",
+        "start_line": 8,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "app.py",
+          "line": 10,
+          "code": "user = User(**request.json)",
+          "why": "Whole request body is bound to the User model without an allowlist."
+        }
+      ],
+      "attack_scenario": "A user can set the role field to \"admin\" during account creation and gain administrative privileges.",
+      "impact": [
+        "role"
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023"
+      ],
+      "recommendation": "Only copy allowed fields from the request, e.g. { name: request.json.get('name'), email: request.json.get('email') }.",
+      "fix_example": "user = User(name=request.json.get('name'), email=request.json.get('email'))",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0006-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0007-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0008-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0009-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0010-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "safe",
+      "reason": "No privileged fields in the users table; only email and name are inserted."
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0015-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0014-1"
+      ]
+    }
+  ]
+}

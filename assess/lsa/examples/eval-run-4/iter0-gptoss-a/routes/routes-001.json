@@ -1,0 +1,425 @@
+{
+  "routes": [
+    {
+      "route_id": "R-0002",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/member.asp?mode=edit",
+      "path_source": "declared",
+      "handler": {
+        "file": "classic-asp/shop/member.asp",
+        "line": 5
+      },
+      "id_inputs": [
+        {
+          "name": "mode",
+          "source": "any"
+        },
+        {
+          "name": "name",
+          "source": "form"
+        },
+        {
+          "name": "member_id",
+          "source": "form"
+        },
+        {
+          "name": "member_id",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0003",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/member.asp?mode=delete",
+      "path_source": "declared",
+      "handler": {
+        "file": "classic-asp/shop/member.asp",
+        "line": 9
+      },
+      "id_inputs": [
+        {
+          "name": "mode",
+          "source": "any"
+        },
+        {
+          "name": "name",
+          "source": "form"
+        },
+        {
+          "name": "member_id",
+          "source": "form"
+        },
+        {
+          "name": "member_id",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0004",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/order.asp",
+      "path_source": "declared",
+      "handler": {
+        "file": "classic-asp/shop/order.asp",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "any"
+        },
+        {
+          "name": "sid",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0005",
+      "method": [
+        "ANY"
+      ],
+      "path": "/coldfusion/app/OrderService.cfc?method=getOrder",
+      "path_source": "declared",
+      "handler": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "line": 2
+      },
+      "id_inputs": [
+        {
+          "name": "orderId",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0006",
+      "method": [
+        "ANY"
+      ],
+      "path": "/coldfusion/app/order.cfm",
+      "path_source": "declared",
+      "handler": {
+        "file": "coldfusion/app/order.cfm",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0007",
+      "method": [
+        "POST"
+      ],
+      "path": "/Admin/DeleteUser",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 12
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0008",
+      "method": [
+        "POST",
+        "POST"
+      ],
+      "path": "/Admin/ResetPassword",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 22
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0009",
+      "method": [
+        "POST"
+      ],
+      "path": "/Admin/Export",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 30
+      },
+      "id_inputs": [
+        {
+          "name": "isAdmin",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0013",
+      "method": [
+        "ANY"
+      ],
+      "path": "/Invoice/Details",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "line": 11
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0014",
+      "method": [
+        "ANY"
+      ],
+      "path": "/Invoice/Mine",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "line": 17
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0015",
+      "method": [
+        "POST"
+      ],
+      "path": "/Invoice/Search",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "line": 26
+      },
+      "id_inputs": [
+        {
+          "name": "customer",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0017",
+      "method": [
+        "ANY"
+      ],
+      "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "hfOrderId",
+          "source": "hidden_field"
+        },
+        {
+          "name": "txtNote",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0018",
+      "method": [
+        "ANY"
+      ],
+      "path": "/dotnet-legacy/Web/Orders/OrderDetail.aspx",
+      "path_source": "declared",
+      "handler": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "query"
+        },
+        {
+          "name": "cart",
+          "source": "form"
+        },
+        {
+          "name": "ref",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0019",
+      "method": [
+        "ANY"
+      ],
+      "path": "/java-legacy/WebContent/order/detail.jsp",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "no",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0001",
+      "method": [
+        "ANY"
+      ],
+      "path": "/user/edit.do",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "user_id",
+          "source": "any"
+        },
+        {
+          "name": "email",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    }
+  ],
+  "rejected": []
+}
