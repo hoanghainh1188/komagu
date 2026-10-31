@@ -235,7 +235,7 @@ holding all BFLA routes, and a verifier batch). The run was stopped after 2 h 50
 unverified. Its partial output is archived as `iter1-qwen-a-incomplete/` and says nothing about the
 model's ability.
 
-### Known gaps (follow-up)
+### Known gaps (follow-up: #319)
 
 1. **Misplaced findings.** Take `file` / `line` of BFLA and mass assignment findings from the Tier 1 route
    or candidate the auditor judged (`route_id` / `candidate_id`), not from the model's text. Expected to
