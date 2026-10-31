@@ -1,0 +1,232 @@
+{
+  "generated_by": "lsa find_mass_assignment.py 0.3.1",
+  "target": "repo",
+  "summary": {
+    "total": 15,
+    "high_priority": 11,
+    "by_rule": {
+      "cs-entity-binding": 1,
+      "cs-update-model": 1,
+      "java-entity-binding": 2,
+      "java-beanutils-populate": 1,
+      "js-model-call": 2,
+      "php-eloquent-static": 2,
+      "php-eloquent-fill": 1,
+      "php-foreach-input": 1,
+      "php-privileged-field": 1,
+      "php-extract": 1,
+      "py-kwargs-request": 1,
+      "py-items-loop": 1
+    },
+    "by_subtype": {
+      "whole_object_binding": 13,
+      "privileged_field_writable": 2
+    },
+    "models": {
+      "jpa_entities": 1,
+      "ef_dbsets": 2,
+      "laravel_models": 3
+    }
+  },
+  "candidates": [
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 12,
+      "language": "cs",
+      "rule": "cs-entity-binding",
+      "subtype": "whole_object_binding",
+      "target": "Customer",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "public ActionResult Edit(Customer customer)",
+      "candidate_id": "M-0001"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 30,
+      "language": "cs",
+      "rule": "cs-update-model",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "TryUpdateModel(customer);",
+      "candidate_id": "M-0002"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 14,
+      "language": "java",
+      "rule": "java-entity-binding",
+      "subtype": "whole_object_binding",
+      "target": "Account",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "public String save(@ModelAttribute Account account) {",
+      "candidate_id": "M-0003"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 27,
+      "language": "java",
+      "rule": "java-entity-binding",
+      "subtype": "whole_object_binding",
+      "target": "Account",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "public Account update(@RequestBody Account account) {",
+      "candidate_id": "M-0004"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+      "line": 12,
+      "language": "java",
+      "rule": "java-beanutils-populate",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "BeanUtils.populate(account, request.getParameterMap());",
+      "candidate_id": "M-0005"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 8,
+      "language": "js",
+      "rule": "js-model-call",
+      "subtype": "whole_object_binding",
+      "target": "User",
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "User.findByIdAndUpdate(req.user._id, req.body, function (e, u) { res.json(u); });",
+      "candidate_id": "M-0006"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 16,
+      "language": "js",
+      "rule": "js-model-call",
+      "subtype": "whole_object_binding",
+      "target": "User",
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "var user = new User(req.body);",
+      "candidate_id": "M-0007"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 13,
+      "language": "php",
+      "rule": "php-eloquent-static",
+      "subtype": "whole_object_binding",
+      "target": "User",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "return User::create($request->all());",
+      "candidate_id": "M-0008"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 23,
+      "language": "php",
+      "rule": "php-eloquent-static",
+      "subtype": "privileged_field_writable",
+      "target": "Team",
+      "allowlist": "seen",
+      "priority": "high",
+      "sensitive_fields": [
+        "owner_id"
+      ],
+      "code": "return Team::create($request->all());",
+      "candidate_id": "M-0009"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 36,
+      "language": "php",
+      "rule": "php-eloquent-fill",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "$user->fill($request->all())->save();",
+      "candidate_id": "M-0010"
+    },
+    {
+      "file": "php-plain/profile.php",
+      "line": 6,
+      "language": "php",
+      "rule": "php-foreach-input",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "foreach ($_POST as $field => $value) {",
+      "candidate_id": "M-0011"
+    },
+    {
+      "file": "php-plain/profile.php",
+      "line": 10,
+      "language": "php",
+      "rule": "php-privileged-field",
+      "subtype": "privileged_field_writable",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [
+        "role"
+      ],
+      "code": "$user->role = $_POST['role'];",
+      "candidate_id": "M-0012"
+    },
+    {
+      "file": "php-plain/register.php",
+      "line": 4,
+      "language": "php",
+      "rule": "php-extract",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "extract($_POST);",
+      "candidate_id": "M-0013"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 10,
+      "language": "python",
+      "rule": "py-kwargs-request",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "user = User(**request.json)",
+      "candidate_id": "M-0014"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 27,
+      "language": "python",
+      "rule": "py-items-loop",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "for key, value in request.json.items():",
+      "candidate_id": "M-0015"
+    }
+  ]
+}
