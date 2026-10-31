@@ -245,3 +245,66 @@ model's ability.
    `UpdateModel` / `TryUpdateModel` and Spring `@ModelAttribute` binding into entities.
 4. **Re-run qwen3.5:9b** with 16K context or on a machine with more memory.
 5. **Triage unmatched BOLA findings** and add markers to the fixtures where they are real.
+
+---
+
+## Run 5 — 2026-10-31, kit 0.3.1 (Run 4 follow-up: anchored locations, retries, model context)
+
+Issue #319. Same eval repo, ground truth, hosting and model as Run 4 (`gpt-oss:20b`, Ollama 0.40.13,
+M4 Pro 24 GB, 32K context, local only). Outputs are archived in
+[`assess/lsa/examples/eval-run-5/`](../examples/eval-run-5/).
+
+### Changes since Run 4 iteration 2
+
+| Change | Why (from Run 4) |
+|---|---|
+| Finding `file` / `line` come from the Tier 1 route handler span or candidate the finding references (`operate/ai/anchoring.py`); evidence is re-pointed or dropped; unknown references get `confidence: low` | The auditor judged the right route for 10 / 10 BFLA markers, but wrote paths such as `routes.js`, `app.py`, `dotnet-mvc/...` |
+| An empty or unparseable batch reply is retried once with a JSON-only reminder | One empty reply cost 15 BOLA routes |
+| Each mass assignment candidate carries the bound model's definition (same app and language); an unknown model means `needs_review`, never `safe` (prompt `35-privilege-auditor.md` and the headless 4c prompt) | Five .NET / Java candidates were judged `safe` in both runs because the auditor never saw `Account.java` (`role`, `balance`) |
+
+### Results after verification
+
+| Run | BOLA | Injection | BFLA marker | Mass marker | BFLA verdict | Mass verdict | FP on safe code | Precision | Rejected | Unverified | Retries · parse fail | Min · calls · tokens |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Run 4 iter 2, A | 24/25 | 34/34 | 8/10 | 6/15 | 10/10 | 10/15 | 0 | 0.729 | 1 | 0 | — · 0 | 57 · 32 · 309K |
+| Run 4 iter 2, B | 11/25 | 32/34 | 5/10 | 4/15 | 10/10 | 9/15 | 0 | 0.693 | 1 | 0 | — · 1 | 56 · 29 · 318K |
+| **Run 5, A** | **24/25** | **34/34** | **10/10** | **10/15** | **10/10** | **15/15** | **0** | **0.818** | 2 | 0 | 0 · 0 | 83 · 32 · 328K |
+| **Run 5, B** | **12/25** | **32/34** | **9/10** | **14/15** | **10/10** | **15/15** | **0** | **0.779** | 3 | 0 | 1 · 1 | 86 · 31 · 369K |
+
+- **BFLA:** 10 / 10 and 9 / 10 as located findings (from 8 and 5). Every anchored finding pointed at a
+  known route or candidate (0 unanchored).
+- **Mass assignment:** the auditor flagged **15 / 15** candidates in both runs (from 10 and 9), including the
+  five .NET / Java bindings. As located findings 10 / 15 and 14 / 15: in run A the model gave a
+  `vulnerable` verdict for four candidates (`php-plain/profile.php` ×2, `CustomerController.cs` ×2)
+  without writing a finding for them.
+- **`php-plain/register.php:4` (MASS marker)** was rejected by the verifier in both runs: `extract($_POST)`
+  is followed by an INSERT of only `email` and `name`. The argument is sound for this fixture as written,
+  so the marker should be reviewed rather than counted as a verifier error.
+- **BOLA in run B (12 / 25)** again lost batch `routes-001` (15 routes). This time the reply was not empty
+  but invalid JSON: the model put code with unescaped `"` into `recommendation.code_before`; the retry
+  failed the same way. The same batch failed in Run 4 run B.
+- **No false positives** on SAFE markers in either run; precision rose to 0.82 / 0.78.
+- Runs are ~45% slower than Run 4 iteration 2 (83–86 min): the privilege and verifier prompts are longer
+  and there are more findings to verify.
+
+### Unmatched BOLA findings (triage, not yet reflected in fixtures)
+
+About 20 BOLA findings per run sit in files with no BOLA marker. By route:
+
+| Route(s) | Assessment |
+|---|---|
+| `Customer/EditName`, `account/rename`, `python-flask` `/users/<uid>/name`, `account/profile` | Likely **real BOLA** not marked: the record ID comes from the request and is not bound to the caller |
+| `Customer/Edit`, `Customer/Refresh`, `account/save`, `account/api`, `/users/<uid>` | Mass-assignment fixtures that also take the ID from the request: plausibly BOLA as well |
+| `Admin/DeleteUser`, `Admin/Export`, `admin/users/{id}/delete`, `delete_user.php`, `promote.php`, `manage_users.php` | **BFLA routes also reported as BOLA**: same flaw seen from a second category; duplicate rather than wrong |
+
+Fixture markers were left unchanged so Run 4 and Run 5 share the same ground truth.
+
+### Remaining gaps
+
+1. **Invalid JSON from code fields:** drop `code_before` / `code_after` from the 4a / 4b output templates
+   (the sanitizer already reduces `recommendation` to a string), or repair unescaped quotes before parsing.
+2. **Verdict without finding:** write a minimal finding for every `vulnerable` / `needs_review` verdict
+   the model did not turn into one.
+3. **Fixtures:** review the `register.php` MASS marker; add BOLA markers for the routes judged real above.
+4. **qwen3.5:9b** still unmeasured: 32K context does not fit in 24 GB next to the OS; needs 16K context or
+   a larger machine.

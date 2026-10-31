@@ -1,0 +1,88 @@
+{
+  "model": "gpt-oss:20b",
+  "endpoint": "http://localhost:11434/v1/chat/completions",
+  "phases": {
+    "2-stack-detector": {
+      "seconds": 83.911,
+      "calls": 1,
+      "prompt_tokens": 3118,
+      "completion_tokens": 2604
+    },
+    "3-route-mapper": {
+      "seconds": 0.009,
+      "calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+    },
+    "4a-bola-auditor": {
+      "seconds": 2116.9,
+      "calls": 6,
+      "prompt_tokens": 45287,
+      "completion_tokens": 37633
+    },
+    "4b-injection-auditor": {
+      "seconds": 1163.891,
+      "calls": 2,
+      "prompt_tokens": 15801,
+      "completion_tokens": 27631
+    },
+    "4c-privilege-auditor": {
+      "seconds": 317.291,
+      "calls": 2,
+      "prompt_tokens": 17724,
+      "completion_tokens": 9043
+    },
+    "5-finding-verifier": {
+      "seconds": 1321.281,
+      "calls": 21,
+      "prompt_tokens": 137647,
+      "completion_tokens": 31828
+    }
+  },
+  "totals": {
+    "calls": 32,
+    "prompt_tokens": 219577,
+    "completion_tokens": 108739,
+    "seconds": 5001.458
+  },
+  "parse_failures": {},
+  "call_errors": {},
+  "retries": {},
+  "anchoring": {
+    "moved": [
+      "BOLA-R-0007",
+      "BOLA-R-0057-2",
+      "BOLA-R-0058-1",
+      "INJ-I-0011-2",
+      "INJ-I-0011-3",
+      "INJ-I-0020-2",
+      "INJ-I-0020-3",
+      "INJ-I-0020-4",
+      "INJ-I-0024-2",
+      "INJ-I-0029-2",
+      "INJ-I-0032-1",
+      "INJ-I-0032-2",
+      "INJ-I-0018-2",
+      "BFLA-R-0003-1",
+      "BFLA-R-0007-1",
+      "BFLA-R-0009-1",
+      "BFLA-R-0023-1",
+      "BFLA-R-0030-1",
+      "BFLA-R-0032-1",
+      "BFLA-R-0057-1",
+      "BFLA-R-0058-1",
+      "MASS-M-0003-1",
+      "MASS-M-0004-1",
+      "MASS-M-0005-1",
+      "MASS-M-0006-1",
+      "MASS-M-0007-1",
+      "MASS-M-0008-1",
+      "MASS-M-0009-1",
+      "MASS-M-0010-1",
+      "MASS-M-0013-1",
+      "MASS-M-0015-1",
+      "MASS-M-0014-1"
+    ],
+    "unanchored": []
+  }
+}

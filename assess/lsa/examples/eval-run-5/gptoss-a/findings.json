@@ -1,0 +1,4766 @@
+{
+  "generated_by": "lsa merge_findings.py 0.3.1",
+  "summary": {
+    "total_reported": 101,
+    "active": 99,
+    "rejected_by_verifier": 2,
+    "by_severity": {
+      "critical": 50,
+      "high": 43,
+      "medium": 6,
+      "low": 0,
+      "info": 0
+    },
+    "by_category": {
+      "bola": 42,
+      "sql_injection": 30,
+      "nosql_injection": 5,
+      "bfla": 12,
+      "mass_assignment": 10
+    },
+    "by_status": {
+      "unverified": 0,
+      "confirmed": 57,
+      "likely": 42,
+      "rejected": 2,
+      "needs_review": 0
+    }
+  },
+  "findings": [
+    {
+      "finding_id": "BFLA-R-0003-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted member deletion in classic‑ASP",
+      "route_id": "R-0003",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 10,
+          "why": "DELETE statement executed without admin check"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 1,
+          "why": "only session login check, no role verification"
+        }
+      ],
+      "impact": "Any authenticated user can delete any member record",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add an admin role check before executing the DELETE",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp:1-10",
+          "classic-asp/shop/inc/auth.asp:1-3"
+        ],
+        "control_found": null,
+        "notes": "The included auth.asp only verifies a logged‑in session; it does not enforce an admin role. The delete case uses the member_id from the query string without any role check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:83b02bec36973742a22a1a70d067dab98296c064b1b633e015f7e580b3b66d97",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0007-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted user deletion in ASP.NET MVC",
+      "route_id": "R-0007",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 12,
+          "why": "DeleteUser action lacks [Authorize(Roles=\"Admin\")]"
+        }
+      ],
+      "impact": "Any authenticated user can delete any user account",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add [Authorize(Roles=\"Admin\")] to DeleteUser action",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs:6-12"
+        ],
+        "control_found": null,
+        "notes": "The controller is marked with [Authorize], allowing any authenticated user. The DeleteUser action lacks a role restriction, so any authenticated user can delete any account.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:8c677e45a76f6bd7c5516a436e8831955ce3e1b1cf0a6c24402479abce231451",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0009-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Export endpoint controlled by request parameter",
+      "route_id": "R-0009",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 30
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 32,
+          "why": "Request.QueryString[\"isAdmin\"] == \"true\" allows export"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 30,
+          "why": "no server‑side role check"
+        }
+      ],
+      "impact": "Any authenticated user can export all user data",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Validate admin role from session before allowing export",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs:30-34"
+        ],
+        "control_found": null,
+        "notes": "Export logic relies solely on a request query string parameter. No server‑side role validation is performed, allowing any authenticated user to trigger the export.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:0345fc5c650ab741a5683992a0ffaaa8536be025f0e4576566feb91f4f055940",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0023-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted user deletion in Spring MVC",
+      "route_id": "R-0023",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 13,
+          "why": "delete method lacks @PreAuthorize"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 19,
+          "why": "other actions have @PreAuthorize, but not this one"
+        }
+      ],
+      "impact": "Any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add @PreAuthorize(\"hasRole('ADMIN')\") to delete method",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/AdminUserController.java lines 13-15",
+          "java-legacy/src/com/acme/web/AdminUserController.java lines 19-21"
+        ],
+        "control_found": null,
+        "notes": "The delete method lacks any @PreAuthorize or other role guard in the visible code. No global filter or security configuration is shown in the provided context, so a compensating control cannot be confirmed.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c185d47f85be7d9e30916ed85ddc9948179375151aa429c9ba9bdba3df193d42",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0030-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted user deletion in Express.js",
+      "route_id": "R-0030",
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 8,
+          "why": "no requireAdmin middleware applied"
+        }
+      ],
+      "impact": "Any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add requireAdmin middleware to the delete route",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "node-express/routes/admin.js lines 8-9"
+        ],
+        "control_found": null,
+        "notes": "The delete route uses only ensureLoggedIn; the requireAdmin middleware is not applied in the visible snippet, and no other role check is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c38121b6ace7111a415f9995085dd8d95b1a63052e9eaa92233dd93446a3c631",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0032-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Export endpoint controlled by query parameter in Express.js",
+      "route_id": "R-0032",
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 17,
+          "why": "req.query.isAdmin === 'true' allows export"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 16,
+          "why": "no role check before export"
+        }
+      ],
+      "impact": "Any authenticated user can export all user data",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Validate admin role from session before allowing export",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "node-express/routes/admin.js lines 16-18"
+        ],
+        "control_found": null,
+        "notes": "The export endpoint checks only a query parameter for admin status; no session‑based role verification is shown in the snippet.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:1ff8888a17724ef410c375511a5f1973e8c6485e141a12d400968de937f78234",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0057-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted user view in PHP",
+      "route_id": "R-0057",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 6,
+          "why": "SELECT * FROM users WHERE id = ... executed without admin check"
+        },
+        {
+          "file": "php-plain/admin.php",
+          "line": 2,
+          "why": "only session login check, no role verification"
+        }
+      ],
+      "impact": "Any authenticated user can view any user record",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before executing the SELECT",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin.php lines 2-8",
+          "php-plain/inc/auth.php lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "The included auth file performs only a login check; there is no admin role guard before the SELECT statement in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:d49176fe451bbe3c61de25550631bf23a5b4b79949df949f18698aa7183f6e10",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0058-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted user deletion in PHP",
+      "route_id": "R-0058",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 10,
+          "why": "DELETE executed without admin check"
+        },
+        {
+          "file": "php-plain/admin.php",
+          "line": 2,
+          "why": "only session login check, no role verification"
+        }
+      ],
+      "impact": "Any authenticated user can delete any user record",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before executing the DELETE",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin.php lines 10-12",
+          "php-plain/inc/auth.php lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "The DELETE statement is executed without any admin role check in the visible code, and the included auth file does not provide such a guard.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:781c6244908fea9052bbe7da28e222368d76d6420cac232e23403ef72b9d0f96",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0059-1",
+      "category": "bfla",
+      "subtype": "client_side_role_check",
+      "title": "Client‑side admin check allows user deletion in PHP",
+      "route_id": "R-0059",
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "line": 5,
+          "why": "DELETE executed without server‑side admin check"
+        },
+        {
+          "file": "php-plain/manage_users.php",
+          "line": 11,
+          "why": "role check only in HTML, not in handler"
+        }
+      ],
+      "impact": "Any authenticated user can delete any user record",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add server‑side admin check before executing the DELETE",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/manage_users.php",
+          "php-plain/inc/auth.php",
+          "php-plain/inc/db.php"
+        ],
+        "control_found": null,
+        "notes": "Deletion is performed on POST without a server‑side role check; the role check appears only in the HTML output.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:46a95c25c9fdd0024572d331fd6b49713b18fd6e351df3afa986ca37372da405",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0063-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Privilege escalation via role field in profile update",
+      "route_id": "R-0063",
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "why": "role set from $_POST['role'] without admin check"
+        },
+        {
+          "file": "php-plain/profile.php",
+          "line": 2,
+          "why": "only session login check, no role verification"
+        }
+      ],
+      "impact": "Any authenticated user can change their own role",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Validate role changes against allowed values and enforce admin checks",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/profile.php",
+          "php-plain/inc/auth.php",
+          "php-plain/inc/db.php"
+        ],
+        "control_found": null,
+        "notes": "The role field is updated directly from POST data with no admin verification in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:5d358b0d7773db98c6fc18bec77889109e89b127d7146e7bc9ca7406ae6ff5fc",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0066-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Unrestricted user deletion in PHP",
+      "route_id": "R-0066",
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "line": 6,
+          "why": "DELETE executed without admin check"
+        },
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "line": 2,
+          "why": "only session login check, no role verification"
+        }
+      ],
+      "impact": "Any authenticated user can delete any user record",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before executing the DELETE",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin/delete_user.php",
+          "php-plain/inc/auth.php",
+          "php-plain/inc/db.php"
+        ],
+        "control_found": null,
+        "notes": "No role or ownership check is present in the visible code. The included auth file only verifies session existence.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:ac5acea0a998815d202206c2242aa04d68020c74c2b9bf604fd6e9620c81190d",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BFLA-R-0067-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Privilege escalation via role promotion in PHP",
+      "route_id": "R-0067",
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 5,
+          "why": "role set from $_POST['is_admin'] without admin check"
+        },
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 2,
+          "why": "only session login check, no role verification"
+        }
+      ],
+      "impact": "Any authenticated user can promote themselves to admin",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Validate admin role from session before allowing role changes",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin/promote.php",
+          "php-plain/inc/auth.php",
+          "php-plain/inc/db.php"
+        ],
+        "control_found": null,
+        "notes": "The code sets the role directly from POST data without any server‑side admin check. No compensating control is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:d174ebc0365672a7b111b699d6c623186ff22f9478565d4ad9e479d844293faf",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0001",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in classic-asp/shop/member.asp:6",
+      "candidate_id": "I-0001",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 6,
+          "code": "sql = \"UPDATE members SET name = '\" & Replace(Request.Form(\"name\"), \"'\", \"''\") & \"'\"",
+          "why": "Unsanitized input concatenated into query (member_id later)",
+          "line": 6
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 7,
+          "code": "sql = sql & \" WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "Unsanitized input concatenated into query",
+          "line": 7
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 8,
+          "code": "conn.Execute sql",
+          "why": "Query executed without parameter binding",
+          "line": 8
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp:6-8",
+          "classic-asp/shop/inc/auth.asp:1-3"
+        ],
+        "control_found": null,
+        "notes": "The SQL UPDATE statement is built via string concatenation with unsanitized form values. The included auth.asp only verifies that a user is logged in; it does not provide parameter binding or sanitization.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:52c63ccaf583de3933acccb3eff1f79314c58ac311cdeecdfc26c798403a7c89",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0002",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in classic-asp/shop/member.asp:7",
+      "candidate_id": "I-0002",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 7,
+          "code": "sql = sql & \" WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "Unsanitized input concatenated into query",
+          "line": 7
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 8,
+          "code": "conn.Execute sql",
+          "why": "Query executed without parameter binding",
+          "line": 8
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp:7-8",
+          "classic-asp/shop/inc/auth.asp:1-3"
+        ],
+        "control_found": null,
+        "notes": "The WHERE clause is concatenated with an unsanitized form value. No parameter binding or integer cast is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:a425457aee9a3c9db04caa44ddba7d35ecadd834bf5a0100207b9fce90ea85dd",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0003",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in classic-asp/shop/member.asp:10",
+      "candidate_id": "I-0003",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 10,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "Unsanitized input concatenated into query",
+          "line": 10
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp:10",
+          "classic-asp/shop/inc/auth.asp:1-3"
+        ],
+        "control_found": null,
+        "notes": "The DELETE statement concatenates an unsanitized query string value. No sanitization or parameter binding is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:f1fb34f9c39374bc339b3dc230f5ac6b00731c69bf6cd1399b983ba2d2833525",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0004",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in classic-asp/shop/order.asp:6",
+      "candidate_id": "I-0004",
+      "location": {
+        "file": "classic-asp/shop/order.asp",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/order.asp",
+          "start_line": 6,
+          "code": "Set rs = conn.Execute(\"SELECT * FROM orders WHERE id = \" & id)",
+          "why": "Unsanitized input concatenated into query",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/order.asp lines 5-6",
+          "classic-asp/shop/order.asp line 12"
+        ],
+        "control_found": null,
+        "notes": "The query at line 6 concatenates the unsanitized request parameter directly into the SQL statement. No ownership check or parameter binding is performed before execution. The subsequent query at line 12 includes a user_id filter, but it does not mitigate the vulnerability in the first query.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:07b1c914202a928e4156e6b6e9e5ab32fe7a75cdceda182d55d68051eeb61ac9",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0006",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in coldfusion/app/OrderService.cfc:5",
+      "candidate_id": "I-0006",
+      "location": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "start_line": 5,
+          "code": "SELECT * FROM orders WHERE id = #arguments.orderId#",
+          "why": "Unsanitized input concatenated into query",
+          "line": 5
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use cfqueryparam to bind parameters",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "coldfusion/app/OrderService.cfc lines 3-6"
+        ],
+        "control_found": null,
+        "notes": "The query at line 5 directly interpolates the unvalidated argument `orderId` into the SQL string. No parameter binding, type casting, or ownership check is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:b6824160d6d38156b7a16dc1526dda6be874be4401ad843a3c185f94446dcf5e",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0007",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in coldfusion/app/order.cfm:3",
+      "candidate_id": "I-0007",
+      "location": {
+        "file": "coldfusion/app/order.cfm",
+        "start_line": 3
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/order.cfm",
+          "start_line": 3,
+          "code": "SELECT * FROM orders WHERE id = #url.id#",
+          "why": "Unsanitized input concatenated into query",
+          "line": 3
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use cfqueryparam to bind parameters",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "coldfusion/app/order.cfm lines 2-4"
+        ],
+        "control_found": null,
+        "notes": "The query at line 3 concatenates the unsanitized `url.id` into the SQL statement. Although a subsequent query uses `cfqueryparam` and a user_id filter, the first query remains vulnerable.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:d2650d07ae7cedfc90bd1abda3c42a63716563d54c45ecde428ae21505214f72",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0008-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in dotnet-legacy/Web/Controllers/InvoiceController.cs:28",
+      "candidate_id": "I-0008",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 28
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 27,
+          "code": "var customer = Request.Form[\"customer\"];",
+          "why": "source: POST body",
+          "line": 27
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 28,
+          "code": "var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();",
+          "why": "unsanitized concatenation",
+          "line": 28
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 25-29 (Search action)"
+        ],
+        "control_found": null,
+        "notes": "No parameter binding, casting, or allow‑list is visible in the provided code context. The raw concatenation of `customer` into the SQL string remains a potential injection vector.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:81106c3dfe7181ee5aad08bbd8e6c94143e8ebb6bf477a18828ca399339d1271",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0009",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in dotnet-legacy/Web/Orders/EditOrder.aspx.vb:7",
+      "candidate_id": "I-0009",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 7,
+          "code": "Dim sql As String = \"UPDATE Orders SET Note = '\" & txtNote.Text & \"'\"",
+          "why": "Unsanitized input concatenated into query",
+          "line": 7
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 8,
+          "code": "sql &= \" WHERE OrderId = \" & hfOrderId.Value",
+          "why": "Unsanitized input concatenated into query",
+          "line": 8
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 10,
+          "code": "cmd.ExecuteNonQuery()",
+          "why": "Query executed without parameter binding",
+          "line": 10
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 6-8"
+        ],
+        "control_found": null,
+        "notes": "The SQL string is built by concatenating `txtNote.Text` and `hfOrderId.Value` without any parameterization or type casting. No ownership check is performed before execution.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:999e755f32c1edc6b46f7497ebdfd065d8afcc3518cab3211f45fc11a7342afd",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0010",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in dotnet-legacy/Web/Orders/EditOrder.aspx.vb:8",
+      "candidate_id": "I-0010",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 8,
+          "code": "sql &= \" WHERE OrderId = \" & hfOrderId.Value",
+          "why": "Unsanitized input concatenated into query",
+          "line": 8
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 10,
+          "code": "cmd.ExecuteNonQuery()",
+          "why": "Query executed without parameter binding",
+          "line": 10
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 7-8"
+        ],
+        "control_found": null,
+        "notes": "Same as INJ-I-0009: the query is constructed via string concatenation with user-supplied values and executed without parameter binding or ownership validation.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:323eb8697c45d7b7466292d80a0763dd2310608e0975d837273bde14e3458f59",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0011-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:13",
+      "candidate_id": "I-0011",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 13,
+          "code": "var cmd = new SqlCommand(\"SELECT * FROM Orders WHERE OrderId = \" + id, conn);",
+          "why": "Unsanitized input concatenated into query",
+          "line": 13
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 14,
+          "code": "conn.Open();",
+          "why": "Query executed without parameter binding",
+          "line": 14
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "line 13"
+        ],
+        "control_found": null,
+        "notes": "The query at line 13 concatenates the unsanitized request parameter \"id\" directly into the SQL string and is executed immediately. No ownership, role check, integer cast, or allow‑list is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c9aa426f72d032a9b0729b0905c9c25a6fb8844a92a91c45d72d3e26170bbae5",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0011-3",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:20",
+      "candidate_id": "I-0011",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 20,
+          "code": "string sql3 = $\"DELETE FROM Carts WHERE CartId = {Request.Form[\"cart\"]}\";",
+          "why": "Unsanitized input concatenated into query",
+          "line": 20
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 22,
+          "code": "new SqlCommand(sql3, conn).ExecuteNonQuery();",
+          "why": "Query executed without parameter binding",
+          "line": 22
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "line 20"
+        ],
+        "control_found": null,
+        "notes": "The interpolated string at line 20 directly injects the unsanitized form parameter \"cart\" into a DELETE statement, executed at line 22. No protection is evident.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:ffb5c060494d8556500d82003827d34b69c9197e90809dd8cffb8bc91642f981",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0012",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:19",
+      "candidate_id": "I-0012",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 19
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 19,
+          "code": "string sql2 = string.Format(\"SELECT * FROM Logs WHERE Ref = '{0}'\", Request[\"ref\"]);",
+          "why": "Unsanitized input concatenated into query",
+          "line": 19
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 21,
+          "code": "new SqlCommand(sql2, conn).ExecuteReader();",
+          "why": "Query executed without parameter binding",
+          "line": 21
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "line 19"
+        ],
+        "control_found": null,
+        "notes": "Same as INJ-I-0011-2: unsanitized \"ref\" is concatenated into SQL and executed without parameter binding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c0adff113329292a51bb7d2f2aa03dd242c6d767cee060a789ff750f3ab9b946",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0013",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:20",
+      "candidate_id": "I-0013",
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 20
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 20,
+          "code": "string sql3 = $\"DELETE FROM Carts WHERE CartId = {Request.Form[\"cart\"]}\";",
+          "why": "Unsanitized input concatenated into query",
+          "line": 20
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 22,
+          "code": "new SqlCommand(sql3, conn).ExecuteNonQuery();",
+          "why": "Query executed without parameter binding",
+          "line": 22
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "line 20"
+        ],
+        "control_found": null,
+        "notes": "Duplicate finding ID; same issue as INJ-I-0011-3.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:85f16690de7a315c7ef9dc35f534e32d9f39803093f42a6ec4200391523c52c2",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0014",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in java-legacy/WebContent/order/detail.jsp:5",
+      "candidate_id": "I-0014",
+      "location": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "start_line": 5,
+          "code": "ResultSet rs = c.createStatement().executeQuery(\"SELECT * FROM orders WHERE order_no = '\" + no + \"'\");",
+          "why": "Unsanitized input concatenated into query",
+          "line": 5
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use PreparedStatement with parameters",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/WebContent/order/detail.jsp lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "The JSP page concatenates the request parameter directly into a SQL query without any parameter binding, casting, or ownership check visible in the provided code context.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:b8e7acb1ca7119156e96cf2bd42356b53bb6107a0a904b492534714730ac45f8",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0015-1",
+      "category": "sql_injection",
+      "subtype": "template_placeholder",
+      "title": "SQL Injection in java-legacy/src/com/acme/mapper/OrderMapper.xml:9",
+      "candidate_id": "I-0015",
+      "location": {
+        "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+          "start_line": 9,
+          "code": "ORDER BY ${orderBy}",
+          "why": "raw string substitution unsanitized",
+          "line": 9
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries or allow-list ORDER BY columns",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/mapper/OrderMapper.xml lines 8-10 (ORDER BY clause)"
+        ],
+        "control_found": null,
+        "notes": "The `${orderBy}` placeholder is substituted directly into the SQL string with no visible allow‑list or type enforcement in the provided snippet.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:8df8ce68ec0891d8df90282a79909ca8020e544c090dec299a62140d23fde444",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0016",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in java-legacy/src/com/acme/struts/EditUserAction.java:13",
+      "candidate_id": "I-0016",
+      "location": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "start_line": 13,
+          "code": "PreparedStatement ps = conn.prepareStatement(\"UPDATE users SET email = '\" + email + \"' WHERE id = \" + userId);",
+          "why": "Unsanitized input concatenated into query",
+          "line": 13
+        },
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "start_line": 14,
+          "code": "ps.executeUpdate();",
+          "why": "Query executed without parameter binding",
+          "line": 14
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use PreparedStatement with parameters",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/struts/EditUserAction.java lines 1-17"
+        ],
+        "control_found": null,
+        "notes": "The action builds an UPDATE statement by concatenating user-supplied values without using prepared statement parameters or any ownership verification in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:2976fb21c23c927d1de0f3af7dc883d9b66a1d051ec67bb9ec1b44396f6479fc",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0017",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in java-legacy/src/com/acme/web/InvoiceController.java:29",
+      "candidate_id": "I-0017",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 29
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "start_line": 29,
+          "code": "model.addAttribute(\"list\", session.createQuery(\"from Invoice i where i.customer = '\" + customer + \"'\").list());",
+          "why": "Unsanitized input concatenated into query",
+          "line": 29
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized HQL/JPQL",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/InvoiceController.java lines 9-31"
+        ],
+        "control_found": null,
+        "notes": "The controller concatenates the 'customer' request parameter into an HQL query without parameter binding or ownership checks in the shown snippet.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:7796f734194bfe71dc7268f597efd6338a4e967a788e0220edb61b8e1c198b16",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0018-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in java-legacy/src/com/acme/web/OrderServlet.java:15",
+      "candidate_id": "I-0018",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 15
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "start_line": 11,
+          "code": "String id = request.getParameter(\"orderId\");",
+          "why": "source: request parameter",
+          "line": 11
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "start_line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "unsanitized concatenation",
+          "line": 15
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use prepared statements",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/OrderServlet.java lines 13-15 (first query)"
+        ],
+        "control_found": null,
+        "notes": "The `id` parameter is concatenated into the SQL string without any casting or validation in the shown code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:eed713c040fe4b03f16a649b4da2fa326995fd074ad3ba46bbbb4958486b6b8d",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0020-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in node-express/routes/orders.js:17",
+      "candidate_id": "I-0020",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 17
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 17,
+          "code": "db.query(\"SELECT * FROM reports WHERE month = '\" + req.query.month + \"'\", function (e, rows) { res.json(rows); });",
+          "why": "Unsanitized input concatenated into query",
+          "line": 17
+        }
+      ],
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "node-express/routes/orders.js lines 1-32"
+        ],
+        "control_found": null,
+        "notes": "The route constructs a raw SQL query by concatenating req.query.month without any type casting, parameter binding, or ownership verification in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:fc0f31011ca4510d026845f7fb0dcd77812ef24f6ea5329ad24fbc08a15b58ff",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0020-3",
+      "category": "nosql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in node-express/routes/orders.js:25",
+      "candidate_id": "I-0020",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 17
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 25,
+          "code": "db.collection('items').find({ $where: \"this.name == '\" + req.query.n + \"'\" }).toArray(function (e, r) { res.json(r); });",
+          "why": "Unescaped string used in $where expression",
+          "line": 25
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Avoid $where; use parameterized queries or safe operators",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "lines 24-26 of node-express/routes/orders.js"
+        ],
+        "control_found": null,
+        "notes": "The query concatenates user input into a $where expression with no sanitization or allow‑list. The only guard is ensureLoggedIn, which only verifies authentication, not ownership or input validation.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:47ce27f1a9f336e20d5e241fd635274073032ac2f65abcfe9d60fb3a2b8fca3a",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0020-4",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in node-express/routes/orders.js:29",
+      "candidate_id": "I-0020",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 17
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 29,
+          "code": "db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });",
+          "why": "Unsanitized input interpolated into query",
+          "line": 29
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "lines 28-30 of node-express/routes/orders.js"
+        ],
+        "control_found": null,
+        "notes": "The SQL statement interpolates req.query.shop directly into the query string. No cast, parameter binding, or ownership check is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:87003bc21a5066f127e17d017411e5ede375de322eabe11a402d6ee498598376",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0021",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in node-express/routes/orders.js:29",
+      "candidate_id": "I-0021",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 29
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 29,
+          "code": "db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });",
+          "why": "Unsanitized input interpolated into query",
+          "line": 29
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "lines 28-30 of node-express/routes/orders.js"
+        ],
+        "control_found": null,
+        "notes": "Same as INJ-I-0020-4; the route is identical and lacks any compensating control.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:2abbfba5afbab6fe47146424b128ea7bf5496a9ec3ae59589a94d2eccd4c3d66",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0022",
+      "category": "nosql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in node-express/routes/orders.js:21",
+      "candidate_id": "I-0022",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 21
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 21,
+          "code": "db.collection('users').findOne(req.body, function (e, u) { res.json(!!u); });",
+          "why": "Unvalidated request body used directly as query filter",
+          "line": 21
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Validate and whitelist query parameters; avoid passing raw request body to findOne",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "lines 20-22 of node-express/routes/orders.js"
+        ],
+        "control_found": null,
+        "notes": "The request body is passed directly to findOne without validation or sanitization. No authentication guard is applied to this POST /login route.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:b11f292e89c1d1ed0de413d0c30a47a3f3e034679b695b5f5b7c5167f5f1e929",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0023",
+      "category": "nosql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in node-express/routes/orders.js:25",
+      "candidate_id": "I-0023",
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 25
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 25,
+          "code": "db.collection('items').find({ $where: \"this.name == '\" + req.query.n + \"'\" }).toArray(function (e, r) { res.json(r); });",
+          "why": "Unescaped string used in $where expression",
+          "line": 25
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Avoid $where; use parameterized queries or safe operators",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "lines 24-26 of node-express/routes/orders.js"
+        ],
+        "control_found": null,
+        "notes": "Identical to INJ-I-0020-3; no sanitization or allow‑list is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:3c8358a689974ac6ce80d5d8933718bcf7ce7c7afafe2196d8fcfb9abcde049b",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0024-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in perl-cgi/cgi-bin/order.cgi:13",
+      "candidate_id": "I-0024",
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "start_line": 13,
+          "code": "my $sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "why": "Unsanitized input concatenated into query",
+          "line": 13
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "perl-cgi/cgi-bin/order.cgi line 13",
+          "perl-cgi/cgi-bin/order.cgi line 11-14"
+        ],
+        "control_found": null,
+        "notes": "The query concatenates the unsanitized $id directly into the SQL string. No integer cast, parameter binding, or ownership check is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:0594761f603533b7391a9b7a8464e6865b71c1b61b71fdcd10991d861f51b5fb",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0025",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in perl-cgi/cgi-bin/order.cgi:19",
+      "candidate_id": "I-0025",
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 19
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "start_line": 19,
+          "code": "$dbh->do(\"DELETE FROM carts WHERE cart_id = \" . $q->param('cart'));",
+          "why": "Unsanitized input concatenated into query",
+          "line": 19
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "perl-cgi/cgi-bin/order.cgi line 19",
+          "perl-cgi/cgi-bin/order.cgi line 18-20"
+        ],
+        "control_found": null,
+        "notes": "Same as INJ-I-0024-2; unsanitized input used in a DELETE statement with no protection.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c7206e5510c18d43418b9ed9a4d20047783ea5263cfdc395a138b735b613debc",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0026-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-codeigniter/application/controllers/Invoice.php:10",
+      "candidate_id": "I-0026",
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 9,
+          "code": "$id = $this->uri->segment(3);",
+          "why": "source: URL segment",
+          "line": 9
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "unsanitized concatenation",
+          "line": 10
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-codeigniter/application/controllers/Invoice.php:9-10"
+        ],
+        "control_found": null,
+        "notes": "The query concatenates the raw $id parameter without any sanitization, casting, or parameter binding. No ownership or role check is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:cab7179a42b52f77a862191152d4b0ebc8511c6c77b956503f7c53525c9390b0",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0028",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/admin.php:12",
+      "candidate_id": "I-0028",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "Unsanitized input concatenated into query",
+          "line": 12
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-plain/admin.php line 12",
+          "php-plain/admin.php lines 5-13"
+        ],
+        "control_found": null,
+        "notes": "The DELETE query uses the raw $_POST['id'] value. No cast, parameter binding, or ownership check is present. The included auth.php only verifies login, not admin role.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:59fca8cd0dedd8f70d286a5d3808292d9eddcf084148a63a448b7043b69c7948",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0029-2",
+      "category": "nosql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in php-plain/mongo_find.php:6",
+      "candidate_id": "I-0029",
+      "location": {
+        "file": "php-plain/mongo_find.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/mongo_find.php",
+          "start_line": 6,
+          "code": "$docs = $coll->find(array('$where' => \"this.name == '\" . $_GET['n'] . \"'\"));",
+          "why": "Unescaped string used in $where expression",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Avoid $where; use parameterized queries or safe operators",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-plain/mongo_find.php line 6",
+          "php-plain/mongo_find.php lines 1-6"
+        ],
+        "control_found": null,
+        "notes": "The $where expression concatenates the unsanitized $_GET['n'] value. No sanitization or ownership check is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:0bebccae3a46f1c54cc666792689e68bb695435e0130148b1e2f6fc35e872ed4",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0030",
+      "category": "nosql_injection",
+      "subtype": "operator_injection",
+      "title": "NoSQL Injection in php-plain/mongo_find.php:6",
+      "candidate_id": "I-0030",
+      "location": {
+        "file": "php-plain/mongo_find.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/mongo_find.php",
+          "start_line": 6,
+          "code": "$docs = $coll->find(array('$where' => \"this.name == '\" . $_GET['n'] . \"'\"));",
+          "why": "Unescaped string used in $where expression",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Avoid $where; use parameterized queries or safe operators",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-plain/mongo_find.php",
+          "php-plain/inc/auth.php"
+        ],
+        "control_found": null,
+        "notes": "The query concatenates user input into a $where expression with no sanitisation or ownership check. The included auth file only verifies login, not object ownership.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:bf0197ac678eaca25ff151d805751c71b878e909d2e7180bacf39dd373b53b09",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0031-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/order_detail.php:6",
+      "candidate_id": "I-0031",
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "source: GET parameter",
+          "line": 5
+        },
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "unsanitized input concatenated into query",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-plain/order_detail.php",
+          "php-plain/inc/auth.php"
+        ],
+        "control_found": null,
+        "notes": "The SQL statement concatenates the GET id directly. No ownership or role guard is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:3065614ddeff53f64ce73f2bd0210f5b36a2249f4d2561f69219095ad867ac9f",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0032-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/search.php:7",
+      "candidate_id": "I-0032",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "start_line": 5,
+          "code": "$kw = addslashes($_GET['q']);",
+          "why": "source: GET parameter",
+          "line": 5
+        },
+        {
+          "file": "php-plain/search.php",
+          "start_line": 6,
+          "code": "$sort = $_GET['sort'];",
+          "why": "source: GET parameter",
+          "line": 6
+        },
+        {
+          "file": "php-plain/search.php",
+          "start_line": 7,
+          "code": "$sql = \"SELECT id, name FROM products WHERE 1=1\";",
+          "why": "query start",
+          "line": 7
+        },
+        {
+          "file": "php-plain/search.php",
+          "start_line": 8,
+          "code": "$sql .= \" AND name LIKE '%\" . $kw . \"%'\";",
+          "why": "unsanitized input concatenated",
+          "line": 8
+        },
+        {
+          "file": "php-plain/search.php",
+          "start_line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "unsanitized ORDER BY",
+          "line": 9
+        },
+        {
+          "file": "php-plain/search.php",
+          "start_line": 11,
+          "code": "$res = mysql_query($sql);",
+          "why": "sink",
+          "line": 11
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries and allow-list ORDER BY",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-plain/search.php",
+          "php-plain/inc/auth.php",
+          "php-plain/inc/db.php"
+        ],
+        "control_found": null,
+        "notes": "Both the keyword and ORDER BY values are unsanitised and no allow‑list or ownership check is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:7290ec7c22df15c86f213eb1e27320eaf80f4bafc68a9a6813fb0bd32771b6da",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0032-2",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in php-plain/search.php:12",
+      "candidate_id": "I-0032",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "start_line": 14,
+          "code": "WHERE category = '{$_GET['cat']}'",
+          "why": "unsanitized interpolation",
+          "line": 14
+        },
+        {
+          "file": "php-plain/search.php",
+          "start_line": 16,
+          "code": "$res2 = mysql_query($q);",
+          "why": "sink",
+          "line": 16
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "php-plain/search.php",
+          "php-plain/inc/auth.php",
+          "php-plain/inc/db.php"
+        ],
+        "control_found": null,
+        "notes": "The interpolated category value is used directly in the query with no sanitisation or ownership guard.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:272fb833676c5fa2882f4c605fd61f324c91b78b15356dbb8dd10ae9bbf2934d",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0036-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in python-flask/app.py:29",
+      "candidate_id": "I-0036",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 29
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 27,
+          "code": "q = request.args.get('q', '')",
+          "why": "source: query parameter",
+          "line": 27
+        },
+        {
+          "file": "python-flask/app.py",
+          "start_line": 29,
+          "code": "cur.execute(f\"SELECT * FROM products WHERE name LIKE '%{q}%'\")",
+          "why": "unsanitized interpolation",
+          "line": 29
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "python-flask/app.py"
+        ],
+        "control_found": null,
+        "notes": "The f‑string interpolates the query parameter directly into the SQL. The @login_required decorator only ensures authentication, not ownership or parameter validation.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:52c1a1b2beb4129f6fbbfa5c9bcc2f05de1cb6b4a835dcb6adfa7075c03edf79",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0037-1",
+      "category": "sql_injection",
+      "subtype": "stored_procedure_dynamic_sql",
+      "title": "SQL Injection in sql-procs/sp_search_orders.sql:5",
+      "candidate_id": "I-0037",
+      "location": {
+        "file": "sql-procs/sp_search_orders.sql",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "start_line": 5,
+          "code": "SET @sql = 'SELECT * FROM Orders WHERE Customer = ''' + @Customer + ''' ORDER BY ' + @Sort",
+          "why": "unsanitized dynamic SQL",
+          "line": 5
+        },
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "start_line": 6,
+          "code": "EXEC(@sql)",
+          "why": "sink",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use sp_executesql with parameters",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "sql-procs/sp_search_orders.sql:5-6"
+        ],
+        "control_found": null,
+        "notes": "Dynamic SQL is built by concatenating @Customer and @Sort directly into the statement. No allow‑list, integer cast, or parameterized execution is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:dda6a5bb147b8aa741739e9da8799b0f942492567758d5d3209c1395a97c8f98",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0003-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Unrestricted role binding in Spring MVC",
+      "candidate_id": "M-0003",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 14
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 14,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Any authenticated user can set the role field of an Account",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only allowed fields or set role server‑side",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java"
+        ],
+        "control_found": null,
+        "notes": "The controller accepts a full Account model via @ModelAttribute and persists it without any field‑level binding or role restrictions shown.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:b427f067ed1c164d59f88449e3f3d39e10773b28dafaf7db21426e9881df1269",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0004-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Unrestricted role binding in Spring MVC (duplicate)",
+      "candidate_id": "M-0004",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 27,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Any authenticated user can set the role field of an Account",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only allowed fields or set role server‑side",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "AccountController.update method (lines 13-28)",
+          "AccountDao.save invocation"
+        ],
+        "control_found": null,
+        "notes": "No ownership or role check, no allow‑list, and no type cast is visible in the provided code context.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:d35e421652a66141ead0efd242f840a67488e56a31666c91fce47bd638bb29f9",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0005-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Unrestricted role binding via BeanUtils in Java Servlet",
+      "candidate_id": "M-0005",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "line": 12,
+          "why": "BeanUtils.populate binds all request parameters including role"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "line": 10,
+          "why": "no field filtering or role check"
+        }
+      ],
+      "impact": "Any authenticated user can set the role field of an Account",
+      "severity": "critical",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only allowed fields or set role server‑side",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "ProfileServlet.doPost method (lines 9-16)",
+          "BeanUtils.populate usage"
+        ],
+        "control_found": null,
+        "notes": "The code shows direct population of all request parameters into the Account object with no filtering or role enforcement.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:47cc80b68d7dd6dcc0d605fb83d8a929ebd6a5752da9de89a7b50339f698eaea",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0001",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /user/edit.do: missing owner verification",
+      "route_id": "R-0001",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/user/edit.do"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "start_line": 10,
+          "code": "String userId = request.getParameter(\"user_id\");",
+          "why": "ID from request",
+          "line": 10
+        },
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "start_line": 13,
+          "code": "PreparedStatement ps = conn.prepareStatement(\"UPDATE users SET email = '\" + email + \"' WHERE id = \" + userId);",
+          "why": "Query does not bind to user_id",
+          "line": 13
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify user ownership before update",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/struts/EditUserAction.java"
+        ],
+        "control_found": null,
+        "notes": "The UPDATE statement uses the user_id from the request without any ownership verification or parameter binding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:fd2aa0a34a547de1965d6735e927f0eb2dac3c019cdf1e1d14bdfa9666ae1581",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0002",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /classic-asp/shop/member.asp?mode=edit: missing owner verification",
+      "route_id": "R-0002",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=edit"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 6,
+          "code": "sql = \"UPDATE members SET name = '\" & Replace(Request.Form(\"name\"), \"'\", \"''\") & \"'\"",
+          "why": "ID from request, no ownership check",
+          "line": 6
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 7,
+          "code": "sql = sql & \" WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "ID from request, no ownership check",
+          "line": 7
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 8,
+          "code": "conn.Execute sql",
+          "why": "Executes query without owner check",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp lines 6-8",
+          "classic-asp/shop/inc/auth.asp line 2"
+        ],
+        "control_found": null,
+        "notes": "The code updates a member record using the member_id from the request without any ownership verification. The only visible check is authentication in inc/auth.asp, which does not enforce ownership.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:99af1eeee9810e226e1e9087abed7ad8883a9cb6e96fcb50fdcd281bc652e4bd",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0003",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /classic-asp/shop/member.asp?mode=delete: missing owner verification",
+      "route_id": "R-0003",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=delete"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 9,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "ID from request, no ownership check",
+          "line": 9
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind delete to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/member.asp line 9",
+          "classic-asp/shop/inc/auth.asp line 2"
+        ],
+        "control_found": null,
+        "notes": "The delete statement uses the member_id from the query string directly. No ownership check is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:29fb5a10552560ba47d892b16a1ad7a135ce2f282623ae6cc75f5074f34e83cf",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0004",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /classic-asp/shop/order.asp: missing owner verification on first query",
+      "route_id": "R-0004",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/order.asp"
+      },
+      "location": {
+        "file": "classic-asp/shop/order.asp",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/order.asp",
+          "start_line": 5,
+          "code": "id = Request(\"id\")",
+          "why": "ID from request, no ownership check",
+          "line": 5
+        },
+        {
+          "file": "classic-asp/shop/order.asp",
+          "start_line": 6,
+          "code": "Set rs = conn.Execute(\"SELECT * FROM orders WHERE id = \" & id)",
+          "why": "Query does not bind to user_id",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind order query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "classic-asp/shop/order.asp lines 5-6",
+          "classic-asp/shop/inc/auth.asp line 2"
+        ],
+        "control_found": null,
+        "notes": "The first query selects an order by id from the request without binding to the current user. The later query includes a user_id check, but the initial query remains vulnerable.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:e93fc6e82ca183dc55be6fef39c3146001c4dbab631322ba960d00930e254b5d",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0005",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /coldfusion/app/OrderService.cfc?method=getOrder: missing owner verification",
+      "route_id": "R-0005",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/OrderService.cfc?method=getOrder"
+      },
+      "location": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "start_line": 4,
+          "code": "<cfquery name=\"q\" datasource=\"shop\">",
+          "why": "Query starts here",
+          "line": 4
+        },
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "start_line": 5,
+          "code": "SELECT * FROM orders WHERE id = #arguments.orderId#",
+          "why": "ID from request, no ownership check",
+          "line": 5
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind order query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "coldfusion/app/OrderService.cfc lines 4-5"
+        ],
+        "control_found": null,
+        "notes": "The cfquery directly interpolates the orderId argument into the SQL without any ownership verification or parameter binding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c856936fd2eec990ab6cbc31fe4731bcb2077a14890d911f4e4369445335a26d",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0006",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /coldfusion/app/order.cfm: missing owner verification on first query",
+      "route_id": "R-0006",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/order.cfm"
+      },
+      "location": {
+        "file": "coldfusion/app/order.cfm",
+        "start_line": 2
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/order.cfm",
+          "start_line": 2,
+          "code": "<cfquery name=\"qOrder\" datasource=\"shop\">",
+          "why": "Query starts here",
+          "line": 2
+        },
+        {
+          "file": "coldfusion/app/order.cfm",
+          "start_line": 3,
+          "code": "SELECT * FROM orders WHERE id = #url.id#",
+          "why": "ID from request, no ownership check",
+          "line": 3
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind order query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "coldfusion/app/order.cfm lines 2-3",
+          "coldfusion/app/order.cfm lines 5-8"
+        ],
+        "control_found": null,
+        "notes": "The first query qOrder selects an order by id from the URL without checking the current user. The subsequent qMine query includes a user_id check, but the initial query is still exposed.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:eb3e24aeaf1e9815041914c036da60526aa633ef0d70a5b2fcebfdd4a8b2309b",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0007",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Admin/DeleteUser: missing owner verification",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 11,
+          "code": "public ActionResult DeleteUser(int id)",
+          "why": "Method signature",
+          "line": 11
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 12,
+          "code": "var u = db.Users.Find(id);",
+          "why": "Finds user by id from request",
+          "line": 12
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 13,
+          "code": "db.Users.Remove(u);",
+          "why": "Deletes user without ownership check",
+          "line": 13
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Restrict to admin role and verify ownership",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs lines 6-13"
+        ],
+        "control_found": null,
+        "notes": "The DeleteUser action lacks any ownership or role check; the controller is only marked with [Authorize], allowing any authenticated user to delete any user.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:ff7ce7baa2540985e6cf2198bc15a646ece40603a915b3ccbe7e0fb05ccca5d7",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0009",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in POST /Admin/Export: missing role check allows data exposure",
+      "route_id": "R-0009",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/Export"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 30
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 30,
+          "code": "public ActionResult Export()",
+          "why": "Method signature",
+          "line": 30
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 32,
+          "code": "if (Request.QueryString[\"isAdmin\"] == \"true\")",
+          "why": "Checks query string, not role",
+          "line": 32
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 33,
+          "code": "return Json(db.Users.ToList(), JsonRequestBehavior.AllowGet);",
+          "why": "Returns all users",
+          "line": 33
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-285"
+      ],
+      "recommendation": "Add role-based authorization",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-35"
+        ],
+        "control_found": null,
+        "notes": "Export is protected only by class-level [Authorize] and a query‑string flag; no role or ownership verification is performed.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c99eea2bd0e04671e882ae366561fdcb05e616e63bc0be8447284701cb748766",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0010",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Customer/Edit: missing owner verification",
+      "route_id": "R-0010",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/Edit"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 14,
+          "code": "db.Entry(customer).State = System.Data.Entity.EntityState.Modified;",
+          "why": "Marks the supplied customer entity as modified without checking that the current user owns it",
+          "line": 14
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 15,
+          "code": "db.SaveChanges();",
+          "why": "Persists the changes, allowing any authenticated user to modify any customer record",
+          "line": 15
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Load the customer by ID and verify ownership before applying changes",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/CustomerController.cs lines 11-15"
+        ],
+        "control_found": null,
+        "notes": "The Edit action marks the supplied Customer entity as Modified and saves it without checking ownership. The controller is decorated with [Authorize], which only ensures authentication, not ownership.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:2ff50be6396a3261e2543aa3b955d99113acdc748a014446cb0b489407bafe90",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0011",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Customer/EditName: missing owner verification",
+      "route_id": "R-0011",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/EditName"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 20
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 22,
+          "code": "db.SaveChanges();",
+          "why": "Saves changes to the customer entity without verifying that the current user owns it",
+          "line": 22
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify ownership before saving changes",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/CustomerController.cs lines 20-23"
+        ],
+        "control_found": null,
+        "notes": "EditName receives a Customer with only Id and Name bound, then calls SaveChanges without verifying that the current user owns the customer.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:f8f8312969722c53dc4fbfcebddf09bfc6ea44e77f308058c6f5a0a79916c6a1",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0012",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Customer/Refresh: missing owner verification",
+      "route_id": "R-0012",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/Refresh"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 29,
+          "code": "var customer = db.Customers.Find(id);",
+          "why": "Loads customer by ID supplied in the request without checking ownership",
+          "line": 29
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 30,
+          "code": "TryUpdateModel(customer);",
+          "why": "Updates the customer entity without verifying that the current user owns it",
+          "line": 30
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 31,
+          "code": "db.SaveChanges();",
+          "why": "Persists the changes, allowing any authenticated user to modify any customer record",
+          "line": 31
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Load the customer and verify ownership before updating",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/CustomerController.cs lines 27-32"
+        ],
+        "control_found": null,
+        "notes": "Refresh loads a Customer by id and applies TryUpdateModel before saving, with no ownership check. The [Authorize] attribute only guarantees authentication.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:642d9e00b1146b80dc8724396082e7bf839dc74fdcc9224c6452557ed7b19ab7",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0013",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /Invoice/Details: missing owner verification",
+      "route_id": "R-0013",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/Invoice/Details"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 11
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 11,
+          "code": "public ActionResult Details(int id)",
+          "why": "Method signature",
+          "line": 11
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 13,
+          "code": "var inv = db.Invoices.Find(id);",
+          "why": "Finds invoice by id from request",
+          "line": 13
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 14,
+          "code": "return View(inv);",
+          "why": "Returns invoice without ownership check",
+          "line": 14
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify invoice ownership",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 6-14"
+        ],
+        "control_found": null,
+        "notes": "Details retrieves an invoice by id without checking that the invoice belongs to the current user.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:a63c895e83988c707151981826dda723122bb41598834dcfa82591301c26b773",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0015",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Invoice/Search: missing owner verification",
+      "route_id": "R-0015",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Invoice/Search"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 26
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 26,
+          "code": "public ActionResult Search(string customer)",
+          "why": "Method signature",
+          "line": 26
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 28,
+          "code": "var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();",
+          "why": "Raw query uses customer from request, no ownership check",
+          "line": 28
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add ownership filter to query",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 25-29"
+        ],
+        "control_found": null,
+        "notes": "Search builds a raw SQL query from user input and returns all matching invoices, with no ownership filter.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:58c2c056d7e71edc7c9962f37053cd74e5daff6f95dd7fc443c4dd44338ad450",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0016",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /dotnet-legacy/Web/Handlers/GetFile.ashx: missing owner verification",
+      "route_id": "R-0016",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Handlers/GetFile.ashx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+          "start_line": 8,
+          "code": "string fileId = context.Request.QueryString[\"file_id\"];",
+          "why": "Takes file identifier directly from the request",
+          "line": 8
+        },
+        {
+          "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+          "start_line": 9,
+          "code": "string path = DocStore.PathFor(fileId);",
+          "why": "Builds file path without checking that the current user owns the file",
+          "line": 9
+        },
+        {
+          "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+          "start_line": 10,
+          "code": "context.Response.TransmitFile(path);",
+          "why": "Serves the file to the requester, enabling download of any file",
+          "line": 10
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify that the current user owns the requested file before transmitting",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Handlers/GetFile.ashx:8-10"
+        ],
+        "control_found": null,
+        "notes": "The handler reads the file identifier directly from the query string, builds a path without any ownership verification, and transmits the file. No ownership or tenant check is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:d642a15232edeffab2a15511431577f3f9ce893382573e1c45e203eec7bb0cad",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0017",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /dotnet-legacy/Web/Orders/EditOrder.aspx.vb: missing owner verification",
+      "route_id": "R-0017",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 7,
+          "code": "Dim sql As String = \"UPDATE Orders SET Note = '\" & txtNote.Text & \"'\"",
+          "why": "SQL built from request data",
+          "line": 7
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 8,
+          "code": "sql &= \" WHERE OrderId = \" & hfOrderId.Value",
+          "why": "OrderId from hidden field, no ownership check",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify order ownership before update",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 6-13"
+        ],
+        "control_found": null,
+        "notes": "The update statement uses the OrderId from a hidden field without verifying that the current user owns the order.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:2ea5e8435292a4d79e53292c88e5a3a1b4a20a146f32ecd3b312dc2abc60a5f2",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0018",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /dotnet-legacy/Web/Orders/OrderDetail.aspx.cs: missing owner verification",
+      "route_id": "R-0018",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/OrderDetail.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 10,
+          "code": "string id = Request.QueryString[\"id\"];",
+          "why": "ID from request",
+          "line": 10
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 13,
+          "code": "var cmd = new SqlCommand(\"SELECT * FROM Orders WHERE OrderId = \" + id, conn);",
+          "why": "Query does not bind to user_id",
+          "line": 13
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind order query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs"
+        ],
+        "control_found": null,
+        "notes": "The unsafe query at line 13 is executed before any ownership check or parameter binding. No role or ownership guard is visible in the provided code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:03c16bbd7e443e60e4ed1827e0adb8534c92aaa782468773c94fb64c74f21119",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0019",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /java-legacy/WebContent/order/detail.jsp: missing owner verification",
+      "route_id": "R-0019",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/java-legacy/WebContent/order/detail.jsp"
+      },
+      "location": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "start_line": 3
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "start_line": 3,
+          "code": "String no = request.getParameter(\"no\");",
+          "why": "ID from request",
+          "line": 3
+        },
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "start_line": 5,
+          "code": "ResultSet rs = c.createStatement().executeQuery(\"SELECT * FROM orders WHERE order_no = '\" + no + \"'\");",
+          "why": "Query does not bind to user_id",
+          "line": 5
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind order query to current session user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/WebContent/order/detail.jsp"
+        ],
+        "control_found": null,
+        "notes": "The query concatenates the request parameter directly into the SQL string with no ownership check or parameter binding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:ec652d51f2910465a7f501f44711a7f6e698bf5baa030a30a23b1461eab30b63",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0020",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /account/save: missing owner verification",
+      "route_id": "R-0020",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/save"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 14
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "start_line": 14,
+          "code": "public String save(@ModelAttribute Account account) {",
+          "why": "Account object is bound directly from the request; attacker can set any id",
+          "line": 14
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "start_line": 15,
+          "code": "    accountDao.save(account);",
+          "why": "No check that the account belongs to the current user",
+          "line": 15
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind the save operation to the authenticated user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java"
+        ],
+        "control_found": null,
+        "notes": "The Account object is bound directly from the request and passed to the DAO without any ownership check.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:9000c4fa2f6055d14cf75d1662d403303b29e4f9180300dab9b97c58273fd6ea",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0021",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /account/rename: missing owner verification",
+      "route_id": "R-0021",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 20
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "start_line": 20,
+          "code": "public String rename(@ModelAttribute RenameForm form) {",
+          "why": "Form contains an id that can be set by the attacker",
+          "line": 20
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "start_line": 21,
+          "code": "    accountDao.rename(form.getId(), form.getName());",
+          "why": "No check that the id belongs to the current user",
+          "line": 21
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify ownership before renaming",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java"
+        ],
+        "control_found": null,
+        "notes": "The RenameForm contains an id that is used directly in the DAO call with no ownership verification.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:146872d643de658dcd96d7bbf5fe56300d60ee7171d9d0dd7e00305b65d20277",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0022",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in PUT /account/api: missing owner verification",
+      "route_id": "R-0022",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/account/api"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "start_line": 27,
+          "code": "public Account update(@RequestBody Account account) {",
+          "why": "Account object is deserialized from the request; attacker can set any id",
+          "line": 27
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "start_line": 28,
+          "code": "    return accountDao.save(account);",
+          "why": "No ownership check before saving",
+          "line": 28
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind update to the authenticated user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/AccountController.java:25-28"
+        ],
+        "control_found": null,
+        "notes": "The update method deserializes an Account object and directly passes it to accountDao.save without any ownership or role check visible in the provided code. No global filter or cast is shown.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:667b1fe358bedebcb8ba083eadd120bf13739387ae2c54e773f8b5bb8c0943ad",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0023",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /admin/users/{id}/delete: missing owner verification",
+      "route_id": "R-0023",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "start_line": 13,
+          "code": "@RequestMapping(value = \"/{id}/delete\", method = RequestMethod.POST)",
+          "why": "Endpoint accepts any user id",
+          "line": 13
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "start_line": 15,
+          "code": "    userDao.deleteById(id);",
+          "why": "No authentication or role check; any logged‑in user can delete any account",
+          "line": 15
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Require admin role before deleting a user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/AdminUserController.java:13-15"
+        ],
+        "control_found": null,
+        "notes": "The delete method accepts any user id and calls userDao.deleteById without a role or ownership guard. The @PreAuthorize annotation is present only on a different method.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:a4f576c3ecb678956e186f0ee7498af55e42a7b8632ed464b8eada05c59007b4",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0025",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /invoices/{id}: missing owner verification",
+      "route_id": "R-0025",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/{id}"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 15
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "start_line": 15,
+          "code": "@RequestMapping(value = \"/{id}\", method = RequestMethod.GET)",
+          "why": "Endpoint accepts any invoice id",
+          "line": 15
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "start_line": 17,
+          "code": "        model.addAttribute(\"invoice\", invoiceDao.findById(id));",
+          "why": "No check that the invoice belongs to the current user",
+          "line": 17
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind invoice lookup to the authenticated user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/InvoiceController.java:15-17"
+        ],
+        "control_found": null,
+        "notes": "The show method retrieves an invoice by id without verifying that the invoice belongs to the current user. No ownership check or role guard is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:4213dd0e852a3473b5f77a0dd8c52fbbb9776802a6d4475b6edad70be330df73",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0027",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /invoices/search: missing owner verification",
+      "route_id": "R-0027",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/search"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "start_line": 27,
+          "code": "@RequestMapping(value = \"/search\", method = RequestMethod.GET)",
+          "why": "Endpoint accepts any customer string",
+          "line": 27
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "start_line": 29,
+          "code": "        model.addAttribute(\"list\", session.createQuery(\"from Invoice i where i.customer = '\" + customer + \"'\").list());",
+          "why": "Query is built from user input without binding to current user",
+          "line": 29
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Restrict search to invoices owned by the current user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/InvoiceController.java:27-29"
+        ],
+        "control_found": null,
+        "notes": "The search method builds a query from a customer string without binding to the current user or applying an allow‑list. No ownership or role check is shown.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:b576c39e6469454d66f748f828a753ff3f9f250c5538a9c88b4a57760334d368",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0028",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /order/view: missing owner verification",
+      "route_id": "R-0028",
+      "endpoint": {
+        "method": "GET",
+        "path": "/order/view"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 11
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "start_line": 11,
+          "code": "String id = request.getParameter(\"orderId\");",
+          "why": "Order id comes directly from the request",
+          "line": 11
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "start_line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "No check that the order belongs to the current user",
+          "line": 15
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind order lookup to the authenticated user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "java-legacy/src/com/acme/web/OrderServlet.java:11-15"
+        ],
+        "control_found": null,
+        "notes": "The servlet retrieves an order by id directly from the request and queries the database without verifying ownership. No role or ownership guard is visible in the provided snippet.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:a589b3cdcfea2b9cc2c5190ffe4a0c2989e46fdd4d15b59781c1b74e3c554524",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0029",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /ProfileServlet: missing owner verification",
+      "route_id": "R-0029",
+      "endpoint": {
+        "method": "POST",
+        "path": "<see web.xml servlet-mapping>"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "start_line": 12,
+          "code": "BeanUtils.populate(account, request.getParameterMap());",
+          "why": "Populates an Account object with all request parameters without checking ownership",
+          "line": 12
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "start_line": 13,
+          "code": "/* no further processing shown */",
+          "why": "No authentication or ownership check is performed before persisting the account",
+          "line": 13
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Load the account by ID and verify that the current user owns it before updating",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "java-legacy/src/com/acme/web/ProfileServlet.java:12-13"
+        ],
+        "control_found": null,
+        "notes": "The servlet populates an Account object with all request parameters and does not perform any ownership check before persisting. No compensating control is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:f8c53a1c11f4e356cd58bf22809c720589dfa46c38243f129f05d96341d8a333",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0030",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /admin/users/:id/delete: missing owner verification",
+      "route_id": "R-0030",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/delete"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "start_line": 8,
+          "code": "router.post('/admin/users/:id/delete', ensureLoggedIn, function (req, res) {",
+          "why": "Endpoint accepts any user id",
+          "line": 8
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "start_line": 9,
+          "code": "  User.deleteOne({ _id: req.params.id }, function () { res.sendStatus(204); });",
+          "why": "No role check; any logged‑in user can delete any account",
+          "line": 9
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Require admin role before deleting a user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "router.post('/admin/users/:id/delete', ensureLoggedIn, function (req, res) {",
+          "  User.deleteOne({ _id: req.params.id }, function () { res.sendStatus(204); });"
+        ],
+        "control_found": null,
+        "notes": "No admin role or ownership check is performed before deleting a user.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:3dd2e6ecf2f0730978e0c2a05f31e2af3920a107cd2af0b5ea81c9ded7f6a100",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0033",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /orders/:id: missing owner verification",
+      "route_id": "R-0033",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/:id"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 8,
+          "code": "router.get('/orders/:id', ensureLoggedIn, function (req, res) { Order.findById(req.params.id, function (err, order) { res.json(order); }); });",
+          "why": "The order ID comes from the request and the query does not filter by the authenticated user.",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind the query to the current session user.",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "router.get('/orders/:id', ensureLoggedIn, function (req, res) {",
+          "  Order.findById(req.params.id, function (err, order) { res.json(order); });"
+        ],
+        "control_found": null,
+        "notes": "The order is retrieved by ID without filtering by the authenticated user.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:3efb41972fd6c818041a922563d6a1e65eb9cdcd63b764b52ff4ffce238a6c8d",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0038",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /stats: missing owner verification",
+      "route_id": "R-0038",
+      "endpoint": {
+        "method": "GET",
+        "path": "/stats"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 28
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 28,
+          "code": "router.get('/stats', function (req, res) { db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); }); });",
+          "why": "The shop_id is taken from the request and the query is not filtered by the authenticated user.",
+          "line": 28
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add authentication guard and filter by the current user’s shop.",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "router.get('/stats', function (req, res) {",
+          "  db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });"
+        ],
+        "control_found": null,
+        "notes": "The shop_id is taken directly from the request and no authentication guard is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:e0d4076276caf1e9557699dcd9494f106ac443c30bfdb55c71fb7aaedda29b14",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0043",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /perl-cgi/cgi-bin/order.cgi: missing owner verification",
+      "route_id": "R-0043",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/perl-cgi/cgi-bin/order.cgi"
+      },
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "start_line": 13,
+          "code": "my $sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "why": "The order ID comes from the request and the query does not filter by the authenticated user.",
+          "line": 13
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Use a parameterized query that includes the user_id.",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "my $sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "$sth->execute();"
+        ],
+        "control_found": null,
+        "notes": "An insecure query is executed before the safe query that includes user_id.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:0823c809d4892eb324f1b12ff01c568fed5e7b10e716e2a0064b9ed53c6f0380",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0044",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /invoice/view/{id}: missing owner verification",
+      "route_id": "R-0044",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/view/{id}"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "The invoice ID comes from the request and the query does not filter by the authenticated user.",
+          "line": 10
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an owner check to the query.",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "$this->load->view('invoice', array('inv' => $q->row()));"
+        ],
+        "control_found": null,
+        "notes": "The invoice is fetched by ID without filtering by the authenticated user.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:9e7c8370d77a2f7c2d568a97ad128c427ef21f3b9775cfaa95eb72b2c5da6115",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0046",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /invoice/update: missing owner verification",
+      "route_id": "R-0046",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/update"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 23,
+          "code": "$this->db->query(\"UPDATE invoices SET note = ? WHERE id = ?\", array($note, $id));",
+          "why": "The invoice ID comes from the request and the update does not filter by the authenticated user.",
+          "line": 23
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an owner check to the update query.",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-codeigniter/application/controllers/Invoice.php lines 20-24"
+        ],
+        "control_found": null,
+        "notes": "No ownership or role check, integer cast, or allow‑list is visible in the update method. The controller does not include any auth guard in the provided context.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:4f200be5155b2854ef32764906134098549058ea95b61c478a18aa59988ef8cb",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0057-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in GET /php-plain/admin.php?action=view: missing admin authorization",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/admin.php?action=view"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 8,
+          "code": "$r = mysql_query(\"SELECT * FROM users WHERE id = \" . $uid);",
+          "why": "No admin check; any logged-in user can view any user record by supplying uid",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin.php lines 5-9",
+          "php-plain/inc/auth.php lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "The included auth file only verifies a logged‑in session; there is no admin role check before the SELECT query.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:cc867961fc9e03b8d4c0fa8a48dd37b02dcf819859c0a79e37915d2b20e5bb78",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0057-2",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in POST /php-plain/admin.php?action=delete: missing admin authorization",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin.php?action=delete"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "No admin check; any logged-in user can delete any user record by supplying id",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin.php lines 10-13",
+          "php-plain/inc/auth.php lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "No admin role check is present before the DELETE statement; the auth file does not enforce role.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:69e73d203136e6bb864223ff8a016aba9833243225e09244054bc123d36ab648",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0058-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in GET /php-plain/admin.php?action=view: missing admin authorization",
+      "route_id": "R-0058",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/admin.php?action=view"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 8,
+          "code": "$r = mysql_query(\"SELECT * FROM users WHERE id = \" . $uid);",
+          "why": "No admin check; any logged-in user can view any user record by supplying uid",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin.php lines 5-9",
+          "php-plain/inc/auth.php lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "Same as BOLA-R-0057-1: only a login check is performed, no admin guard before the SELECT.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:4a9c6a0b64c50807e31b9d3dfcfc80fc6b039ab7e96d393502573010849e1856",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0058-2",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in POST /php-plain/admin.php?action=delete: missing admin authorization",
+      "route_id": "R-0058",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin.php?action=delete"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "No admin check; any logged-in user can delete any user record by supplying id",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-plain/admin.php lines 10-13",
+          "php-plain/inc/auth.php lines 1-7"
+        ],
+        "control_found": null,
+        "notes": "Same as BOLA-R-0057-2: no admin role check before the DELETE.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:5f4a304f0d15de265879c259fb3e7dce88c9be1061597334f91c47b1b6dd6271",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0059-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in POST /php-plain/manage_users.php: missing admin authorization",
+      "route_id": "R-0059",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/manage_users.php"
+      },
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "No admin check; any logged-in user can delete any user record by supplying id",
+          "line": 6
+        },
+        {
+          "file": "php-plain/manage_users.php",
+          "start_line": 7,
+          "code": "$stmt->execute(array((int)$_POST['id']));",
+          "why": "No admin check; any logged-in user can delete any user record by supplying id",
+          "line": 7
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "Checked lines 1-12 of php-plain/manage_users.php"
+        ],
+        "control_found": null,
+        "notes": "The script performs a delete operation after a POST request but contains only a login check. No admin role check is present; the integer cast on $_POST['id'] is insufficient.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:008ddeaa85f4816b40232882477c347c1374d0e34eb390d7ba54103922d1da59",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0061-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /php-plain/order_detail.php: missing ownership verification",
+      "route_id": "R-0061",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/order_detail.php"
+      },
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "No ownership check; any logged-in user can view any order by supplying id",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current session user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "Checked lines 1-8 of php-plain/order_detail.php"
+        ],
+        "control_found": null,
+        "notes": "The visible code performs a direct query on the order id without any ownership verification. The auth model indicates a check exists elsewhere, but it is not shown in the provided context.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:835c7046e8f9b4f1efe4a97ba040bb7f831da06ad0f6572e9360c6d7558a8506",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0066-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in POST /php-plain/admin/delete_user.php: missing admin authorization",
+      "route_id": "R-0066",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/delete_user.php"
+      },
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "No admin check; any logged-in user can delete any user record by supplying id",
+          "line": 6
+        },
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "start_line": 7,
+          "code": "$stmt->execute(array($id));",
+          "why": "No admin check; any logged-in user can delete any user record by supplying id",
+          "line": 7
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "Checked lines 1-8 of php-plain/admin/delete_user.php"
+        ],
+        "control_found": null,
+        "notes": "The file includes only a login check via inc/auth.php; no admin role check is present. The integer cast on $_POST['id'] does not provide authorization.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:129cd6c2fbef0081813a0bc03a9d112ed8972207ef449be38fd4cc03bef853a1",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0067-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "BOLA in POST /php-plain/admin/promote.php: missing admin authorization",
+      "route_id": "R-0067",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php"
+      },
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"UPDATE users SET role = 'admin' WHERE id = ?\");",
+          "why": "No admin check; any logged-in user can promote any user to admin",
+          "line": 6
+        },
+        {
+          "file": "php-plain/admin/promote.php",
+          "start_line": 7,
+          "code": "$stmt->execute(array((int)$_POST['uid']));",
+          "why": "No admin check; any logged-in user can promote any user to admin",
+          "line": 7
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict admin actions to users with admin role",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "Checked lines 1-8 of php-plain/admin/promote.php"
+        ],
+        "control_found": null,
+        "notes": "Only a login check is performed; there is no admin role verification. The cast to int on $_POST['uid'] does not mitigate the missing authorization.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:6dc0277da98df231d8fc02ee1493c920b33ee571a51150fae72b902ead20c3ab",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0069-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /orders/<int:order_id>: missing ownership verification",
+      "route_id": "R-0069",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/<int:order_id>"
+      },
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id);",
+          "why": "No ownership check; any logged-in user can view any order by supplying order_id",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind query to current user",
+      "status": "confirmed",
+      "verification": {
+        "verdict": "confirmed",
+        "reason_code": "traced",
+        "checked": [
+          "Checked lines 8-13 of python-flask/app.py"
+        ],
+        "control_found": null,
+        "notes": "The /orders/<int:order_id> route executes a query based solely on the order id with no user‑ownership filter. Only the login_required decorator is present.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:8cba56db899ed30b4e1dab440f085921515c324f8d9fff2d15ee38eb60afa641",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0073",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /users/<uid>/name: missing owner verification",
+      "route_id": "R-0073",
+      "endpoint": {
+        "method": "POST",
+        "path": "/users/<int:uid>/name"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "start_line": 18,
+          "code": "user = User.query.get(uid)",
+          "why": "Loads user by ID supplied in the URL without checking ownership",
+          "line": 18
+        },
+        {
+          "file": "python-flask/profile.py",
+          "start_line": 19,
+          "code": "user.name = request.json[\"name\"]",
+          "why": "Updates the user record without verifying that the current session user owns it",
+          "line": 19
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind the update to the current session user",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "python-flask/profile.py lines 16-20"
+        ],
+        "control_found": null,
+        "notes": "The rename endpoint loads a User by the supplied uid and updates the name without any ownership or role check. No cast or allow‑list is present in the visible code.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:bfc179df51db588076982a9b160cccb6aa5f7c21b296231a88eb6cbdfe2c3842",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "BOLA-R-0074",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in PATCH /users/<uid>: missing owner verification",
+      "route_id": "R-0074",
+      "endpoint": {
+        "method": "PATCH",
+        "path": "/users/<int:uid>"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 24
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "start_line": 26,
+          "code": "user = User.query.get(uid)",
+          "why": "Loads user by ID supplied in the URL without ownership check",
+          "line": 26
+        },
+        {
+          "file": "python-flask/profile.py",
+          "start_line": 27,
+          "code": "for key, value in request.json.items():\n    setattr(user, key, value)",
+          "why": "Updates arbitrary fields of the user record without verifying ownership",
+          "line": 27
+        }
+      ],
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify that the current session user owns the target user before updating",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "python-flask/profile.py lines 24-29"
+        ],
+        "control_found": null,
+        "notes": "The patch endpoint retrieves a User by uid and applies arbitrary updates without verifying that the current session user owns the record. No ownership guard is visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:53120a82329f249cb5d921adbb2d6965297c52b37440e5f47d8a2525bbe46fde",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows owner_id to be set by any user",
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 21,
+          "why": "Team::create($request->all()) binds all request fields, including owner_id which is writable"
+        }
+      ],
+      "impact": "owner_id field writable by any authenticated user",
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Restrict mass assignment to non-privileged fields or set guarded/fillable to exclude owner_id",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-laravel/app/Http/Controllers/AccountController.php lines 21-23"
+        ],
+        "control_found": null,
+        "notes": "The controller calls Team::create($request->all()) with no visible mass‑assignment guard. The Team model definition (fillable/guarded) is not shown, so a compensating control cannot be confirmed.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:8b971db7731e918c2e512a87c2f1fa5db1332111bbe36388f36cd8dbc836da8a",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "profile.js router.put('/profile') handler (lines 7-9)",
+          "User.findByIdAndUpdate with req.body"
+        ],
+        "control_found": null,
+        "notes": "The handler updates the user document with the entire request body without any field filtering or privilege checks.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:ec78e14c30f0e52cc4cdf220e7fb71d0f8c9347306faf2453ce6d54de02aeb7a",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "profile.js router.post('/signup') handler (lines 15-17)",
+          "new User(req.body) and user.save()"
+        ],
+        "control_found": null,
+        "notes": "The signup route creates a new user from the full request body, exposing all fields to the client.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:ff246809367a9a11f3cf5de56d796bac3a7d168644e45ba113f83bbe26fcd608",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration binds entire request body to User model",
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "AccountController.register method (lines 11-14)",
+          "User::create($request->all())"
+        ],
+        "control_found": null,
+        "notes": "The register action mass‑assigns all request fields to the User model without any explicit field filtering.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:0d993d49cea372dd80c171b78e6f7ec5a9ee98469cbb325ec6fa20f80f2824d3",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Team creation binds entire request body to Team model",
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 36,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "php-laravel/app/Http/Controllers/AccountController.php lines 21-23"
+        ],
+        "control_found": null,
+        "notes": "Same as finding 1: the entire request body is bound to the Team model with no visible guard. The model’s mass‑assignment configuration is not visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:244d21feb05b766e446de3435905992e0d39b20a5436a9de0683c6a008b0159a",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds entire request JSON to User model",
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 10,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "python-flask/profile.py lines 8-12"
+        ],
+        "control_found": null,
+        "notes": "User creation uses User(**request.json) to bind all fields. No visible guard is present in the shown code, and the model’s mass‑assignment configuration is not visible.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:51138561ba9122be66c6d5528102fe010b0ace15250bc672817339e3750f8de1",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "PATCH endpoint sets arbitrary attributes from request JSON",
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 27,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "likely",
+      "verification": {
+        "verdict": "likely",
+        "reason_code": "code_not_visible",
+        "checked": [
+          "python-flask/profile.py lines 24-29"
+        ],
+        "control_found": null,
+        "notes": "The PATCH endpoint iterates over request.json and sets attributes on the User object without any visible guard. The User model’s mass‑assignment restrictions are not shown.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:c5462b8a2767bef52d1825278c78faa6d04a3dcaeaba8db7445a2210c5deac7c",
+      "baseline_state": "new"
+    },
+    {
+      "finding_id": "INJ-I-0035-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in python-flask/app.py:12",
+      "candidate_id": "I-0035",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 10,
+          "code": "order_id = request.view_args['order_id']",
+          "why": "source: URL path parameter",
+          "line": 10
+        },
+        {
+          "file": "python-flask/app.py",
+          "start_line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "unsanitized string formatting",
+          "line": 12
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries",
+      "status": "rejected",
+      "verification": {
+        "verdict": "rejected",
+        "reason_code": "control_found",
+        "checked": [
+          "python-flask/app.py line 8 (route decorator)",
+          "python-flask/app.py line 12 (query execution)"
+        ],
+        "control_found": {
+          "file": "python-flask/app.py",
+          "line": 8,
+          "code": "@app.route('/orders/<int:order_id>')"
+        },
+        "notes": "The Flask route converter `<int:order_id>` guarantees that `order_id` is an integer before it reaches the handler, preventing SQL injection via the string formatting used in the query.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:380cba3dbd163699e9ff5dd53924bb40b0532d1acc79dd1496f72558597fd643"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User insertion uses extract($_POST) to bind all fields",
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "php-plain/register.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "php-plain/register.php",
+          "line": 4,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "rejected",
+      "verification": {
+        "verdict": "rejected",
+        "reason_code": "evidence_mismatch",
+        "checked": [
+          "php-plain/register.php lines 4-6"
+        ],
+        "control_found": null,
+        "notes": "The code extracts $_POST but only inserts the email and name columns into the users table. No mass assignment of privileged fields occurs, so the evidence does not support the finding.",
+        "suggested_subtype": null,
+        "suggested_cwe": null
+      },
+      "fingerprint": "kfp1:8083b1070ea8434ace18c5599bb58a5b7793bb16ca3ff34eafa6112c524e7926"
+    }
+  ]
+}

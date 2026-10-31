@@ -1,0 +1,248 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration binds entire request body to User model",
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows owner_id to be set by any user",
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 21,
+          "why": "Team::create($request->all()) binds all request fields, including owner_id which is writable"
+        }
+      ],
+      "impact": "owner_id field writable by any authenticated user",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Restrict mass assignment to non-privileged fields or set guarded/fillable to exclude owner_id",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Team creation binds entire request body to Team model",
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 36,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User insertion uses extract($_POST) to bind all fields",
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "php-plain/register.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "php-plain/register.php",
+          "line": 4,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "PATCH endpoint sets arbitrary attributes from request JSON",
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 27,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds entire request JSON to User model",
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 10,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unknown privileged fields may be writable",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review model definition to ensure no privileged fields are mass assignable",
+      "status": "needs_review"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "needs_review"
+    }
+  ]
+}

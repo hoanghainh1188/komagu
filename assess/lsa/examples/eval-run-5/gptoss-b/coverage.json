@@ -1,0 +1,44 @@
+{
+  "route_candidates": 74,
+  "inventoried": 74,
+  "rejected": 0,
+  "missing_from_inventory": [],
+  "bola_routes_to_audit": 74,
+  "bola_routes_without_verdict": [
+    "R-0001",
+    "R-0002",
+    "R-0003",
+    "R-0004",
+    "R-0005",
+    "R-0006",
+    "R-0007",
+    "R-0008",
+    "R-0009",
+    "R-0013",
+    "R-0014",
+    "R-0015",
+    "R-0017",
+    "R-0018",
+    "R-0019"
+  ],
+  "bfla_routes_to_audit": 0,
+  "bfla_routes_without_verdict": [],
+  "injection_candidates": 38,
+  "injection_candidates_without_verdict": [],
+  "mass_candidates": 15,
+  "mass_candidates_without_verdict": [],
+  "findings_without_verification": [],
+  "duplicates_removed": [
+    {
+      "kept": "BOLA-R-0057-1",
+      "dropped": "BOLA-R-0057-2"
+    },
+    {
+      "kept": "BOLA-R-0058-1",
+      "dropped": "BOLA-R-0058-2"
+    }
+  ],
+  "validation_errors": [],
+  "new_issues_from_verifier": [],
+  "out_of_scope_notes": []
+}

@@ -1,0 +1,226 @@
+{
+  "repo": "repo",
+  "generated_by": "lsa detect_stack.py 0.3.1",
+  "stacks": [
+    {
+      "id": "php",
+      "language": "php",
+      "version_hint": null,
+      "evidence": [
+        "20 file(s) with extension .php, .php3, .php4, .php5, .phtml"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "php-codeigniter",
+      "language": "php",
+      "version_hint": null,
+      "evidence": [
+        "marker file php-codeigniter/system/core/CodeIgniter.php"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "php-laravel",
+      "language": "php",
+      "version_hint": null,
+      "evidence": [
+        "pattern /Route::(get|post|put|delete|any|match|re/ in php-laravel/routes/web.php"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "java-servlet",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "marker file java-legacy/WebContent/WEB-INF/web.xml",
+        "pattern /extends\\s+HttpServlet|@WebServlet/ in java-legacy/src/com/acme/web/OrderServlet.java",
+        "pattern /extends\\s+HttpServlet|@WebServlet/ in java-legacy/src/com/acme/web/ProfileServlet.java"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "java-jsp",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "1 file(s) with extension .jsp, .jspf"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "java-struts1",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "marker file java-legacy/WebContent/WEB-INF/struts-config.xml",
+        "pattern /extends\\s+(Dispatch|LookupDispatch|Mappi/ in java-legacy/src/com/acme/struts/EditUserAction.java"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "java-spring-mvc",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "pattern /@(Controller|RestController)\\b|@RequestM/ in java-legacy/src/com/acme/web/AccountController.java",
+        "pattern /@(Controller|RestController)\\b|@RequestM/ in java-legacy/src/com/acme/web/AdminUserController.java",
+        "pattern /@(Controller|RestController)\\b|@RequestM/ in java-legacy/src/com/acme/web/InvoiceController.java"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "java-mybatis",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "pattern /<mapper\\s+namespace=|org\\.apache\\.ibatis/ in java-legacy/src/com/acme/mapper/OrderMapper.xml"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "java-hibernate",
+      "language": "java",
+      "version_hint": null,
+      "evidence": [
+        "pattern /org\\.hibernate\\.|\\.hbm\\.xml|createQuery\\/ in java-legacy/src/com/acme/web/InvoiceController.java"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "dotnet-webforms",
+      "language": "csharp/vbnet",
+      "version_hint": null,
+      "evidence": [
+        "2 file(s) with extension .ascx, .aspx"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "dotnet-handlers",
+      "language": "csharp/vbnet",
+      "version_hint": null,
+      "evidence": [
+        "1 file(s) with extension .ashx"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "dotnet-mvc",
+      "language": "csharp/vbnet",
+      "version_hint": null,
+      "evidence": [
+        "pattern /:\\s*(ControllerBase|Controller)\\b|Inheri/ in dotnet-legacy/Web/Controllers/AdminController.cs",
+        "pattern /:\\s*(ControllerBase|Controller)\\b|Inheri/ in dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "pattern /:\\s*(ControllerBase|Controller)\\b|Inheri/ in dotnet-legacy/Web/Controllers/InvoiceController.cs"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "classic-asp",
+      "language": "vbscript",
+      "version_hint": null,
+      "evidence": [
+        "4 file(s) with extension .asa, .asp"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "perl-cgi",
+      "language": "perl",
+      "version_hint": null,
+      "evidence": [
+        "1 file(s) with extension .cgi",
+        "pattern /use\\s+CGI\\b|CGI->new|use\\s+DBI\\b/ in perl-cgi/cgi-bin/order.cgi"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "coldfusion",
+      "language": "cfml",
+      "version_hint": null,
+      "evidence": [
+        "2 file(s) with extension .cfc, .cfm, .cfml"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "node-express",
+      "language": "javascript",
+      "version_hint": null,
+      "evidence": [
+        "pattern /require\\(\\s*['\\\"]express['\\\"]\\s*\\)|from\\/ in node-express/routes/admin.js",
+        "pattern /require\\(\\s*['\\\"]express['\\\"]\\s*\\)|from\\/ in node-express/routes/orders.js",
+        "pattern /require\\(\\s*['\\\"]express['\\\"]\\s*\\)|from\\/ in node-express/routes/profile.js"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "python-flask",
+      "language": "python",
+      "version_hint": null,
+      "evidence": [
+        "pattern /from\\s+flask\\s+import|import\\s+flask/ in python-flask/app.py",
+        "pattern /from\\s+flask\\s+import|import\\s+flask/ in python-flask/profile.py"
+      ],
+      "confirmed": false
+    },
+    {
+      "id": "sql-procedures",
+      "language": "sql",
+      "version_hint": null,
+      "evidence": [
+        "pattern /(?i)create\\s+(or\\s+replace\\s+)?proc(edur/ in sql-procs/sp_search_orders.sql"
+      ],
+      "confirmed": false
+    }
+  ],
+  "data_access": [
+    "JDBC",
+    "mysql_* (no binding)",
+    "ColdFusion cfquery",
+    "Entity Framework / LINQ to SQL",
+    "ADO.NET",
+    "Hibernate/JPA",
+    "Classic ADO",
+    "MyBatis/iBATIS",
+    "TypeORM (Node/TS)",
+    "Perl DBI",
+    "MongoDB",
+    "PDO"
+  ],
+  "databases": [
+    "MySQL",
+    "SQL Server",
+    "MongoDB"
+  ],
+  "file_counts": {
+    ".php": 20,
+    ".java": 7,
+    ".cs": 5,
+    ".asp": 4,
+    ".xml": 3,
+    ".js": 3,
+    ".aspx": 2,
+    ".py": 2,
+    ".cfc": 1,
+    ".cfm": 1,
+    ".config": 1,
+    ".ashx": 1,
+    ".vb": 1,
+    ".jsp": 1,
+    ".cgi": 1,
+    ".sql": 1
+  },
+  "knowledge_files": [
+    "knowledge/stacks/php.md",
+    "knowledge/stacks/java.md",
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/classic-asp.md",
+    "knowledge/stacks/perl-cgi.md",
+    "knowledge/stacks/coldfusion.md",
+    "knowledge/stacks/node-python-ruby.md"
+  ],
+  "notes": "Heuristic result. The stack-detector agent must confirm each item."
+}

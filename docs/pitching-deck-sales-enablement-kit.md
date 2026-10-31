@@ -133,17 +133,17 @@ flowchart LR
 | **Tỷ lệ báo động giả (False Positives)** | **0%** | **0 (`[]`)** | Tuyệt đối không báo sai các hàm truy vấn an toàn |
 | **Độ chính xác (Precision)** | $\ge 0.95$ | **1.000 (57 / 57)** | 100% lỗi báo ra là chính xác và có thể kiểm chứng |
 
-- **Run 4 — BFLA & Mass Assignment, model chạy local (`gpt-oss:20b` trên Ollama, code không rời máy):**
+- **Run 4–5 — BFLA & Mass Assignment, model chạy local (`gpt-oss:20b` trên Ollama, code không rời máy):**
 
-| Chỉ số Đo lường | Kết quả Run 4 (2 lần chạy, vòng cuối) | Đánh giá |
+| Chỉ số Đo lường | Kết quả Run 5 (2 lần chạy) | Đánh giá |
 | :--- | :---: | :--- |
 | **BFLA: route bị đánh giá đúng** | **10 / 10** (cả 2 lần) | Auditor nhận ra đúng mọi route thiếu kiểm tra quyền |
-| **BFLA: finding ghi đúng vị trí** | **8 / 10 và 5 / 10** | Model 20B hay ghi sai đường dẫn file; đang sửa (follow-up) |
-| **Mass Assignment (theo verdict / theo vị trí)** | **10 và 9 / 15 · 6 và 4 / 15** | Bỏ sót binding kiểu .NET/Java; cần cải thiện knowledge |
+| **BFLA: finding ghi đúng vị trí** | **10 / 10 và 9 / 10** | Vị trí lấy từ inventory Tier 1 thay vì để model tự ghi (Run 4: 8 và 5 / 10) |
+| **Mass Assignment (theo verdict / theo vị trí)** | **15 và 15 / 15 · 10 và 14 / 15** | Auditor được xem class model nên bắt được cả binding .NET/Java |
 | **Báo động giả trên code an toàn** | **0** | Cả 4 nhóm lỗi, cả 2 lần chạy |
 
 - **Speaker Notes (Harry):**
-  > *"Tại thị trường Nhật Bản, 'nói có sách, mách có chứng'. Run 3 đo BOLA và injection trên 10 công nghệ di sản: bắt 25/25 và 34/34, không báo sai trên code an toàn. Run 4 đo thêm BFLA và mass assignment bằng một model 20B chạy hoàn toàn trên máy, không gửi code ra ngoài: model nhận ra đúng 10/10 route BFLA, mass assignment còn thiếu, và chúng tôi công bố đúng con số đó. Đây là mức sàn của model local; model mạnh hơn có thể cho kết quả cao hơn, nhưng chúng tôi chưa đo."*
+  > *"Tại thị trường Nhật Bản, 'nói có sách, mách có chứng'. Run 3 đo BOLA và injection trên 10 công nghệ di sản: bắt 25/25 và 34/34, không báo sai trên code an toàn. Run 4 đo thêm BFLA và mass assignment bằng một model 20B chạy hoàn toàn trên máy, không gửi code ra ngoài: model nhận ra đúng 10/10 route BFLA và 15/15 điểm mass assignment, nhưng kết quả giữa các lần chạy còn dao động, và chúng tôi công bố đúng con số đó. Đây là mức sàn của model local; model mạnh hơn có thể cho kết quả cao hơn, nhưng chúng tôi chưa đo."*
 
 ---
 
@@ -304,7 +304,7 @@ GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAGU (A-UN LIFECYCLE):
 │  1. ASSESS   │──>│  2. PROTECT  │──>│ 3. REMEDIATE │──>│  4. OPERATE  │
 │  (LSA Kit)   │   │  (Edge WAF)  │   │(Boilerplate) │   │ (CI Testing) │
 └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
-• Assess: Phân tích sâu 10 stack di sản; Run 3: BOLA 25/25, injection 34/34, 0 báo sai; Run 4 (model local): BFLA 10/10 route, mass assignment 9–10/15.
+• Assess: Phân tích sâu 10 stack di sản; Run 3: BOLA 25/25, injection 34/34, 0 báo sai; Run 5 (model local): BFLA 9–10/10, mass assignment 15/15 theo verdict.
 • Protect: Đặt Kong Gateway + Coraza WAF che chắn tầng biên trong 10 phút, không sửa code cũ.
 • Remediate: 5 Boilerplates (.NET 8, Spring 3, Go, Node, Python; Zero-PII eKYC 2027; WORM Backup; Multi-Tenant BYOK; Legacy Shims).
 • Operate: Kiểm thử chéo User A-B, tự động vá lỗi (komagu fix), xuất SBOM & 6-job CI Security Scan.

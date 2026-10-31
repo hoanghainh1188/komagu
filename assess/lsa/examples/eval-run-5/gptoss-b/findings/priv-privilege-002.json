@@ -1,0 +1,268 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body, ...) binds entire request body to update"
+        },
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "new User(req.body); user.save(); binds entire request body to new User"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to allowed set; use explicit field assignment or whitelist.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Profile update binds entire request body to User model",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "User.findByIdAndUpdate(req.user._id, req.body, ...) binds entire request body to update"
+        },
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "new User(req.body); user.save(); binds entire request body to new User"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Limit fields to allowed set; use explicit field assignment or whitelist.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration uses mass assignment without field restrictions",
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "User::create($request->all()); binds all request fields to User model"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Define $fillable or $guarded to restrict mass assignable attributes.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows owner_id to be set via mass assignment",
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()); binds all request fields including owner_id"
+        },
+        {
+          "file": "php-laravel/app/Models/Team.php",
+          "line": 8,
+          "why": "$fillable = ['name', 'owner_id']; owner_id is privileged field"
+        }
+      ],
+      "impact": "owner_id can be set to arbitrary value, enabling impersonation of other teams.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove owner_id from $fillable or guard it; enforce ownership server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Team creation uses mass assignment without model definition",
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Team::create($request->all()); binds all request fields"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review Team model to ensure privileged fields are not mass assignable.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Manual extraction of POST data may allow mass assignment",
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "php-plain/register.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "php-plain/inc/db.php",
+          "line": 4,
+          "why": "extract($_POST); pulls all POST variables into local scope"
+        },
+        {
+          "file": "php-plain/inc/db.php",
+          "line": 5,
+          "why": "$stmt->execute(array($email, $name)); only uses email and name, but extract may expose other variables"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields if not validated",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Avoid extract($_POST); use explicit variable extraction and validation.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "PATCH user endpoint assigns arbitrary fields from request",
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 24,
+          "why": "for key, value in request.json.items(): setattr(user, key, value); assigns all fields"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Whitelist allowed fields; avoid setattr on arbitrary keys.",
+      "status": "needs_review"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation binds request JSON to User model",
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 10,
+          "why": "user = User(**request.json); binds all request fields to User model"
+        }
+      ],
+      "impact": "unknown; potential mass assignment of privileged fields",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Use explicit field assignment or DTO to restrict fields.",
+      "status": "needs_review"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "needs_review"
+    }
+  ]
+}

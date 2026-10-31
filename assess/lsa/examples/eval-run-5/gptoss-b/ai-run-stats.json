@@ -1,0 +1,83 @@
+{
+  "model": "gpt-oss:20b",
+  "endpoint": "http://localhost:11434/v1/chat/completions",
+  "phases": {
+    "2-stack-detector": {
+      "seconds": 567.881,
+      "calls": 1,
+      "prompt_tokens": 3118,
+      "completion_tokens": 11596
+    },
+    "3-route-mapper": {
+      "seconds": 0.048,
+      "calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+    },
+    "4a-bola-auditor": {
+      "seconds": 1670.708,
+      "calls": 7,
+      "prompt_tokens": 80567,
+      "completion_tokens": 33678
+    },
+    "4b-injection-auditor": {
+      "seconds": 672.139,
+      "calls": 2,
+      "prompt_tokens": 15801,
+      "completion_tokens": 21643
+    },
+    "4c-privilege-auditor": {
+      "seconds": 555.588,
+      "calls": 2,
+      "prompt_tokens": 24026,
+      "completion_tokens": 14528
+    },
+    "5-finding-verifier": {
+      "seconds": 1667.106,
+      "calls": 19,
+      "prompt_tokens": 133891,
+      "completion_tokens": 29835
+    }
+  },
+  "totals": {
+    "calls": 31,
+    "prompt_tokens": 257403,
+    "completion_tokens": 111280,
+    "seconds": 5130.466
+  },
+  "parse_failures": {
+    "4a-bola-auditor": [
+      "routes-001"
+    ]
+  },
+  "call_errors": {},
+  "retries": {
+    "4a-bola-auditor": [
+      "routes-001"
+    ]
+  },
+  "anchoring": {
+    "moved": [
+      "BOLA-R-0057-2",
+      "BOLA-R-0058-1",
+      "INJ-I-0021",
+      "INJ-I-0022",
+      "INJ-I-0023",
+      "INJ-I-0027",
+      "INJ-I-0032",
+      "INJ-I-0034",
+      "BFLA-R-0007-1",
+      "BFLA-R-0009-1",
+      "BFLA-R-0032-1",
+      "MASS-M-0001-1",
+      "MASS-M-0002-1",
+      "MASS-M-0003-1",
+      "MASS-M-0007-1",
+      "MASS-M-0010-1",
+      "MASS-M-0013-1",
+      "MASS-M-0015-1",
+      "MASS-M-0014-1"
+    ],
+    "unanchored": []
+  }
+}

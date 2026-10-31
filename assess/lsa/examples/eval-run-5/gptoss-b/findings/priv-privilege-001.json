@@ -1,0 +1,579 @@
+{
+  "batch_id": "privilege-001",
+  "findings": [
+    {
+      "finding_id": "BFLA-R-0003-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Member deletion without admin check",
+      "route_id": "R-0003",
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 9,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any member can be deleted by any authenticated user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add an admin role check before executing the delete statement",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0007-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin role check",
+      "route_id": "R-0007",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 12,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add [Authorize(Roles = \"Admin\")] to DeleteUser",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0009-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Export users controlled by request param",
+      "route_id": "R-0009",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 32
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 32,
+          "why": "privileged action controlled by request param"
+        }
+      ],
+      "impact": "any authenticated user can export all users",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Enforce admin role check before exporting",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0023-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin role check",
+      "route_id": "R-0023",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 13,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add @PreAuthorize(\"hasRole('ADMIN')\") to delete method",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0030-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0030",
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 8,
+          "why": "privileged action, no admin check"
+        }
+      ],
+      "impact": "any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add requireAdmin middleware before delete route",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0032-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Export users controlled by request param",
+      "route_id": "R-0032",
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 16,
+          "why": "privileged action controlled by request param"
+        }
+      ],
+      "impact": "any authenticated user can export all users",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Enforce admin role check before exporting",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0057-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "View user details without admin check",
+      "route_id": "R-0057",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 6,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can view any user record",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before rendering user details",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0058-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0058",
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 10,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before delete operation",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0066-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0066",
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "line": 1,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before delete operation",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0067-1",
+      "category": "bfla",
+      "subtype": "role_from_request",
+      "title": "Promote user based on request param",
+      "route_id": "R-0067",
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 5,
+          "why": "privileged action controlled by request param"
+        }
+      ],
+      "impact": "any authenticated user can promote any user to admin",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Enforce admin role check before promotion",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0059-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "Delete user without admin check",
+      "route_id": "R-0059",
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "line": 6,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can delete any user",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Add admin role check before delete operation",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BFLA-R-0063-1",
+      "category": "bfla",
+      "subtype": "missing_role_check",
+      "title": "User can change own role",
+      "route_id": "R-0063",
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "why": "privileged action, no role check"
+        }
+      ],
+      "impact": "any authenticated user can elevate own role",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "recommendation": "Restrict role changes to admin only",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0011-1",
+      "category": "mass_assignment",
+      "title": "Mass assignment with unknown model fields",
+      "candidate_id": "M-0011",
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 6,
+          "why": "whole object binding, model fields unknown"
+        }
+      ],
+      "impact": "unknown \u2013 potential privileged fields may be set",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review the User model definition and restrict writable fields",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0012-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "User can set role via profile update",
+      "candidate_id": "M-0012",
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 10,
+          "why": "privileged field 'role' writable"
+        }
+      ],
+      "impact": "role",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove 'role' from mass assignment and enforce role changes only by admins",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0001-1",
+      "category": "mass_assignment",
+      "title": "Entity binding with unknown model definition",
+      "candidate_id": "M-0001",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 12,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "unknown \u2013 potential privileged fields may be set",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Inspect the Customer model and restrict writable fields",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0002-1",
+      "category": "mass_assignment",
+      "title": "Entity binding with unknown model definition",
+      "candidate_id": "M-0002",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 30
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 30,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "unknown \u2013 potential privileged fields may be set",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Inspect the Customer model and restrict writable fields",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0003-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Account update allows role change",
+      "candidate_id": "M-0003",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 14
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 27,
+          "why": "whole object binding, 'role' field writable"
+        }
+      ],
+      "impact": "role",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove 'role' from the binding or enforce role changes only by admins",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0004-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Account update allows role change",
+      "candidate_id": "M-0004",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 27,
+          "why": "whole object binding, 'role' field writable"
+        }
+      ],
+      "impact": "role",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove 'role' from the binding or enforce role changes only by admins",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0005-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "BeanUtils.populate allows role change",
+      "candidate_id": "M-0005",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "line": 12,
+          "why": "whole object binding, 'role' field writable"
+        }
+      ],
+      "impact": "role",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove 'role' from the binding or enforce role changes only by admins",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [
+    {
+      "route_id": "R-0003",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0023",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0030",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0032",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0057",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0058",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0066",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0067",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0059",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0063",
+      "verdict": "vulnerable"
+    }
+  ],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0011",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0012",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0001",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0002",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0003",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0004",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0005",
+      "verdict": "vulnerable"
+    }
+  ]
+}

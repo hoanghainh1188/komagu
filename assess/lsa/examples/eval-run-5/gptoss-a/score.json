@@ -1,0 +1,80 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 25,
+      "found": 24,
+      "recall": 0.96,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "perl-cgi/cgi-bin/order.cgi:19"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 34,
+      "recall": 1.0,
+      "false_positive_on_safe_code": [],
+      "missed": []
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "false_positive_on_safe_code": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 10,
+      "recall": 0.667,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/profile.php:6",
+        "php-plain/profile.php:10",
+        "php-plain/register.php:4",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30"
+      ]
+    }
+  },
+  "active_findings": 99,
+  "matched_findings": 81,
+  "precision": 0.818,
+  "unmatched_findings": [
+    "BFLA-R-0003-1",
+    "BFLA-R-0063-1",
+    "BOLA-R-0007",
+    "BOLA-R-0009",
+    "BOLA-R-0010",
+    "BOLA-R-0011",
+    "BOLA-R-0012",
+    "BOLA-R-0020",
+    "BOLA-R-0021",
+    "BOLA-R-0022",
+    "BOLA-R-0023",
+    "BOLA-R-0029",
+    "BOLA-R-0030",
+    "BOLA-R-0059-1",
+    "BOLA-R-0066-1",
+    "BOLA-R-0067-1",
+    "BOLA-R-0073",
+    "BOLA-R-0074"
+  ],
+  "needs_review_not_scored": [],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 15,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    }
+  }
+}
