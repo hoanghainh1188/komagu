@@ -28,6 +28,10 @@ LSA_PROMPTS = REPO_ROOT / "assess" / "lsa" / "prompts"
 DEFAULT_CWE = {"bola": ["CWE-284"], "bfla": ["CWE-285"], "mass_assignment": ["CWE-915"],
                "sql_injection": ["CWE-89"], "nosql_injection": ["CWE-943"]}
 LSA_SCRIPTS = REPO_ROOT / "assess" / "lsa" / "scripts"
+# Valid subtypes per category (finding.schema.json); the first one is used when a model writes an invalid value
+CATEGORY_SUBTYPES = {"bfla": ["missing_role_check", "role_from_request", "client_side_role_check"],
+                     "mass_assignment": ["whole_object_binding", "privileged_field_writable"]}
+FINDING_STATUSES = {"unverified", "confirmed", "likely", "rejected", "needs_review"}
 
 
 def _read_snippet(target_dir: Path, rel_file: str, line: int, radius: int = 15) -> str:
@@ -77,10 +81,14 @@ class HeadlessAIRunner:
             self._log("warn", f"{phase}: model call failed for {batch_id} ({e}); batch left without verdicts")
             return None
 
-    def _parse_failed(self, phase: str, batch_id: str) -> None:
+    def _parse_failed(self, phase: str, batch_id: str, reply: Optional[str] = None) -> None:
         if batch_id in self.call_errors.get(phase, {}):
             return
         self.parse_failures.setdefault(phase, []).append(batch_id)
+        if reply is not None:
+            raw_dir = self.out_dir / "ai-raw"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            (raw_dir / f"{phase}-{batch_id}.txt").write_text(reply, encoding="utf-8")
         self._log("warn", f"{phase}: could not parse the model reply for {batch_id}; batch left without verdicts")
 
     def _usage(self) -> Dict[str, Any]:
@@ -257,6 +265,17 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
         """Normalize finding fields to strictly comply with finding.schema.json."""
         if not isinstance(f, dict):
             return f
+        # impact must be a string; small models often return a list of consequences
+        if isinstance(f.get("impact"), list):
+            f["impact"] = "; ".join(str(i) for i in f["impact"])
+
+        # a verdict written into subtype belongs in status; fall back to the category's first subtype
+        allowed = CATEGORY_SUBTYPES.get(f.get("category"))
+        if allowed and f.get("subtype") not in allowed:
+            if f.get("subtype") in FINDING_STATUSES:
+                f["status"] = f["subtype"]
+            f["subtype"] = allowed[0]
+
         # recommendation must be a string
         rec = f.get("recommendation")
         if isinstance(rec, dict):
@@ -378,7 +397,7 @@ Respond STRICTLY with a valid JSON object matching:
                 findings = [self._sanitize_finding(f) for f in raw_findings]
                 route_verdicts = parsed.get("route_verdicts", [])
             except Exception:
-                self._parse_failed("4a-bola-auditor", r_file.stem)
+                self._parse_failed("4a-bola-auditor", r_file.stem, reply)
                 findings = []
                 route_verdicts = []
 
@@ -465,7 +484,7 @@ Respond STRICTLY with a valid JSON object matching:
                 findings = [self._sanitize_finding(f) for f in raw_findings]
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
-                self._parse_failed("4b-injection-auditor", b_file.stem)
+                self._parse_failed("4b-injection-auditor", b_file.stem, reply)
                 findings = []
                 candidate_verdicts = []
 
@@ -530,8 +549,36 @@ Mass Assignment Candidates:
 
 Task:
 Judge every route for BFLA and every candidate for mass assignment as described in your role.
-Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}"),
-"privilege_route_verdicts", "candidate_verdicts" and "findings" (category "bfla" or "mass_assignment").
+Respond STRICTLY with a valid JSON object matching:
+{{
+  "batch_id": "{b_file.stem}",
+  "privilege_route_verdicts": [
+    {{"route_id": "<route_id>", "verdict": "vulnerable|safe|needs_review"}}
+  ],
+  "candidate_verdicts": [
+    {{"candidate_id": "<candidate_id>", "verdict": "vulnerable|safe|needs_review"}}
+  ],
+  "findings": [
+    {{
+      "finding_id": "BFLA-<route_id>-1 or MASS-<candidate_id>-1",
+      "category": "bfla|mass_assignment",
+      "subtype": "missing_role_check|role_from_request|client_side_role_check (bfla) or whole_object_binding|privileged_field_writable (mass_assignment)",
+      "title": "<short title>",
+      "route_id": "<route_id, bfla only>",
+      "candidate_id": "<candidate_id, mass_assignment only>",
+      "location": {{"file": "<file>", "start_line": <line>}},
+      "evidence": [{{"file": "<file>", "line": <line>, "why": "<privileged action or binding, and the missing control>"}}],
+      "impact": "<one string naming the privileged action or fields>",
+      "severity": "critical|high|medium|low",
+      "confidence": "high|medium|low",
+      "cwe": ["CWE-285"],
+      "recommendation": "<one string>",
+      "status": "unverified|needs_review"
+    }}
+  ]
+}}
+Write one finding for every "vulnerable" or "needs_review" verdict. A "needs_review" verdict goes in
+"status", never in "subtype".
 """
             messages = [
                 {"role": "system", "content": auditor_prompt},
@@ -544,7 +591,7 @@ Respond STRICTLY with a valid JSON object with keys "batch_id" ("{b_file.stem}")
                 route_verdicts = parsed.get("privilege_route_verdicts", [])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
             except Exception:
-                self._parse_failed("4c-privilege-auditor", b_file.stem)
+                self._parse_failed("4c-privilege-auditor", b_file.stem, reply)
                 findings, route_verdicts, candidate_verdicts = [], [], []
 
             out_doc = {
@@ -626,7 +673,7 @@ Respond STRICTLY with a valid JSON object matching verification.schema.json:
             except Exception:
                 # No verdicts: merge_findings.py lists these findings under
                 # coverage.findings_without_verification instead of confirming them
-                self._parse_failed("5-finding-verifier", f"verified-{(idx // batch_size) + 1}")
+                self._parse_failed("5-finding-verifier", f"verified-{(idx // batch_size) + 1}", reply)
                 verifs = []
 
             verif_doc = {

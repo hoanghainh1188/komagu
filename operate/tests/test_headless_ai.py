@@ -74,6 +74,28 @@ class TestLLMClient(unittest.TestCase):
         self.assertIn("Failed to connect to LLM endpoint", str(ctx.exception))
 
 
+class TestSanitizeFinding(unittest.TestCase):
+    """Format repairs for model output that would otherwise fail finding.schema.json (#286)."""
+
+    def test_impact_list_becomes_string(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "mass_assignment", "subtype": "whole_object_binding",
+                                                "impact": ["role escalation", "balance change"]})
+        self.assertEqual(f["impact"], "role escalation; balance change")
+
+    def test_verdict_in_subtype_moves_to_status(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "mass_assignment", "subtype": "needs_review", "status": "unverified"})
+        self.assertEqual(f["subtype"], "whole_object_binding")
+        self.assertEqual(f["status"], "needs_review")
+
+    def test_unknown_bfla_subtype_falls_back(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "admin_only", "status": "unverified"})
+        self.assertEqual((f["subtype"], f["status"]), ("missing_role_check", "unverified"))
+
+    def test_valid_subtype_is_kept(self) -> None:
+        f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "role_from_request"})
+        self.assertEqual(f["subtype"], "role_from_request")
+
+
 class TestHeadlessAIRunner(unittest.TestCase):
     """End-to-end tests for HeadlessAIRunner and multi-agent pipeline."""
 
@@ -254,6 +276,8 @@ module.exports = app;
         self.assertEqual(sorted(coverage["findings_without_verification"]), sorted(f["finding_id"] for f in findings))
         stats = json.loads((self.out_dir / "ai-run-stats.json").read_text(encoding="utf-8"))
         self.assertEqual(stats["parse_failures"]["5-finding-verifier"], ["verified-1"])
+        raw = self.out_dir / "ai-raw" / "5-finding-verifier-verified-1.txt"
+        self.assertEqual(raw.read_text(encoding="utf-8"), "I think these all look vulnerable.")
         self.assertTrue(any(st == "warn" and "verified-1" in msg for st, msg in logs))
 
     def test_failed_batch_call_is_recorded_and_run_continues(self) -> None:
