@@ -30,7 +30,7 @@ Komagu adopts a **Two-Tier Architecture** with a strictly **Runtime-Neutral** an
 │ - Pattern Knowledge Base & JSON Schemas                │
 │ - Driven by User's AI Runtime (Claude Code, Cursor,    │
 │   Antigravity, OpenHands, or Private LLM API)          │
-│ - Adversarial Skeptic Verifier for 0 false positives   │
+│ - Adversarial Skeptic Verifier to cut false positives  │
 └────────────────────────────────────────────────────────┘
 ```
 

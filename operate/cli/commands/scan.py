@@ -455,7 +455,7 @@ def execute_scan(args: argparse.Namespace) -> int:
             f"  {color('🚀 Mode: Tier 2 Cognitive Multi-Agent Engine', GREEN, BOLD)} "
             f"(Headless BYO-LLM: {args.headless_ai}, Model: {args.model})"
         )
-        print(f"  {color('✔ Skeptic Consensus Applied', GREEN)}: Verified zero-false-positive findings against compensative controls.\n")
+        print(f"  {color('✔ Skeptic Consensus Applied', GREEN)}: Findings challenged against compensating controls.\n")
     else:
         print(f"  {color('💡 Mode: Tier 1 Deterministic Engine', CYAN, BOLD)} (Regex & AST candidate extraction, no LLM required)")
         print("  To run Tier 2 Cognitive Multi-Agent Audit (BOLA semantic reasoning & Skeptic Verifier):")

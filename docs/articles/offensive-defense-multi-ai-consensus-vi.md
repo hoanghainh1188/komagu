@@ -10,7 +10,7 @@
 
 Trong văn hóa thần đạo Nhật Bản, **Komagu (狛犬)** là cặp linh thú hộ vệ uy nghiêm trấn giữ cổng đền. Một con ngậm miệng biểu trưng cho sự tĩnh lặng nội tại, con còn lại mở miệng sẵn sàng nghênh chiến. Chúng bảo vệ sự linh thiêng không phải bằng cách dựng lên những bức tường vô tri, mà bằng **nanh vuốt cảnh giác và sức mạnh chủ động đối kháng**.
 
-![Komagu Architecture Shield](https://img.shields.io/badge/Architecture-Offensive--Driven%20Verification-blueviolet?style=for-the-badge) ![Multi-AI Consensus](https://img.shields.io/badge/Engine-Multi--AI%20Consensus-orange?style=for-the-badge) ![Zero False Positive](https://img.shields.io/badge/Precision-1.000%20(Zero%20FP)-success?style=for-the-badge)
+![Komagu Architecture Shield](https://img.shields.io/badge/Architecture-Offensive--Driven%20Verification-blueviolet?style=for-the-badge) ![Multi-AI Consensus](https://img.shields.io/badge/Engine-Multi--AI%20Consensus-orange?style=for-the-badge)
 
 Ngày nay, ngành công nghệ toàn cầu đang chứng kiến một cuộc khủng hoảng mang tên **Legacy Systems**. Tại Nhật Bản, Bộ Kinh tế, Thương mại và Công nghiệp (METI) đã gióng lên hồi chuông cảnh báo về **"Vách đá số 2025" (2025 Digital Cliff)** — nơi sự già cỗi của các hệ thống nguyên khối (Monolith) viết bằng Classic ASP, ColdFusion, Perl CGI hay Java Struts có thể gây tổn thất kinh tế lên tới **12.000 tỷ Yên mỗi năm**. Nhưng tổn thất tài chính chưa phải là điều tồi tệ nhất: **những hệ thống di sản này đang biến thành mỏ vàng lộ thiên cho các cuộc tấn công dữ liệu quy mô lớn**.
 
@@ -79,7 +79,7 @@ sequenceDiagram
     
     alt Lỗ hổng BOLA thực sự tồn tại (Unprotected)
         Target-->>Bob: 200 OK [Trả về toàn bộ PII của Alice!]
-        Komagu->>Komagu: XÁC THỰC 100% EXPLOITABLE! (Zero False Positive)
+        Komagu->>Komagu: XÁC NHẬN KHAI THÁC ĐƯỢC (quan sát thực tế, không suy đoán)
     else Hệ thống đã có kiểm tra ngầm (Protected)
         Target-->>Bob: 403 Forbidden / 404 Not Found
         Komagu->>Komagu: BÁC BỎ CẢNH BÁO GIẢ! (Không làm phiền Developer)
@@ -126,7 +126,7 @@ flowchart TD
         G --> R --> S
     end
 
-    S -->|"Consensus Verified Findings<br/>(OASIS SARIF v2.1.0 & HTML)"| Output["KẾT QUẢ ĐỘT PHÁ:<br/>Precision: 1.000 (Zero False Positive)<br/>Recall: 100% trên 10 Legacy Stacks"]
+    S -->|"Consensus Verified Findings<br/>(OASIS SARIF v2.1.0 & HTML)"| Output["Đo trên 10 legacy stack mẫu:<br/>xem EVAL-RESULTS.md (Run 1–4)"]
 
     style Tier1 fill:#e8eaf6,stroke:#283593,stroke-width:2px
     style Tier2 fill:#fff8e1,stroke:#f57f17,stroke-width:2px
@@ -171,7 +171,7 @@ flowchart LR
     style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
-### Bước 1: Auto-Detect (Không xâm phạm, 0 cảnh báo giả)
+### Bước 1: Auto-Detect (Không xâm phạm)
 Chỉ với một dòng lệnh:
 ```bash
 npx @hoanghainh/komagu scan ./legacy-app --format html --out ./audit-output

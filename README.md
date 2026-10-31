@@ -68,7 +68,7 @@ sequenceDiagram
 
     Note over Team,Komagu: Phase 1: Day 1 — Non-Invasive Audit (Tier 1 & Tier 2)
     Team->>Komagu: npx @hoanghainh/komagu scan ./legacy-app --format html
-    Komagu-->>Team: report.html & SARIF (Zero false alarms, 1.000 precision)
+    Komagu-->>Team: report.html & SARIF (verified findings with file:line evidence)
 
     Note over Team,Edge: Phase 2: Day 2 — Zero-Code Perimeter Shield
     Team->>Edge: npx @hoanghainh/komagu protect --up

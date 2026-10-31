@@ -41,7 +41,7 @@ Komagu mang hình tượng **Cặp thần thú hộ vệ Shinto A–Un (阿吽)*
 ```mermaid
 flowchart LR
     S1["Slide 1-3\nBối cảnh & Nỗi đau\n(METI DX & BOLA)"] --> S2["Slide 4-6\nGiải pháp 4 Trụ cột\n(Assess, Protect, Remediate, Operate)"]
-    S2 --> S3["Slide 7-9\nBằng chứng Thực nghiệm\n(Run 3: 100% Recall & Demo App)"]
+    S2 --> S3["Slide 7-9\nBằng chứng Thực nghiệm\n(Run 3–4: Số đo thật & Demo App)"]
     S3 --> S4["Slide 10-12\nQuản trị AI, Lộ trình\n& Gói Dịch vụ Thương mại"]
 ```
 
@@ -77,8 +77,8 @@ flowchart LR
 
 | Vấn đề | Công cụ SAST truyền thống (Fortify, Checkmarx, Sonar) | Nền tảng Komagu |
 | :--- | :--- | :--- |
-| **BOLA / IDOR (CWE-639)** | ❌ **Bỏ sót:** Không hiểu mô hình sở hữu dữ liệu (Ai sở hữu bản ghi nào). | ✅ **Phát hiện 100%:** Mô hình hóa đối tượng và truy vết quyền sở hữu per-route. |
-| **Báo động giả (False Positives)** | ❌ **Quá tải:** Báo hàng nghìn cảnh báo giả, làm tê liệt đội ngũ kỹ thuật. | ✅ **Zero False Positives:** Có Agent phản biện (*Skeptic Verifier*) bác bỏ lỗi sai. |
+| **BOLA / IDOR (CWE-639)** | ❌ **Bỏ sót:** Không hiểu mô hình sở hữu dữ liệu (Ai sở hữu bản ghi nào). | ✅ **Phát hiện 25/25 trên bộ mẫu (Run 3):** Mô hình hóa đối tượng và truy vết quyền sở hữu per-route. |
+| **Báo động giả (False Positives)** | ❌ **Quá tải:** Báo hàng nghìn cảnh báo giả, làm tê liệt đội ngũ kỹ thuật. | ✅ **Ít báo động giả:** Agent phản biện (*Skeptic Verifier*) đối chiếu control trong code; 0 cảnh báo sai trên các đoạn code an toàn của bộ mẫu (Run 3, Run 4 vòng cuối). |
 | **Biện pháp can thiệp** | ❌ **Chỉ báo lỗi:** Bắt khách hàng tự tìm cách sửa code cũ mạo hiểm. | ✅ **Bảo vệ biên tức thì:** Kong + WAF che chắn ngay lập tức trước khi sửa code. |
 | **Tài liệu & Tuân thủ** | ❌ Báo cáo kỹ thuật tiếng Anh thuần túy, xa rời bối cảnh Nhật. | ✅ Báo cáo song ngữ tiếng Nhật chuẩn **IPA / NISC** và Dashboard tương tác. |
 
@@ -93,7 +93,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A["1. ASSESS (LSA Kit)<br/><b>Đánh giá sâu</b><br/>• Quét 10 Stacks di sản<br/>• Zero False Positives<br/>• Báo cáo IPA/NISC & HTML"]
+    A["1. ASSESS (LSA Kit)<br/><b>Đánh giá sâu</b><br/>• Quét 10 Stacks di sản<br/>• Agent phản biện giảm báo động giả<br/>• Báo cáo IPA/NISC & HTML"]
     P["2. PROTECT (Edge)<br/><b>Bảo vệ biên tức thì</b><br/>• Kong Gateway + Coraza WAF<br/>• Chặn SQLi/XSS/Bot<br/>• 0 dòng code thay đổi"]
     R["3. REMEDIATE (5 Boilerplates)<br/><b>Khắc phục chuẩn hóa</b><br/>• 5 Ngôn ngữ (.NET, Spring, Go, Node, Py)<br/>• Zero-PII eKYC 2027, WORM & BYOK<br/>• Legacy Shims & Deny-by-default (404)"]
     O["4. OPERATE (DevSecOps & CI)<br/><b>Vận hành liên tục</b><br/>• Kiểm thử chéo User A-B & Auto-Fix<br/>• SBOM CycloneDX/SPDX<br/>• 6-Job CI Security Scan (SARIF)"]
@@ -118,12 +118,12 @@ flowchart LR
     - **Pha 5 — Trọng tài Hoài nghi (Skeptic Verifier):** *Cố tình tìm lý lẽ để chứng minh Auditor sai* (nhận diện enum mapping, `switch/case`, allow-list). Nếu có cơ chế kiểm tra quyền, lập tức hủy finding để đảm bảo không có báo động giả!
     - Pha 6: Xuất báo cáo Markdown, SARIF v2.1.0 và HTML Dashboard.
 - **Speaker Notes (Harry):**
-  > *"Điểm đột phá nhất của Komagu là vai trò của Agent Phản biện (Skeptic Verifier). Giống như trong một phiên tòa, Auditor đóng vai công tố viên buộc tội, còn Skeptic đóng vai luật sư bào chữa cho đoạn code của khách hàng. Chỉ khi bằng chứng lỗ hổng rõ mười mươi không thể bào chữa, lỗi đó mới được ghi vào báo cáo. Nhờ đó, chúng tôi triệt tiêu hoàn toàn báo động giả."*
+  > *"Điểm đột phá nhất của Komagu là vai trò của Agent Phản biện (Skeptic Verifier). Giống như trong một phiên tòa, Auditor đóng vai công tố viên buộc tội, còn Skeptic đóng vai luật sư bào chữa cho đoạn code của khách hàng. Chỉ khi bằng chứng lỗ hổng rõ mười mươi không thể bào chữa, lỗi đó mới được ghi vào báo cáo. Nhờ đó, báo động giả giảm mạnh, và mọi con số chúng tôi đưa ra đều đo được trong `EVAL-RESULTS.md`."*
 
 ---
 
-### SLIDE 6: Empirical Proof — Evaluation Run 3 Benchmark Results
-- **Tiêu đề Slide:** **Bằng chứng Thực nghiệm: Đạt 100% Recall & Tuyệt đối Không Báo động Giả**
+### SLIDE 6: Empirical Proof — Evaluation Run 3 & Run 4 Benchmark Results
+- **Tiêu đề Slide:** **Bằng chứng Thực nghiệm: Số đo thật trên 10 stack mẫu**
 - **Bảng số liệu kiểm chứng (Được nghiệm thu tại `assess/lsa/tests/EVAL-RESULTS.md`):**
 
 | Chỉ số Đo lường | Mục tiêu Thiết kế | Kết quả Thực nghiệm Run 3 | Đánh giá |
@@ -133,8 +133,17 @@ flowchart LR
 | **Tỷ lệ báo động giả (False Positives)** | **0%** | **0 (`[]`)** | Tuyệt đối không báo sai các hàm truy vấn an toàn |
 | **Độ chính xác (Precision)** | $\ge 0.95$ | **1.000 (57 / 57)** | 100% lỗi báo ra là chính xác và có thể kiểm chứng |
 
+- **Run 4 — BFLA & Mass Assignment, model chạy local (`gpt-oss:20b` trên Ollama, code không rời máy):**
+
+| Chỉ số Đo lường | Kết quả Run 4 (2 lần chạy, vòng cuối) | Đánh giá |
+| :--- | :---: | :--- |
+| **BFLA: route bị đánh giá đúng** | **10 / 10** (cả 2 lần) | Auditor nhận ra đúng mọi route thiếu kiểm tra quyền |
+| **BFLA: finding ghi đúng vị trí** | **8 / 10 và 5 / 10** | Model 20B hay ghi sai đường dẫn file; đang sửa (follow-up) |
+| **Mass Assignment (theo verdict / theo vị trí)** | **10 và 9 / 15 · 6 và 4 / 15** | Bỏ sót binding kiểu .NET/Java; cần cải thiện knowledge |
+| **Báo động giả trên code an toàn** | **0** | Cả 4 nhóm lỗi, cả 2 lần chạy |
+
 - **Speaker Notes (Harry):**
-  > *"Tại thị trường Nhật Bản, 'nói có sách, mách có chứng'. Đây không phải là những con số dự đoán. Chúng tôi đã cho chạy thực nghiệm trên tập mẫu 10 công nghệ di sản với hàng nghìn dòng code. Kết quả tại Evaluation Run 3 đạt độ chính xác 1.000: Bắt trọn 100% các lỗ hổng tiềm ẩn mà không hề có bất kỳ một cảnh báo sai nào trên code an toàn."*
+  > *"Tại thị trường Nhật Bản, 'nói có sách, mách có chứng'. Run 3 đo BOLA và injection trên 10 công nghệ di sản: bắt 25/25 và 34/34, không báo sai trên code an toàn. Run 4 đo thêm BFLA và mass assignment bằng một model 20B chạy hoàn toàn trên máy, không gửi code ra ngoài: model nhận ra đúng 10/10 route BFLA, mass assignment còn thiếu, và chúng tôi công bố đúng con số đó. Đây là mức sàn của model local; model mạnh hơn có thể cho kết quả cao hơn, nhưng chúng tôi chưa đo."*
 
 ---
 
@@ -295,7 +304,7 @@ GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAGU (A-UN LIFECYCLE):
 │  1. ASSESS   │──>│  2. PROTECT  │──>│ 3. REMEDIATE │──>│  4. OPERATE  │
 │  (LSA Kit)   │   │  (Edge WAF)  │   │(Boilerplate) │   │ (CI Testing) │
 └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
-• Assess: Phân tích sâu 10 stack di sản; đạt 100% Recall và 0% False Positives (Run 3).
+• Assess: Phân tích sâu 10 stack di sản; Run 3: BOLA 25/25, injection 34/34, 0 báo sai; Run 4 (model local): BFLA 10/10 route, mass assignment 9–10/15.
 • Protect: Đặt Kong Gateway + Coraza WAF che chắn tầng biên trong 10 phút, không sửa code cũ.
 • Remediate: 5 Boilerplates (.NET 8, Spring 3, Go, Node, Python; Zero-PII eKYC 2027; WORM Backup; Multi-Tenant BYOK; Legacy Shims).
 • Operate: Kiểm thử chéo User A-B, tự động vá lỗi (komagu fix), xuất SBOM & 6-job CI Security Scan.
