@@ -15,7 +15,7 @@ def create_user():
 
 @app.route("/users/<int:uid>/name", methods=["POST"])
 def rename(uid):
-    user = User.query.get(uid)
+    user = User.query.get(uid)  # LSA-EXPECT:BOLA
     user.name = request.json["name"]  # LSA-EXPECT:SAFE-MASS
     db.session.commit()
     return jsonify(ok=True)
@@ -23,7 +23,7 @@ def rename(uid):
 
 @app.route("/users/<int:uid>", methods=["PATCH"])
 def patch(uid):
-    user = User.query.get(uid)
+    user = User.query.get(uid)  # LSA-EXPECT:BOLA
     for key, value in request.json.items():  # LSA-EXPECT:MASS
         setattr(user, key, value)
     db.session.commit()

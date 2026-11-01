@@ -18,7 +18,7 @@ public class AccountController {
 
     @RequestMapping(value = "/rename", method = RequestMethod.POST)
     public String rename(@ModelAttribute RenameForm form) { // LSA-EXPECT:SAFE-MASS
-        accountDao.rename(form.getId(), form.getName());
+        accountDao.rename(form.getId(), form.getName()); // LSA-EXPECT:BOLA
         return "redirect:/account";
     }
 

@@ -317,3 +317,19 @@ Harness changes for gaps 1 and 2 (#323), not yet measured in a new run:
   to its Tier 1 route or candidate (`operate/ai/verdicts.py`), listed under `findings_from_verdicts`. An
   offline replay of run A turns the four flagged candidates into located findings (mass assignment 14 / 15
   before verification) with no SAFE marker hit (`operate/tests/test_ai_verdicts.py`).
+
+### Ground truth change after Run 5 (#323)
+
+The fixtures were changed after Run 5, so runs from Run 6 on are scored against a new ground truth
+(117 → 121 items). The archived `eval-run-4/` and `eval-run-5/` ground-truth files are kept as they were,
+and their tests still score against them.
+
+| Change | Reason |
+|---|---|
+| `php-plain/register.php`: `$role` defaults to `customer`, `extract($_POST)` can overwrite it, and it is inserted (MASS marker kept on line 4) | As written, the INSERT used only `email` and `name`, so the verifier's rejection was sound |
+| New `BOLA` markers: `AccountController.java:21` (`/account/rename`), `CustomerController.cs:29` (`Refresh`), `python-flask/profile.py:18` (`/users/<uid>/name`) and `:26` (`PATCH /users/<uid>`) | The record id comes from the request and is not bound to the caller; checked by hand |
+| No marker for Laravel `account/rename` / `account/profile` or .NET `Customer/EditName` | They act on `$request->user()`, or touch no record, so the Run 5 triage was wrong about them |
+
+Run 5 rescored against the new ground truth (for comparison only; findings unchanged): BOLA 28 / 29
+(run A) and 16 / 29 (run B), precision 0.859 and 0.826, still no false positive on SAFE markers. Every
+new marker was already reported by both runs; Tier 1 lists all of them as BOLA route candidates.

@@ -26,7 +26,7 @@ namespace Web.Controllers
         [HttpPost]
         public ActionResult Refresh(int id)
         {
-            var customer = db.Customers.Find(id);
+            var customer = db.Customers.Find(id); // LSA-EXPECT:BOLA
             TryUpdateModel(customer); // LSA-EXPECT:MASS
             db.SaveChanges();
             return RedirectToAction("Index");
