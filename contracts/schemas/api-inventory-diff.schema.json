@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/api-inventory-diff.schema.json",
+  "title": "Komagu API Inventory Diff",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "sources",
+    "summary",
+    "shadow_apis",
+    "zombie_apis",
+    "documented_missing_code",
+    "dormant_code"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "sources": {
+      "type": "object",
+      "required": [
+        "routes_file",
+        "openapi_file"
+      ],
+      "properties": {
+        "routes_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "openapi_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "traffic_log_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_code_routes",
+        "total_spec_endpoints",
+        "total_traffic_endpoints",
+        "shadow_count",
+        "zombie_count",
+        "missing_code_count",
+        "dormant_count"
+      ],
+      "properties": {
+        "total_code_routes": {
+          "type": "integer"
+        },
+        "total_spec_endpoints": {
+          "type": "integer"
+        },
+        "total_traffic_endpoints": {
+          "type": "integer"
+        },
+        "shadow_count": {
+          "type": "integer"
+        },
+        "zombie_count": {
+          "type": "integer"
+        },
+        "missing_code_count": {
+          "type": "integer"
+        },
+        "dormant_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "shadow_apis": {
+      "type": "array",
+      "description": "Endpoints present in code or seen in traffic, but absent from OpenAPI specification.",
+      "items": {
+        "type": "object",
+        "required": [
+          "method",
+          "path",
+          "normalized",
+          "discovered_in"
+        ],
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "discovered_in": {
+            "type": "string",
+            "enum": [
+              "code_only",
+              "traffic_only",
+              "code_and_traffic"
+            ]
+          },
+          "location": {
+            "type": "string"
+          },
+          "traffic_hits": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "zombie_apis": {
+      "type": "array",
+      "description": "Endpoints marked as deprecated in OpenAPI spec, but still active/receiving live traffic.",
+      "items": {
+        "type": "object",
+        "required": [
+          "method",
+          "path",
+          "normalized",
+          "traffic_hits"
+        ],
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "traffic_hits": {
+            "type": "integer"
+          },
+          "last_seen": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "documented_missing_code": {
+      "type": "array",
+      "description": "Endpoints declared in OpenAPI spec but not found implemented in code inventory.",
+      "items": {
+        "type": "object",
+        "required": [
+          "method",
+          "path",
+          "normalized"
+        ],
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dormant_code": {
+      "type": "array",
+      "description": "Endpoints implemented in code and documented, but never seen in traffic log.",
+      "items": {
+        "type": "object",
+        "required": [
+          "method",
+          "path",
+          "normalized",
+          "location"
+        ],
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

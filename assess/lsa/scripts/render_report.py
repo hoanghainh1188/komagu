@@ -20,6 +20,12 @@ from trend import render_trend_html, render_trend_md  # noqa: E402
 from attack_chains import render_attack_chains_html, render_attack_chains_md  # noqa: E402
 from forecast import render_forecast_html, render_forecast_md  # noqa: E402
 
+try:
+    from operate.inventory.api_inventory import render_inventory_html, render_inventory_md  # noqa: E402
+except (ImportError, ModuleNotFoundError):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
+    from operate.inventory.api_inventory import render_inventory_html, render_inventory_md  # noqa: E402
+
 SEV = ["critical", "high", "medium", "low", "info"]
 
 JA_SEV_LABELS = {
@@ -84,6 +90,17 @@ def _load_attack_chains(out: Path) -> Dict[str, Any]:
 def _load_forecast(out: Path) -> Dict[str, Any]:
     """Security debt forecast from forecast.py (OUT/forecast.json)."""
     path = out / "forecast.json"
+    if not path.is_file():
+        return {}
+    try:
+        return read_json(path) or {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def _load_inventory_diff(out: Path) -> Dict[str, Any]:
+    """API inventory diff from operate inventory (OUT/api-inventory-diff.json)."""
+    path = out / "api-inventory-diff.json"
     if not path.is_file():
         return {}
     try:
@@ -157,6 +174,9 @@ def render_en(out: Path, project: str) -> str:
     fc = _load_forecast(out)
     if fc:
         L += render_forecast_md(fc, "en")
+    inv = _load_inventory_diff(out)
+    if inv and inv.get("summary"):
+        L += render_inventory_md(inv, "en")
     chains = _load_attack_chains(out)
     if chains and chains.get("chains"):
         L += render_attack_chains_md(chains, "en")
@@ -256,6 +276,9 @@ def render_ja(out: Path, project: str) -> str:
     fc = _load_forecast(out)
     if fc:
         L += render_forecast_md(fc, "ja")
+    inv = _load_inventory_diff(out)
+    if inv and inv.get("summary"):
+        L += render_inventory_md(inv, "ja")
     chains = _load_attack_chains(out)
     if chains and chains.get("chains"):
         L += render_attack_chains_md(chains, "ja")
@@ -465,6 +488,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
     trend_card = render_trend_html(trend) if trend else ""
     fc = _load_forecast(out)
     forecast_card = render_forecast_html(fc) if fc else ""
+    inv = _load_inventory_diff(out)
+    inv_card = render_inventory_html(inv) if inv and inv.get("summary") else ""
     chains = _load_attack_chains(out)
     chains_card = render_attack_chains_html(chains) if chains and chains.get("chains") else ""
 
@@ -1042,6 +1067,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
   </section>
 
   {chains_card}
+
+  {inv_card}
 
   {trend_card}
 
