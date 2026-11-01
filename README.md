@@ -230,4 +230,4 @@ komagu/
 ## 👥 Governance & License
 
 - **The Two-Person Rule:** Komagu enforces strict governance ([`governance/usage-policy.md`](governance/usage-policy.md)) where automated audits/patches (Person A) must be validated by a human architect/engineer (Person B) prior to production deployment.
-- **Open Core Architecture ([ADR-0002](docs/adr/0002-ip-position-open-core.md)):** Core LSA assessment kit, contracts, and remediation interfaces are licensed under **MIT**. Enterprise integrations and managed playbooks are retained for customer engagements.
+- **100% Open Source Architecture ([ADR-0008](docs/adr/0008-transition-to-fully-open-source.md)):** Komagu is fully open source under the **Apache License 2.0**. The assessment kit, WAF edge shields, AST auto-fix generators, and CI cross-user testing engines are completely open and auditable by the global engineering community.
