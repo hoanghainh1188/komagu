@@ -17,6 +17,7 @@ from typing import Any, Dict, List
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import KIT_VERSION, read_json  # noqa: E402
 from trend import render_trend_html, render_trend_md  # noqa: E402
+from attack_chains import render_attack_chains_html, render_attack_chains_md  # noqa: E402
 
 SEV = ["critical", "high", "medium", "low", "info"]
 
@@ -66,6 +67,17 @@ def _load_trend(out: Path) -> Dict[str, Any]:
     except (OSError, ValueError, AttributeError):
         return {}
     return trend if trend.get("history") else {}
+
+
+def _load_attack_chains(out: Path) -> Dict[str, Any]:
+    """Attack chains from attack_chains.py (OUT/attack-chains.json)."""
+    path = out / "attack-chains.json"
+    if not path.is_file():
+        return {}
+    try:
+        return read_json(path) or {}
+    except (OSError, ValueError, AttributeError):
+        return {}
 
 
 def md_escape(s: str) -> str:
@@ -130,6 +142,9 @@ def render_en(out: Path, project: str) -> str:
     trend = _load_trend(out)
     if trend:
         L += render_trend_md(trend, "en")
+    chains = _load_attack_chains(out)
+    if chains and chains.get("chains"):
+        L += render_attack_chains_md(chains, "en")
     L += ["## 3. Findings", "",
           "| ID | Sev | Conf | Status | Category | Endpoint | Location | Title |", "|---|---|---|---|---|---|---|---|"]
     for f in active:
@@ -223,6 +238,9 @@ def render_ja(out: Path, project: str) -> str:
     trend = _load_trend(out)
     if trend:
         L += render_trend_md(trend, "ja")
+    chains = _load_attack_chains(out)
+    if chains and chains.get("chains"):
+        L += render_attack_chains_md(chains, "ja")
     L += ["## 3. 検出事項の詳細", "",
           "| ID | 重要度 | 確信度 | ステータス | 脆弱性分類 | 対象エンドポイント | 該当箇所 | タイトル |",
           "|---|---|---|---|---|---|---|---|"]
@@ -427,6 +445,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
     )
     trend = _load_trend(out)
     trend_card = render_trend_html(trend) if trend else ""
+    chains = _load_attack_chains(out)
+    chains_card = render_attack_chains_html(chains) if chains and chains.get("chains") else ""
 
     # Build severity legend rows
     sev_colors = {
@@ -906,6 +926,16 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
     font-size: 12px;
     color: #475569;
   }}
+  .chain-list-container {{ display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }}
+  .chain-item-card {{ border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fdfdfd; }}
+  .chain-item-header {{ font-size: 15px; margin-bottom: 12px; }}
+  .chain-flow-diagram {{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }}
+  .chain-step-node {{ background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px; }}
+  .chain-step-badge {{ font-weight: 600; color: var(--accent); margin-bottom: 4px; }}
+  .chain-step-id {{ font-size: 13px; }}
+  .chain-step-loc {{ color: var(--muted); font-family: monospace; font-size: 11px; }}
+  .chain-arrow {{ font-size: 18px; color: var(--muted); font-weight: bold; }}
+  .chain-impact-desc {{ font-size: 13px; color: var(--muted); margin-top: 8px; }}
   @media print {{
     body {{ background: #fff; }}
     .btn-ctrl, .filter-bar, .btn-inspect, .btn-copy {{ display: none !important; }}
@@ -985,6 +1015,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
       {cat_svg}
     </div>
   </section>
+
+  {chains_card}
 
   {trend_card}
 

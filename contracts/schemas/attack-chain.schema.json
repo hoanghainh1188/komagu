@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/attack-chain.schema.json",
+  "title": "Komagu attack chain collection",
+  "type": "object",
+  "required": [
+    "version",
+    "chains",
+    "summary"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "chains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "chain_id",
+          "title",
+          "entry",
+          "steps",
+          "outcome",
+          "business_impact",
+          "severity",
+          "confidence",
+          "breaking_fixes"
+        ],
+        "properties": {
+          "chain_id": {
+            "type": "string",
+            "pattern": "^chain-[0-9]{3,}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "entry": {
+            "type": "string",
+            "enum": [
+              "anonymous",
+              "authenticated_user",
+              "tenant_admin"
+            ]
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "step_index",
+                "finding_id",
+                "role_in_chain",
+                "requires",
+                "gains"
+              ],
+              "properties": {
+                "step_index": {
+                  "type": "integer"
+                },
+                "finding_id": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "subtype": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                },
+                "role_in_chain": {
+                  "type": "string",
+                  "enum": [
+                    "entry_point",
+                    "privilege_gain",
+                    "access",
+                    "impact"
+                  ]
+                },
+                "requires": {
+                  "type": "string"
+                },
+                "gains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "explanation": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "business_impact": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "likely",
+              "needs_review"
+            ]
+          },
+          "breaking_fixes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "narrative": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_chains",
+        "top_breaking_fixes"
+      ],
+      "properties": {
+        "total_chains": {
+          "type": "integer"
+        },
+        "by_severity": {
+          "type": "object"
+        },
+        "top_breaking_fixes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "chains_broken"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "chains_broken": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

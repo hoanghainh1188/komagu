@@ -374,6 +374,7 @@ def to_sarif(
                 "confidence": f.get("confidence", "high"),
                 "status": f.get("status", "unverified"),
                 "cwe": norm_cwes,
+                **({"attackChains": sorted(f["attack_chains"])} if f.get("attack_chains") else {}),
                 **replay_properties(f),
             },
         }
@@ -465,6 +466,16 @@ def main() -> int:
         start_time=t0,
         end_time=t1,
     )
+
+    chains_file = out / "attack-chains.json"
+    if chains_file.is_file():
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from attack_chains import attach_chains_to_sarif  # noqa: E402
+            chains_doc = read_json(chains_file)
+            sarif = attach_chains_to_sarif(sarif, chains_doc)
+        except Exception:
+            pass
 
     out_file = Path(a.sarif_out).resolve() if a.sarif_out else (out / "findings.sarif")
     out_file.parent.mkdir(parents=True, exist_ok=True)

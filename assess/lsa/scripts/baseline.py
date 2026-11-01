@@ -236,6 +236,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         history = append_history(history, snapshot(counts, diff.findings, args.today))
     updated = update_baseline(entries, diff, args.today, history)
     write_json(findings_file, {**doc, "findings": diff.findings})
+    try:
+        from attack_chains import build_attack_chains
+        routes_file = out / "routes.json"
+        routes_list = read_json(routes_file).get("routes", []) if routes_file.exists() else []
+        chains_doc = build_attack_chains(diff.findings, routes_list)
+        write_json(out / "attack-chains.json", chains_doc)
+    except Exception:
+        pass
     write_json(out / "baseline-diff.json", {
         "generated": args.today,
         "baseline": str(baseline_path) if baseline_path else None,
