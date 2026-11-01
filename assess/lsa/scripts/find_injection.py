@@ -28,7 +28,7 @@ LANG_BY_EXT = {
     ".asp": "vb", ".asa": "vb",
     ".pl": "perl", ".pm": "perl", ".cgi": "perl",
     ".cfm": "cfml", ".cfc": "cfml", ".cfml": "cfml",
-    ".js": "js", ".mjs": "js", ".ts": "js", ".py": "python", ".rb": "ruby",
+    ".js": "js", ".mjs": "js", ".cjs": "js", ".mts": "js", ".ts": "js", ".tsx": "js", ".jsx": "js", ".py": "python", ".rb": "ruby",
     ".rs": "rust", ".go": "go",
     ".xml": "xml", ".sql": "sql",
 }

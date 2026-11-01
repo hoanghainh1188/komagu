@@ -48,7 +48,7 @@ SOURCE_EXTS = {
     ".asp", ".asa",
     ".pl", ".pm", ".cgi",
     ".cfm", ".cfc", ".cfml",
-    ".js", ".mjs", ".ts", ".py", ".rb", ".erb", ".sql",
+    ".js", ".mjs", ".cjs", ".mts", ".ts", ".tsx", ".jsx", ".py", ".rb", ".erb", ".sql",
     ".rs", ".go", ".toml", ".mod",
 }
 

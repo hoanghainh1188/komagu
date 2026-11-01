@@ -21,6 +21,7 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import (KIT_VERSION, compile_id_patterns, is_id_name, iter_source_files,  # noqa: E402
                         line_of, load_config, read_text, write_json)
+from nextjs_routes import middleware_note, nextjs_declared  # noqa: E402
 from privilege import annotate_privilege  # noqa: E402
 
 # --------------------------------------------------------------------------------------
@@ -138,7 +139,7 @@ LANG_BY_EXT = {
     ".asp": "asp", ".asa": "asp",
     ".pl": "perl", ".pm": "perl", ".cgi": "perl",
     ".cfm": "cfml", ".cfc": "cfml", ".cfml": "cfml",
-    ".js": "js", ".mjs": "js", ".ts": "js", ".py": "python", ".rb": "ruby",
+    ".js": "js", ".mjs": "js", ".cjs": "js", ".mts": "js", ".ts": "js", ".tsx": "js", ".jsx": "js", ".py": "python", ".rb": "ruby",
     ".rs": "rust", ".go": "go",
 }
 
@@ -764,7 +765,9 @@ def _scan_route_file_batch(args: Tuple[List[Tuple[str, str]], Dict, set, str]) -
             declared = dotnet_declared(c, rel, t)
         elif lang == "cfml" and ext == ".cfc":
             declared = cfml_declared(c, rel, t)
-        elif lang in ("js", "python", "ruby"):
+        elif lang == "js":
+            declared = nextjs_declared(c, rel, t) or js_py_rb_declared(c, rel, t, lang)
+        elif lang in ("python", "ruby"):
             declared = js_py_rb_declared(c, rel, t, lang)
         elif lang == "rust":
             declared = rust_declared(c, rel, t)
@@ -881,6 +884,11 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
     for n, it in enumerate(keep, 1):
         it["route_id"] = f"R-{n:04d}"
     c.items = keep
+    mw_note = middleware_note(target, [rel for _, rel in files], enc) \
+        if any(it["stack"] == "node-nextjs" for it in c.items) else None
+    for it in c.items:
+        if mw_note and it["stack"] == "node-nextjs":
+            it["notes"] = f"{it['notes']}; {mw_note}" if it["notes"] else mw_note
     for it in c.items:
         it["needs_audit_hint"] = bool(any(i.get("is_id_like") for i in it["id_params"]) or it["kind"] == "declared_route")
     c.items = annotate_privilege(c.items, target, config)
