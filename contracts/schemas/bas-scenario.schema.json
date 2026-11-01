@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/schemas/bas-scenario.schema.json",
+  "title": "Breach & Attack Simulation (BAS) Declarative Scenario",
+  "description": "Schema for declarative incident simulation files in Komagu BAS.",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "title",
+    "status",
+    "incident",
+    "mappings",
+    "parameters",
+    "steps",
+    "scoring"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Unique slug identifier for the scenario."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+      "description": "Semantic version of the scenario definition."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Human-readable scenario title."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "approved", "retired"],
+      "description": "Governance review lifecycle status. Only approved scenarios run without explicit override."
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Sign-off auditor or security team member identity."
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of audit approval."
+    },
+    "incident": {
+      "type": "object",
+      "required": ["name", "date", "summary", "references"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Historical breach or landmark incident name."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date or year of the incident."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Executive description of the real-world attack."
+        },
+        "references": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Public advisories, news reports, or CVE references."
+        }
+      }
+    },
+    "mappings": {
+      "type": "object",
+      "properties": {
+        "cwe": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "CWE numbers related to the attack (e.g. ['CWE-639', 'CWE-284'])."
+        },
+        "owasp_api": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "OWASP API Security Top 10 IDs (e.g. ['API1:2023'])."
+        },
+        "mitre_attack": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "MITRE ATT&CK technique IDs (e.g. ['T1059', 'T1552'])."
+        }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Configurable parameters with defaults.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["default", "description"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["string", "integer", "boolean", "list"],
+            "default": "string"
+          },
+          "default": {},
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["http_request", "storage_worm_check", "custom_probe"]
+          },
+          "destructive": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, changes or deletes state; requires --allow-destructive."
+          },
+          "repeat": {
+            "type": "object",
+            "description": "Loop configuration over an array parameter.",
+            "required": ["param_name", "as_var"],
+            "properties": {
+              "param_name": { "type": "string" },
+              "as_var": { "type": "string" }
+            }
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
+                "default": "GET"
+              },
+              "path": { "type": "string" },
+              "query": { "type": "object", "additionalProperties": { "type": "string" } },
+              "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+              "body": { "type": "string" }
+            }
+          },
+          "expect_secure": {
+            "type": "object",
+            "description": "Conditions indicating the system successfully mitigated or blocked the attack.",
+            "properties": {
+              "status_codes": {
+                "type": "array",
+                "items": { "type": "integer" }
+              },
+              "body_not_contains": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "expect_vulnerable": {
+            "type": "object",
+            "description": "Conditions indicating the system leaked data or was compromised.",
+            "properties": {
+              "status_codes": {
+                "type": "array",
+                "items": { "type": "integer" }
+              },
+              "body_contains": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "body_matches_regex": {
+                "type": "string"
+              }
+            }
+          },
+          "storage_check": {
+            "type": "object",
+            "description": "WORM storage compliance probe parameters.",
+            "properties": {
+              "operations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["overwrite", "truncate", "delete"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["strategy", "recommendations"],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["ratio", "all_or_nothing"],
+          "default": "ratio"
+        },
+        "recommendations": {
+          "type": "object",
+          "required": ["remediation", "passed"],
+          "properties": {
+            "remediation": { "type": "string" },
+            "passed": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

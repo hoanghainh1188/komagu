@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komagu/main/contracts/schemas/bas-scenario.schema.json",
+  "id": "idc-frontier-ransomware",
+  "version": "1.0.0",
+  "title": "IDC Frontier Cloud Storage Ransomware Simulation",
+  "status": "approved",
+  "approved_by": "sec-team@komagu.io",
+  "approved_at": "2026-03-15T00:00:00Z",
+  "incident": {
+    "name": "IDC Frontier Cloud Storage Ransomware Disaster",
+    "date": "2024",
+    "summary": "Simulates in-flight malicious tamper/deletion attempts against storage archives to verify Write-Once-Read-Many (WORM) and S3 Object Lock compliance.",
+    "references": [
+      "IDC Frontier East Japan ransomware disaster: 495 enterprise tenants suffered unrecoverable cloud data loss."
+    ]
+  },
+  "mappings": {
+    "cwe": ["CWE-284"],
+    "owasp_api": ["API1:2023"],
+    "mitre_attack": ["T1485", "T1486"]
+  },
+  "parameters": {
+    "target_dir": {
+      "type": "string",
+      "default": "/tmp/backup-dir",
+      "description": "Path to local directory or storage mount point being evaluated for immutable WORM protection."
+    }
+  },
+  "steps": [
+    {
+      "name": "WORM Tamper & Deletion Compliance Check",
+      "description": "Performs overwrite, truncate, and delete operations against test archive file.",
+      "type": "storage_worm_check",
+      "destructive": false,
+      "storage_check": {
+        "operations": ["overwrite", "truncate", "delete"]
+      }
+    }
+  ],
+  "scoring": {
+    "strategy": "ratio",
+    "recommendations": {
+      "remediation": "Deploy Komagu Boilerplate 3 (Immutable Backup & DR) with AWS S3 Object Lock in COMPLIANCE mode and cross-region replication to prevent unrecoverable cloud ransomware wiping.",
+      "passed": "Storage assets strictly adhere to immutable WORM policy."
+    }
+  }
+}

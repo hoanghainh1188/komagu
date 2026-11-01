@@ -343,7 +343,7 @@ komagu fix ./legacy-monolith
 
 ### 3.6 `komagu simulate` — Breach & Attack Simulation (BAS) Suite
 
-Simulates catastrophic real-world cyber incidents modeled after notable enterprise disasters to empirically measure defensive resilience and compute the **Platform Resilience Index (%)**.
+Simulates catastrophic real-world cyber incidents modeled after notable enterprise disasters to empirically measure defensive resilience and compute the **Platform Resilience Index (%)**. Scenarios are defined as declarative JSON documents conforming to `contracts/schemas/bas-scenario.schema.json`.
 
 ```bash
 komagu simulate [options]
@@ -352,26 +352,48 @@ komagu simulate [options]
 #### Flags & Arguments
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `--scenario` | `-s` | `all` | Scenario: `all`, `times-car-breach`, `metabase-cve-2026-72898`, `idc-frontier-ransomware` |
+| `--list` | | | List all discovered built-in and custom scenarios |
+| `--validate` | | `None` | Validate a scenario JSON file against schema and exit |
+| `--scenario` | `-s` | `all` | Scenario ID to execute, or `all` |
+| `--scenario-file` | | `None` | Path to custom scenario file (repeatable) |
+| `--scenario-dir` | | `None` | Path to directory containing scenario files (repeatable) |
+| `--set` | | `None` | Override scenario parameter (`--set key=value`, repeatable) |
+| `--allow-draft` | | `false` | Allow execution of scenarios with `status != 'approved'` |
+| `--allow-destructive` | | `false` | Allow execution of steps marked `destructive: true` |
 | `--target` | `-t` | `http://localhost:5001` | Target API base URL or storage volume path |
 | `--endpoint` | | `/api/legacy-orders/{id}` | Target endpoint pattern for BOLA scenario |
 | `--param` | | `q` | Target search query parameter for SQLi scenario |
 | `--token` | | `mock-attacker-bob-token` | Attacker bearer credential for impersonation |
+| `--evidence` | | `None` | Export signed JSON execution evidence for METI SCS audit (#271) |
 | `--format` | | `table` | Report output format (`table`, `markdown`, `json`) |
 | `--output` | `-o` | `None` | Output file path to save Executive C-Level Report |
 
-#### Available Scenarios
+#### Available Built-in Scenarios
 1. **`times-car-breach`**: Simulates the 2024 Times Car mass IDOR attack (6.6M customer accounts and ID photos harvested).
 2. **`metabase-cve-2026-72898`**: Simulates remote unauthenticated SQL injection probe (CVSS 10.0 zero-day).
 3. **`idc-frontier-ransomware`**: Simulates malicious in-flight backup overwriting, truncation, and deletion testing immutable WORM / S3 Object Lock compliance.
 
 #### Examples
 ```bash
-# Run all breach simulations and generate Executive Board of Directors Report
-komagu simulate --target http://staging-api:8000 --output ./executive-bas-report.md --format markdown
+# List all available scenarios with their review status and incident dates
+komagu simulate --list
 
-# Simulate specifically the Times Car IDOR account harvesting probe
-komagu simulate --scenario times-car-breach --target http://localhost:8000 --endpoint /api/orders/{id}
+# Validate a custom declarative scenario JSON against the contract schema
+komagu simulate --validate ./custom-scenario.json
+
+# Run all breach simulations and generate Executive Board of Directors Report and METI SCS evidence
+komagu simulate \
+  --target http://staging-api:8000 \
+  --output ./executive-bas-report.md \
+  --evidence ./bas-evidence.json \
+  --format markdown
+
+# Execute a custom scenario with parameter overrides and draft permission
+komagu simulate \
+  --scenario-file ./new-advisory.json \
+  --set endpoint_pattern=/api/v2/orders/{id} \
+  --allow-draft \
+  --target http://localhost:8000
 ```
 
 ---
