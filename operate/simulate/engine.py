@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import time
 import urllib.error
 import urllib.parse
@@ -203,8 +204,13 @@ class DeclarativeScenario(BaseScenario):
         is_leaked = False
         response_sample = ""
 
+        # Audit URL scheme to only permit HTTP/HTTPS per Bandit B310
+        parsed_url = urllib.parse.urlparse(url)
+        if parsed_url.scheme.lower() not in ("http", "https"):
+            raise ValueError(f"Unsupported URL scheme: {parsed_url.scheme}. Only http and https are permitted.")
+
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # nosec B310
                 status_code = resp.status
                 body_text = resp.read().decode("utf-8", errors="replace")[:300]
                 response_sample = body_text
@@ -274,7 +280,8 @@ class DeclarativeScenario(BaseScenario):
         try:
             target_dir.mkdir(parents=True, exist_ok=True)
             test_file.write_text("Komagu Immutable WORM Backup - Read Only", encoding="utf-8")
-            os.chmod(str(test_file), 0o444)
+            # Mark file read-only for owner (simulating local WORM compliance mode without world permissions)
+            os.chmod(str(test_file), stat.S_IRUSR)
         except Exception:
             pass
 
@@ -306,8 +313,9 @@ class DeclarativeScenario(BaseScenario):
                     blocked += 1
                     details.append({"operation": "Delete File", "blocked": True, "note": "Deletion prevented by filesystem / WORM policy"})
 
+        # Restore owner write permission before cleanup
         try:
-            os.chmod(str(test_file), 0o666)
+            os.chmod(str(test_file), stat.S_IRUSR | stat.S_IWUSR)
             test_file.unlink(missing_ok=True)
         except Exception:
             pass
