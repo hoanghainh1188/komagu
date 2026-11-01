@@ -244,6 +244,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         write_json(out / "attack-chains.json", chains_doc)
     except Exception:
         pass
+    try:
+        from forecast import project_debt
+        forecast_doc = project_debt(history, today=args.today)
+        write_json(out / "forecast.json", forecast_doc)
+    except Exception:
+        pass
     write_json(out / "baseline-diff.json", {
         "generated": args.today,
         "baseline": str(baseline_path) if baseline_path else None,

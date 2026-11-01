@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import KIT_VERSION, read_json  # noqa: E402
 from trend import render_trend_html, render_trend_md  # noqa: E402
 from attack_chains import render_attack_chains_html, render_attack_chains_md  # noqa: E402
+from forecast import render_forecast_html, render_forecast_md  # noqa: E402
 
 SEV = ["critical", "high", "medium", "low", "info"]
 
@@ -72,6 +73,17 @@ def _load_trend(out: Path) -> Dict[str, Any]:
 def _load_attack_chains(out: Path) -> Dict[str, Any]:
     """Attack chains from attack_chains.py (OUT/attack-chains.json)."""
     path = out / "attack-chains.json"
+    if not path.is_file():
+        return {}
+    try:
+        return read_json(path) or {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def _load_forecast(out: Path) -> Dict[str, Any]:
+    """Security debt forecast from forecast.py (OUT/forecast.json)."""
+    path = out / "forecast.json"
     if not path.is_file():
         return {}
     try:
@@ -142,6 +154,9 @@ def render_en(out: Path, project: str) -> str:
     trend = _load_trend(out)
     if trend:
         L += render_trend_md(trend, "en")
+    fc = _load_forecast(out)
+    if fc:
+        L += render_forecast_md(fc, "en")
     chains = _load_attack_chains(out)
     if chains and chains.get("chains"):
         L += render_attack_chains_md(chains, "en")
@@ -238,6 +253,9 @@ def render_ja(out: Path, project: str) -> str:
     trend = _load_trend(out)
     if trend:
         L += render_trend_md(trend, "ja")
+    fc = _load_forecast(out)
+    if fc:
+        L += render_forecast_md(fc, "ja")
     chains = _load_attack_chains(out)
     if chains and chains.get("chains"):
         L += render_attack_chains_md(chains, "ja")
@@ -445,6 +463,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
     )
     trend = _load_trend(out)
     trend_card = render_trend_html(trend) if trend else ""
+    fc = _load_forecast(out)
+    forecast_card = render_forecast_html(fc) if fc else ""
     chains = _load_attack_chains(out)
     chains_card = render_attack_chains_html(chains) if chains and chains.get("chains") else ""
 
@@ -936,6 +956,11 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
   .chain-step-loc {{ color: var(--muted); font-family: monospace; font-size: 11px; }}
   .chain-arrow {{ font-size: 18px; color: var(--muted); font-weight: bold; }}
   .chain-impact-desc {{ font-size: 13px; color: var(--muted); margin-top: 8px; }}
+  .forecast-stats-grid {{ display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0 18px; }}
+  .forecast-stat-box {{ background: #fdfdfd; border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; flex: 1; min-width: 140px; }}
+  .stat-lbl {{ font-size: 12px; color: var(--muted); }}
+  .stat-val {{ font-size: 20px; font-weight: 700; margin-top: 4px; }}
+  .forecast-alert {{ padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }}
   @media print {{
     body {{ background: #fff; }}
     .btn-ctrl, .filter-bar, .btn-inspect, .btn-copy {{ display: none !important; }}
@@ -1019,6 +1044,8 @@ def render_html(out: Path, project: str, default_lang: str = "en") -> str:
   {chains_card}
 
   {trend_card}
+
+  {forecast_card}
 
   <section class="card" aria-label="Interactive Findings Table">
     <h2 class="card-title" data-en="Interactive Findings Explorer" data-ja="検出事項一覧・インタラクティブ検索 (Findings Explorer)">Interactive Findings Explorer</h2>
