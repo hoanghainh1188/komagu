@@ -181,6 +181,13 @@ class TestNextjs(unittest.TestCase):
         self.assertEqual(_names(page), {"code": "path"})
         self.assertFalse(any(r["path"] == "/about" for r in self.routes))
 
+    def test_use_server_after_comments(self) -> None:
+        from nextjs_routes import _starts_with_use_server
+
+        self.assertTrue(_starts_with_use_server('// x\n/* y */\n  "use server";\nexport async function a() {}'))
+        self.assertFalse(_starts_with_use_server('import x from "y";\n"use server";'))
+        self.assertFalse(_starts_with_use_server("/*" + "*//*" * 5000))
+
     def test_proxy_noted(self) -> None:
         get = _find(self.routes, "GET", "/api/orders/{id}")
         self.assertIn("src/proxy.ts", get["notes"])

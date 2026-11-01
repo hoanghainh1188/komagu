@@ -20,7 +20,6 @@ METHODS = "GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS"
 HANDLER_DECL = re.compile(r"^export\s+(?:async\s+)?function\s+(" + METHODS + r")\b|^export\s+const\s+(" + METHODS + r")\s*=", re.M)
 HANDLER_REEXPORT = re.compile(r"\b\w+\s+as\s+(" + METHODS + r")\b")
 TOP_LEVEL = re.compile(r"^(?:export|function|async|const|let|var|class)\b", re.M)
-USE_SERVER_FILE = re.compile(r"\A(?:\s|//[^\n]*\n|/\*[\s\S]*?\*/)*['\"]use server['\"]")
 ACTION_EXPORT = re.compile(r"^export\s+(?:default\s+)?async\s+function\s+(\w+)\s*\(|^export\s+const\s+(\w+)\s*=\s*async\s*\(", re.M)
 INLINE_ACTION = re.compile(r"\basync\s+function\s+(\w+)\s*\(|\b(?:const|let)\s+(\w+)\s*=\s*async\s*\(")
 USE_SERVER_STMT = re.compile(r"\s*['\"]use server['\"]")
@@ -67,6 +66,23 @@ def _close(text: str, idx: int, open_ch: str, close_ch: str) -> int:
             if depth == 0:
                 return j
     return len(text)
+
+
+def _starts_with_use_server(text: str) -> bool:
+    """True when the first statement of the file is the "use server" directive (comments may come first)."""
+    i, n = 0, len(text)
+    while i < n:
+        if text[i].isspace():
+            i += 1
+        elif text.startswith("//", i):
+            nl = text.find("\n", i)
+            i = n if nl == -1 else nl + 1
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            i = n if end == -1 else end + 2
+        else:
+            break
+    return bool(USE_SERVER_STMT.match(text, i))
 
 
 def _segment_end(text: str, start: int) -> int:
@@ -171,7 +187,7 @@ class NextRoutes:
         self.add("declared_route", methods, path, 0, len(self.text), "next.js pages/api route")
 
     def server_actions(self) -> None:
-        if USE_SERVER_FILE.search(self.text):
+        if _starts_with_use_server(self.text):
             for m in ACTION_EXPORT.finditer(self.text):
                 name = m.group(1) or m.group(2)
                 paren = m.end() - 1
