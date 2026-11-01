@@ -26,7 +26,7 @@ Skip nothing. If a phase fails, stop and report the failure.
 |---|---|---|---|
 | 1 | Pre-scan | script `python3 KIT/scripts/run_prescan.py TARGET OUT [--config CONFIG]` | `stack-profile.json`, `routes.candidates.json`, `injection.candidates.json`, `mass-assignment.candidates.json`, `batches/*.json` |
 | 2 | Stack & auth model | agent `10-stack-detector` | `stack-profile.json` (confirmed), `auth-model.md` |
-| 3 | Route inventory | agent `20-route-mapper` (one run per route batch) | `routes/<batch>.json` → merged `routes.json` |
+| 3 | Route inventory | agent `20-route-mapper` (one run per route batch), then scripts `merge_findings.py OUT` and `make_privilege_batches.py OUT` | `routes/<batch>.json` → merged `routes.json`; extra `batches/privilege-<n>.json` |
 | 4a | BOLA audit | agent `30-bola-auditor` (parallel, one per route batch) | `findings/bola-<batch>.json` |
 | 4b | Injection audit | agent `40-injection-auditor` (parallel, one per injection batch) | `findings/inj-<batch>.json` |
 | 4c | Privilege audit (BFLA, mass assignment) | agent `35-privilege-auditor` (parallel, one per `batches/privilege-<n>.json`) | `findings/priv-<batch>.json` |
@@ -51,10 +51,13 @@ Skip nothing. If a phase fails, stop and report the failure.
   `routes.candidates.json`. Every candidate must be either in `routes.json` or
   listed in `routes.json → rejected[]` with a reason. Missing items = rerun.
 - **Privilege batches.** The pre-scan puts BFLA-hinted routes and mass
-  assignment candidates into `batches/privilege-<n>.json`. If the route mapper
-  sets `needs_bfla_audit: true` on a route that is in no privilege batch, give
-  it to `35-privilege-auditor` as a one-route batch. `merge_findings.py`
-  reports BFLA routes and mass candidates without a verdict as coverage gaps.
+  assignment candidates into `batches/privilege-<n>.json`. The route mapper
+  usually flags more routes (`needs_bfla_audit: true`) than the pre-scan hints.
+  After phase 3, run `merge_findings.py OUT` (writes `routes.json`), then
+  `make_privilege_batches.py OUT`: it adds `privilege-<n>.json` batches for the
+  flagged routes that are in no batch yet. Run phase 4c on every privilege batch.
+  `merge_findings.py` reports BFLA routes and mass candidates without a verdict
+  as coverage gaps; if any remain, run `make_privilege_batches.py` again.
 - **Verifier new issues.** `merge_findings.py` lists verifier `new_issues`
   in `coverage.json`. Send each one back to the matching auditor (BOLA,
   injection or privilege) as a one-item batch, then verify the result. Repeat once at most.

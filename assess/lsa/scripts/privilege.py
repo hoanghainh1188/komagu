@@ -42,6 +42,9 @@ SENSITIVE_WRITE_RES = [
     re.compile(r"(?i)\bupdate\s+[`\"\[]?(?:\w+\.)?(users?|accounts?|members?)[`\"\]]?\s+set\b[^;\n]{0,120}?"
                r"\b(?:role|is_?admin|admin|permissions?|privileges?|level|user_?type)\s*="),
     re.compile(r"(?i)\bupdate\s+[`\"\[]?(?:\w+\.)?(roles?|permissions?|settings|config)\b"),
+    # ORM writes: Drizzle db.update(users) / db.delete(roles) / db.insert(userRoles), Prisma prisma.user.update(...)
+    re.compile(r"\.(?:update|delete|insert)\s*\(\s*(?:\w+\.)?(users?|accounts?|members?|roles?|permissions?|user_?[Rr]oles?)\s*\)"),
+    re.compile(r"\bprisma\.(users?|accounts?|members?|roles?|permissions?|userRoles?)\.(?:update|updateMany|upsert|delete|deleteMany|create|createMany)\s*\("),
 ]
 
 ROLE_CHECK_RE = re.compile("|".join([
@@ -55,6 +58,7 @@ ROLE_CHECK_RE = re.compile("|".join([
     r"\$_SESSION\s*\[\s*['\"](?:role|is_?admin|admin|user_?role|level|privilege)['\"]\s*\]",
     r"Session\s*[\(\[]\s*\"(?:role|isadmin|is_admin|admin|level)\"|session\.(?:role|isadmin|is_admin|admin)\b",
     r"\$session->param\s*\(\s*['\"](?:role|admin)",
+    r"\bpermission\s*:\s*['\"][\w.:-]+['\"]|\bcan\s*\(\s*[\w.]+\s*,\s*['\"]|\b(?:require|has)(?:Permission|Role)\s*\(",
     r"(?:include|require)(?:_once)?\s*\(?\s*['\"](?:[^'\"]*/)?[^/'\"]*(?:admin|role|perm|acl)[^/'\"]*['\"]",
 ]), re.I)
 
