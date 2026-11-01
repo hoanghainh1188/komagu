@@ -7,7 +7,7 @@ import sys
 from typing import List, Optional
 
 from operate.cli import __version__
-from operate.cli.commands import demo, devsecops, fix, init, inventory, protect, scan, simulate, test
+from operate.cli.commands import demo, devsecops, evidence, fix, init, inventory, protect, scan, simulate, test
 from operate.cli.ui import print_banner
 
 
@@ -28,6 +28,7 @@ Quick Start Workflow:
   7. Install AI audit agents:   komagu init --ai codex ~/audits/acme
   8. Simulate breach scenarios: komagu simulate --scenario times-car-breach
   9. Reconcile API inventory:   komagu inventory --routes OUT/routes.json --openapi openapi.json
+  10. Bundle METI SCS evidence: komagu evidence --audit-dir OUT/ --output-dir ./evidence-pack
 
 Documentation & Guides:
   Comprehensive User Guide: docs/cli-guide.md
@@ -64,6 +65,7 @@ Learn more about a specific command:
     init.register_subcommand(subparsers)
     simulate.register_subcommand(subparsers)
     inventory.register_subcommand(subparsers)
+    evidence.register_subcommand(subparsers)
 
     help_parser = subparsers.add_parser(
         "help",
@@ -73,8 +75,8 @@ Learn more about a specific command:
     help_parser.add_argument(
         "topic",
         nargs="?",
-        choices=["scan", "protect", "test", "demo", "devsecops", "fix", "init", "simulate", "inventory"],
-        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops, fix, init, simulate, inventory)",
+        choices=["scan", "protect", "test", "demo", "devsecops", "fix", "init", "simulate", "inventory", "evidence"],
+        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops, fix, init, simulate, inventory, evidence)",
     )
 
     return parser

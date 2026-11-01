@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/schemas/evidence-manifest.schema.json",
+  "title": "METI SCS & NIST CSF 2.0 Evidence Manifest",
+  "description": "Cryptographically hashed manifest bundling technical evidence for METI Supply Chain Security (★3/★4) and Active Cyber Defense compliance.",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "project_name",
+    "generated_at",
+    "target_system",
+    "frameworks",
+    "overall_readiness",
+    "controls",
+    "bundled_artifacts",
+    "disclaimer"
+  ],
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+      "description": "Semantic version of the evidence manifest schema."
+    },
+    "project_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target project or organization name."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of evidence pack generation."
+    },
+    "target_system": {
+      "type": "string",
+      "description": "Target codebase or API environment evaluated."
+    },
+    "frameworks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Compliance frameworks mapped (e.g. ['METI SCS ★3', 'METI SCS ★4', 'NIST CSF 2.0', 'Active Cyber Defense Act 2025'])."
+    },
+    "overall_readiness": {
+      "type": "object",
+      "required": ["rating", "total_controls", "covered_controls", "partial_controls", "compliance_percentage"],
+      "properties": {
+        "rating": {
+          "type": "string",
+          "enum": ["SCS-★3-READY", "SCS-★4-READY", "GAP-IDENTIFIED", "INSUFFICIENT-EVIDENCE"]
+        },
+        "total_controls": { "type": "integer", "minimum": 0 },
+        "covered_controls": { "type": "integer", "minimum": 0 },
+        "partial_controls": { "type": "integer", "minimum": 0 },
+        "compliance_percentage": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "control_id",
+          "category",
+          "name_en",
+          "name_ja",
+          "tier",
+          "nist_csf_v2",
+          "status",
+          "evidence_files",
+          "description_en",
+          "description_ja"
+        ],
+        "properties": {
+          "control_id": { "type": "string" },
+          "category": { "type": "string" },
+          "name_en": { "type": "string" },
+          "name_ja": { "type": "string" },
+          "tier": { "type": "string", "enum": ["★3", "★4", "★5"] },
+          "nist_csf_v2": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["covered", "partially_covered", "out_of_scope_organizational", "missing_evidence"]
+          },
+          "evidence_files": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "description_en": { "type": "string" },
+          "description_ja": { "type": "string" },
+          "action_required_ja": { "type": "string" },
+          "action_required_en": { "type": "string" }
+        }
+      }
+    },
+    "bundled_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["filename", "artifact_type", "sha256", "size_bytes"],
+        "properties": {
+          "filename": { "type": "string" },
+          "artifact_type": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "disclaimer": {
+      "type": "string",
+      "description": "Legal/governance disclaimer regarding accredited assessment."
+    }
+  }
+}
