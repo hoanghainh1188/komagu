@@ -22,17 +22,15 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 
 from operate.ai.anchoring import Anchor, AnchorReport, anchor_findings, load_anchors
-from operate.ai.client import LLMClient
+from operate.ai.client import LLMClient, repair_json_quotes
 from operate.ai.context import _included_files, _model_source, _read_snippet, _verification_context  # noqa: F401
+from operate.ai.verdicts import DEFAULT_CWE, SUBTYPES, verdict_findings
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LSA_PROMPTS = REPO_ROOT / "assess" / "lsa" / "prompts"
-DEFAULT_CWE = {"bola": ["CWE-284"], "bfla": ["CWE-285"], "mass_assignment": ["CWE-915"],
-               "sql_injection": ["CWE-89"], "nosql_injection": ["CWE-943"]}
 LSA_SCRIPTS = REPO_ROOT / "assess" / "lsa" / "scripts"
 # Valid subtypes per category (finding.schema.json); the first one is used when a model writes an invalid value
-CATEGORY_SUBTYPES = {"bfla": ["missing_role_check", "role_from_request", "client_side_role_check"],
-                     "mass_assignment": ["whole_object_binding", "privileged_field_writable"]}
+CATEGORY_SUBTYPES = {c: SUBTYPES[c] for c in ("bfla", "mass_assignment")}
 FINDING_STATUSES = {"unverified", "confirmed", "likely", "rejected", "needs_review"}
 
 
@@ -62,6 +60,10 @@ class HeadlessAIRunner:
         self.call_errors: Dict[str, Dict[str, str]] = {}
         # Per-phase batches whose first reply was empty or unparseable and were asked again
         self.retries: Dict[str, List[str]] = {}
+        # Per-phase batches that parsed only after escaping stray quotes in string values (#323)
+        self.repaired: Dict[str, List[str]] = {}
+        # Per-phase finding ids generated from flagged verdicts the model wrote no finding for (#323)
+        self.findings_from_verdicts: Dict[str, List[str]] = {}
         # Findings whose location was taken from the Tier 1 inventory (#319)
         self.anchor_report = AnchorReport()
         self._anchors: Optional[Dict[str, Anchor]] = None
@@ -103,19 +105,47 @@ class HeadlessAIRunner:
         if not (reply or "").strip():
             return False
         try:
-            self.client.extract_json(reply)
+            self._extract(reply)
             return True
         except Exception:
             return False
+
+    def _extract(self, reply: Optional[str], phase: Optional[str] = None, batch_id: Optional[str] = None) -> Any:
+        """Parse a reply; if that fails, escape stray quotes in string values and parse again (#323).
+
+        With phase and batch_id, a repaired batch is recorded and its raw reply kept in OUT/ai-raw/.
+        """
+        try:
+            return self.client.extract_json(reply)
+        except Exception:
+            parsed = self.client.extract_json(repair_json_quotes(reply or ""))
+        if phase and batch_id:
+            self.repaired.setdefault(phase, []).append(batch_id)
+            self._save_raw(phase, batch_id, reply or "")
+            self._log("warn", f"{phase}: reply for {batch_id} parsed after escaping stray quotes")
+        return parsed
+
+    def _save_raw(self, phase: str, batch_id: str, reply: str) -> None:
+        raw_dir = self.out_dir / "ai-raw"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        (raw_dir / f"{phase}-{batch_id}.txt").write_text(reply, encoding="utf-8")
+
+    def _with_verdict_findings(self, phase: str, findings: List[Dict[str, Any]], verdicts: Any, key: str,
+                               records: Dict[str, Dict[str, Any]], category: str) -> List[Dict[str, Any]]:
+        """Add an anchored low-confidence finding for each flagged verdict without one (#323)."""
+        extra = verdict_findings(verdicts, findings, key, records, category)
+        if not extra:
+            return findings
+        self.findings_from_verdicts.setdefault(phase, []).extend(f["finding_id"] for f in extra)
+        self._log("warn", f"{phase}: {len(extra)} flagged verdict(s) had no finding; generated low-confidence findings")
+        return findings + self._anchor(extra)
 
     def _parse_failed(self, phase: str, batch_id: str, reply: Optional[str] = None) -> None:
         if batch_id in self.call_errors.get(phase, {}):
             return
         self.parse_failures.setdefault(phase, []).append(batch_id)
         if reply is not None:
-            raw_dir = self.out_dir / "ai-raw"
-            raw_dir.mkdir(parents=True, exist_ok=True)
-            (raw_dir / f"{phase}-{batch_id}.txt").write_text(reply, encoding="utf-8")
+            self._save_raw(phase, batch_id, reply)
         self._log("warn", f"{phase}: could not parse the model reply for {batch_id}; batch left without verdicts")
 
     def _usage(self) -> Dict[str, Any]:
@@ -140,6 +170,8 @@ class HeadlessAIRunner:
             "parse_failures": self.parse_failures,
             "call_errors": self.call_errors,
             "retries": self.retries,
+            "repaired": self.repaired,
+            "findings_from_verdicts": self.findings_from_verdicts,
             "anchoring": {"moved": self.anchor_report.moved, "unanchored": self.anchor_report.unanchored},
         }
         path = self.out_dir / "ai-run-stats.json"
@@ -408,7 +440,7 @@ Respond STRICTLY with a valid JSON object matching:
       "severity": "high",
       "confidence": "high",
       "cwe": ["CWE-284", "CWE-639"],
-      "recommendation": {{"summary": "Bind query to current session user", "code_before": "...", "code_after": "..."}},
+      "recommendation": "<one string: the fix in words, no code>",
       "status": "unverified"
     }}
   ],
@@ -416,6 +448,7 @@ Respond STRICTLY with a valid JSON object matching:
     {{"route_id": "<route_id>", "verdict": "vulnerable|safe"}}
   ]
 }}
+Write one finding for every "vulnerable" verdict.
 """
             messages = [
                 {"role": "system", "content": auditor_prompt},
@@ -424,10 +457,13 @@ Respond STRICTLY with a valid JSON object matching:
 
             reply = self._chat("4a-bola-auditor", r_file.stem, messages)
             try:
-                parsed = self.client.extract_json(reply)
+                parsed = self._extract(reply, "4a-bola-auditor", r_file.stem)
                 raw_findings = parsed.get("findings", [])
                 findings = self._anchor([self._sanitize_finding(f) for f in raw_findings])
                 route_verdicts = parsed.get("route_verdicts", [])
+                findings = self._with_verdict_findings(
+                    "4a-bola-auditor", findings, route_verdicts, "route_id",
+                    {r.get("route_id"): r for r in routes_to_audit}, "bola")
             except Exception:
                 self._parse_failed("4a-bola-auditor", r_file.stem, reply)
                 findings = []
@@ -495,7 +531,7 @@ Respond STRICTLY with a valid JSON object matching:
       "severity": "critical",
       "confidence": "high",
       "cwe": ["CWE-89"],
-      "recommendation": {{"summary": "Use parameterized queries", "code_before": "...", "code_after": "..."}},
+      "recommendation": "<one string: the fix in words, no code>",
       "status": "unverified"
     }}
   ],
@@ -503,6 +539,7 @@ Respond STRICTLY with a valid JSON object matching:
     {{"candidate_id": "<candidate_id>", "verdict": "vulnerable|safe"}}
   ]
 }}
+Write one finding for every "vulnerable" verdict.
 """
             messages = [
                 {"role": "system", "content": auditor_prompt},
@@ -511,10 +548,13 @@ Respond STRICTLY with a valid JSON object matching:
 
             reply = self._chat("4b-injection-auditor", b_file.stem, messages)
             try:
-                parsed = self.client.extract_json(reply)
+                parsed = self._extract(reply, "4b-injection-auditor", b_file.stem)
                 raw_findings = parsed.get("findings", [])
                 findings = self._anchor([self._sanitize_finding(f) for f in raw_findings])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
+                findings = self._with_verdict_findings(
+                    "4b-injection-auditor", findings, candidate_verdicts, "candidate_id",
+                    {c.get("candidate_id"): c for c in candidates}, "sql_injection")
             except Exception:
                 self._parse_failed("4b-injection-auditor", b_file.stem, reply)
                 findings = []
@@ -621,10 +661,16 @@ For mass assignment, judge the fields from "model_definition". If it says the de
             ]
             reply = self._chat("4c-privilege-auditor", b_file.stem, messages)
             try:
-                parsed = self.client.extract_json(reply)
+                parsed = self._extract(reply, "4c-privilege-auditor", b_file.stem)
                 findings = self._anchor([self._sanitize_finding(f) for f in parsed.get("findings", [])])
                 route_verdicts = parsed.get("privilege_route_verdicts", [])
                 candidate_verdicts = parsed.get("candidate_verdicts", [])
+                findings = self._with_verdict_findings(
+                    "4c-privilege-auditor", findings, route_verdicts, "route_id",
+                    {r.get("route_id"): r for r in routes}, "bfla")
+                findings = self._with_verdict_findings(
+                    "4c-privilege-auditor", findings, candidate_verdicts, "candidate_id",
+                    {c.get("candidate_id"): c for c in mass}, "mass_assignment")
             except Exception:
                 self._parse_failed("4c-privilege-auditor", b_file.stem, reply)
                 findings, route_verdicts, candidate_verdicts = [], [], []
@@ -712,7 +758,7 @@ Respond STRICTLY with a valid JSON object matching verification.schema.json:
 
             reply = self._chat("5-finding-verifier", f"verified-{(idx // batch_size) + 1}", messages)
             try:
-                parsed = self.client.extract_json(reply)
+                parsed = self._extract(reply, "5-finding-verifier", f"verified-{(idx // batch_size) + 1}")
                 verifs = parsed.get("verifications", [])
             except Exception:
                 # No verdicts: merge_findings.py lists these findings under
