@@ -84,6 +84,7 @@ Batch files list the right files in `knowledge_files`. If they do not:
 | `classic-asp` | `knowledge/stacks/classic-asp.md` |
 | `perl` | `knowledge/stacks/perl-cgi.md` |
 | `coldfusion` | `knowledge/stacks/coldfusion.md` |
+| `node-nextjs` | `knowledge/stacks/nextjs.md` |
 | `node`, `python`, `ruby` | `knowledge/stacks/node-python-ruby.md` |
 | `sql-procedures` | `knowledge/injection-patterns.md` §1 (stored procedures) |
 

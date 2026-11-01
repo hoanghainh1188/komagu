@@ -61,6 +61,8 @@ RULES = [
     ("go-gorilla", "go", "go.md", [("text", r"github\.com/gorilla/mux|mux\.NewRouter")]),
     ("python-fastapi", "python", "node-python-ruby.md", [("text", r"from\s+fastapi\s+import|import\s+fastapi|FastAPI\s*\(")]),
     ("node-nestjs", "typescript", "node-python-ruby.md", [("text", r"@nestjs/(common|core|swagger)")]),
+    ("node-nextjs", "typescript", "nextjs.md", [("name", r"(^|/)next\.config\.(js|mjs|cjs|ts|mts)$"),
+                                                ("text", r"from\s+['\"]next/(server|navigation|headers|cache)['\"]")]),
 ]
 
 DATA_ACCESS = [
@@ -96,7 +98,7 @@ DB_HINTS = [
 ]
 
 TEXT_SAMPLE_EXTS = {".sql", ".php", ".inc", ".java", ".jsp", ".xml", ".cs", ".vb", ".aspx", ".asax", ".config", ".asp",
-                    ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".py", ".rb", ".kt", ".kts",
+                    ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".tsx", ".jsx", ".py", ".rb", ".kt", ".kts",
                     ".rs", ".go", ".toml", ".mod"}
 
 

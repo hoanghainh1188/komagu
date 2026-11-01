@@ -22,7 +22,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lsa_common import load_config, read_json, write_json  # noqa: E402
 
 STACK_KNOWLEDGE = [("php", "php.md"), ("java", "java.md"), ("dotnet", "dotnet.md"), ("classic-asp", "classic-asp.md"),
-                   ("perl", "perl-cgi.md"), ("coldfusion", "coldfusion.md"), ("node", "node-python-ruby.md"),
+                   ("perl", "perl-cgi.md"), ("coldfusion", "coldfusion.md"), ("node-nextjs", "nextjs.md"),
+                   ("node", "node-python-ruby.md"),
                    ("python", "node-python-ruby.md"), ("ruby", "node-python-ruby.md")]
 LANG_KNOWLEDGE = {"php": "php.md", "java": "java.md", "xml": "java.md", "cs": "dotnet.md", "vb": "dotnet.md",
                   "aspx": "dotnet.md", "perl": "perl-cgi.md", "cfml": "coldfusion.md", "js": "node-python-ruby.md",
