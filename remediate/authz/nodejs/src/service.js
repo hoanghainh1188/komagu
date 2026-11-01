@@ -128,6 +128,36 @@ class KomaguSecurityService {
     }
   }
 
+  /**
+   * Emit a 'Komagu.Authorization.RoleDenied' audit event (function-level / BFLA denial).
+   * Auditing failures never affect the denial outcome.
+   */
+  async emitRoleDenial(user, requiredRoles, route, reason = 'Caller lacks required role') {
+    try {
+      let actorUserId = null;
+      let actorTenantId = null;
+
+      if (user) {
+        try { actorUserId = this.getCurrentUserId(user); } catch (_) {}
+        try { actorTenantId = this.getCurrentTenantId(user); } catch (_) {}
+      }
+
+      const event = {
+        timestamp: new Date().toISOString(),
+        eventName: 'Komagu.Authorization.RoleDenied',
+        actorUserId: actorUserId || undefined,
+        actorTenantId: actorTenantId || undefined,
+        requiredRoles: Array.isArray(requiredRoles) ? requiredRoles.slice() : [],
+        route: route || undefined,
+        reason,
+      };
+
+      await this.auditSink.emit(event);
+    } catch (_) {
+      // Auditing failures must never affect the denial outcome
+    }
+  }
+
   async _emitDenial(user, resource, operation, reason, resourceId) {
     try {
       let actorUserId = null;

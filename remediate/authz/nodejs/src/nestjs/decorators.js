@@ -1,8 +1,10 @@
 'use strict';
 
 const { ResourceOperation } = require('../interfaces');
+const { normalizeRequiredRoles, resolveDenyStatus } = require('../roles');
 
 const KOMAGU_REQUIRE_OWNERSHIP_KEY = 'komagu:require_ownership';
+const KOMAGU_REQUIRE_ROLE_KEY = 'komagu:require_role';
 
 // WeakMap fallback when reflect-metadata is not loaded
 const metadataStore = new WeakMap();
@@ -58,6 +60,29 @@ function RequireOwnership(operation = ResourceOperation.READ, options = {}) {
 }
 
 /**
+ * Decorator requiring the caller to hold at least one of `roles` (function-level / BFLA check).
+ * Enforced by KomaguRoleGuard. Roles are validated here, so a bad argument fails at load time.
+ *
+ * @param {string|string[]} roles
+ * @param {Object} [options] - { denyStatus: 403 | 404 }
+ */
+function RequireRole(roles, options = {}) {
+  const meta = Object.freeze({
+    roles: normalizeRequiredRoles(roles),
+    denyStatus: resolveDenyStatus(options),
+  });
+
+  return function (target, propertyKey, descriptor) {
+    if (descriptor && descriptor.value) {
+      setMetadata(KOMAGU_REQUIRE_ROLE_KEY, meta, descriptor.value);
+      return descriptor;
+    }
+    setMetadata(KOMAGU_REQUIRE_ROLE_KEY, meta, target);
+    return target;
+  };
+}
+
+/**
  * Parameter decorator extracting the verified user principal from the request.
  */
 function CurrentUser() {
@@ -70,7 +95,9 @@ function CurrentUser() {
 
 module.exports = {
   KOMAGU_REQUIRE_OWNERSHIP_KEY,
+  KOMAGU_REQUIRE_ROLE_KEY,
   RequireOwnership,
+  RequireRole,
   CurrentUser,
   setMetadata,
   getMetadata,

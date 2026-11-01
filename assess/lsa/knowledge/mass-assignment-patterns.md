@@ -75,3 +75,10 @@ Bindings to DTO or form classes that are not entities are not reported.
 | Only harmless fields reachable | low (or no finding) |
 
 Adjust with `severity-and-cwe.md`.
+
+## 6. Recommended fix
+
+Bind a DTO with only the editable fields and copy them onto the entity explicitly, or filter map-shaped
+input with an allow-list. Komagu has a tested example per stack and an `allowFields` helper for Spring
+Boot, Express and Go: see `remediate/authz/README.md`, section 7. Use it in the finding's `recommendation`
+when the target stack matches.

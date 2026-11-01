@@ -253,3 +253,7 @@ test('KomaguSecurityService: claim semantics and edge cases', async () => {
   const decision = await service.authorize(userWithId, emptyOwnerRes, ResourceOperation.READ);
   assert.strictEqual(decision.succeeded, false);
 });
+
+// Role guard (BFLA) and mass-assignment tests. Loaded from here so the CI step
+// `node --test remediate/authz/nodejs/tests/test-authz.js` also runs them.
+require('./test-roles.js');

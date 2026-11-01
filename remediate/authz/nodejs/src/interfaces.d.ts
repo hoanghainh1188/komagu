@@ -25,8 +25,18 @@ export interface SecurityAuditEvent {
   reason: string;
 }
 
+export interface RoleDeniedAuditEvent {
+  timestamp: string;
+  eventName: 'Komagu.Authorization.RoleDenied';
+  actorUserId?: string;
+  actorTenantId?: string;
+  requiredRoles: string[];
+  route?: string;
+  reason: string;
+}
+
 export interface ISecurityAuditSink {
-  emit(event: SecurityAuditEvent): void | Promise<void>;
+  emit(event: SecurityAuditEvent | RoleDeniedAuditEvent): void | Promise<void>;
 }
 
 export declare class HttpException extends Error {
@@ -45,14 +55,18 @@ export declare class UnauthorizedException extends HttpException {
   constructor(message?: string);
 }
 
+export declare class ForbiddenException extends HttpException {
+  constructor(message?: string);
+}
+
 export declare class LoggingSecurityAuditSink implements ISecurityAuditSink {
   constructor(logger?: any);
-  emit(event: SecurityAuditEvent): void;
+  emit(event: SecurityAuditEvent | RoleDeniedAuditEvent): void;
 }
 
 export declare class InMemorySecurityAuditSink implements ISecurityAuditSink {
-  readonly events: SecurityAuditEvent[];
-  emit(event: SecurityAuditEvent): void;
+  readonly events: Array<SecurityAuditEvent | RoleDeniedAuditEvent>;
+  emit(event: SecurityAuditEvent | RoleDeniedAuditEvent): void;
   clear(): void;
 }
 
@@ -61,5 +75,6 @@ export interface UserPrincipal {
   tenantId: string;
   claims?: Record<string, any>;
   roles?: string[];
+  role?: string;
   isAuthenticated?: boolean;
 }
