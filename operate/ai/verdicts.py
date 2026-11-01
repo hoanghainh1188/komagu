@@ -92,15 +92,21 @@ def verdict_findings(verdicts: Any, findings: List[Dict[str, Any]], key: str,
                      records: Dict[str, Dict[str, Any]], default_category: str) -> List[Dict[str, Any]]:
     """Findings for flagged verdicts (by `key`: route_id or candidate_id) that no finding covers.
 
-    Verdicts whose id is not a known Tier 1 record are skipped: they cannot be located.
+    A verdict is covered by a finding that carries its id in `key`, that the verdict lists in
+    `finding_ids`, or whose finding_id names the record (`BFLA-R-0001-1`). Verdicts whose id is not a
+    known Tier 1 record are skipped: they cannot be located.
     """
-    covered = {f.get(key) for f in findings if isinstance(f, dict)}
+    dicts = [f for f in findings if isinstance(f, dict)]
+    covered = {f.get(key) for f in dicts}
+    finding_ids = {str(f.get("finding_id")) for f in dicts}
     out: List[Dict[str, Any]] = []
     for v in verdicts if isinstance(verdicts, list) else []:
         if not isinstance(v, dict) or v.get("verdict") not in FLAGGED:
             continue
         record_id = v.get(key)
-        if record_id in covered or record_id not in records:
+        listed = v.get("finding_ids") if isinstance(v.get("finding_ids"), list) else []
+        if (record_id in covered or record_id not in records or finding_ids.intersection(map(str, listed))
+                or any(f"-{record_id}-" in f"{fid}-" for fid in finding_ids)):
             continue
         covered.add(record_id)
         out.append(_finding(key, record_id, v["verdict"], records[record_id], default_category))

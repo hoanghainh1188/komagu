@@ -127,6 +127,17 @@ class TestVerdictFindings(unittest.TestCase):
         covered = [{"candidate_id": "M-1"}]
         self.assertEqual(verdict_findings(verdicts, covered, "candidate_id", self.RECORDS, "mass_assignment"), [])
 
+    def test_finding_linked_by_finding_ids_or_finding_id_covers_the_verdict(self) -> None:
+        findings = [{"finding_id": "MASS-M-1-1"}]
+        self.assertEqual(verdict_findings([{"candidate_id": "M-1", "verdict": "vulnerable"}], findings,
+                                          "candidate_id", self.RECORDS, "mass_assignment"), [])
+        listed = [{"candidate_id": "M-1", "verdict": "vulnerable", "finding_ids": ["F-9"]}]
+        self.assertEqual(verdict_findings(listed, [{"finding_id": "F-9"}], "candidate_id", self.RECORDS, "mass_assignment"), [])
+        # M-1 must not be covered by a finding for M-10
+        (f,) = verdict_findings([{"candidate_id": "M-1", "verdict": "vulnerable"}], [{"finding_id": "MASS-M-10-1"}],
+                                "candidate_id", self.RECORDS, "mass_assignment")
+        self.assertEqual(f["candidate_id"], "M-1")
+
     def test_category_and_subtype_hints_from_the_record(self) -> None:
         (f,) = verdict_findings([{"candidate_id": "I-1", "verdict": "vulnerable"}], [], "candidate_id",
                                 self.RECORDS, "sql_injection")
