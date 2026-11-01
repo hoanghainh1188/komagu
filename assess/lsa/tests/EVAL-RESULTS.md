@@ -308,3 +308,12 @@ Fixture markers were left unchanged so Run 4 and Run 5 share the same ground tru
 3. **Fixtures:** review the `register.php` MASS marker; add BOLA markers for the routes judged real above.
 4. **qwen3.5:9b** still unmeasured: 32K context does not fit in 24 GB next to the OS; needs 16K context or
    a larger machine.
+
+Harness changes for gaps 1 and 2 (#323), not yet measured in a new run:
+- The 4a / 4b templates ask for `recommendation` as one string (no `code_before` / `code_after`). A reply
+  that is still invalid is parsed again after escaping quotes that cannot end their string; such batches
+  are listed under `repaired` in `ai-run-stats.json` and their raw reply is kept in `ai-raw/`.
+- Every `vulnerable` / `needs_review` verdict without a finding gets a `confidence: low` finding anchored
+  to its Tier 1 route or candidate (`operate/ai/verdicts.py`), listed under `findings_from_verdicts`. An
+  offline replay of run A turns the four flagged candidates into located findings (mass assignment 14 / 15
+  before verification) with no SAFE marker hit (`operate/tests/test_ai_verdicts.py`).
