@@ -20,7 +20,8 @@ from merge_findings import extract_json  # noqa: E402
 
 EXT_LANG = {".php": "php", ".inc": "php", ".java": "java", ".jsp": "java", ".xml": "java", ".cs": "cs", ".vb": "vb",
             ".aspx": "aspx", ".ashx": "cs", ".asmx": "cs", ".asp": "vb", ".pl": "perl", ".cgi": "perl", ".pm": "perl",
-            ".cfm": "cfml", ".cfc": "cfml", ".js": "js", ".py": "python", ".rb": "ruby", ".kt": "java"}
+            ".cfm": "cfml", ".cfc": "cfml", ".js": "js", ".mjs": "js", ".cjs": "js", ".ts": "js", ".tsx": "js",
+            ".jsx": "js", ".py": "python", ".rb": "ruby", ".kt": "java"}
 
 
 def ext_lang(path: str) -> str:
@@ -35,7 +36,7 @@ def main() -> int:
     out = Path(a.out)
     findings = []
     for p in sorted((out / "findings").glob("*.json")):
-        if p.name.startswith(("bola-", "inj-")):
+        if p.name.startswith(("bola-", "inj-", "priv-")):
             findings += extract_json(p).get("findings", [])
     # keep findings on the same file together, highest severity first
     order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
