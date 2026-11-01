@@ -57,7 +57,9 @@ Parameterization Cheat Sheet; CWE-89, CWE-564, CWE-943.
   `selectall_arrayref`, `selectrow_*`.
 - **ColdFusion**: `<cfquery>` body, `queryExecute("..." & x)`.
 - **Node**: `connection.query`, `pool.query`, `sequelize.query`,
-  `knex.raw`, `db.collection(...).find/aggregate/$where`.
+  `knex.raw`, `db.collection(...).find/aggregate/$where`, Prisma
+  `$queryRawUnsafe` / `$executeRawUnsafe`, and raw fragments inside tagged
+  templates: Drizzle / postgres.js `sql.raw(x)`, `sql.unsafe(x)`, `Prisma.raw(x)`.
 - **Python**: `cursor.execute`, `executemany`, `engine.execute`,
   `Model.objects.raw`, `extra(where=...)`.
 - **Ruby**: `find_by_sql`, `where("...#{}")`, `order(params[:sort])`,
@@ -80,6 +82,7 @@ Parameterization Cheat Sheet; CWE-89, CWE-564, CWE-943.
 | Regex "no quotes" / blacklist (`select`, `union`) | No | Treat as unsanitized; mention in notes. |
 | `magic_quotes_gpc` | No | Removed in PHP 5.4; never rely on it. |
 | ORM entity methods (`find($id)`, `Where(x => x.Id == id)`) | Yes | Not raw. |
+| JS tagged templates: Drizzle / postgres.js / Slonik `` sql`... ${x}` ``, `` Prisma.sql`...` ``, `` prisma.$queryRaw`...` `` | Yes | `${x}` is sent as a bound parameter. Not the same as an untagged template passed to `db.execute(...)` or `$queryRawUnsafe(...)`, and not `sql.raw(x)` / `Prisma.raw(x)` inside the template, which insert raw text. |
 
 ## 4. NoSQL specifics
 
@@ -115,6 +118,10 @@ A string that is built but **never sent to any sink** is not a finding: verdict 
   (`"IN (" + String.join(",", Collections.nCopies(n, "?")) + ")"`) — safe if
   values are bound afterwards.
 - Log or error messages that contain SQL keywords.
+- `sql-raw-fragment` whose argument is a schema object or constant
+  (`sql.raw(`'${seq.seqName}'`)` with `seq = pgSequence("customer_code_seq")`)
+  — not attacker-controlled. The pre-scan marks these `priority: low` when no
+  request input is in the file.
 - MyBatis `#{}` (safe) vs `${}` (unsafe) — do not confuse.
 - Session-only values (`$_SESSION['uid']` set by the server at login) — not
   attacker-controlled, but note if the session value itself came from an

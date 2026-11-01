@@ -85,6 +85,8 @@ DATA_ACCESS = [
     ("SQLAlchemy (Python)", r"sqlalchemy\.|create_engine|SessionLocal"),
     ("Prisma (Node/TS)", r"PrismaClient|@prisma/client"),
     ("TypeORM (Node/TS)", r"typeorm|@Entity|getRepository"),
+    ("Drizzle ORM (Node/TS)", r"drizzle-orm"),
+    ("postgres.js (Node/TS)", r"from\s+['\"]postgres['\"]|require\(\s*['\"]postgres['\"]\s*\)"),
 ]
 
 DB_HINTS = [
