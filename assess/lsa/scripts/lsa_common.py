@@ -15,7 +15,14 @@ DEFAULT_CONFIG: Dict = {
         "include": [],
         "exclude": ["vendor/", "node_modules/", "bower_components/", "packages/", "bin/", "obj/",
                     "target/", "build/", "dist/", ".git/", ".svn/", ".hg/", "test/", "tests/", "spec/", "docs/",
-                    "*.min.js", "*jquery*.js"],
+                    # framework build output and caches
+                    ".next/", ".nuxt/", ".output/", ".svelte-kit/", ".vercel/", ".netlify/", ".turbo/",
+                    ".parcel-cache/", ".cache/", "out/", "storybook-static/",
+                    # test and coverage output
+                    "coverage/", "test-results/", "playwright-report/", ".nyc_output/",
+                    # Python environments and caches
+                    "__pycache__/", ".venv/", "venv/", ".tox/", ".mypy_cache/", ".pytest_cache/",
+                    "*.min.js", "*jquery*.js", "*.map"],
         "web_roots": [],
         "file_endpoints": "all",
         "max_file_kb": 1024,
