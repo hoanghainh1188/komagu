@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lsa/forecast.schema.json",
+  "title": "Komagu security debt forecast",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "has_enough_history",
+    "history_summary",
+    "projections"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "has_enough_history": {
+      "type": "boolean"
+    },
+    "reason_if_insufficient": {
+      "type": "string"
+    },
+    "history_summary": {
+      "type": "object",
+      "required": [
+        "snapshot_count",
+        "span_days"
+      ],
+      "properties": {
+        "snapshot_count": {
+          "type": "integer"
+        },
+        "span_days": {
+          "type": "integer"
+        },
+        "start_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "rates": {
+      "type": "object",
+      "properties": {
+        "arrival_rate_per_week": {
+          "type": "number"
+        },
+        "fix_rate_per_week": {
+          "type": "number"
+        },
+        "net_rate_per_week": {
+          "type": "number"
+        }
+      }
+    },
+    "projections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "severity",
+          "current_open",
+          "status"
+        ],
+        "properties": {
+          "severity": {
+            "type": "string"
+          },
+          "current_open": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "converging",
+              "flat",
+              "diverging",
+              "insufficient_history"
+            ]
+          },
+          "net_weekly_change": {
+            "type": "number"
+          },
+          "target_zero_date_p10": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target_zero_date_p50": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target_zero_date_p90": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target_status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "on_track",
+              "at_risk",
+              "off_track",
+              "not_converging",
+              null
+            ]
+          },
+          "required_fix_rate_per_week": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "description"
+        ],
+        "properties": {
+          "scenario_id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "projected_date_range": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "net_weekly_change": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
