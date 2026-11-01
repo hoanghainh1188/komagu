@@ -1,12 +1,13 @@
 # Docs
 
-Business and planning documents that sit around the LSA kit. They are **internal and confidential**: they contain business positioning and open decisions. Do not copy them into public repositories.
+Architecture specifications, planning frameworks, and strategy documents for Komagu.
 
 | Document | What it is | Status |
 |---|---|---|
-| [Modernization Boilerplates — Proposal](modernization-boilerplates-proposal.md) | Assessment-first modernization package for Japanese clients: context, offer, roadmap, business model, risks, decisions. Includes a client-facing summary. | Approved by BOD (2026-10-17) |
+| [ADR-0008 — Transition to 100% Open Source](adr/0008-transition-to-fully-open-source.md) | Official transition from Open Core to 100% Open Source under Apache 2.0 | Accepted (2026-11-01); Supersedes ADR-0002 |
+| [Modernization Boilerplates — Proposal](modernization-boilerplates-proposal.md) | Assessment-first modernization package for Japanese clients: context, offer, roadmap, business model, risks, decisions. | Approved by BOD (2026-10-17) |
 | [ADR-0001 — Name and repository structure](adr/0001-name-and-repository-structure.md) | Product name Komagu; repository organised by lifecycle (assess / remediate / operate) | Accepted; applied to assess/ and contracts/ |
-| [ADR-0002 — IP Position: Open Core Model](adr/0002-ip-position-open-core.md) | Open Core boundary: assess/, contracts/, governance/ open; remediate/, operate/, delivery/, docs/ closed | Accepted (2026-10-17) |
+| [ADR-0002 — IP Position: Open Core Model](adr/0002-ip-position-open-core.md) | Initial Open Core boundary (Superseded by ADR-0008) | Superseded by ADR-0008 |
 | [ADR-0003 — WAF Engine Selection for D4](adr/0003-waf-engine-coraza.md) | OWASP Coraza WAF (pure Go, CRS v4, proxy-wasm / Kong sidecar) for D4 | Accepted (2026-10-17) |
 | [ADR-0004 — B1 Design Review](adr/0004-b1-design-review-d1-threat-model-demo-app.md) | B1 design review: D1 public interface (.NET & Spring), request path threat model, D6 demo app scope | Accepted (2026-10-17) |
 | [ADR-0005 — Effort Baseline & ROI Measurement Framework](adr/0005-effort-baseline-and-roi-measurement.md) | Dual-baseline measurement framework: IPA Japan standards + empirical D6 benchmark (75.7% savings); pilot tracking protocol | Accepted (2026-10-18); Closes #4 |
