@@ -8,7 +8,7 @@
   },
   "scope": {
     "include": [],
-    "exclude": ["vendor/", "node_modules/", "bower_components/", "packages/", "bin/", "obj/", "target/", "build/", "dist/", ".git/", "test/", "tests/", "spec/", "docs/", "*.min.js", "*jquery*.js"],
+    "exclude": ["vendor/", "node_modules/", "bower_components/", "packages/", "bin/", "obj/", "target/", "build/", "dist/", ".git/", ".svn/", ".hg/", "test/", "tests/", "spec/", "docs/", ".next/", ".nuxt/", ".output/", ".svelte-kit/", ".vercel/", ".netlify/", ".turbo/", ".parcel-cache/", ".cache/", "out/", "storybook-static/", "coverage/", "test-results/", "playwright-report/", ".nyc_output/", "__pycache__/", ".venv/", "venv/", ".tox/", ".mypy_cache/", ".pytest_cache/", "*.min.js", "*jquery*.js", "*.map"],
     "web_roots": [],
     "_file_endpoints": "all = every reachable page file is a candidate (recommended); with_inputs = only pages with request input or data access",
     "file_endpoints": "all",
