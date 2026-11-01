@@ -354,6 +354,13 @@
           "description": "Mass assignment: request that returns the stored object, e.g. 'GET /api/profile'."
         }
       }
+    },
+    "attack_chains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of attack chains this finding participates in."
     }
   }
 }

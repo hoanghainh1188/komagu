@@ -385,6 +385,20 @@ def main() -> int:
         f.pop("_source", None)
     write_json(out / "findings.json", {"generated_by": f"lsa merge_findings.py {KIT_VERSION}", "summary": summary, "findings": ordered})
     write_json(out / "coverage.json", cov)
+
+    # Automatically generate attack chains from linked findings
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from attack_chains import build_attack_chains  # noqa: E402
+        routes_list = []
+        if (out / "routes.json").exists():
+            r_doc = read_json(out / "routes.json")
+            routes_list = r_doc.get("routes", []) if isinstance(r_doc, dict) else []
+        chains_doc = build_attack_chains(ordered, routes_list)
+        write_json(out / "attack-chains.json", chains_doc)
+    except Exception:
+        pass
+
     gaps = any(cov.get(k) for k in ("missing_from_inventory", "bola_routes_without_verdict",
                                     "injection_candidates_without_verdict", "bfla_routes_without_verdict",
                                     "mass_candidates_without_verdict", "validation_errors",
