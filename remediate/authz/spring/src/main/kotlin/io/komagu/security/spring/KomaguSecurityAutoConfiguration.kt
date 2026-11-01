@@ -8,6 +8,7 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
+import org.springframework.core.env.Environment
 
 /**
  * Spring Boot AutoConfiguration for Komagu Authorization module.
@@ -36,5 +37,24 @@ class KomaguSecurityAutoConfiguration {
         resolvers: ObjectProvider<ResourceOwnershipResolver<*>>
     ): OwnershipAspect {
         return OwnershipAspect(securityManager, resolvers.orderedStream().toList())
+    }
+
+    /**
+     * Role (function-level) aspect for @RequireRole. Set `komagu.security.role.hide-denied-as-not-found=true`
+     * to answer role denials with 404 instead of 403 for every annotated endpoint.
+     */
+    @Bean
+    @ConditionalOnMissingBean(RoleAspect::class)
+    fun roleAspect(
+        securityManager: KomaguSecurityManager,
+        auditSink: SecurityAuditSink,
+        environment: Environment
+    ): RoleAspect {
+        val hideAsNotFound = environment.getProperty(HIDE_ROLE_DENIED_PROPERTY, Boolean::class.javaObjectType, false)
+        return RoleAspect(securityManager, auditSink, hideAsNotFound)
+    }
+
+    companion object {
+        const val HIDE_ROLE_DENIED_PROPERTY = "komagu.security.role.hide-denied-as-not-found"
     }
 }

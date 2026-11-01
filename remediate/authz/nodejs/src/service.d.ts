@@ -32,4 +32,10 @@ export declare class KomaguSecurityService {
     operation?: ResourceOperationType,
     options?: AuthorizeOptions
   ): Promise<void>;
+  emitRoleDenial(
+    user: any,
+    requiredRoles: readonly string[],
+    route?: string,
+    reason?: string
+  ): Promise<void>;
 }

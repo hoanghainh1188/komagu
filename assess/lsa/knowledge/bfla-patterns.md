@@ -89,3 +89,11 @@ route named `/orders/close-month` can still be an admin function.
 
 Adjust with `severity-and-cwe.md` (multi-tenant impact +1, compensating
 control outside code −1).
+
+## 7. Recommended fix
+
+Check the role on the server, from the authenticated principal only, before the privileged action.
+Komagu ships a drop-in guard per stack (`[RequireRole]` for .NET, `@RequireRole` for Spring Boot,
+`requireRole` / `@RequireRole` for Express and NestJS, `RequireRole` middleware for Go): see
+`remediate/authz/README.md`, section 7. Use it in the finding's `recommendation` when the target stack
+matches; never suggest reading the role from the request.

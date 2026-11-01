@@ -276,7 +276,128 @@ func RegisterOrderRoutes(mux *http.ServeMux, authorizer *authz.Authorizer) {
 
 ---
 
-## 7. Test Verification & D5 Runner
+## 7. Function-Level Authorization (BFLA) and Mass Assignment
+
+These helpers fix the two privilege findings of the audit kit: **BFLA** (CWE-285, see
+[`bfla-patterns.md`](../../assess/lsa/knowledge/bfla-patterns.md)) and **mass assignment** (CWE-915, see
+[`mass-assignment-patterns.md`](../../assess/lsa/knowledge/mass-assignment-patterns.md)).
+
+The role guard behaves the same in every module:
+
+| Rule | Behaviour |
+|---|---|
+| Role source | The authenticated principal only (claims, granted authorities, `req.user`, request context). Never route values, query, form, body or headers |
+| Not authenticated | 401 |
+| Match | The caller needs at least one of the listed roles (exact, case-sensitive) |
+| Denied | 403 by default; a module setting answers 404 to hide the endpoint |
+| Audit | Each denial emits `Komagu.Authorization.RoleDenied` with actor ids and the required roles |
+| Bad configuration | Empty or blank role lists and unsupported deny statuses fail fast |
+
+For mass assignment, bind a DTO that lists only the fields the caller may change and copy them onto the
+entity explicitly. Never bind the entity itself or rely on `[Bind(Include = "...")]`. Where the input is a
+map, `allowFields` keeps only the listed keys and never mutates its input.
+
+### .NET 8
+
+```csharp
+// Program.cs
+builder.Services.AddKomaguAuthorization();
+builder.Services.ConfigureKomaguRoles(o =>
+{
+    o.RoleClaimType = "role";               // default: ClaimTypes.Role
+    o.DenyWith = RoleDenyResponse.NotFound; // default: Forbidden (403)
+});
+
+[HttpDelete("admin/users/{id}")]
+[RequireRole("admin", "support")]           // any one role; several attributes must all pass
+public IActionResult DeleteUser(int id) => NoContent();
+
+public sealed record ProfileUpdateDto(string Name, string Email)
+{
+    public void ApplyTo(Customer customer)
+    {
+        customer.Name = Name;
+        customer.Email = Email;             // Role / IsAdmin / Balance cannot be set from the request
+    }
+}
+```
+
+`[RequireRole]` is an authorization filter, so it runs before model binding.
+
+### Spring Boot 3
+
+```kotlin
+@RestController
+@RequestMapping("/admin")
+@RequireRole("admin")                                       // class-level default
+class AdminController(private val users: UserService) {
+    @DeleteMapping("/users/{id}")
+    fun delete(@PathVariable id: String) = users.delete(id) // ROLE_admin or admin passes
+
+    @GetMapping("/audit")
+    @RequireRole("admin", "auditor", hideAsNotFound = true) // method-level overrides class-level
+    fun audit() = users.auditTrail()
+}
+
+data class ProfileUpdate(val name: String, val email: String) {
+    fun applyTo(account: UserAccount) = account.copy(name = name, email = email)
+}
+val safe = allowFields(body, "name", "email")               // io.komagu.security.data
+```
+
+Roles are the granted authorities of the authentication in `SecurityContextHolder`; one leading `ROLE_` is
+ignored on both sides. Map JWT scopes or role claims to authorities in your `JwtAuthenticationConverter`.
+Set `komagu.security.role.hide-denied-as-not-found=true` to answer every denial with 404. Spring Boot's
+default `ObjectMapper` silently drops unknown fields such as `role`; the explicit copy is what keeps them out.
+
+### Node.js (Express & NestJS)
+
+```js
+const { requireRole, allowFields } = require('@hoanghainh/komagu-authz');
+
+app.delete('/admin/users/:id', requireRole('admin'), deleteUser);
+app.post('/ops/rotate-keys', requireRole(['ops', 'admin'], { denyStatus: 404 }), rotateKeys);
+
+app.patch('/me', async (req, res) => {
+  const changes = allowFields(req.body, ['name', 'email']); // role / isAdmin are dropped
+  res.json(await users.update(req.user.userId, changes));
+});
+```
+
+```ts
+@Controller('admin')
+@UseGuards(KomaguRoleGuard)
+export class AdminController {
+  @Delete('users/:id')
+  @RequireRole('admin')
+  deleteUser(@Param('id') id: string) { /* ... */ }
+}
+```
+
+Roles come from `req.user.roles` and `req.user.role`. `allowFields` ignores `__proto__`, `constructor` and
+`prototype`, and copies values by reference.
+
+### Go
+
+```go
+// After verifying the token, attach the identity in your authentication middleware.
+ctx := authz.WithIdentity(r.Context(), authz.Identity{UserID: claims.Sub, TenantID: claims.TenantID, Roles: claims.Roles})
+
+auth := authz.NewAuthorizer(nil)
+mux.Handle("/admin/users", authenticate(auth.RequireRole([]string{"admin"})(adminUsers)))
+mux.Handle("/internal/reindex", authenticate(auth.RequireRole(
+    []string{"admin", "ops"}, authz.WithDenyStatus(http.StatusNotFound))(reindex)))
+
+patch := authz.AllowFields(body, "name", "email")           // or decode into a narrow struct:
+dec := json.NewDecoder(r.Body)
+dec.DisallowUnknownFields()                                 // {"role":"admin"} -> 400
+```
+
+`RequireRole` panics at route registration on an empty role list or a deny status other than 403 / 404.
+
+---
+
+## 8. Test Verification & D5 Runner
 
 All multi-language adapters verify identical BOLA defense invariants:
 

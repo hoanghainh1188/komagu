@@ -50,6 +50,11 @@ dependencies {
     testImplementation("org.springframework.data:spring-data-commons:3.5.13")
     testImplementation("org.springframework:spring-aspects:6.2.19")
     testImplementation("org.aspectj:aspectjweaver:1.9.25.1")
+    // Test-only: a real servlet request for the role-from-request tests, and Jackson (the version
+    // Spring Boot $springBootVersion manages) for the mass-assignment DTO example.
+    testImplementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.4")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.4")
 }
 
 tasks.test {

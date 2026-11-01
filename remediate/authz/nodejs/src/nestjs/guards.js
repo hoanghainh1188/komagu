@@ -1,7 +1,9 @@
 'use strict';
 
-const { NotFoundException, UnauthorizedException } = require('../interfaces');
-const { KOMAGU_REQUIRE_OWNERSHIP_KEY, getMetadata } = require('./decorators');
+const { NotFoundException, UnauthorizedException, ForbiddenException } = require('../interfaces');
+const { KOMAGU_REQUIRE_OWNERSHIP_KEY, KOMAGU_REQUIRE_ROLE_KEY, getMetadata } = require('./decorators');
+const { KomaguSecurityService } = require('../service');
+const { hasAnyRole } = require('../roles');
 
 /**
  * NestJS Guard evaluating object-level authorization before route handler execution.
@@ -71,6 +73,71 @@ class OwnershipGuard {
   }
 }
 
+function readMeta(reflector, key, handler, targetClass) {
+  let meta = null;
+  if (reflector && typeof reflector.get === 'function') {
+    meta = reflector.get(key, handler) || reflector.get(key, targetClass);
+  }
+  if (!meta) {
+    meta = (handler && getMetadata(key, handler)) ||
+           (targetClass && getMetadata(key, targetClass));
+  }
+  return meta || null;
+}
+
+function describeOperation(req, handler, targetClass) {
+  if (req && req.method && req.route && req.route.path) {
+    return `${req.method} ${req.baseUrl || ''}${req.route.path}`;
+  }
+  const className = targetClass && targetClass.name;
+  const handlerName = handler && handler.name;
+  if (className && handlerName) {
+    return `${className}.${handlerName}`;
+  }
+  return handlerName || className || undefined;
+}
+
+/**
+ * NestJS Guard enforcing @RequireRole (function-level / BFLA authorization).
+ * Roles are read only from the authenticated principal (req.user.roles / req.user.role).
+ * Method-level @RequireRole overrides class-level.
+ */
+class KomaguRoleGuard {
+  constructor(reflector, securityService) {
+    this.reflector = reflector;
+    this.securityService = securityService || new KomaguSecurityService();
+  }
+
+  async canActivate(context) {
+    const handler = context.getHandler ? context.getHandler() : null;
+    const targetClass = context.getClass ? context.getClass() : null;
+
+    const meta = readMeta(this.reflector, KOMAGU_REQUIRE_ROLE_KEY, handler, targetClass);
+    if (!meta) {
+      return true; // No role requirements on this route
+    }
+
+    const httpContext = context.switchToHttp ? context.switchToHttp() : null;
+    const req = httpContext ? httpContext.getRequest() : context.request;
+
+    if (!req || !req.user) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
+    if (hasAnyRole(req.user, meta.roles)) {
+      return true;
+    }
+
+    await this.securityService.emitRoleDenial(req.user, meta.roles, describeOperation(req, handler, targetClass));
+
+    if (meta.denyStatus === 404) {
+      throw new NotFoundException('Resource not found');
+    }
+    throw new ForbiddenException('Forbidden');
+  }
+}
+
 module.exports = {
   OwnershipGuard,
+  KomaguRoleGuard,
 };

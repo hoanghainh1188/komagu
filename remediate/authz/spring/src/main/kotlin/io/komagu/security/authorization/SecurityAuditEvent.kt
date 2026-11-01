@@ -7,7 +7,7 @@ import java.time.Instant
  */
 data class SecurityAuditEvent(
     val timestamp: Instant = Instant.now(),
-    val eventName: String = "Komagu.Authorization.Denied",
+    val eventName: String = DENIED,
     val traceId: String? = null,
     val actorUserId: String? = null,
     val actorTenantId: String? = null,
@@ -16,7 +16,15 @@ data class SecurityAuditEvent(
     val operation: ResourceOperation = ResourceOperation.READ,
     val clientIp: String? = null,
     val reason: String = ""
-)
+) {
+    companion object {
+        /** Object-level (ownership / tenant) denial. */
+        const val DENIED = "Komagu.Authorization.Denied"
+
+        /** Function-level denial: the caller lacks every role required by @RequireRole. */
+        const val ROLE_DENIED = "Komagu.Authorization.RoleDenied"
+    }
+}
 
 /**
  * Sink interface for processing security audit events.

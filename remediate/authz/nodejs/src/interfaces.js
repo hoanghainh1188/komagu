@@ -47,6 +47,15 @@ class UnauthorizedException extends HttpException {
   }
 }
 
+/**
+ * Thrown on function-level (role) denial when the endpoint may be revealed.
+ */
+class ForbiddenException extends HttpException {
+  constructor(message = 'Forbidden') {
+    super(message, 403);
+  }
+}
+
 class LoggingSecurityAuditSink {
   constructor(logger = console) {
     this.logger = logger;
@@ -76,6 +85,7 @@ module.exports = {
   HttpException,
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException,
   LoggingSecurityAuditSink,
   InMemorySecurityAuditSink,
 };

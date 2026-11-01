@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
     {
         services.TryAddSingleton<ISecurityAuditSink, LoggingSecurityAuditSink>();
         services.TryAddScoped<IKomaguAuthorizationService, DefaultKomaguAuthorizationService>();
+        services.AddOptions<KomaguRoleOptions>();
         return services;
     }
 
@@ -27,6 +28,21 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<ISecurityAuditSink, TAuditSink>();
         services.TryAddScoped<IKomaguAuthorizationService, DefaultKomaguAuthorizationService>();
+        services.AddOptions<KomaguRoleOptions>();
+        return services;
+    }
+
+    /// <summary>
+    /// Configures the <see cref="RequireRoleAttribute"/> guard (role claim type, 403 vs 404 on denial).
+    /// Call after <c>AddKomaguAuthorization</c>.
+    /// </summary>
+    public static IServiceCollection ConfigureKomaguRoles(
+        this IServiceCollection services,
+        Action<KomaguRoleOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+        services.AddOptions<KomaguRoleOptions>().Configure(configure);
         return services;
     }
 }
