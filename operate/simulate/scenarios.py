@@ -107,6 +107,24 @@ class TimesCarBreachScenario(BaseScenario):
         self.sample_ids = sample_ids or ["1", "2", "3", "101", "102"]
 
     def run(self) -> ScenarioResult:
+        from operate.simulate.engine import DeclarativeScenario
+        from operate.simulate.loader import BUILTIN_SCENARIOS_DIR, load_scenario_file
+
+        scenario_path = BUILTIN_SCENARIOS_DIR / "times-car-breach.json"
+        if scenario_path.is_file():
+            data = load_scenario_file(scenario_path)
+            runner = DeclarativeScenario(
+                data,
+                target=self.target,
+                param_overrides={
+                    "endpoint_pattern": self.endpoint_pattern,
+                    "attacker_token": self.attacker_token,
+                    "sample_ids": self.sample_ids,
+                },
+                timeout=self.timeout,
+            )
+            return runner.run()
+
         total = len(self.sample_ids)
         blocked = 0
         leaked = 0
@@ -212,6 +230,24 @@ class MetabaseZeroDayScenario(BaseScenario):
         ]
 
     def run(self) -> ScenarioResult:
+        from operate.simulate.engine import DeclarativeScenario
+        from operate.simulate.loader import BUILTIN_SCENARIOS_DIR, load_scenario_file
+
+        scenario_path = BUILTIN_SCENARIOS_DIR / "metabase-cve-2026-72898.json"
+        if scenario_path.is_file():
+            data = load_scenario_file(scenario_path)
+            runner = DeclarativeScenario(
+                data,
+                target=self.target,
+                param_overrides={
+                    "query_path": self.query_path,
+                    "target_param": self.target_param,
+                    "payloads": self.payloads,
+                },
+                timeout=self.timeout,
+            )
+            return runner.run()
+
         total = len(self.payloads)
         blocked = 0
         leaked = 0
@@ -315,6 +351,22 @@ class IDCFrontierRansomwareScenario(BaseScenario):
         self.target_dir = Path(target_dir).resolve()
 
     def run(self) -> ScenarioResult:
+        from operate.simulate.engine import DeclarativeScenario
+        from operate.simulate.loader import BUILTIN_SCENARIOS_DIR, load_scenario_file
+
+        scenario_path = BUILTIN_SCENARIOS_DIR / "idc-frontier-ransomware.json"
+        if scenario_path.is_file():
+            data = load_scenario_file(scenario_path)
+            runner = DeclarativeScenario(
+                data,
+                target=str(self.target_dir),
+                param_overrides={
+                    "target_dir": str(self.target_dir),
+                },
+                timeout=self.timeout,
+            )
+            return runner.run()
+
         total = 3
         blocked = 0
         leaked = 0

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/hoanghainh1188/komagu/main/contracts/schemas/bas-scenario.schema.json",
+  "id": "times-car-breach",
+  "version": "1.0.0",
+  "title": "Times Car Mass BOLA / IDOR Scraping Simulation",
+  "status": "approved",
+  "approved_by": "sec-team@komagu.io",
+  "approved_at": "2026-03-15T00:00:00Z",
+  "incident": {
+    "name": "Times Car (Times Mobility) 2024 Mass Data Exposure",
+    "date": "2024",
+    "summary": "Simulates automated cross-user account/license harvesting by iterating through consecutive resource IDs with an unauthorized peer credential.",
+    "references": [
+      "https://scan.netsecurity.ne.jp/article/2024/04/17/50873.html",
+      "Times Car 2024 breach: 6.6M customer accounts and ID images exposed."
+    ]
+  },
+  "mappings": {
+    "cwe": ["CWE-639", "CWE-284"],
+    "owasp_api": ["API1:2023"],
+    "mitre_attack": ["T1059", "T1552"]
+  },
+  "parameters": {
+    "endpoint_pattern": {
+      "type": "string",
+      "default": "/api/legacy-orders/{id}",
+      "description": "Target endpoint path containing {id} parameter."
+    },
+    "attacker_token": {
+      "type": "string",
+      "default": "mock-attacker-bob-token",
+      "description": "Bearer token used to test cross-tenant unauthorized access."
+    },
+    "sample_ids": {
+      "type": "list",
+      "default": ["1", "2", "3", "101", "102"],
+      "description": "List of sample resource IDs to probe."
+    }
+  },
+  "steps": [
+    {
+      "name": "Iterate Cross-User Endpoints",
+      "description": "Requests resource IDs using attacker credential, expecting 403 or 404.",
+      "type": "http_request",
+      "destructive": false,
+      "repeat": {
+        "param_name": "sample_ids",
+        "as_var": "id"
+      },
+      "request": {
+        "method": "GET",
+        "path": "{endpoint_pattern}",
+        "headers": {
+          "Authorization": "Bearer {attacker_token}",
+          "User-Agent": "Komagu-BAS-TimesCarSimulator/1.0",
+          "Accept": "application/json"
+        }
+      },
+      "expect_secure": {
+        "status_codes": [403, 404]
+      },
+      "expect_vulnerable": {
+        "status_codes": [200, 201, 204]
+      }
+    }
+  ],
+  "scoring": {
+    "strategy": "ratio",
+    "recommendations": {
+      "remediation": "Enforce Komagu Boilerplate 1 (Object-Level Authorization) with declarative @RequireOwnership decorators or integrate Kong perimeter WAF with strict 404 invariants.",
+      "passed": "Endpoint securely enforces tenant isolation (404 Not Found invariant maintained)."
+    }
+  }
+}
