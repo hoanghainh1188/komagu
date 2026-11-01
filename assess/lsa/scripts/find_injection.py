@@ -108,6 +108,28 @@ ASSIGN = {
     "rust": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"), "go": re.compile(r"\b(\w+)\s*(\+=|=)(?!=)"),
 }
 APPEND_CALL = re.compile(r"\b(\w+)\s*\.\s*(append|Append|AppendLine|concat)\s*\(")
+# JS/TS tagged templates that bind ${...} as parameters: Drizzle / postgres.js / Slonik `sql`, Prisma.sql, $queryRaw
+SQL_TAG = re.compile(r"(?:(?<![\w$])(?:[\w$]+\.)*sql|\$queryRaw|\$executeRaw)\s*(?:<[^`]*>)?\s*$")
+# escape hatches that put raw text into a tagged template
+RAW_FRAGMENT = re.compile(r"\b(?:sql\.raw|sql\.unsafe|Prisma\.raw)\s*\(")
+
+
+def untagged(line: str, lits: List[re.Match], lang: str) -> List[re.Match]:
+    """Drop JS template literals whose tag binds interpolations as query parameters."""
+    if lang != "js":
+        return lits
+    return [m for m in lits if not (m.group(0).startswith("`") and SQL_TAG.search(line[:m.start()]))]
+
+
+def raw_fragment_arg_is_constant(arg: str) -> bool:
+    """True when sql.raw(...) gets a plain string literal (no ${...})."""
+    arg = arg.lstrip()
+    if arg[:1] in ("'", '"'):
+        return True
+    if arg[:1] == "`":
+        end = arg.find("`", 1)
+        return end != -1 and "${" not in arg[1:end]
+    return False
 
 
 def strip_literals(line: str, lit: re.Pattern) -> str:
@@ -188,7 +210,8 @@ class Finder:
         self.seen = set()
         self.suppressed: List[Dict] = []
 
-    def add(self, lang, rel, lineno, lines, rule, subtype, category, sql_var=None, file_has_input=False):
+    def add(self, lang, rel, lineno, lines, rule, subtype, category, sql_var=None, file_has_input=False,
+            low_without_input=False):
         key = (rel, lineno)
         if key in self.seen:
             return
@@ -209,7 +232,8 @@ class Finder:
             "file": rel, "line": lineno, "snippet": redact(snippet(lines, lineno)),
             "sql_var": sql_var, "input_hint": hint,
             "sanitizer_hints": sorted(set(m.group(0)[:30] for m in SANITIZER_RE.finditer(ctx)))[:5],
-            "priority": "high" if hint in ("request_input_on_line", "request_input_nearby") else "normal",
+            "priority": "high" if hint in ("request_input_on_line", "request_input_nearby")
+            else "low" if low_without_input and hint == "none" else "normal",
         })
 
     # ----------------------------------------------------------------------------------
@@ -224,7 +248,7 @@ class Finder:
         for i, line in enumerate(lines, 1):
             if com and com.search(line):
                 continue
-            lits = literals(line, lit)
+            lits = untagged(line, literals(line, lit), lang)
             if not any(STRONG_SQL.search(m.group(0)) for m in lits):
                 continue
             if assign_rx:
@@ -258,7 +282,7 @@ class Finder:
                     if heredoc_sql and INTERP[lang].search(line):
                         self.add(lang, rel, i, lines, "heredoc-interpolation", "string_interpolation", "sql", None, file_has_input)
                     continue
-            lits = literals(line, lit)
+            lits = untagged(line, literals(line, lit), lang)
             sql_lits = [m for m in lits if STRONG_SQL.search(m.group(0))]
             target_var = None
             if assign_rx:
@@ -300,6 +324,11 @@ class Finder:
         for i, line in enumerate(lines, 1):
             if com and com.search(line):
                 continue
+            if lang == "js":
+                fm = RAW_FRAGMENT.search(line)
+                if fm and not raw_fragment_arg_is_constant(line[fm.end():]):
+                    self.add(lang, rel, i, lines, "sql-raw-fragment", "raw_fragment", "sql", None, file_has_input,
+                             low_without_input=True)
             rm = RAW_APIS.search(line)
             if rm:
                 arg = line[rm.end():].strip()
