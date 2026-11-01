@@ -141,12 +141,17 @@ def run_inventory(args: argparse.Namespace) -> int:
     step_ok(f"Saved inventory diff to {out_file}")
 
     # Display summary card
+    c_yellow_bold = "\033[33m\033[1m"
+    c_red_bold = "\033[31m\033[1m"
+    c_green = "\033[32m"
+    c_bold = "\033[1m"
+
     summary_rows = [
         ("Code Routes Discovered", str(s["total_code_routes"])),
         ("OpenAPI Endpoints Documented", str(s["total_spec_endpoints"])),
         ("Gateway Traffic Endpoints", str(s["total_traffic_endpoints"])),
-        ("Shadow APIs (Undocumented)", color(str(shadow_count), "\033[33m\033[1m" if shadow_count > 0 else "\033[32m")),
-        ("Zombie APIs (Deprecated Active)", color(str(zombie_count), "\033[31m\033[1m" if zombie_count > 0 else "\033[32m")),
+        ("Shadow APIs (Undocumented)", color(str(shadow_count), c_yellow_bold if shadow_count > 0 else c_green)),
+        ("Zombie APIs (Deprecated Active)", color(str(zombie_count), c_red_bold if zombie_count > 0 else c_green)),
         ("Documented Missing in Code", str(missing_count)),
         ("Dormant Code Endpoints", str(dormant_count)),
     ]
@@ -157,15 +162,19 @@ def run_inventory(args: argparse.Namespace) -> int:
     )
 
     if shadow_count > 0:
-        print("  " + color("⚠ Detected Shadow APIs (Top 5):", "\033[33m", "\033[1m"))
+        print("  " + color("⚠ Detected Shadow APIs (Top 5):", "\033[33m", c_bold))
         for sh in diff_doc["shadow_apis"][:5]:
             hits = f"({sh['traffic_hits']} traffic hits)" if sh["traffic_hits"] > 0 else ""
-            print(f"    • {color(sh['normalized'], '\033[1m')} [{sh['discovered_in']}] {hits}")
+            norm_str = color(sh["normalized"], c_bold)
+            disc_str = sh["discovered_in"]
+            print(f"    • {norm_str} [{disc_str}] {hits}")
 
     if zombie_count > 0:
-        print("  " + color("✖ Detected Zombie APIs (Top 5):", "\033[31m", "\033[1m"))
+        print("  " + color("✖ Detected Zombie APIs (Top 5):", "\033[31m", c_bold))
         for z in diff_doc["zombie_apis"][:5]:
-            print(f"    • {color(z['normalized'], '\033[1m')} ({z['traffic_hits']} active traffic hits!)")
+            norm_str = color(z["normalized"], c_bold)
+            hits_str = f"{z['traffic_hits']} active traffic hits!"
+            print(f"    • {norm_str} ({hits_str})")
 
     exit_code = 0
     if args.fail_on_shadow and shadow_count > 0:
