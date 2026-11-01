@@ -32,7 +32,7 @@ dependencies {
     compileOnly("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
     compileOnly("org.springframework.data:spring-data-commons:3.5.13")
     compileOnly("org.springframework:spring-aspects:6.2.19")
-    compileOnly("org.aspectj:aspectjweaver:1.9.25.1")
+    compileOnly("org.aspectj:aspectjweaver:1.9.26")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
 
     // Logging
@@ -49,12 +49,12 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-oauth2-resource-server:$springSecurityVersion")
     testImplementation("org.springframework.data:spring-data-commons:3.5.13")
     testImplementation("org.springframework:spring-aspects:6.2.19")
-    testImplementation("org.aspectj:aspectjweaver:1.9.25.1")
+    testImplementation("org.aspectj:aspectjweaver:1.9.26")
     // Test-only: a real servlet request for the role-from-request tests, and Jackson (the version
     // Spring Boot $springBootVersion manages) for the mass-assignment DTO example.
     testImplementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.4")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.4")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.4")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.4")
 }
 
 tasks.test {
