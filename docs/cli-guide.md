@@ -465,7 +465,43 @@ komagu inventory \
 
 ---
 
-### 3.9 `komagu demo` — Interactive Member Portal Reference App
+### 3.9 `komagu evidence` — METI SCS ★3/★4 & Active Cyber Defense Evidence Pack
+
+Bundles all technical audit outputs (SARIF findings, CycloneDX/SPDX SBOMs, Cross-User test results, Coraza WAF rules, Shadow/Zombie API inventory diffs, and BAS breach simulation evidence) into a timestamped, cryptographically hashed evidence pack conforming to the Japanese Ministry of Economy, Trade and Industry (**METI**) Supply Chain Security Evaluation Scheme (**SCS ★3/★4**) and **NIST CSF 2.0**.
+
+Generates:
+* `evidence-manifest.json`: Formal signed manifest with SHA-256 digests conforming to `contracts/schemas/evidence-manifest.schema.json`.
+* `gap-report.ja.md`: Japanese gap analysis report for submission to prime contractors (元請企業) or accredited auditors.
+* `gap-report.md`: English executive compliance report.
+* `evidence-pack.zip`: Self-contained verifiable evidence bundle.
+
+```bash
+# Generate METI SCS evidence pack from default audit output directory
+komagu evidence --audit-dir OUT/ --output-dir ./evidence-pack
+
+# Specify enterprise project details and target system
+komagu evidence \
+  --audit-dir OUT/ \
+  --project "Tokyo FinTech Monolith" \
+  --system "Production Kubernetes Cluster" \
+  --output-dir ./audit-pack
+
+# Enforce quality gate in CI: require SCS-★3-READY or SCS-★4-READY
+komagu evidence --audit-dir OUT/ --require-tier 3
+```
+
+#### Command Options
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--audit-dir`, `-d` | Path | `OUT`, `audit-out`, `.` | Path to directory containing audit outputs (repeatable). |
+| `--output-dir`, `-o` | Path | `./evidence-pack` | Target directory for ZIP, manifest, and gap reports. |
+| `--project` | String | `Target Modernization System` | Name of the project or enterprise evaluated. |
+| `--system` | String | `Production Architecture` | Name of the evaluated target architecture/cluster. |
+| `--require-tier` | Choice (`3`, `4`) | `None` | Exit code 1 if evaluated readiness does not meet the star tier. |
+
+---
+
+### 3.10 `komagu demo` — Interactive Member Portal Reference App
 
 Launches the reference modern architecture application (`examples/member-portal/`) demonstrating secure multi-tenant isolation, cross-user 404 enforcement, and comparison against planted legacy vulnerabilities.
 
