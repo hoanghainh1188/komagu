@@ -403,7 +403,47 @@ komagu devsecops run .
 
 ---
 
-### 3.8 `komagu demo` — Interactive Member Portal Reference App
+### 3.8 `komagu inventory` — Shadow & Zombie API Surface Reconciliation
+
+Reconciles discovered backend code routes against published OpenAPI specifications and active API Gateway traffic logs (Kong / NGINX / Envoy). Detects:
+* **Shadow APIs**: Unregistered / undocumented endpoints present in code or gateway traffic that bypass security documentation and inventory reviews.
+* **Zombie APIs**: Deprecated or legacy endpoints still receiving live traffic from clients or attackers.
+* **Dormant APIs**: Code endpoints with zero recorded traffic over the observation window.
+
+```bash
+# Reconcile code routes against OpenAPI spec
+komagu inventory --routes OUT/routes.json --openapi openapi.json
+
+# Full 3-way reconciliation with Kong / NGINX gateway traffic log
+komagu inventory \
+  --routes OUT/routes.json \
+  --openapi openapi.json \
+  --traffic-log /var/log/kong/access.log \
+  --output OUT/api-inventory-diff.json \
+  --format json
+
+# Fail CI pipeline if shadow or zombie APIs exist
+komagu inventory \
+  --routes OUT/routes.json \
+  --openapi openapi.json \
+  --fail-on-shadow \
+  --fail-on-zombie
+```
+
+#### Command Options
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--routes` | File path | *Required* | Path to extracted code routes JSON (e.g. `OUT/routes.json`). |
+| `--openapi` | File path | *Required* | Path to OpenAPI 2.0 / 3.x specification file (`.json` or `.yaml`). |
+| `--traffic-log` | File path | `None` | Path to Kong or NGINX gateway access log (`.log` or `.json`). |
+| `--output`, `-o` | File path | `None` | Path to save `api-inventory-diff.json` reconciliation output. |
+| `--format` | Choice | `table` | Output format: `table`, `json`, or `markdown`. |
+| `--fail-on-shadow` | Flag | `false` | Return exit code 1 if any Shadow API is detected. |
+| `--fail-on-zombie` | Flag | `false` | Return exit code 1 if any Zombie API is detected. |
+
+---
+
+### 3.9 `komagu demo` — Interactive Member Portal Reference App
 
 Launches the reference modern architecture application (`examples/member-portal/`) demonstrating secure multi-tenant isolation, cross-user 404 enforcement, and comparison against planted legacy vulnerabilities.
 
