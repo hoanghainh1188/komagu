@@ -2,16 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "pilotId": "PILOT-AMS-2026Q4",
   "system": {
-    "name": "AMS Legacy Order & Customer API",
-    "primaryStack": "php",
-    "targetDirectory": "/path/to/read-only-target-repo",
-    "outDirectory": "./pilot-out",
+    "name": "<AMS system name from the signed approval>",
+    "primaryStack": "java-jsp, java-struts1, java-spring-mvc",
+    "targetDirectory": "~/pilot/src",
+    "sourceCopy": {
+      "excludeFile": "~/pilot/ams-exclude.txt",
+      "fileListSentToClient": "~/pilot/src-file-list.txt",
+      "readOnly": true
+    },
+    "outDirectory": "~/pilot/out",
     "estimatedEndpoints": 50
   },
   "governance": {
-    "writtenConsentApproved": true,
+    "writtenConsentApproved": false,
     "consentDocumentRef": "docs/pilot-client-ai-approval-consent.md",
-    "approvalDate": "2026-10-25",
+    "runbookRef": "docs/pilot-execution-runbook.md",
+    "requestSentDate": null,
+    "approvalDate": null,
     "humanSignOffAuthority": "Harry Nguyen (Principal Architect / Person B)",
     "fallbackTriggerDeadline": "End of Week 6",
     "fallbackActive": false,
@@ -19,34 +26,46 @@
       "name": "Deliverable D6 Member Portal",
       "endpointCount": 24,
       "referenceNote": "Internal System Reference Metrics"
+    },
+    "deletionReport": {
+      "due": "Week 12, after delivery",
+      "submittedDate": null
     }
   },
-  "computeAndHosting": {
-    "mode": "local-qwen",
-    "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
-    "localInferenceUrl": "http://127.0.0.1:8000/v1",
-    "alternativeCloudEndpoint": {
-      "provider": "Azure OpenAI Service",
-      "region": "japaneast",
-      "enterpriseZeroDataRetention": true,
+  "hosting": {
+    "selected": null,
+    "executionMode": "headless-only",
+    "optionA": {
+      "description": "On-premises / offline workstation or client GPU server",
+      "endpoint": "http://127.0.0.1:11434/v1",
+      "model": "gpt-oss:20b",
+      "measured": "EVAL-RESULTS Run 4-5 (Apple M4 Pro 24 GB, Ollama)",
+      "networkIsolated": true
+    },
+    "optionB": {
+      "description": "Enterprise cloud API in a Japan region",
+      "provider": "<AWS Bedrock ap-northeast-1 | Azure OpenAI japaneast>",
+      "endpoint": "<OpenAI-compatible /v1 endpoint or in-region proxy>",
+      "model": "<model approved by the client>",
+      "apiKeyEnv": "KOMAGU_AI_API_KEY",
+      "measured": null,
+      "dataRetentionTermsChecked": false,
       "noModelTraining": true
     }
   },
   "securityControls": {
     "readOnlyTargetEnforced": true,
-    "secretRedactionEnabled": true,
+    "secretRedaction": "operate/ai/context.py _read_snippet -> assess/lsa/scripts/redaction.py redact_lines (headless mode only)",
+    "agentRuntimesAllowed": false,
+    "osvLookupAllowed": false,
     "noProductionDbAccess": true,
-    "noPiiCollection": true,
-    "secretPatterns": [
-      "(?i)(api[_-]?key|secret|password|token|bearer|private[_-]?key)\\s*[:=]\\s*['\"][^'\"]+['\"]",
-      "(?i)(mongodb|postgres|mysql|mssql)://[^\\s'\"]+"
-    ]
+    "noPiiCollection": true
   },
   "effortTracking": {
     "framework": "ADR-0005 Dual-Baseline",
+    "industryBaselineFormula": "endpoints * (0.25 + 0.35 + 0.20) + 6.0 person-days",
     "industryBaselinePersonDays": 46.0,
-    "empiricalD6ScratchPersonDays": 18.5,
-    "targetSavingsPercentage": 50.0,
+    "industryBaselineNote": "46.0 is the value for 50 endpoints; recompute with the actual endpoint count",
     "timesheetPath": "delivery/pilot/timesheet-template.csv"
   }
 }

@@ -255,6 +255,19 @@ async fn f(pool: &PgPool, id: &str) {
         self.assertEqual(raw, {4, 5})
 
     # --- Medium: wrong output ----------------------------------------------------------
+    def test_jpa_entity_is_not_reported_as_typeorm(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "Account.java").write_text(
+                'import javax.persistence.Entity;\n@Entity\npublic class Account { Long id; String role; }\n',
+                encoding="utf-8")
+            data_access = detect(root, self.config)["data_access"]
+            self.assertIn("Hibernate/JPA", data_access)
+            self.assertNotIn("TypeORM (Node/TS)", data_access)
+            (root / "user.entity.ts").write_text(
+                "import { Entity, Column } from 'typeorm';\n@Entity()\nexport class User {}\n", encoding="utf-8")
+            self.assertIn("TypeORM (Node/TS)", detect(root, self.config)["data_access"])
+
     def test_go_stack_label_ignores_gin_substring(self) -> None:
         routes, _ = self.scan({"main.go": '''package main
 import "github.com/labstack/echo/v4"

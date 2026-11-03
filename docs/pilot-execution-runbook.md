@@ -1,192 +1,231 @@
-# Pilot Execution Runbook: 4-Week Operational Playbook (Weeks 9–12)
-## パイロット運用実施手順書
+# Pilot Execution Runbook: AMS Pilot on a Java Legacy System (Weeks 1–12)
+## パイロット運用実施手順書（AMS・Java レガシー）
 
-**Version:** 1.0  
-**Effective Date:** 2026-10-18  
+**Version:** 2.0  
+**Effective Date:** 2026-11-03  
 **Project Lead & Sign-off Authority:** Harry (Principal Architect / PM / Person B)  
 **Parent Delivery Plan:** [Boilerplate 1 Delivery Plan (§Pilot)](boilerplate-1-delivery-plan.md)  
-**Related Documents:** [ADR-0005: Effort Baseline](adr/0005-effort-baseline-and-roi-measurement.md), [AI Data Governance Protocol](pilot-client-ai-approval-consent.md)  
-**Related Issue:** [hoanghainh1188/komagu#75](https://github.com/hoanghainh1188/komagu/issues/75)
+**Related Documents:** [ADR-0005: Effort Baseline](adr/0005-effort-baseline-and-roi-measurement.md), [AI Data Governance Protocol & Consent Letter](pilot-client-ai-approval-consent.md), [AMS pilot profile](../delivery/pilot/pilot-config.sample.json)  
+**Related Issues:** [hoanghainh1188/komagu#75](https://github.com/hoanghainh1188/komagu/issues/75), [hoanghainh1188/komagu#350](https://github.com/hoanghainh1188/komagu/issues/350)
+
+Mọi lệnh trong sổ tay này đã được chạy thử trên `assess/lsa/tests/fixtures/java-legacy` (kit 0.3.1, CLI 2.3.0), trừ các lệnh cần model thật hoặc môi trường của khách hàng. Các lệnh đó được ghi chú *(chưa chạy thử)*.
 
 ---
 
-## 1. Overview & 4-Week Flight Path (概要と全体スケジュール)
+## 0. Trạng thái hiện tại (2026-11-03)
 
-Sổ tay này định nghĩa toàn bộ quy trình vận hành thực tế cho **Giai đoạn Thử nghiệm Pilot (Tuần 9–12)** của dự án Komagu trên hệ thống đang bảo trì (**AMS** hoặc **Hệ thống Thay thế Nội bộ D6**).
+| Mục | Trạng thái |
+|---|---|
+| Hệ thống AMS | Java legacy (JSP / Struts / Spring), tên và phạm vi chưa điền |
+| Đơn xin phê duyệt AI | **Chưa gửi** ([checklist §7](pilot-client-ai-approval-consent.md#7-action-checklist-for-project-lead-harry)) |
+| Phương án hạ tầng | **Chưa chọn**: chuẩn bị cả A (on-prem) và B (cloud Nhật) |
+| Pilot nội bộ (fallback D6) | Đã xong: [pilot-final-report.md](../delivery/pilot/pilot-final-report.md), số liệu nội bộ |
 
-```
-+-------------------------------------------------------------------------------------------------+
-|                                 KOMAGU PILOT 4-WEEK TIMELINE                                    |
-+-------------------------------------------------------------------------------------------------+
-|  [Tuần 9]      -> KICKOFF & GOVERNANCE: Kiểm tra phê duyệt AI / Quyết định Fallback            |
-|                   Hạ tầng AI (Local GPU/Cloud ZDR), Thiết lập Timesheet 4 tags (ADR-0005)       |
-|                                                                                                 |
-|  [Tuần 9-10]   -> ASSESS & SIGN-OFF: Chạy LSA (100% endpoints), Harry thẩm định Person B        |
-|                   Ký review-log.md, Xuất báo cáo HTML/SARIF cho khách hàng                      |
-|                                                                                                 |
-|  [Tuần 10]     -> PROTECT EDGE: Dựng Kong Gateway + Coraza WAF sidecar (CRS v4)                 |
-|                   Phòng thủ ngay lập tức (Rate Limit + SQLi block) trước khi sửa code           |
-|                                                                                                 |
-|  [Tuần 10-12]  -> REMEDIATE & CI: Áp dụng thư viện phân quyền D1/D2, refactor Safe Query D3     |
-|                   Thiết lập pipeline kiểm thử tự động D5 Schemathesis chặn BOLA                 |
-|                                                                                                 |
-|  [Tuần 12]     -> RE-TEST & ROI MEASURE: Quét lại 100% sạch lỗi, đối chiếu Baseline ADR-0005   |
-|                   Đo lường % Person-days tiết kiệm, Họp BOD duyệt Go/No-go Stage 2              |
-+-------------------------------------------------------------------------------------------------+
-```
+## 1. Quy tắc bất biến
+
+1. **Chỉ chạy headless** (`komagu scan --headless-ai`). Ở chế độ này, mọi đoạn code gửi tới AI đều được che bí mật (`operate/ai/context.py`). Agent runtime (Claude Code, Codex, Cursor) tự mở file, nên **không dùng** trên code của khách hàng.
+2. **Không quét code của khách hàng trước khi có văn bản phê duyệt đã ký.** Tier 1 không gọi AI, nhưng vẫn là xử lý mã nguồn của khách hàng.
+3. Chỉ quét **bản sao đã lọc** (bước W9-2), không quét repository gốc.
+4. Không dùng `komagu fix --osv` trên code của khách hàng: tuỳ chọn này gửi tên và phiên bản thư viện tới OSV.dev. Dùng `--sca` (cơ sở dữ liệu tích hợp, offline).
+5. Không có finding nào ra khỏi nhóm khi chưa có chữ ký Person B trong `review-log.md`.
 
 ---
 
-## 2. Phase 1: Tuần 9 — Khởi động, Pháp trị & Thiết lập Hạ tầng
+## 2. Lịch tổng thể
 
-### Bước 1.1: Kiểm tra Văn bản Phê duyệt Xử lý AI (Consent Verification)
-- **Người thực hiện:** Harry (Lead Oversight).
-- **Hành động kiểm tra:**
-  1. Kiểm tra văn bản [AI Processing Approval Consent Form](pilot-client-ai-approval-consent.md) gửi khách hàng AMS.
-  2. **Quy tắc cổng chặn Tuần 6 (Week 6 Hard Gate):**
-     - **Nếu ĐÃ CÓ văn bản ký kết (Approved):** Chạy Pilot chính thức trên mã nguồn hệ thống AMS.
-     - **Nếu CHƯA CÓ văn bản ký kết trước hạn chót Tuần 6:** Kích hoạt ngay lập tức **Fallback System** (Ứng dụng Member Portal D6 24 endpoints). Gắn nhãn kết quả đo lường là *"Internal System Reference Metrics"*.
-  3. Cập nhật trạng thái `fallbackActive` trong file cấu hình `delivery/pilot/pilot-config.json` (dựa trên mẫu `delivery/pilot/pilot-config.sample.json`).
-
-### Bước 1.2: Thiết lập Hạ tầng Tính toán AI (Model Hosting Setup)
-- **Phương án A (On-Premises / Air-Gapped):**
-  - Khởi động cụm suy luận `Qwen 2.5 Coder 32B Instruct` trên máy chủ GPU nội bộ / máy trạm cô lập:
-    ```bash
-    # Khởi động vLLM hoặc Ollama cục bộ
-    ollama run qwen2.5-coder:32b
-    # Kiểm tra endpoint
-    curl http://127.0.0.1:8000/v1/models
-    ```
-- **Phương án B (Private Enterprise Cloud):**
-  - Cấu hình Azure OpenAI Service (Japan East/West) với hợp đồng Enterprise Zero Data Retention (ZDR).
-  - Khai báo API Key và Endpoint vào biến môi trường:
-    ```bash
-    export AZURE_OPENAI_ENDPOINT="https://komagu-pilot.openai.azure.com/"
-    export AZURE_OPENAI_API_KEY="<secure-secret>"
-    ```
-
-### Bước 1.3: Cách ly Kho Mã nguồn Mục tiêu (Read-Only Target Enforcement)
-- Thư mục mã nguồn `TARGET` phải được gắn quyền **Chỉ đọc (Read-Only)** để đảm bảo an toàn tuyệt đối:
-  ```bash
-  chmod -R 555 /path/to/target-repo
-  ```
-- Khởi tạo thư mục xuất kết quả riêng biệt ngoài cây thư mục dự án (`OUT/`):
-  ```bash
-  mkdir -p ./pilot-out
-  ```
-
-### Bước 1.4: Khởi tạo Bảng Chấm công Timesheet Tracking
-- Sao chép biểu mẫu chấm công từ [`delivery/pilot/timesheet-template.csv`](../delivery/pilot/timesheet-template.csv) sang `delivery/pilot/timesheet-pilot.csv`.
-- Phổ biến cho toàn bộ kỹ sư dự án quy chuẩn chấm công bắt buộc sử dụng 4 tag chuẩn theo [ADR-0005](adr/0005-effort-baseline-and-roi-measurement.md):
-  - `[PILOT-LSA]`: Công sức cấu hình, quét tĩnh, kiểm chứng và thẩm định Person B.
-  - `[PILOT-GATEWAY]`: Công sức dựng Kong Gateway, cấu hình Coraza WAF và test abuse.
-  - `[PILOT-REMEDIATE]`: Công sức tích hợp thư viện D1/D2 và sửa đổi query SQL D3.
-  - `[PILOT-TEST-CI]`: Công sức viết pipeline Schemathesis và chạy cross-user tests.
+| Tuần | Việc | Đầu ra | Cổng |
+|---|---|---|---|
+| 1–2 | P1–P2: điền đơn, chuẩn bị Q&A | Đơn bản nháp | — |
+| 3 | Gửi đơn kèm Security Q&A (§6 của đơn) | Email gửi khách hàng | — |
+| 3–6 | P3–P4: cài đặt, hiệu chuẩn cả hai phương án trên repo eval | `calib-A/`, `calib-B/` | — |
+| **Cuối 6** | Kiểm tra văn bản phê duyệt | Bản ký lưu ở thư mục bảo mật | **Gate M3**: không có thì dùng fallback |
+| 9 | W9: bản sao đã lọc, hạ tầng, timesheet | `pilot-config.json`, danh sách file | — |
+| 9–10 | W9–W10: Tier 1 + Tier 2, Person B duyệt | `review-log.md` đã ký, báo cáo JA/EN | Accepted ≥ 70%, độ phủ endpoint 100% |
+| 10 | W10: edge (Kong + Coraza) trước hệ thống | Rule virtual patch | Abuse script bị chặn |
+| 10–12 | W10–W12: sửa và test cross-user | Patch, kết quả `komagu test` | — |
+| 12 | W12: quét lại, đo ROI, xoá dữ liệu | Báo cáo cuối, biên bản xoá | **Gate BOD** |
 
 ---
 
-## 3. Phase 2: Tuần 9–10 — Rà soát An ninh & Thẩm định Person B
+## 3. Chuẩn bị trước khi có phê duyệt (tuần 1–6)
 
-### Bước 2.1: Chạy Rà soát Cú pháp Tĩnh & Sinh Báo cáo Ban đầu (Scan)
-Sử dụng gói `komagu` đã phát hành để quét tự động toàn bộ mã nguồn mục tiêu:
+### P1. Điền đơn xin phê duyệt
+Điền các ô `[...]` ở [§4 của đơn](pilot-client-ai-approval-consent.md#4-formal-ai-processing-consent-template-ai利用承諾申請書--日英併記): tên hệ thống, số endpoint ước tính, người ký. Đánh dấu cả hai phương án A và B để khách hàng chọn.
+
+### P2. Security Q&A
+Gửi kèm [§6 Security Q&A](pilot-client-ai-approval-consent.md#6-security-qa-for-the-client-想定質問と回答--日英併記). Nếu khách hàng hỏi câu chưa có trong Q&A, trả lời bằng văn bản rồi bổ sung vào §6.
+
+### P3. Cài đặt máy trạm pilot
+Máy trạm phải dùng riêng cho pilot. Với phương án A, máy phải offline khi có code của khách hàng trên đó.
 ```bash
-# Thực hiện quét tĩnh, trích xuất route candidates và sinh báo cáo song ngữ
-npx --yes komagu scan /path/to/target-repo --out ./pilot-out --lang all --format all
+git clone --branch v2.3.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
+cd ~/komagu-pilot
+python3 assess/lsa/tests/run_tests.py
+python3 -m unittest discover -s operate/tests -p "test_*.py"
 ```
-- **Kiểm tra đầu ra trong `./pilot-out`:**
-  - `stack-profile.json`: Xác nhận đúng ngôn ngữ/framework (PHP, Java, .NET...).
-  - `routes.candidates.json`: Đạt độ phủ 100% các endpoint của hệ thống (từ 30 đến 150 endpoints).
-  - `injection.candidates.json`: Các điểm nghi vấn SQL/query interpolation.
-  - Tự động lọc sạch các chuỗi bí mật (Secret Redaction).
-  - `report.html` & `report.md`: Báo cáo sơ bộ trực quan.
+Cả hai bộ test phải pass, trong đó có `test_ai_redaction` và `test_no_planted_secret_reaches_the_model`.
 
-### Bước 2.2: Chạy Kiểm toán Sâu bằng Multi-Agent (Deep Audit Workflow)
-Sử dụng các prompt template LSA runtime neutral (`assess/lsa/prompts/`) đưa vào agent context với dữ liệu đầu vào là thư mục `./pilot-out`:
-1. **Phase 2 & 3:** Chạy `10-stack-detector` và `20-route-mapper` để hoàn thiện `auth-model.md` và `route-inventory.json`.
-2. **Phase 4:** Chạy `30-bola-auditor` và `40-injection-auditor` để tìm kiếm BOLA/IDOR và SQLi trên từng batch endpoints.
-3. **Phase 5:** Chạy `50-finding-verifier` (Skeptic Verifier) phản biện và loại trừ triệt để False Positives để hoàn thiện `findings.json`.
-
-### Bước 2.3: Thẩm định Con người Độc lập (Person B Protocol)
-- **Người thực hiện:** Harry (Security Reviewer / Person B).
-- **Hành động:**
-  1. Mở file `./pilot-out/findings.json` và đối chiếu từng dòng mã nguồn mục tiêu.
-  2. Xác nhận hoặc bác bỏ từng phát hiện vào biên bản thẩm định `./pilot-out/review-log.md`.
-  3. **Tiêu chuẩn nghiệm thu:** Tỷ lệ chấp thuận đạt $\ge 70\%$ tổng số phát hiện của AI.
-  4. Harry ký tên và ghi ngày tháng vào cuối file `review-log.md`.
-
-### Bước 2.4: Xuất Bản Báo cáo Hoàn chỉnh
-Chạy cập nhật lại báo cáo sau thẩm định Person B:
+### P4. Hiệu chuẩn hạ tầng trên repo eval (không dùng code khách hàng)
+Repo eval gồm 10 ứng dụng fixture với ground truth 121 mục. Chạy cùng một lệnh cho từng phương án, chỉ đổi endpoint và model:
 ```bash
-python3 assess/lsa/scripts/render_report.py ./pilot-out --lang all
+python3 assess/lsa/tests/build_eval_repo.py ~/pilot-calib/eval
+export KOMAGU_AI_API_KEY="<key from the secret manager>"   # never pass --api-key on the command line
+./bin/komagu scan ~/pilot-calib/eval/repo --out ~/pilot-calib/calib-A --no-cache \
+  --headless-ai http://127.0.0.1:11434/v1 --model gpt-oss:20b --ai-timeout 3600
+python3 assess/lsa/tests/score_findings.py ~/pilot-calib/eval/ground-truth.json ~/pilot-calib/calib-A
 ```
-- Cung cấp trọn bộ báo cáo cho khách hàng / BOD:
-  - Báo cáo Markdown tóm tắt điều hành (`report.md`, `report.ja.md`).
-  - File SARIF (`findings.sarif`) để import vào GitHub Security Tab / SonarQube.
-  - Báo cáo HTML tương tác standalone (`report.html`) để xem trực tiếp trên trình duyệt.
+- **Phương án A:** đã đo `gpt-oss:20b` (Run 4–5, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)). Lặp lại trên máy chủ GPU dự kiến để lấy thời gian chạy thực tế.
+- **Phương án B** *(chưa chạy thử)*: endpoint phải tương thích OpenAI `/chat/completions` với Bearer token. Nếu dịch vụ cloud không hỗ trợ trực tiếp, đặt một proxy tương thích OpenAI (ví dụ LiteLLM) trong cùng vùng dữ liệu. Ghi lại model, vùng (region) và điều khoản lưu dữ liệu vào `pilot-config.json`.
+- Kết quả hiệu chuẩn (recall theo loại, thời gian, `ai-run-stats.json`) dùng để giải thích cho khách hàng khi họ chọn phương án.
 
 ---
 
-## 4. Phase 3: Tuần 10 — Phòng thủ Bề mặt bằng Edge Gateway & WAF
+## 4. Tuần 9 — Khởi động
 
-Trước khi chỉnh sửa bất kỳ dòng mã nguồn nào, triển khai ngay cổng Kong Gateway và OWASP Coraza WAF (theo Deliverable D4 & [ADR-0003](adr/0003-waf-engine-coraza.md)) phía trước hệ thống mục tiêu:
+### W9-1. Kiểm tra phê duyệt
+Chỉ tiếp tục khi có văn bản đã ký và phương án hạ tầng đã chọn. Sao chép [`delivery/pilot/pilot-config.sample.json`](../delivery/pilot/pilot-config.sample.json) thành `pilot-config.json` (lưu ở thư mục bảo mật, không commit), điền `approvalDate`, `hosting.selected` và số endpoint.
 
+### W9-2. Tạo bản sao đã lọc
+Đây là biện pháp chính cho Q3 trong Q&A: file nhạy cảm không bao giờ có trong bản sao.
 ```bash
-cd operate/gateway
-docker compose up -d
-deck gateway sync --konnect-token <token> deck.yaml
+rsync -a --exclude-from=ams-exclude.txt /path/to/client-repo/ ~/pilot/src/
+find ~/pilot/src -type f | sort > ~/pilot/src-file-list.txt    # send this list to the client for confirmation
+chmod -R a-w ~/pilot/src
 ```
+`ams-exclude.txt` cần được thống nhất với khách hàng. Mẫu khởi đầu cho Java:
+```text
+.git/
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+*.crt
+**/src/test/
+**/test-data/
+**/*-prod.properties
+**/*-production.yml
+**/context.xml
+**/server.xml
+**/tomcat-users.xml
+```
+Kiểm tra lại: `grep -rIliE "password|secret|jdbc:" ~/pilot/src | head` để xem những file còn chứa từ khoá. Bộ che bí mật sẽ xử lý các file đó, nhưng file không cần cho việc audit thì nên loại thêm.
 
-- **Quy tắc bảo vệ kích hoạt:**
-  1. **Rate Limiting:** Giới hạn 100 requests/phút theo IP và 500 requests/phút theo User Token nhằm ngăn chặn tấn công vét cạn (credential stuffing) và quét BOLA diện rộng.
-  2. **OWASP Coraza WAF (CRS v4):** Kích hoạt bộ luật chặn đứng các mẫu chuỗi SQL Injection và Path Traversal.
-- **Kiểm thử nghiệm thu:** Chạy kịch bản tấn công giả lập để xác nhận Kong & WAF trả về `429 Too Many Requests` hoặc `403 Forbidden`.
+### W9-3. Hạ tầng AI
+- **A:** khởi động model trên máy chủ GPU, kiểm tra `curl http://127.0.0.1:11434/v1/models`. Ngắt kết nối Internet của máy trạm.
+- **B:** đặt `KOMAGU_AI_API_KEY` từ secret manager; kiểm tra endpoint bằng một request không chứa code.
 
----
-
-## 5. Phase 4: Tuần 10–12 — Khắc phục Lỗ hổng & Tự động hóa CI
-
-### Bước 5.1: Tích hợp Thư viện Phân quyền D1 & Định danh D2
-- Với các endpoint thuộc ngăn xếp .NET 8:
-  - Nhúng gói NuGet `Komagu.Authorization`.
-  - Khai báo middleware kiểm tra quyền sở hữu đối tượng:
-    ```csharp
-    [AuthorizeOwner(ResourceParam = "orderId", OwnerClaim = "sub")]
-    public async Task<IActionResult> GetOrder(string orderId) { ... }
-    ```
-- Với các endpoint thuộc ngăn xếp Kotlin / Spring Boot 3:
-  - Nhúng dependency `komagu-spring-boot-starter`.
-  - Sử dụng annotation `@PreAuthorize("@ownerCheck.isOwner(#orderId, authentication)")`.
-
-### Bước 5.2: Khắc phục Truy vấn SQL An toàn (D3)
-- Thay thế toàn bộ chuỗi nối SQL thô bằng truy vấn có tham số (Parameterized Queries).
-- Áp dụng bộ phân tích tĩnh Roslyn analyzer (C#) và detekt rule (Kotlin) để ngăn chặn việc commit mã nguồn nối chuỗi SQL mới.
-
-### Bước 5.3: Triển khai Pipeline Kiểm thử Tự động D5
-- Cấu hình workflow GitHub Actions (`.github/workflows/authz-cross-user.yml`) sử dụng công cụ Schemathesis.
-- **Kiểm chứng tính nghiêm ngặt (Plant-and-verify):**
-  - Cố ý tạo một lỗ hổng BOLA giả lập -> Pipeline phải chuyển sang màu ĐỎ (`FAILURE`).
-  - Gỡ bỏ lỗ hổng -> Pipeline chuyển sang màu XANH (`SUCCESS`).
+### W9-4. Timesheet
+Sao chép [`timesheet-template.csv`](../delivery/pilot/timesheet-template.csv). Mỗi dòng phải có một trong 4 tag của ADR-0005: `[PILOT-LSA]`, `[PILOT-GATEWAY]`, `[PILOT-REMEDIATE]`, `[PILOT-TEST-CI]`.
 
 ---
 
-## 6. Phase 5: Tuần 12 — Kiểm thử Lại, Đo lường ROI & Nghiệm thu
+## 5. Tuần 9–10 — Đánh giá (Assess)
 
-### Bước 6.1: Quét Kiểm chứng Tái phát (Re-test Verification)
-- Chạy lại toàn bộ LSA pipeline trên mã nguồn đã sửa.
-- **Tiêu chuẩn đạt:** 100% các lỗ hổng BOLA và SQLi đã chấp thuận trước đó đều được khắc phục triệt để (Zero accepted open findings).
+### W9-5. Tier 1 (không dùng AI)
+```bash
+./bin/komagu scan ~/pilot/src --out ~/pilot/out --project "<AMS system name>" --lang all --format all --update-baseline
+```
+Kiểm tra trên `~/pilot/out`:
+- `stack-profile.json`: phải có `java-jsp`, `java-struts1` hoặc `java-struts2`, `java-spring-mvc` khi áp dụng, cùng `Hibernate/JPA` / `MyBatis/iBATIS`. Nếu thiếu, ghi chú lại; không tự sửa config khi chưa hiểu nguyên nhân.
+- `routes.candidates.json`: so số route với số endpoint khách hàng báo. Route khai báo trong `struts-config.xml` / `struts.xml` / `web.xml` được ánh xạ từ XML. Nếu chênh lệch, tìm nguyên nhân trước khi chạy Tier 2 (tiêu chí: độ phủ 100%).
+- `injection.candidates.json`, `mass-assignment.candidates.json`: số lượng và mức ưu tiên.
 
-### Bước 6.2: Tổng kết Timesheet & Tính toán Tỷ lệ Tiết kiệm Công sức (ROI)
-- Tổng hợp toàn bộ số giờ làm việc thực tế từ `delivery/pilot/timesheet-pilot.csv`:
-  $$\text{Tổng Person-Days Thực tế} = \sum (\text{HoursSpent}) / 8$$
-- Đối chiếu với **Baseline 46.0 person-days** theo chuẩn [ADR-0005](adr/0005-effort-baseline-and-roi-measurement.md):
-  $$\text{Tỷ lệ Tiết kiệm Công sức (\%)} = \frac{46.0 - \text{Person-Days Thực tế}}{46.0} \times 100\%$$
-- **Ngưỡng nghiệm thu thành công:** Tỷ lệ tiết kiệm đạt **$\ge 50\%$** (Mục tiêu kỳ vọng: **$65\% - 75\%$**).
+### W9-6. Tier 2 headless *(chưa chạy thử với model thật trên code Java của khách hàng)*
+```bash
+./bin/komagu scan ~/pilot/src --out ~/pilot/out --project "<AMS system name>" --no-cache \
+  --headless-ai <endpoint> --model <model> --ai-timeout 3600
+```
+- Lưu lại toàn bộ `~/pilot/out` (bao gồm `ai-raw/` và `ai-run-stats.json`). Nếu một batch lỗi (`parse_failures`), chạy lại trước khi duyệt.
+- Phase 5 (skeptic verifier) tự động phản biện từng finding. Finding bị bác vẫn được giữ trong `findings.raw.json` để Person B xem.
 
-### Bước 6.3: Báo cáo Tổng kết & Họp Ban Lãnh đạo (BOD Gate Review)
-- Lập tài liệu báo cáo tổng kết Pilot: `docs/pilot-final-report.md`.
-- Trình bày kết quả trước BOD:
-  1. Số lượng endpoints và lỗ hổng đã được khắc phục 100%.
-  2. Bằng chứng kiểm thử tự động ngăn ngừa BOLA trong CI.
-  3. Tỷ lệ tiết kiệm chi phí và công sức thực tế có số liệu chứng minh.
-  4. Tình trạng chấp thuận trích dẫn làm Case Study (Client Reference) của khách hàng.
-  5. Đề xuất quyết định **Go / No-go** để cấp ngân sách cho **Stage 2 (Boilerplate 5: DevSecOps & SBOM)** và **Stage 3 (Boilerplate 2: eKYC / 犯収法)**.
+### W10-1. Person B duyệt
+Sao chép [`assess/lsa/templates/review-log.md`](../assess/lsa/templates/review-log.md) vào `~/pilot/out/review-log.md`. Với mỗi finding, đọc code tại vị trí được chỉ ra, rồi ghi accept, reject hoặc đổi severity. Hoàn thành mục "Coverage sign-off", trong đó có mục kiểm tra báo cáo không chứa bí mật hay dữ liệu cá nhân.
+- **Tiêu chí:** accepted / reported ≥ 70%.
+
+### W10-2. Báo cáo
+```bash
+python3 assess/lsa/scripts/render_report.py ~/pilot/out --project "<AMS system name>" --lang all --format all
+```
+Gửi `report.ja.md` / `report.html` / `findings.sarif` cho khách hàng **sau khi** Person B ký.
+
+---
+
+## 6. Tuần 10 — Bảo vệ lớp biên (Edge)
+
+Đặt Kong + Coraza (OWASP CRS) trước **môi trường test** của khách hàng trước khi sửa code:
+```bash
+./bin/komagu protect --target http://<client-test-host>:<port> --dry-run
+./bin/komagu protect --virtual-patch ~/pilot/out/findings.json --patch-out ~/pilot/virtual-patches.conf --dry-run
+./bin/komagu protect --target http://<client-test-host>:<port> --up      # (chưa chạy thử trên môi trường khách hàng)
+```
+- Proxy công khai chạy ở `:8000`, Kong Admin ở `:8001`, Coraza ở `:8080`. Ứng dụng Java (Tomcat) thường cũng dùng `8080`, nên phải đổi cổng nếu chạy cùng máy.
+- Chạy script abuse (rate limit, SQLi) và xác nhận nhận được `429` / `403`. Ghi kết quả vào timesheet với tag `[PILOT-GATEWAY]`.
+
+---
+
+## 7. Tuần 10–12 — Khắc phục (Fix) và test cross-user
+
+### W10-3. Chọn cách sửa theo stack
+
+| Stack trong `stack-profile.json` | Cách sửa | Tài liệu |
+|---|---|---|
+| Servlet / JSP / Struts 1 / Struts 2 | `OwnershipEnforcer.requireOwnership(...)` trước khi đọc hoặc ghi object; trả 404 khi không khớp owner | [`remediate/legacy_shims/java/OwnershipEnforcer.java`](../remediate/legacy_shims/java/OwnershipEnforcer.java) |
+| MyBatis `${...}` (sort / column) | Allow-list với `OwnershipEnforcer.safeOrderBy` / `validateIdentifier`; đổi `${}` sang `#{}` khi là giá trị | [`mybatis-safe-sort-example.xml`](../remediate/legacy_shims/java/mybatis-safe-sort-example.xml) |
+| JDBC nối chuỗi | `PreparedStatement` với tham số | [`remediate/query/`](../remediate/query/README.md) |
+| Spring Boot 3 (Java 17+) | `@RequireOwnership` / `KomaguSecurityManager` | [`remediate/authz/README.md` §3](../remediate/authz/README.md) |
+| Spring MVC cũ (Spring ≤ 5, Java 8) | Module Spring Boot 3 không dùng được: dùng shim như với Servlet | `OwnershipEnforcer.java` |
+
+Gợi ý patch tự động (chỉ là đề xuất, áp dụng theo quy trình change của khách hàng):
+```bash
+./bin/komagu fix ~/pilot/src --findings ~/pilot/out/findings.json --dry-run --format diff --output-patch ~/pilot/fix.patch
+```
+Trước khi chạy, phải bỏ cờ chỉ đọc trên một **bản sao làm việc khác**, không phải trên `~/pilot/src`.
+
+### W11-1. Test cross-user *(chưa chạy thử trên môi trường khách hàng)*
+Chỉ chạy trên môi trường test, với tài khoản test do khách hàng cấp (Q7) và sau khi khách hàng đồng ý riêng:
+```bash
+export ATTACKER_TOKEN="<test account B token>"
+./bin/komagu test --url http://<client-test-host>:<port> --from-scan ~/pilot/out/findings.json \
+  --token "$ATTACKER_TOKEN" --strict --output ~/pilot/out/cross-user-results.json
+```
+Mỗi finding đã sửa phải có một test case: trước khi sửa thì test fail, sau khi sửa thì pass.
+
+---
+
+## 8. Tuần 12 — Quét lại, đo lường, đóng pilot
+
+### W12-1. Quét lại so với baseline
+```bash
+./bin/komagu scan ~/pilot/src-fixed --out ~/pilot/out-w12 --baseline ~/pilot/out/baseline.json --fail-on any \
+  --headless-ai <endpoint> --model <model> --ai-timeout 3600
+```
+**Tiêu chí:** 100% finding đã accept trong phạm vi pilot được sửa và test lại (không còn finding accepted nào mở).
+
+### W12-2. ROI theo ADR-0005
+- Baseline ngành: `N × (0.25 + 0.35 + 0.20) + 6.0` person-days, với `N` là số endpoint thực tế. Ví dụ: 50 endpoint cho ra 46.0.
+- Thực tế: `Σ HoursSpent / 8` từ timesheet, tách theo 4 tag.
+- Báo cáo con số đo được, **không đặt mục tiêu** (delivery plan: "Measured and reported, no target").
+
+### W12-3. Bàn giao và xoá dữ liệu
+1. Bàn giao báo cáo, patch và kết quả test cho khách hàng.
+2. Xoá `~/pilot/src`, `~/pilot/src-fixed`, `~/pilot/out*` và log của model server (phương án A); kiểm tra thư mục tạm.
+3. Lập biên bản xoá (thư mục, ngày, người thực hiện, người xác nhận) và gửi khách hàng (cam kết §3-6 của đơn).
+
+---
+
+## 9. Điều kiện dừng
+
+Dừng pilot và báo khách hàng ngay khi:
+- Phát hiện bí mật thật trong `ai-raw/` hoặc trong báo cáo: xoá đầu ra liên quan, báo cáo sự cố, bổ sung pattern che và test trước khi chạy lại.
+- Có code được gửi ra ngoài phạm vi phương án đã duyệt (sai endpoint, sai vùng).
+- Khách hàng rút lại phê duyệt.
+
+---
+
+## 10. Version History
+
+| Phiên bản | Ngày | Tác giả | Tóm tắt thay đổi |
+|---|---|---|---|
+| 1.0 | 2026-10-18 | Harry & Komagu Lead Agent | Khởi tạo sổ tay 4 tuần (#75). |
+| 2.0 | 2026-11-03 | Harry & Claude | #350: viết lại cho pilot AMS Java; chỉ dùng headless; thêm chuẩn bị trước phê duyệt (P1–P4) và bước tạo bản sao đã lọc; sửa lệnh theo CLI 2.3.0 (tên package, `komagu protect` thay cho `operate/gateway` + Konnect, `render_report.py`); bảng sửa lỗi theo stack Java; baseline ROI theo công thức ADR-0005; bước xoá dữ liệu và điều kiện dừng. |

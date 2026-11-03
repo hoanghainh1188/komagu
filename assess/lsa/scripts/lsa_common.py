@@ -166,8 +166,4 @@ def snippet(lines: List[str], lineno: int, max_len: int = 220) -> str:
     return s if len(s) <= max_len else s[: max_len - 3] + "..."
 
 
-SECRET_RE = re.compile(r"(?i)(password|passwd|pwd|secret|api[_-]?key|token)\s*[=:]\s*['\"][^'\"]{4,}['\"]")
-
-
-def redact(s: str) -> str:
-    return SECRET_RE.sub(lambda m: m.group(1) + "=[REDACTED]", s)
+from redaction import redact, redact_lines  # noqa: E402,F401  (re-exported for the Tier 1 scripts)

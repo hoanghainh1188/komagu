@@ -5,18 +5,38 @@ Standard-library only (Python 3.8+ compatible).
 
 from __future__ import annotations
 
+import importlib.util
 import re
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Dict, List, Optional
+
+LSA_REDACTION = Path(__file__).resolve().parents[2] / "assess" / "lsa" / "scripts" / "redaction.py"
+
+
+def _load_redaction() -> ModuleType:
+    """Load the LSA kit's stdlib-only redaction module, so Tier 1 and the agents share one set of patterns."""
+    spec = importlib.util.spec_from_file_location("komagu_lsa_redaction", LSA_REDACTION)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load LSA redaction from {LSA_REDACTION}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_redact_lines = _load_redaction().redact_lines
 
 
 def _read_snippet(target_dir: Path, rel_file: str, line: int, radius: int = 15) -> str:
-    """Read a window of code around target line from the audited repository."""
+    """Read a window of code around target line from the audited repository, with secrets redacted.
+
+    Every code excerpt sent to the model goes through here (#350).
+    """
     full_path = target_dir / rel_file
     if not full_path.is_file():
         return f"[File not found: {rel_file}]"
     try:
-        lines = full_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        lines = _redact_lines(full_path.read_text(encoding="utf-8", errors="replace").splitlines())
         start = max(0, line - radius - 1)
         end = min(len(lines), line + radius)
         numbered = [f"{i + 1:4d} | {lines[i]}" for i in range(start, end)]
