@@ -1,7 +1,7 @@
-# Komainu Pilot Final Delivery & ROI Report (Weeks 9–12)
-## コマイヌ・パイロット最終成果報告書および費用対効果（ROI）測定レポート
+# Komagu Pilot Final Delivery & ROI Report (Weeks 9–12)
+## Komagu パイロット最終成果報告書および費用対効果（ROI）測定レポート
 
-- **Project**: Komainu — Automated Legacy Security Audit & Modernization Boilerplate
+- **Project**: Komagu — Automated Legacy Security Audit & Modernization Boilerplate
 - **Deliverable Reference**: Pilot Stage (Weeks 9–12) / Issue #79 (`pilot(w12): re-test, measure ROI & prepare Stage 2 Go/No-go review`)
 - **Target System**: Deliverable D6 — Member Portal (`examples/member-portal`)
 - **System Sizing**: 24 endpoints (12 .NET 8 ASP.NET Core, 12 Kotlin Spring Boot 3, PostgreSQL / SQLite)
@@ -14,16 +14,16 @@
 ## 1. Executive Summary / エグゼクティブサマリー
 
 ### English
-The Pilot phase (Weeks 9–12) of Project Komainu was executed on Deliverable D6 (Member Portal) to evaluate the real-world operational feasibility, security efficacy, and engineering cost reduction of the platform. All empirical targets established in [ADR-0005](file:///Users/hoanghainh/Projects/komainu/docs/adr/0005-effort-baseline-and-roi-measurement.md) and the [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komainu/docs/boilerplate-1-delivery-plan.md) have been met or exceeded:
-- **100% of Security Findings Remediated**: All 8 accepted vulnerabilities (6 BOLA / IDOR and 2 SQL Injection) were eliminated using Boilerplate 1 components (**Komainu D1 Authz** and **Komainu D3 Safe Query**).
+The Pilot phase (Weeks 9–12) of Project Komagu was executed on Deliverable D6 (Member Portal) to evaluate the real-world operational feasibility, security efficacy, and engineering cost reduction of the platform. All empirical targets established in [ADR-0005](../../docs/adr/0005-effort-baseline-and-roi-measurement.md) and the [Boilerplate 1 Delivery Plan](../../docs/boilerplate-1-delivery-plan.md) have been met or exceeded:
+- **100% of Security Findings Remediated**: All 8 accepted vulnerabilities (6 BOLA / IDOR and 2 SQL Injection) were eliminated using Boilerplate 1 components (**Komagu D1 Authz** and **Komagu D3 Safe Query**).
 - **Edge Layer Defense (D4)**: Kong Gateway and Coraza WAF (OWASP CRS v4) were deployed in DB-less declarative mode, demonstrating real-time blocking of SQLi, XSS, and Path Traversal with HTTP 403, and automated rate-limiting protection with HTTP 429.
 - **Continuous Cross-User CI (D5)**: An automated D5 regression test harness was integrated into GitHub Actions, enforcing deny-by-default (HTTP 404) cross-user authorization checks on every Pull Request.
 - **Measured Effort Reduction Rate**: Actual engineering investment across the entire pilot was **3.5 Person-Days (28.0 hours)**, achieving an **81.1% effort reduction** against the Tier 2 baseline (18.5 person-days) and **86.1% reduction** against the IPA Japan benchmark (25.2 person-days). This comfortably surpasses the $\ge 50\%$ pass threshold.
 - **Stage 2 Recommendation**: **UNANIMOUS GO** for transitioning to Stage 2 modernization boilerplates (BP2 Zero-Privilege DB, BP3 Multi-Tenancy, BP4 Audit Trail, BP5 DevSecOps CI/CD).
 
 ### 日本語 (Japanese)
-コマイヌ・プロジェクトのパイロット運用（第9週〜第12週）は、成果物D6「会員ポータル（Member Portal）」を対象に実施され、プラットフォームの実効性、セキュリティ担保能力、および開発生産性向上（工数削減）を実証しました。[ADR-0005](file:///Users/hoanghainh/Projects/komainu/docs/adr/0005-effort-baseline-and-roi-measurement.md) および配備計画に定められたすべての目標値を達成・超過しました。
-- **検出された脆弱性の100%解消**: 検出・承認された全8件の脆弱性（BOLA/IDOR 6件、SQLインジェクション 2件）を、ボイラープレート1のコンポーネント（**Komainu D1 認可** および **Komainu D3 安全クエリ**）により完全改修（100%解消）。
+Komagu プロジェクトのパイロット運用（第9週〜第12週）は、成果物D6「会員ポータル（Member Portal）」を対象に実施され、プラットフォームの実効性、セキュリティ担保能力、および開発生産性向上（工数削減）を実証しました。[ADR-0005](../../docs/adr/0005-effort-baseline-and-roi-measurement.md) および配備計画に定められたすべての目標値を達成・超過しました。
+- **検出された脆弱性の100%解消**: 検出・承認された全8件の脆弱性（BOLA/IDOR 6件、SQLインジェクション 2件）を、ボイラープレート1のコンポーネント（**Komagu D1 認可** および **Komagu D3 安全クエリ**）により完全改修（100%解消）。
 - **エッジ防御（D4）の展開**: Kong GatewayとCoraza WAF（OWASP CRS v4）をDBレス・宣言的設定で配置し、SQLi/XSS/パストラバーサルをHTTP 403で即時遮断、DoS対策レート制限（HTTP 429）を実証。
 - **継続的クロスユーザー認可CI（D5）**: GitHub Actionsにおいて、認可不備を即時検知するD5自動テストスイートを確立し、リグレッション防止体制を配備。
 - **実測工数削減率**: パイロット全体の投入工数は **3.5人日（28.0時間）** であり、人手によるスクラッチ改修基準（18.5人日）に対して **81.1%の工数削減**、IPA（情報処理推進機構）基準（25.2人日）に対して **86.1%の工数削減** を達成（合否判定ライン $\ge 50\%$ を大幅に超過クリア）。
@@ -75,7 +75,7 @@ The Pilot phase (Weeks 9–12) of Project Komainu was executed on Deliverable D6
 
 ## 3. Security Findings & Remediation Matrix
 
-All 8 vulnerabilities accepted during the Phase 5–6 audit sign-off ([Issue #76](https://github.com/hoanghainh1188/komainu/issues/76)) were completely neutralized:
+All 8 vulnerabilities accepted during the Phase 5–6 audit sign-off ([Issue #76](https://github.com/hoanghainh1188/komagu/issues/76)) were completely neutralized:
 
 | Finding ID | CWE | Vulnerability Class | Stack / Component | Endpoint | Remediation Component | Verification Result |
 |---|---|---|---|---|---|---|
@@ -115,7 +115,7 @@ Re-scan tests executed across all audit, remediation, and edge components yielde
 ## 5. Effort & ROI Measurement (ADR-0005 Compliance)
 
 ### A. Actual Time Invested (Timesheet Breakdown)
-Extracted directly from [`delivery/pilot/timesheet-pilot.csv`](file:///Users/hoanghainh/Projects/komainu/delivery/pilot/timesheet-pilot.csv):
+Extracted directly from [`delivery/pilot/timesheet-pilot.csv`](timesheet-pilot.csv):
 
 | Stage / Phase | Tag | Description | Hours Spent | Person-Days (8h/day) |
 |---|---|---|:---:|:---:|
@@ -177,7 +177,7 @@ The pilot on Deliverable D6 establishes a verified **Client Reference Package (�
 2. **Turnkey WAF & Gateway Deployments**:
    - Ready-to-deploy Kong `deck.yaml` and Coraza CRS configurations requiring zero code changes for Day-1 edge defense.
 3. **Drop-in Remediation Libraries**:
-   - Production-ready .NET NuGet (`Komagu.Security.Authorization`, `Komagu.Security.Query`) and Spring Boot starter (`komainu-spring-boot-starter`).
+   - Production-ready .NET NuGet (`Komagu.Security.Authorization`, `Komagu.Security.Query`) and Spring Boot starter (`komagu-security-spring`).
 
 ---
 
@@ -196,4 +196,4 @@ Having fulfilled all criteria of Milestone M5 with empirical metrics exceeding t
 
 *Report prepared and submitted by:*  
 **Harry Nguyen** (Principal Architect / BOD / BrSE) & **Antigravity AI Agent**  
-*Project Komainu Core Engineering Team*
+*Project Komagu Core Engineering Team*
