@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   self-test:
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.8 build for ubuntu-latest (26.04); 24.04 still has 3.8.18
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         # The kit promises Python 3.8+; test the oldest and a current version.
