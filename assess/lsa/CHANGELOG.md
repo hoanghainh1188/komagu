@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+AMS pilot readiness (#350).
+
+- **Secret redaction (`scripts/redaction.py`, re-exported by `lsa_common`):** besides quoted `password`-like values, it now masks:
+  - unquoted config values (`.properties`, YAML, `.env`) and dotted keys inside comments (`<%-- db.password=x --%>`);
+  - JSON and PHP keys, plus `pass`, `pw`, `passphrase` and `credential` key names such as Tomcat `keystorePass`;
+  - Java legacy forms: `setPassword("x")`, `getConnection(url, user, "x")`, `PasswordAuthentication`, Spring XML `<property name=… value=…>`, and `web.xml` `<param-name>` / `<param-value>`, including when split across lines;
+  - credentials in connection strings and URIs (`;password=`, `?pwd=`, `password={…}`, `scheme://user:pass@host`, `jdbc:oracle:thin:user/pass@host`);
+  - `Basic` / `Bearer` values and AWS, GitHub, `sk-` and Google API tokens;
+  - private key blocks.
+
+  Lines longer than 4,000 characters are dropped whole, which keeps the regexes linear on minified files. The headless runner applies `redact_lines()` to every code excerpt it sends to the model (`operate/ai/context.py`).
+- **`detect_stack.py`:** JPA's `@Entity` and Spring Data's `getRepository` no longer report "TypeORM (Node/TS)" on Java code.
+
 ## 0.3.1 — 2026-10-30
 
 SARIF replay properties (#289).

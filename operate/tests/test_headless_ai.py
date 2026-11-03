@@ -19,7 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from operate.ai.client import LLMClient
-from operate.ai.mock_server import start_mock_llm_server
+from operate.ai.mock_server import MockLLMHandler, start_mock_llm_server
 from operate.ai.runner import HeadlessAIRunner
 from operate.cli.main import main as cli_main
 
@@ -294,6 +294,21 @@ module.exports = app;
         self.assertEqual(stats["retries"], {"4a-bola-auditor": ["routes-001"]})
         self.assertEqual(stats["parse_failures"], {})
         self.assertEqual(stats["anchoring"]["unanchored"], [])
+
+    def test_no_planted_secret_reaches_the_model(self) -> None:
+        planted = ("PlantedPg9", "planted-key-42", "PlantedOra3")
+        with (self.target_dir / "app.js").open("a", encoding="utf-8") as fh:
+            fh.write('const DB = "postgres://app:PlantedPg9@db/orders";\nconst apiKey = "planted-key-42";\n'
+                     '// legacy: db.password=PlantedOra3\n')
+        self._prescan()
+        client = LLMClient(endpoint=self.base_url, model="mock-model", api_key="test")
+        HeadlessAIRunner(self.target_dir, self.out_dir, client).run()
+
+        sent = json.dumps(MockLLMHandler.received_requests)
+        self.assertIn("5-finding-verifier", json.loads((self.out_dir / "ai-run-stats.json").read_text())["phases"])
+        self.assertIn("[REDACTED]", sent)
+        for secret in planted:
+            self.assertNotIn(secret, sent)
 
     def test_unparseable_verifier_reply_leaves_findings_unverified(self) -> None:
         """A broken verifier reply must not confirm findings (#286)."""

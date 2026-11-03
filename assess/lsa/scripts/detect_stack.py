@@ -86,7 +86,8 @@ DATA_ACCESS = [
     ("database/sql (Go)", r"sql\.Open|db\.Query|db\.Exec"),
     ("SQLAlchemy (Python)", r"sqlalchemy\.|create_engine|SessionLocal"),
     ("Prisma (Node/TS)", r"PrismaClient|@prisma/client"),
-    ("TypeORM (Node/TS)", r"typeorm|@Entity|getRepository"),
+    # Not bare @Entity / getRepository: JPA and Spring Data use the same names
+    ("TypeORM (Node/TS)", r"['\"]typeorm['\"]|\bTypeORM\b"),
     ("Drizzle ORM (Node/TS)", r"drizzle-orm"),
     ("postgres.js (Node/TS)", r"from\s+['\"]postgres['\"]|require\(\s*['\"]postgres['\"]\s*\)"),
 ]
