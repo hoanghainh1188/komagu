@@ -2,7 +2,7 @@
 
 Date: 2026-10-18 · Status: accepted · Owner: Harry (BOD / Principal Architect)  
 Related Issue: [hoanghainh1188/komagu#4](https://github.com/hoanghainh1188/komagu/issues/4)  
-Parent Documents: [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komagu/docs/boilerplate-1-delivery-plan.md), [Modernization Proposal](file:///Users/hoanghainh/Projects/komagu/docs/modernization-boilerplates-proposal.md)
+Parent Documents: [Boilerplate 1 Delivery Plan](../boilerplate-1-delivery-plan.md), [Modernization Proposal](../modernization-boilerplates-proposal.md)
 
 ---
 
@@ -117,4 +117,4 @@ $$\text{Cost Savings (JPY)} = (\text{Baseline Person-Days} - \text{Actual Pilot 
 - [IPA Software Development Data Whitebook 2024–2025](https://www.ipa.go.jp/digital/data/whitebook.html)
 - [ADR-0002 — IP Position: Open Core Model](0002-ip-position-open-core.md)
 - [ADR-0004 — B1 Design Review](0004-b1-design-review-d1-threat-model-demo-app.md)
-- [Boilerplate 1 Delivery Plan](file:///Users/hoanghainh/Projects/komagu/docs/boilerplate-1-delivery-plan.md)
+- [Boilerplate 1 Delivery Plan](../boilerplate-1-delivery-plan.md)

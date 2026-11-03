@@ -2,7 +2,7 @@
 """
 Pilot Edge Protection Verification Suite (Deliverable D4 & D6).
 Executes live security abuse and transparent routing verification against the
-Komainu Edge Gateway (Kong) + OWASP Coraza WAF stack.
+Komagu Edge Gateway (Kong) + OWASP Coraza WAF stack.
 Standard-library only (Python 3.8+ compatible).
 """
 
@@ -14,7 +14,7 @@ import urllib.error
 import json
 import unittest
 
-BASE_GATEWAY_URL = os.environ.get("KOMAINU_GATEWAY_URL", "http://localhost:8000")
+BASE_GATEWAY_URL = os.environ.get("KOMAGU_GATEWAY_URL", "http://localhost:8000")
 
 
 class TestPilotEdgeProtection(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestPilotEdgeProtection(unittest.TestCase):
 
     def setUp(self):
         if not self.live_ready:
-            self.skipTest(f"Komainu Gateway at {BASE_GATEWAY_URL} is not responding.")
+            self.skipTest(f"Komagu Gateway at {BASE_GATEWAY_URL} is not responding.")
         # Short pause between test cases to ensure rate limit buckets do not collide
         time.sleep(0.15)
 
