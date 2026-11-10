@@ -171,14 +171,41 @@ Gợi ý patch tự động (chỉ là đề xuất, áp dụng theo quy trình 
 ```
 Trước khi chạy, phải bỏ cờ chỉ đọc trên một **bản sao làm việc khác**, không phải trên `~/pilot/src`.
 
+**Với Java legacy, `komagu fix` chưa tạo được patch dùng được.** Kết quả chạy `--dry-run` trên fixture Struts với `findings.json` dựng tay theo dạng Tier 2 (Tier 1 không sinh finding nên không có gì để vá):
+- File `.java`: patcher chỉ chèn `@RequireOwnership` của module Spring Boot 3. Annotation này không có tác dụng trên Struts, Servlet hay Spring MVC cũ. `entityClass` lại suy ra từ route (`View.do.class`), nên code không biên dịch được.
+- File Java mã hoá Shift_JIS: patcher đọc file như UTF-8, làm hỏng chú thích tiếng Nhật và đổi CRLF thành LF, nên diff thay cả file.
+- File `.jsp`: báo `needs manual fix`, không có patch.
+
+Vì vậy **không áp dụng patch này**. Chỉ dùng `--dry-run` để liệt kê vị trí cần sửa, rồi sửa bằng tay theo bảng trên với `OwnershipEnforcer`.
+
 ### W11-1. Test cross-user *(chưa chạy thử trên môi trường khách hàng)*
-Chỉ chạy trên môi trường test, với tài khoản test do khách hàng cấp (Q7) và sau khi khách hàng đồng ý riêng:
+Chỉ chạy trên môi trường test, với tài khoản test do khách hàng cấp (Q7) và sau khi khách hàng đồng ý riêng. Bản `v2.4.0` chưa có các cờ session dưới đây, phải cập nhật `~/komagu-pilot` lên bản có #368 trước.
+
+Ứng dụng JSP / Struts / Spring MVC cũ dùng `JSESSIONID` và form, không dùng Bearer token. Làm theo thứ tự:
+
+1. Đăng nhập bằng tài khoản A (chủ object) và B (kẻ tấn công), lấy giá trị cookie. Cookie chỉ đi qua biến môi trường hoặc file, không có cờ nhận trực tiếp giá trị cookie, và không xuất hiện trong output hay báo cáo.
+2. Mở thử một trang không có quyền để biết ứng dụng từ chối thế nào: mã `404` / `403`, trang lỗi `200`, hay `302` về trang login. Ghi lại để khai báo bằng `--deny-*`. Trang lỗi Shift_JIS / Windows-31J vẫn so khớp được.
+3. Chạy:
 ```bash
-export ATTACKER_TOKEN="<test account B token>"
+read -rs ATTACKER_COOKIE && export ATTACKER_COOKIE   # nhập JSESSIONID=... của B
+read -rs OWNER_COOKIE && export OWNER_COOKIE         # nhập JSESSIONID=... của A
 ./bin/komagu test --url http://<client-test-host>:<port> --from-scan ~/pilot/out/findings.json \
-  --token "$ATTACKER_TOKEN" --strict --output ~/pilot/out/cross-user-results.json
+  --resource-id <id object của A> --strict \
+  --attacker-cookie-env ATTACKER_COOKIE --owner-cookie-env OWNER_COOKIE \
+  --session-check /<trang cả A và B đều mở được> --session-marker "<chữ chỉ có khi đã đăng nhập>" \
+  --deny-status 404 --deny-redirect /login.do --deny-marker "<chữ trên trang báo lỗi quyền>" \
+  --allow-redirect /<trang đích sau khi ghi thành công> \
+  --csrf-page /<trang form của B> --csrf-field org.apache.struts.taglib.html.TOKEN \
+  --owner-control-writes --owner-csrf-page /<trang form của A> \
+  --output ~/pilot/out/cross-user-results.json
 ```
-Mỗi finding đã sửa phải có một test case: trước khi sửa thì test fail, sau khi sửa thì pass.
+- Route `.do`, `.action`, `.jsp`, `.jspx` tự gửi form; id lấy tên tham số từ `attack_vector.target_param` (mặc định `id`). Tên trường token: Struts 1 như trên, Struts 2 `<s:token>` là `token`, Spring Security là `_csrf`. Không có token thì bỏ hai cờ `--csrf-*`.
+- `--strict` với cookie bắt buộc có tín hiệu từ chối, `--session-check` và cookie của A. Thiếu một trong ba thì lệnh dừng với exit 2.
+- Exit `0`: mọi request đều bị từ chối. Exit `1`: có `[FAIL]` (lỗ hổng) hoặc `[ERROR]` (không kết luận được, ví dụ redirect chưa khai báo, thiếu token, hoặc A cũng bị từ chối nên id hay route sai). Exit `2`: cấu hình sai hoặc session hết hạn, kể cả khi hết hạn giữa chừng; kết quả lần chạy đó không dùng được.
+- Sau khi B bị từ chối, A gửi lại đúng request đó và phải thành công, để chứng minh route và id là đúng. `--owner-control-writes` **thực sự ghi vào dữ liệu của A**, nên phải dùng object test và có sự đồng ý của khách hàng. Không có cờ này thì `--strict` báo `[ERROR]` cho request ghi bị từ chối, không báo PASS. Route `DELETE` sẽ xoá object của A, nên cần object riêng cho từng route.
+- Trên route còn lỗ hổng, request ghi của B **thực sự được thực hiện**.
+
+Mỗi finding đã sửa phải có một test case: trước khi sửa thì test fail, sau khi sửa thì pass. Lưu file kết quả của cả hai lần chạy. Mới diễn tập trên app mô phỏng trong `operate/tests/mock_legacy_session_app.py`, chưa chạy trên ứng dụng Java thật.
 
 ---
 

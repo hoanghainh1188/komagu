@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from operate.cli.ui import (
     BOLD,
@@ -34,6 +34,17 @@ from operate.cross_user_tester.persona_matrix import (
     is_v2_suite,
     load_persona_suite,
 )
+from operate.cross_user_tester.session_config import (
+    SessionOptions,
+    add_session_arguments,
+    build_session_options,
+    check_session,
+    cookie_file_is_open,
+    global_csrf,
+    read_cookie,
+    strict_gaps,
+)
+from operate.cross_user_tester.session_http import SessionConfigError
 from operate.cross_user_tester.runner import (
     CrossUserTestRunner,
     format_report,
@@ -46,6 +57,8 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SUITE = REPO_ROOT / "operate" / "tests" / "test_suite.json"
 # --token is passed to persona-matrix cases through this private env entry.
 CLI_TOKEN_ENV = "KOMAGU_CLI_TOKEN"
+# The attacker's cookie reaches persona-matrix cases the same way, in a private copy of the environment.
+CLI_COOKIE_ENV = "KOMAGU_CLI_COOKIE"
 
 
 def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
@@ -74,6 +87,11 @@ Examples:
 
   # Persona matrix (suite "version": 2): BFLA and mass assignment checks
   KOMAGU_TOKEN_USER=... KOMAGU_TOKEN_ADMIN=... komagu test --url http://staging:8000 --suite ./personas.json
+
+  # Session-based Java app (JSP / Struts): cookies from the environment, declared denial signal
+  ATTACKER_COOKIE=... OWNER_COOKIE=... komagu test --url http://test:8080 --from-scan ./findings.json --strict \\
+    --attacker-cookie-env ATTACKER_COOKIE --owner-cookie-env OWNER_COOKIE \\
+    --session-check /home.do --deny-status 404 --deny-redirect /login.do
 
 Documentation:
   See docs/cli-guide.md#34-komagu-test--offensive-exploit-verification-bola-invariant--persona-matrix
@@ -126,7 +144,8 @@ Documentation:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Enforce strict 404 requirement (reject 401/403 which leak resource existence)",
+        help="Enforce strict 404 requirement (reject 401/403 which leak resource existence). "
+             "With session cookies, also requires a declared denial signal, --session-check and the owner's cookie",
     )
     parser.add_argument(
         "--token-env",
@@ -139,6 +158,7 @@ Documentation:
         dest="export_poc",
         help="Directory path to export standalone executable Python and cURL exploit PoC scripts",
     )
+    add_session_arguments(parser)
     parser.set_defaults(func=execute_test)
 
 
@@ -149,6 +169,19 @@ def execute_test(args: argparse.Namespace) -> int:
 
     tests: List[Any] = []
     matrix_cases: List[MatrixCase] = []
+
+    try:
+        session = build_session_options(args, os.environ)
+        csrf = global_csrf(args)
+    except SessionConfigError as e:
+        step_fail(str(e))
+        return 2
+    for cookie_file in (args.attacker_cookie_file, args.owner_cookie_file):
+        if cookie_file_is_open(cookie_file):
+            step_warn("A cookie file can be read by other users; restrict it with chmod 600")
+    # A session run sends the cookie only; the --token default must not go with it.
+    attacker_token = None if session and session.attacker_cookie else args.attacker_token
+    suite_body_format = "form" if args.body_format == "form" else "json"
 
     # 1. Ingest from scan output if provided
     if getattr(args, "from_scan", None):
@@ -161,15 +194,19 @@ def execute_test(args: argparse.Namespace) -> int:
         scan_cases = generate_test_cases_from_findings(
             scan_data_or_path=scan_file,
             default_resource_id=args.resource_id,
-            attacker_token=args.attacker_token,
+            attacker_token=attacker_token,
             min_consensus_score=min_c,
+            body_format=args.body_format,
+            csrf=csrf,
         )
         step_info(f"Synthesized {len(scan_cases)} active verification cases from scan findings")
         tests.extend(scan_cases)
-        matrix_cases.extend(_matrix_cases_from_scan(scan_file, args, min_c))
+        matrix_cases.extend(_matrix_cases_from_scan(scan_file, args, min_c, session, csrf))
 
         # Export PoC exploits if requested
         if getattr(args, "export_poc", None):
+            if session and session.attacker_cookie:
+                step_warn("--export-poc writes Bearer scripts; they do not carry the session cookie")
             from operate.exploit.generator import ExploitGenerator
             gen = ExploitGenerator(
                 base_url=args.base_url,
@@ -191,14 +228,20 @@ def execute_test(args: argparse.Namespace) -> int:
             return 2
         if is_v2_suite(suite_data):
             try:
-                matrix_cases.extend(load_persona_suite(suite_data, default_id=args.resource_id))
-            except SuiteError as e:
+                matrix_cases.extend(load_persona_suite(
+                    suite_data, default_id=args.resource_id,
+                    default_body_format=suite_body_format, default_csrf=csrf,
+                ))
+            except (SuiteError, SessionConfigError) as e:
                 step_fail(f"Invalid persona suite {suite_path.name}: {e}")
                 return 2
             step_info(f"Persona matrix: {len(matrix_cases)} BFLA / mass assignment cases")
         else:
             try:
-                tests.extend(load_suite_from_file(str(suite_path)))
+                tests.extend(load_suite_from_file(str(suite_path), suite_body_format, csrf))
+            except SessionConfigError as e:
+                step_fail(f"Invalid test suite {suite_path.name}: {e}")
+                return 2
             except Exception as e:
                 step_warn(f"Could not load test suite {suite_path}: {e}")
 
@@ -210,15 +253,29 @@ def execute_test(args: argparse.Namespace) -> int:
             generate_crud_test_cases(
                 resource_path=crud_path,
                 resource_id=args.resource_id,
-                attacker_token=args.attacker_token,
+                attacker_token=attacker_token,
+                body_format=suite_body_format,
+                csrf=csrf,
             )
         )
 
 
     runner = CrossUserTestRunner(
         base_url=args.base_url,
-        default_attacker_token=args.attacker_token,
+        default_attacker_token=attacker_token,
+        session=session,
     )
+
+    has_cookie_personas = any(c.persona.cookie_env or c.persona.cookie_file for c in matrix_cases)
+    if args.strict and has_cookie_personas:
+        gaps = strict_gaps(args, False, False)
+        if gaps:
+            step_fail("--strict on a session app needs " + "; ".join(gaps))
+            return 2
+    problem = _session_problem(args, session, matrix_cases, os.environ)
+    if problem:
+        step_fail(f"{problem}. No test was sent.")
+        return 2
 
     results = []
     success = True
@@ -230,7 +287,7 @@ def execute_test(args: argparse.Namespace) -> int:
         print(report_text)
 
     try:
-        matrix_results = _run_matrix(matrix_cases, args)
+        matrix_results = _run_matrix(matrix_cases, args, session)
     except ValueError as e:
         step_fail(str(e))
         return 2
@@ -242,6 +299,12 @@ def execute_test(args: argparse.Namespace) -> int:
         print(matrix_text)
         success = success and matrix_ok
 
+    # A session lost during the run turns refusals into login redirects: the verdicts cannot be trusted.
+    lost_session = _session_problem(args, session, matrix_cases, os.environ)
+    if lost_session:
+        step_fail(f"{lost_session} after the run. The results below are not valid.")
+        success = False
+
     # Save output if requested
     if args.output:
         out_path = Path(args.output).resolve()
@@ -252,6 +315,8 @@ def execute_test(args: argparse.Namespace) -> int:
             "results": [r.to_dict() for r in results],
             "matrix_results": [r.to_dict() for r in matrix_results],
         }
+        if lost_session:
+            report_data["session_check"] = "failed_after_run"
         out_path.write_text(json.dumps(report_data, indent=2), encoding="utf-8")
         step_ok(f"Saved test report to {out_path}")
 
@@ -282,7 +347,7 @@ def execute_test(args: argparse.Namespace) -> int:
             if r.is_breach:
                 verdict = color("CONFIRMED BREACH (EXPLOITABLE)", RED, BOLD)
             elif r.is_secure:
-                verdict = color("PROTECTED (404 INVARIANT)", GREEN, BOLD)
+                verdict = color("PROTECTED (DENIAL SIGNAL)" if session else "PROTECTED (404 INVARIANT)", GREEN, BOLD)
             else:
                 verdict = color(f"UNEXPECTED HTTP {r.status_code}", YELLOW)
             exploit_rows.append((f"{f_id} [{tc.method} {tc.path}]", f"Consensus: {c_score_str} | Verdict: {verdict}"))
@@ -293,29 +358,80 @@ def execute_test(args: argparse.Namespace) -> int:
             footer="Offensive Verification: Green = 404 Enforced, Red = Active BOLA Breach Confirmed.",
         )
 
+    if lost_session:
+        return 2
     return 0 if success else 1
 
 
-def _matrix_cases_from_scan(scan_file: Path, args: argparse.Namespace, min_consensus: float) -> List[MatrixCase]:
+def _session_targets(
+    session: Optional[SessionOptions],
+    cases: List[MatrixCase],
+    env: Mapping[str, str],
+) -> List[Tuple[str, str]]:
+    """(label, cookie) for every session persona in this run."""
+    targets: List[Tuple[str, str]] = []
+    if session and session.attacker_cookie:
+        targets.append(("attacker", session.attacker_cookie))
+    if session and session.owner_cookie:
+        targets.append(("owner", session.owner_cookie))
+    for persona in {c.persona for c in cases if c.persona.cookie_env != CLI_COOKIE_ENV}:
+        cookie = read_cookie(persona.cookie_env, persona.cookie_file, env, persona.name)
+        if cookie:
+            targets.append((persona.name, cookie))
+    return targets
+
+
+def _session_problem(
+    args: argparse.Namespace,
+    session: Optional[SessionOptions],
+    cases: List[MatrixCase],
+    env: Mapping[str, str],
+) -> Optional[str]:
+    """Why a session persona cannot be used, or None when all are alive."""
+    if session is None or not session.session_check:
+        return None
+    try:
+        targets = _session_targets(session, cases, env)
+    except SessionConfigError as err:
+        return str(err)
+    for label, cookie in targets:
+        problem = check_session(args.base_url, label, cookie, session.session_check, session.session_marker, session.denial)
+        if problem:
+            return problem
+    return None
+
+
+def _matrix_cases_from_scan(
+    scan_file: Path,
+    args: argparse.Namespace,
+    min_consensus: float,
+    session: Optional[SessionOptions],
+    csrf: Optional[Any],
+) -> List[MatrixCase]:
     """BFLA and mass assignment findings from findings.json or SARIF."""
     try:
         data = json.loads(scan_file.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return []
     token_env = getattr(args, "token_env", None) or CLI_TOKEN_ENV
+    cookie_env = CLI_COOKIE_ENV if session and session.attacker_cookie else None
     cases = generate_matrix_cases_from_findings(
-        data, token_env=token_env, default_id=args.resource_id, min_consensus=min_consensus
+        data, token_env=token_env, default_id=args.resource_id, min_consensus=min_consensus,
+        cookie_env=cookie_env, body_format=args.body_format, csrf=csrf,
     )
     if cases:
         step_info(f"Synthesized {len(cases)} BFLA / mass assignment cases from scan findings")
     return cases
 
 
-def _run_matrix(cases: List[MatrixCase], args: argparse.Namespace) -> List[Any]:
+def _run_matrix(cases: List[MatrixCase], args: argparse.Namespace, session: Optional[SessionOptions]) -> List[Any]:
     if not cases:
         return []
     env: Dict[str, str] = dict(os.environ)
     if args.attacker_token:
         env.setdefault(CLI_TOKEN_ENV, args.attacker_token)
+    if session and session.attacker_cookie:
+        env[CLI_COOKIE_ENV] = session.attacker_cookie
     step(f"Executing {len(cases)} persona matrix cases")
-    return PersonaMatrixRunner(args.base_url, env=env, strict=args.strict).run(cases)
+    denial = session.denial if session else None
+    return PersonaMatrixRunner(args.base_url, env=env, strict=args.strict, denial=denial).run(cases)
