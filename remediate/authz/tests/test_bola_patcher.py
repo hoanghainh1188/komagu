@@ -106,6 +106,9 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
     def test_patch_spring_boot_controller(self) -> None:
         """Spring Boot controller method must receive @RequireOwnership annotation and import."""
+        (self.test_dir / "build.gradle").write_text(
+            "plugins { id 'org.springframework.boot' version '3.2.1' }\n", encoding="utf-8"
+        )
         controller_file = self.test_dir / "OrderController.java"
         controller_file.write_text(
             "package com.example.demo;\n\n"
@@ -127,7 +130,7 @@ class TestBOLAOwnershipPatcher(unittest.TestCase):
 
         patched_content, res = self.patcher.patch_file(controller_file, 5, finding)
         self.assertTrue(res.changed)
-        self.assertIn("import io.komagu.security.authorization.RequireOwnership;", patched_content)
+        self.assertIn("import io.komagu.security.spring.RequireOwnership;", patched_content)
         self.assertIn("@RequireOwnership(entityClass = Order.class, operation = ResourceOperation.READ)", patched_content)
 
     def test_patch_python_fastapi(self) -> None:

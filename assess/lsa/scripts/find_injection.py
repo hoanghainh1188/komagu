@@ -37,6 +37,11 @@ STRONG_SQL = re.compile(
     r"(?i)(\bselect\b[\s\S]*?\bfrom\b|\bselect\s+[\w*]|\binsert\s+into\b|\bupdate\s+[\w\[\].`\"]+\s+set\b|\bupdate\s+[\w\[\].`\"]+\s*$"
     r"|\bdelete\s+from\b|\bwhere\b\s*[\w(`\[]|\border\s+by\b|\bgroup\s+by\b|\bvalues\s*\(|\bexec(ute)?\s+\w|\bunion\s+select\b"
     r"|\bfrom\s+[\w\[\].`\"]+\s+(where|order|group|inner|left|join)\b|\bhaving\b)")
+# Java only: an HTML opening tag is markup, and a literal ending in WHERE is SQL/JPQL about to take a concatenated clause
+HTML_OPEN_TAG = re.compile(r"</?[a-zA-Z][\w:-]*\b")
+JAVA_TRAILING_WHERE = re.compile(r"(?i)\bwhere\s*\"$")
+# JPQL positional parameter: the appended value is the numeric index of a bind mark, as in " = ?").append(size)
+JAVA_POSITIONAL_APPEND = re.compile(r"\?\"\s*\)\s*\.\s*append\s*\(\s*(?:size|index|idx|i|n|pos|position|count|\w*[Ii]ndex)\s*\)\s*;?\s*$")
 WEAK_SQL = re.compile(r"(?i)\b(and|or|like|in|not|between|set|where|order\s+by|limit|offset|values|join|on)\b|=\s*['\"]?$|[(,=<>]\s*'?$")
 SQL_IDENT = re.compile(r"(?i)\b(order\s+by|group\s+by|asc|desc|limit)\b")
 
@@ -130,6 +135,20 @@ def raw_fragment_arg_is_constant(arg: str) -> bool:
         end = arg.find("`", 1)
         return end != -1 and "${" not in arg[1:end]
     return False
+
+
+def is_sql_literal(text: str, lang: str) -> bool:
+    if lang == "java":
+        return bool(STRONG_SQL.search(HTML_OPEN_TAG.sub("", text)) or JAVA_TRAILING_WHERE.search(text))
+    return bool(STRONG_SQL.search(text))
+
+
+def java_continuation_is_dynamic(line: str, lit: re.Pattern) -> bool:
+    """True when a continuation line of a multi-line SQL statement joins a non-constant operand."""
+    if concat_kind(line, "java", lit) == "dynamic":
+        return True
+    leading = re.match(r"\s*\+\s*([A-Za-z_][\w.]*)", strip_literals(line, lit))
+    return bool(leading and not CONST_OPERAND.match(leading.group(1)))
 
 
 def strip_literals(line: str, lit: re.Pattern) -> str:
@@ -249,7 +268,7 @@ class Finder:
             if com and com.search(line):
                 continue
             lits = untagged(line, literals(line, lit), lang)
-            if not any(STRONG_SQL.search(m.group(0)) for m in lits):
+            if not any(is_sql_literal(m.group(0), lang) for m in lits):
                 continue
             if assign_rx:
                 m = assign_rx.search(line)
@@ -259,6 +278,7 @@ class Finder:
             if am:
                 sqlvars.setdefault(am.group(1), i)
         heredoc_end = None
+        open_sql = False
         # pass 2 — flag dynamic building
         for i, line in enumerate(lines, 1):
             if com and com.search(line):
@@ -283,7 +303,12 @@ class Finder:
                         self.add(lang, rel, i, lines, "heredoc-interpolation", "string_interpolation", "sql", None, file_has_input)
                     continue
             lits = untagged(line, literals(line, lit), lang)
-            sql_lits = [m for m in lits if STRONG_SQL.search(m.group(0))]
+            sql_lits = [m for m in lits if is_sql_literal(m.group(0), lang)]
+            continuing = False
+            if lang == "java":
+                code = strip_literals(line, lit)
+                continuing = open_sql
+                open_sql = (bool(sql_lits) or open_sql) and not re.search(r"[;{}]", code)
             target_var = None
             if assign_rx:
                 am = assign_rx.search(line)
@@ -294,6 +319,8 @@ class Finder:
                 target_var = ap.group(1)
             is_sqlish = bool(sql_lits) or target_var is not None
             if not is_sqlish:
+                if continuing and java_continuation_is_dynamic(line, lit):
+                    self.add(lang, rel, i, lines, "sql-concat", "string_concatenation", "sql", None, file_has_input)
                 continue
             # interpolation inside a SQL literal (or SQL-variable literal)
             cand_lits = sql_lits or (lits if target_var else [])
@@ -315,6 +342,10 @@ class Finder:
                 continue
             if kind == "const":
                 self.suppressed.append({"file": rel, "line": i, "reason": "concatenation with constant-looking operands only",
+                                        "snippet": redact(snippet(lines, i))})
+                continue
+            if lang == "java" and JAVA_POSITIONAL_APPEND.search(line):
+                self.suppressed.append({"file": rel, "line": i, "reason": "appended value is a positional bind index",
                                         "snippet": redact(snippet(lines, i))})
                 continue
             if target_var and re.search(r"\.\s*(append|Append|AppendLine|concat)\s*\(\s*(?![\"'@\s])", line):
@@ -350,6 +381,8 @@ class Finder:
     def scan_xml(self, rel: str, text: str) -> None:
         if not re.search(r"<mapper\b|<sqlMap\b|<!DOCTYPE\s+(mapper|sqlMap)", text):
             return
+        if re.search(r"<#(?:if|list|assign|macro|include)\b", text):
+            return  # FreeMarker code-generator template: ${...} is the template language, not MyBatis
         lines = text.splitlines()
         in_stmt = False
         for i, line in enumerate(lines, 1):

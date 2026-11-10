@@ -98,12 +98,12 @@ class BOLARemediationStrategy(BaseRemediationStrategy):
 
         # Use intelligent BOLA ownership patcher
         patcher = BOLAOwnershipPatcher()
-        patched_content, result = patcher.patch_file(target_file, start_line + 1, finding)
+        patched_content, result = patcher.patch_file(target_file, start_line + 1, finding, content=content)
         if result.changed:
             return patched_content, result.explanation
 
         # Do NOT inject comment-only fake fixes. Require genuine code rewrite or manual fix.
-        return content, "No automated BOLA ownership rewrite applicable; requires manual remediation."
+        return content, result.explanation or "No automated BOLA ownership rewrite applicable; requires manual remediation."
 
 
 class DependencyVulnerabilityRemediationStrategy(BaseRemediationStrategy):

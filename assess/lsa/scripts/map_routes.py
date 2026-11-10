@@ -19,8 +19,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lsa_common import (KIT_VERSION, compile_id_patterns, is_id_name, iter_source_files,  # noqa: E402
-                        line_of, load_config, read_text, write_json)
+from java_routes import (build_class_index, collect_spring_beans, java_declared, struts2_action_extension,  # noqa: E402
+                         struts_modules, xml_declared)
+from lsa_common import (JAVA_WEB_ROOT, KIT_VERSION, call_args, compile_id_patterns, is_id_name,  # noqa: E402
+                        iter_source_files, line_of, load_config, read_text, split_top, write_json)
 from nextjs_routes import middleware_note, nextjs_declared  # noqa: E402
 from privilege import annotate_privilege  # noqa: E402
 
@@ -250,8 +252,6 @@ def segments(text: str, decl_rx: re.Pattern) -> List[Tuple[re.Match, int, int]]:
 # Declared-route extractors
 # --------------------------------------------------------------------------------------
 PHP_METHOD = re.compile(r"^[ \t]*(?:(public|protected|private)\s+)?(?:static\s+)?function\s+&?(\w+)\s*\(", re.M)
-JAVA_METHOD_ANN = re.compile(r"@(RequestMapping|GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|Path)\b\s*(\(([^)]*)\))?")
-JAVA_HTTP_ANN = re.compile(r"@(GET|POST|PUT|DELETE|PATCH)\b")
 CS_ACTION = re.compile(r"^[ \t]*public\s+(?!record\b|class\b)(?:virtual\s+|async\s+|override\s+|static\s+)*[A-Za-z0-9_<>., \[\]?]+\s+(\w+)\s*\(([^)]*)\)", re.M)
 VB_ACTION = re.compile(r"^[ \t]*Public\s+(?:Overridable\s+|Async\s+)*Function\s+(\w+)\s*\(([^)]*)\)\s+As\s+[\w.(<>) ]+", re.M | re.I)
 WEBMETHOD = re.compile(r"(\[WebMethod[^\]]*\]|<WebMethod[^>]*>|\[OperationContract[^\]]*\]|<OperationContract[^>]*>)[\s\S]{0,300}?"
@@ -302,107 +302,6 @@ def php_declared(c: Collector, rel: str, text: str, stacks: set) -> bool:
               id_params=idps + c.inputs("php", body, line), guard_hints=c.guards(text[:s], 1)[:3] + c.guards(body, line),
               data_hints=c.data_ops(body, line), notes="path is convention-based")
         found = True
-    return found
-
-
-def java_declared(c: Collector, rel: str, text: str) -> bool:
-    found = False
-    cls_prefix = ""
-    cm = re.search(r"@(RequestMapping|Path)\s*\(\s*(?:value\s*=\s*)?\"([^\"]*)\"[^)]*\)\s*(?:@\w+(?:\([^)]*\))?\s*)*(?:public\s+)?(?:abstract\s+)?class", text)
-    if cm:
-        cls_prefix = cm.group(2)
-    is_servlet = re.search(r"extends\s+HttpServlet", text)
-    if is_servlet:
-        ws = re.search(r"@WebServlet\s*\(\s*(?:urlPatterns\s*=\s*|value\s*=\s*)?\{?\s*\"([^\"]+)\"", text)
-        for m in re.finditer(r"(?:public|protected)\s+void\s+(doGet|doPost|doPut|doDelete|service)\s*\(", text):
-            start = m.start()
-            nxt = re.search(r"\n\s*(?:public|protected|private)\s+[\w<>\[\]]+\s+\w+\s*\(", text[m.end():])
-            body = text[start: m.end() + (nxt.start() if nxt else len(text))]
-            line = line_of(text, start)
-            verb = {"doGet": "GET", "doPost": "POST", "doPut": "PUT", "doDelete": "DELETE"}.get(m.group(1), "ANY")
-            c.add(stack="java-servlet", kind="declared_route", method=[verb],
-                  path=ws.group(1) if ws else "<see web.xml servlet-mapping>",
-                  handler={"file": rel, "line": line, "symbol": m.group(1)},
-                  id_params=c.inputs("java", body, line), guard_hints=c.guards(body, line),
-                  data_hints=c.data_ops(body, line), notes="" if ws else "resolve path from web.xml")
-            found = True
-        return found
-    anns = list(JAVA_METHOD_ANN.finditer(text))
-    for m in anns:
-        if cm and m.start() == cm.start():
-            continue
-        after = text[m.end(): m.end() + 600]
-        # skip class-level annotation
-        if re.match(r"\s*(?:@\w+(?:\([^)]*\))?\s*)*(?:public\s+)?(?:abstract\s+)?class\b", after):
-            continue
-        sig = re.search(r"(?:(?:public|protected)\s+[\w<>\[\],.? ]+|fun|(?:override|suspend)\s+fun)\s+(\w+)\s*\(", after)
-        if not sig:
-            continue
-        before = text[:m.start()]
-        cls_m = list(re.finditer(r"@(?:RequestMapping|Path)\s*\(\s*(?:value\s*=\s*|path\s*=\s*)?\"([^\"]*)\"[^)]*\)[\s\S]{0,300}?(?:class\b)", before))
-        method_cls_prefix = cls_m[-1].group(1) if cls_m else cls_prefix
-        args = m.group(3) or ""
-        pv = re.search(r"(?:value\s*=\s*|path\s*=\s*)?\{?\s*\"([^\"]*)\"", args)
-        sub = pv.group(1) if pv else ""
-        verbs = re.findall(r"RequestMethod\.(\w+)", args)
-        ann = m.group(1)
-        if ann.endswith("Mapping") and ann != "RequestMapping":
-            verbs = [ann[:-7].upper()]
-        if ann == "Path":
-            hv = JAVA_HTTP_ANN.search(text[max(0, m.start() - 200): m.end() + 200])
-            verbs = [hv.group(1)] if hv else ["ANY"]
-        path = "/" + "/".join(p.strip("/") for p in (method_cls_prefix, sub) if p.strip("/"))
-        nxt = re.search(r"\n\s*@(RequestMapping|GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|Path)\b(?!Variable|Param)", text[m.end():])
-        body = text[m.start(): m.end() + (nxt.start() if nxt else len(text))]
-        line = line_of(text, m.start())
-        c.add(stack="java-spring-mvc" if ann != "Path" else "java-jaxrs", kind="declared_route", method=verbs or ["ANY"],
-              path=path, handler={"file": rel, "line": line, "symbol": sig.group(1)},
-              id_params=c.path_params(path) + c.inputs("java", body, line),
-              guard_hints=c.guards(text[:m.start()][-1500:], 1)[:2] + c.guards(body, line),
-              data_hints=c.data_ops(body, line), notes="")
-        found = True
-    # Struts 1 / 2 Action classes without annotations are mapped from XML (see xml_declared)
-    return found
-
-
-def xml_declared(c: Collector, rel: str, text: str, class_index: Dict[str, str]) -> bool:
-    found = False
-    if rel.endswith("web.xml"):
-        servlets = dict(re.findall(r"<servlet>\s*<servlet-name>\s*([^<]+?)\s*</servlet-name>[\s\S]*?<servlet-class>\s*([^<]+?)\s*</servlet-class>", text))
-        for m in re.finditer(r"<servlet-mapping>\s*<servlet-name>\s*([^<]+?)\s*</servlet-name>\s*<url-pattern>\s*([^<]+?)\s*</url-pattern>", text):
-            name, pattern = m.group(1), m.group(2)
-            cls = servlets.get(name, "")
-            hfile = class_index.get(cls.split(".")[-1], rel)
-            c.add(stack="java-servlet", kind="declared_route", method=["ANY"], path=pattern,
-                  handler={"file": hfile, "line": 1, "symbol": cls or name}, id_params=[], guard_hints=[],
-                  data_hints=[], notes=f"mapped in {rel}:{line_of(text, m.start())}")
-            found = True
-    if "struts-config" in rel:
-        for m in re.finditer(r"<action\b([^>]*)>", text):
-            attrs = dict(re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", m.group(1)))
-            if "path" not in attrs:
-                continue
-            cls = attrs.get("type", "")
-            hfile = class_index.get(cls.split(".")[-1], rel)
-            note = f"declared in {rel}:{line_of(text, m.start())}"
-            if attrs.get("parameter"):
-                note += f"; DispatchAction parameter '{attrs['parameter']}' -> one endpoint per method"
-            c.add(stack="java-struts1", kind="declared_route", method=["ANY"], path=attrs["path"] + ".do",
-                  handler={"file": hfile, "line": 1, "symbol": cls}, id_params=[], guard_hints=[], data_hints=[], notes=note)
-            found = True
-    if rel.endswith("struts.xml"):
-        for pm in re.finditer(r"<package\b([^>]*)>([\s\S]*?)</package>", text):
-            pattrs = dict(re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", pm.group(1)))
-            ns = pattrs.get("namespace", "/").rstrip("/")
-            for am in re.finditer(r"<action\b([^>]*)>", pm.group(2)):
-                attrs = dict(re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", am.group(1)))
-                cls = attrs.get("class", "")
-                hfile = class_index.get(cls.split(".")[-1], rel)
-                c.add(stack="java-struts2", kind="declared_route", method=["ANY"], path=f"{ns}/{attrs.get('name', '?')}.action",
-                      handler={"file": hfile, "line": 1, "symbol": f"{cls}#{attrs.get('method', 'execute')}"},
-                      id_params=[], guard_hints=[], data_hints=[],
-                      notes=f"declared in {rel}:{line_of(text, pm.start() + am.start())}; action setters are inputs")
-                found = True
     return found
 
 
@@ -560,48 +459,6 @@ GO_FRAMEWORKS = [("go-gin", "github.com/gin-gonic/gin"), ("go-echo", "github.com
 GO_PATTERN = re.compile(r"^(?:([A-Z]+)\s+)?(/\S*)$")
 
 
-def call_args(text: str, open_idx: int, limit: int = 4000) -> Tuple[str, int]:
-    """Return (argument text, index after the closing paren) for the call whose '(' is at open_idx."""
-    depth, i, end = 0, open_idx, min(len(text), open_idx + limit)
-    while i < end:
-        ch = text[i]
-        if ch in "\"`":
-            close = text.find(ch, i + 1)
-            while ch == '"' and close != -1 and text[close - 1] == "\\":
-                close = text.find(ch, close + 1)
-            i = close if close != -1 else end
-        elif ch in "([{":
-            depth += 1
-        elif ch in ")]}":
-            depth -= 1
-            if depth == 0:
-                return text[open_idx + 1:i], i + 1
-        i += 1
-    return text[open_idx + 1:end], end
-
-
-def split_top(args: str) -> List[str]:
-    """Split call arguments on top-level commas."""
-    parts, depth, cur, quote = [], 0, [], None
-    for ch in args:
-        if quote:
-            quote = None if ch == quote else quote
-        elif ch in "\"`":
-            quote = ch
-        elif ch in "([{":
-            depth += 1
-        elif ch in ")]}":
-            depth -= 1
-        elif ch == "," and depth == 0:
-            parts.append("".join(cur).strip())
-            cur = []
-            continue
-        cur.append(ch)
-    if "".join(cur).strip():
-        parts.append("".join(cur).strip())
-    return parts
-
-
 def guards_before(c: Collector, text: str, start: int, end: int, span: int = 500) -> List[Dict]:
     ws = max(0, start - span)
     return c.guards(text[ws:end], line_of(text, ws))
@@ -712,6 +569,9 @@ def file_endpoint(c: Collector, rel: str, text: str, lang: str, ext: str, target
         wr = wr.strip("/") + "/"
         if rel.startswith(wr):
             path = "/" + rel[len(wr):]
+    root = JAVA_WEB_ROOT.search(rel) if lang == "java" and path == "/" + rel else None
+    if root:
+        path = "/" + rel[root.end():]
     stack = {"php": "php", "java": "java-jsp", "dotnet": "dotnet-webforms" if ext in (".aspx",) else "dotnet-handlers",
              "asp": "classic-asp", "perl": "perl-cgi", "cfml": "coldfusion"}.get(lang, lang)
     if ext in (".asmx", ".svc"):
@@ -775,7 +635,11 @@ def _scan_route_file_batch(args: Tuple[List[Tuple[str, str]], Dict, set, str]) -
             declared = go_declared(c, rel, t)
         if declared or ext not in FILE_ENDPOINT_EXTS:
             continue
-        if INCLUDE_DIR_RE.search(rel.rsplit("/", 1)[0] + "/" if "/" in rel else ""):
+        if ext == ".jsp":
+            # Tomcat serves any JSP outside WEB-INF, whatever its directory is called; those inside are only forwarded to
+            if "/WEB-INF/" in "/" + rel:
+                continue
+        elif INCLUDE_DIR_RE.search(rel.rsplit("/", 1)[0] + "/" if "/" in rel else ""):
             continue
         if framework_php and lang == "php" and re.search(r"(^|/)(application|system|app|vendor|routes|resources|storage|bootstrap)/", rel):
             continue
@@ -791,15 +655,22 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
     files = list(iter_source_files(target, config))
     stack_ids = stack_ids or set()
     framework_php = bool(stack_ids & {"php-codeigniter", "php-cakephp", "php-laravel", "php-zend1"})
-    class_index = {p.stem: rel for p, rel in files if p.suffix == ".java"}
+    class_index = build_class_index(rel for _, rel in files)
     texts: Dict[str, str] = {}
 
-    # 1. XML pre-pass (web.xml / struts.xml declarative mappings)
-    for p, rel in files:
-        if p.suffix.lower() == ".xml":
-            t = read_text(p, enc)
-            if "<servlet" in t or "<action" in t:
-                xml_declared(c, rel, t, class_index)
+    # 1. XML pre-pass (web.xml / Struts / Spring declarative mappings)
+    xml_texts = {rel: read_text(p, enc) for p, rel in files if p.suffix.lower() == ".xml"}
+    modules: Dict[str, str] = {}
+    beans: Dict[str, str] = {}
+    for rel, t in xml_texts.items():
+        if rel.endswith("web.xml"):
+            modules.update(struts_modules(rel, t))
+        if "<bean" in t:
+            beans.update(collect_spring_beans(t))
+    extension = struts2_action_extension(target, config, xml_texts.values(), enc)
+    for rel, t in xml_texts.items():
+        if "<servlet" in t or "<action" in t or "UrlHandlerMapping" in t:
+            xml_declared(c, rel, t, class_index, modules, beans, extension)
 
     xml_items = list(c.items)
 
@@ -871,14 +742,16 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
             it["guard_hints"] = it["guard_hints"] or c.guards(t)
             it["data_hints"] = it["data_hints"] or c.data_ops(t)
     # post-pass 2: servlet classes without @WebServlet -> take the path from web.xml
-    xml_paths = {it["handler"]["file"]: it["path"] for it in c.items
-                 if it["stack"] == "java-servlet" and it["notes"].startswith("mapped in ")}
+    xml_paths: Dict[str, List[str]] = {}
+    for it in c.items:
+        if it["stack"] == "java-servlet" and it["notes"].startswith("mapped in "):
+            xml_paths.setdefault(it["handler"]["file"], []).append(it["path"])
     keep = []
     for it in c.items:
         if it["path"] == "<see web.xml servlet-mapping>" and it["handler"]["file"] in xml_paths:
-            it["path"] = xml_paths[it["handler"]["file"]]
-            it["notes"] = "path from web.xml"
-        keep.append(it)
+            keep.extend(dict(it, path=mapped, notes="path from web.xml") for mapped in xml_paths[it["handler"]["file"]])
+        else:
+            keep.append(it)
     mapped_with_methods = {it["handler"]["file"] for it in keep if it["notes"] == "path from web.xml"}
     keep = [it for it in keep if not (it["notes"].startswith("mapped in ") and it["handler"]["file"] in mapped_with_methods)]
     for n, it in enumerate(keep, 1):

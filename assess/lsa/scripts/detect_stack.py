@@ -12,7 +12,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lsa_common import KIT_VERSION, iter_source_files, load_config, read_text, write_json  # noqa: E402
+from lsa_common import KIT_VERSION, blank_java_comments, iter_source_files, load_config, read_text, write_json  # noqa: E402
+
+# org.hibernate.validator is the Bean Validation implementation: it says nothing about the persistence layer
+HIBERNATE_ORM = r"org\.hibernate\.(?!validator\b)"
 
 # (stack id, language, knowledge file, list of (kind, pattern))
 #   kind = "name"  -> regex on relative path
@@ -35,7 +38,7 @@ RULES = [
     ("java-jaxrs", "java", "java.md", [("text", r"javax\.ws\.rs\.|jakarta\.ws\.rs\.")]),
     ("java-mybatis", "java", "java.md", [("text", r"<mapper\s+namespace=|org\.apache\.ibatis")]),
     ("java-ibatis", "java", "java.md", [("text", r"<sqlMap\b|com\.ibatis\.")]),
-    ("java-hibernate", "java", "java.md", [("text", r"org\.hibernate\.|\.hbm\.xml|createQuery\s*\(")]),
+    ("java-hibernate", "java", "java.md", [("text", HIBERNATE_ORM + r"|\.hbm\.xml|createQuery\s*\(")]),
     ("dotnet-webforms", "csharp/vbnet", "dotnet.md", [("ext", {".aspx", ".ascx"})]),
     ("dotnet-handlers", "csharp/vbnet", "dotnet.md", [("ext", {".ashx"})]),
     ("dotnet-asmx-wcf", "csharp/vbnet", "dotnet.md", [("ext", {".asmx", ".svc"})]),
@@ -73,8 +76,8 @@ DATA_ACCESS = [
     ("JDBC", r"java\.sql\.|DriverManager\.getConnection"),
     ("Spring JdbcTemplate", r"JdbcTemplate"),
     ("MyBatis/iBATIS", r"<mapper\s+namespace=|<sqlMap\b"),
-    ("Hibernate/JPA", r"org\.hibernate\.|javax\.persistence\."),
-    ("ADO.NET", r"SqlCommand|OleDbCommand|OdbcCommand|OracleCommand"),
+    ("Hibernate/JPA", HIBERNATE_ORM + r"|javax\.persistence\.|jakarta\.persistence\."),
+    ("ADO.NET", r"\b(?:SqlCommand|OleDbCommand|OdbcCommand|OracleCommand)\b"),
     ("Entity Framework / LINQ to SQL", r"DbContext|DataContext|System\.Data\.Entity"),
     ("Classic ADO", r"ADODB\.(Connection|Recordset|Command)"),
     ("Perl DBI", r"DBI->connect"),
@@ -98,6 +101,7 @@ DB_HINTS = [
     ("MongoDB", r"(?i)mongo"), ("SQLite", r"(?i)sqlite"),
 ]
 
+DOTNET_TEXT_EXTS = {".cs", ".vb", ".aspx", ".asax", ".config"}
 TEXT_SAMPLE_EXTS = {".sql", ".php", ".inc", ".java", ".jsp", ".xml", ".cs", ".vb", ".aspx", ".asax", ".config", ".asp",
                     ".pl", ".pm", ".cgi", ".cfm", ".cfc", ".js", ".mjs", ".ts", ".tsx", ".jsx", ".py", ".rb", ".kt", ".kts",
                     ".rs", ".go", ".toml", ".mod"}
@@ -129,9 +133,13 @@ def detect(target: Path, config: dict) -> dict:
     for path, rel in files:
         if path.suffix.lower() not in TEXT_SAMPLE_EXTS:
             continue
+        ext = path.suffix.lower()
         text = read_text(path, enc)
+        rule_text = blank_java_comments(text) if ext == ".java" else text
         for sid, rx in text_rules:
-            if seen_text[sid] < 3 and rx.search(text):
+            if sid.startswith("dotnet-") and ext not in DOTNET_TEXT_EXTS:
+                continue
+            if seen_text[sid] < 3 and rx.search(rule_text):
                 seen_text[sid] += 1
                 evidence[sid].append(f"pattern /{rx.pattern[:40]}/ in {rel}")
         for n, rx in da_rules:

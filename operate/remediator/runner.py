@@ -128,6 +128,16 @@ def write_source_file_safe(file_path: Path, content: str, encoding: str, newline
     file_path.write_bytes(encode_source(content, encoding, newline))
 
 
+def line_after_earlier_patches(pre_patch: str, current: str, line: int) -> int:
+    """Map a 1-based line of the unpatched file (what findings refer to) into the patched content."""
+    idx = line - 1
+    matcher = difflib.SequenceMatcher(None, pre_patch.splitlines(), current.splitlines(), autojunk=False)
+    for _, i1, i2, j1, j2 in matcher.get_opcodes():
+        if i1 <= idx < i2 and j2 > j1:
+            return j1 + min(idx - i1, j2 - j1 - 1) + 1
+    return line
+
+
 class RemediationRunner:
     """Coordinates automated code patching based on security audit findings."""
 
@@ -178,6 +188,7 @@ class RemediationRunner:
         self.sync_lockfiles = sync_lockfiles
         self.registry = StrategyRegistry()
         self._virtual_contents: Dict[Path, str] = {}
+        self._pre_patch_contents: Dict[Path, str] = {}
 
     def discover_findings_file(self) -> Path:
         """Locate findings.json in default known output paths if not explicitly provided."""
@@ -365,7 +376,11 @@ class RemediationRunner:
                     ),
                 )
             original_content = self._virtual_contents.get(abs_file, disk_content)
-            patched_content, explanation = strategy.generate_patch(abs_file, original_content, finding)
+            current_line = start_line
+            if abs_file in self._virtual_contents:
+                current_line = line_after_earlier_patches(self._pre_patch_contents[abs_file], original_content, start_line)
+            located_finding = {**finding, "location": {**loc, "start_line": current_line}}
+            patched_content, explanation = strategy.generate_patch(abs_file, original_content, located_finding)
 
             if patched_content == original_content:
                 return RemediationPlan(
@@ -385,6 +400,7 @@ class RemediationRunner:
                 )
 
             self._virtual_contents[abs_file] = patched_content
+            self._pre_patch_contents.setdefault(abs_file, original_content)
 
             # Generate unified diff
             orig_lines = original_content.splitlines(keepends=True)
@@ -469,6 +485,7 @@ class RemediationRunner:
     def run(self) -> RemediationReport:
         """Execute the remediation workflow."""
         self._virtual_contents.clear()
+        self._pre_patch_contents.clear()
         findings = self.load_findings()
 
         # Track (relative_file, finding_id) already queued so companion lockfiles are not duplicated
