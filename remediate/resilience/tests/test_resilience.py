@@ -66,6 +66,22 @@ class TestMultiRegionResilience(unittest.TestCase):
         self.assertIn("aws_route_table_association", content)
         self.assertIn("aws_security_group", content)
 
+    def test_03b_terraform_network_and_encryption_hardening(self) -> None:
+        """Verifies no automatic public IPs, no open egress and CMK-encrypted primary backups."""
+        tf_dir = os.path.join(MODULE_ROOT, "terraform")
+        with open(os.path.join(tf_dir, "main.tf"), "r", encoding="utf-8") as f:
+            main_tf = f.read()
+        with open(os.path.join(tf_dir, "backup_worm.tf"), "r", encoding="utf-8") as f:
+            worm_tf = f.read()
+
+        self.assertNotIn("map_public_ip_on_launch = true", main_tf)
+        sg_start = main_tf.index('resource "aws_security_group" "primary_default_sg"')
+        sg_block = main_tf[sg_start:main_tf.index("# 2. Secondary Standby DR VPC")]
+        self.assertNotIn("0.0.0.0/0", sg_block)
+
+        self.assertIn("aws_kms_key.primary_state_key[0].arn", worm_tf)
+        self.assertIn("replica_kms_key_id = aws_kms_key.worm_backup_key.arn", worm_tf)
+
     def test_04_dr_snapshot_creation_and_integrity(self) -> None:
         """Verifies immutable snapshot creation and cryptographic integrity check."""
         mgr = DRManager(secondary_region="ap-northeast-3")

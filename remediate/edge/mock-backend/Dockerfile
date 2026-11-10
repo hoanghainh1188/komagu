@@ -5,4 +5,6 @@ COPY app.py .
 
 EXPOSE 5000
 
+USER nobody
+
 CMD ["python", "-u", "app.py"]

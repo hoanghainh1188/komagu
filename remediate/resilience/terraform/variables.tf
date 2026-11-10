@@ -35,3 +35,14 @@ variable "enable_cross_region_replication" {
   type        = bool
   default     = true
 }
+
+variable "workload_egress_cidrs" {
+  description = "External CIDR ranges primary workloads may reach over HTTPS. Empty keeps egress inside the VPC."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = !contains(var.workload_egress_cidrs, "0.0.0.0/0") && !contains(var.workload_egress_cidrs, "::/0")
+    error_message = "workload_egress_cidrs must list specific ranges, not 0.0.0.0/0 or ::/0."
+  }
+}
