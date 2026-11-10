@@ -249,8 +249,17 @@ komagu test --url <base-url> [options]
 | `--attacker-token` | | `token-attacker-bob` | Bearer token belonging to unauthorized Persona B |
 | `--output` | `-o` | `None` | Path to save JSON test verification report |
 | `--suite` | `-s` | `operate/tests/test_suite.json` | Test suite file. `"version": 2` turns on the persona matrix |
-| `--strict` | | `false` | Persona matrix: only 404 counts as refused (401/403 fail) |
+| `--strict` | | `false` | Persona matrix: only 404 counts as refused (401/403 fail). Session runs have extra requirements, see below |
 | `--token-env` | | `None` | Env variable with a normal user's token for BFLA / mass assignment findings from `--from-scan` (default: `--token`) |
+| `--attacker-cookie-env` / `--attacker-cookie-file` | | `None` | Env variable or file holding the attacker's `Cookie` value. See [session-based apps](#session-based-java-legacy-apps) |
+| `--owner-cookie-env` / `--owner-cookie-file` | | `None` | Env variable or file holding the resource owner's `Cookie` value |
+| `--body-format` | | `auto` | `auto`: form for `--from-scan` routes ending in `.do`, `.action`, `.jsp`, `.jspx`, JSON otherwise. `json` or `form` forces it |
+| `--csrf-page` / `--csrf-field` | | `None` | Page to fetch before each write and the token field to read from it |
+| `--deny-status` / `--deny-redirect` / `--deny-marker` | | `None` | What a refusal looks like: status, text in the redirect target, text in a 2xx body. Repeatable |
+| `--allow-redirect` / `--allow-marker` | | `None` | What success looks like, for redirects and for 2xx bodies. Repeatable |
+| `--session-check` / `--session-marker` | | `None` | Page every session persona can open, checked before and after the run, and text it must contain |
+| `--owner-control-writes` | | `false` | Also replay writes as the owner after a refusal. Changes the owner's data. `--strict` needs it to pass a refused write |
+| `--owner-csrf-page` | | `--csrf-page` | Token page for the owner's replayed writes |
 
 #### Persona matrix (suite v2): BFLA and mass assignment
 
@@ -296,6 +305,70 @@ inconclusive.
   they read the token from `KOMAGU_TOKEN`. Both options accept `findings.json`
   or the SARIF file from `komagu scan`. SARIF from older scans has no attack
   vector, so mass assignment cases fall back to the default probe fields.
+
+#### Session-based Java legacy apps
+
+JSP, Struts and old Spring MVC apps authenticate with `JSESSIONID`, take form
+bodies, and often refuse with a `200` error page or a `302` to login. Declare
+how the app behaves and `komagu test` evaluates the response itself. Redirects
+are not followed.
+
+```bash
+read -rs ATTACKER_COOKIE && export ATTACKER_COOKIE   # JSESSIONID=... of account B
+read -rs OWNER_COOKIE && export OWNER_COOKIE         # JSESSIONID=... of account A
+komagu test --url http://test-host:8080 --from-scan findings.json --resource-id 100 --strict \
+  --attacker-cookie-env ATTACKER_COOKIE --owner-cookie-env OWNER_COOKIE \
+  --session-check /home.do --session-marker "Logout" \
+  --deny-status 404 --deny-redirect /login.do --deny-marker "Access denied" \
+  --allow-redirect /order/list.do \
+  --csrf-page /order/edit.do?id=200 --csrf-field org.apache.struts.taglib.html.TOKEN \
+  --owner-control-writes --owner-csrf-page /order/edit.do?id=100
+```
+
+| Response | Verdict |
+| :--- | :--- |
+| Declared `--deny-status` | Refused |
+| `3xx` to a `--deny-redirect` target | Refused |
+| `3xx` to an `--allow-redirect` target | Breach |
+| Any other `3xx` | Error (inconclusive) |
+| `2xx` with a `--deny-marker` | Refused |
+| `2xx` with no denial marker | Breach. If `--allow-marker` is set, the body must contain it, otherwise error |
+| `2xx` or `3xx` matching both a denial and an allow signal | Error (inconclusive) |
+| Any other status, or a network failure | Error (inconclusive) |
+
+- **Secrets.** There is no flag that takes a cookie value. Cookies are one line
+  (`NAME=VALUE; NAME2=VALUE2`) from an environment variable or a file. They are
+  not written to the output or the report, and `;jsessionid=` is removed from
+  reported redirect targets. A session run sends no Bearer token.
+- **`--strict` with cookies** needs a declared denial signal, `--session-check`
+  and the owner's cookie, otherwise the command exits 2. Without them an
+  expired session or a missing record would look like a refusal.
+- **Session check.** An expired session before the run exits 2 and sends
+  nothing. A session lost during the run exits 2 and the report records
+  `"session_check": "failed_after_run"`.
+- **Owner control.** After a refused request, the owner sends the same request
+  and must succeed, otherwise the case is an error. Writes are replayed only
+  with `--owner-control-writes`, because they change the owner's data. Without
+  it, a refused write is an error under `--strict`, and a PASS with a note
+  (`owner_control: skipped_write`) otherwise. Suite v2 does not call allowed
+  personas, so it has no owner control.
+- **CSRF.** A fresh token is fetched before every write. If the page or field
+  is missing, the case is an error and the write is not sent. Struts 2's
+  `struts.token.name` companion field is sent automatically.
+- **Findings.** A form action takes the id as a parameter named by
+  `attack_vector.target_param` (default `id`): in the query for `GET`, in the
+  body for writes. `attack_vector.suggested_payload` is used as the form when
+  it looks like `id={id}&status=x`.
+- **Suites.** A v1 test or a v2 route can set `"body_format": "form"` and
+  `"csrf": {"page": "...", "field": "..."}`. A v2 persona can use `cookie_env`
+  or `cookie_file` instead of `token_env`.
+- **Bearer runs.** A `--from-scan` route ending in `.do`, `.action`, `.jsp` or
+  `.jspx` is sent as a form without following redirects, even with `--token`.
+  `--body-format json` restores the old request shape.
+- **Limits.** Mass assignment probes need a JSON readback, so on a JSP page
+  they report an error rather than a verdict. `--export-poc` writes Bearer
+  scripts only. `komagu fix` has no usable rewrite for Java legacy code
+  (see W10-3 in the pilot runbook).
 
 #### Examples
 ```bash
