@@ -64,7 +64,7 @@ resource "aws_subnet" "primary_public_1a" {
   vpc_id                  = aws_vpc.primary.id
   cidr_block              = "10.100.1.0/24"
   availability_zone       = "${var.primary_region}a"
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false # Internet-facing resources must request a public IP explicitly
 
   tags = {
     Name = "${var.project_name}-primary-public-1a"
@@ -76,7 +76,7 @@ resource "aws_subnet" "primary_public_1c" {
   vpc_id                  = aws_vpc.primary.id
   cidr_block              = "10.100.2.0/24"
   availability_zone       = "${var.primary_region}c"
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false # Internet-facing resources must request a public IP explicitly
 
   tags = {
     Name = "${var.project_name}-primary-public-1c"
@@ -102,10 +102,22 @@ resource "aws_security_group" "primary_default_sg" {
   description = "Default egress-only security group for primary workloads"
 
   egress {
+    description = "Workload traffic inside the primary VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [aws_vpc.primary.cidr_block]
+  }
+
+  dynamic "egress" {
+    for_each = length(var.workload_egress_cidrs) > 0 ? [1] : []
+    content {
+      description = "HTTPS to operator-approved external destinations"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = var.workload_egress_cidrs
+    }
   }
 
   tags = {
