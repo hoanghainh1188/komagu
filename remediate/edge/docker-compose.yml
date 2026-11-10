@@ -13,9 +13,9 @@ services:
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KOMAGU_JWT_SECRET: ${KOMAGU_JWT_SECRET:-komagu-default-test-jwt-secret-key-32chars}
     volumes:
-      - ./kong/kong.yaml:/kong/declarative/kong.yaml:ro
+      - ${KOMAGU_KONG_CONFIG:-./kong/kong.yaml}:/kong/declarative/kong.yaml:ro
     ports:
-      - "8000:8000"  # Public API Gateway proxy port
+      - "${KOMAGU_EDGE_BIND:-0.0.0.0}:8000:8000"  # Public API Gateway proxy port
       - "127.0.0.1:8001:8001"  # Kong Admin API bound strictly to loopback interface on host
     depends_on:
       - coraza-waf
@@ -34,10 +34,15 @@ services:
       context: ./coraza
     image: komagu-coraza-caddy:local
     container_name: komagu-coraza-waf
+    environment:
+      KOMAGU_UPSTREAM: ${KOMAGU_UPSTREAM:-http://mock-backend:5000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./coraza/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./coraza/coraza.conf:/etc/coraza/coraza.conf:ro
       - ./coraza/rules:/etc/coraza/rules:ro
+      - ${KOMAGU_VIRTUAL_PATCH_FILE:-./coraza/rules/virtual-patches.conf}:/etc/coraza/rules/virtual-patches.conf:ro
     expose:
       - "8080"
     depends_on:

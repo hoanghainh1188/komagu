@@ -17,6 +17,7 @@
     "examples/",
     "README.md",
     "CHANGELOG.md",
+    "!examples/legacy-java-rehearsal/**",
     "!**/__pycache__/**",
     "!**/.gradle/**",
     "!**/build/**",

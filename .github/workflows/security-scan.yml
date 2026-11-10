@@ -309,6 +309,7 @@ jobs:
             --skip-dirs assess/lsa/tests/fixtures \
             --skip-dirs assess/lsa/examples \
             --skip-dirs delivery/pilot \
+            --skip-dirs examples/legacy-java-rehearsal \
             --skip-dirs '**/node_modules' \
             --skip-dirs '**/bin' \
             --skip-dirs '**/obj' \

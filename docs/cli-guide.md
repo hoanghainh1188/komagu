@@ -215,8 +215,16 @@ komagu protect [action] [options]
 | `--virtual-patch` | | Ingest `findings.json` or SARIF and compile into Coraza SecRules |
 | `--patch-out` | `./remediate/edge/coraza/rules/virtual-patches.conf` | Target destination path for generated WAF rules |
 
+| `--target` | demo backend | Upstream the WAF forwards to, as an http(s) URL. Takes effect with `--up` |
+| `--config` | `remediate/edge/kong/kong.yaml` | Kong declarative config. Use `remediate/edge/kong/kong-legacy-session.yaml` for session-cookie and form applications |
+
+With `--up`, a `--patch-out` file is loaded by the WAF. Set `KOMAGU_EDGE_BIND=127.0.0.1` to publish the proxy on loopback only. Coraza listens on 8080 inside the Docker network and is not published on the host. BOLA findings on session-cookie routes (`.do`, `.action`, `.jsp`, `.jspx`) get no virtual patch, because a WAF cannot check object ownership there.
+
 #### Examples
 ```bash
+# Front a legacy session-based application
+komagu protect --target http://host.docker.internal:18080 --config remediate/edge/kong/kong-legacy-session.yaml --up
+
 # Launch edge perimeter proxy in front of legacy application
 komagu protect --up
 

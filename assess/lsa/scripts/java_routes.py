@@ -222,6 +222,17 @@ def collect_spring_beans(text: str) -> Dict[str, str]:
     return beans
 
 
+def entry_method_line(text: str, symbol: Optional[str]) -> Optional[int]:
+    """Line of the method a route declared in XML dispatches to, or None when the class has no known entry method."""
+    named = symbol.split("#", 1)[1] if symbol and "#" in symbol else None
+    names = [re.escape(named)] if named else ["execute", "doPost", "doGet", "service", "handleRequest"]
+    for name in names:
+        m = re.search(rf"\b(?:public|protected)\b[^;{{}}(]*\b{name}\s*\(", text)
+        if m:
+            return text.count("\n", 0, m.end()) + 1
+    return None
+
+
 def _spring_url_mappings(c, rel: str, text: str, class_index: Dict[str, List[str]], beans: Dict[str, str]) -> bool:
     found = False
     mappers = list(SPRING_URL_MAPPER.finditer(text))

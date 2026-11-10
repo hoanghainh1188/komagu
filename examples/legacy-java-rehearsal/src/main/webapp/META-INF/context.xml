@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fake datasource for the W9-2 exclude-list check. Not read by the Docker image. -->
+<Context>
+  <Resource name="jdbc/ams" type="javax.sql.DataSource" url="jdbc:h2:mem:unused" username="sa" password="planted-context-value"/>
+</Context>

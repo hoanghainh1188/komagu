@@ -1,0 +1,208 @@
+diff -ruN a/src/main/java/com/example/ams/web/InvoiceViewAction.java b/src/main/java/com/example/ams/web/InvoiceViewAction.java
+--- a/src/main/java/com/example/ams/web/InvoiceViewAction.java	2026-11-10 23:58:26
++++ b/src/main/java/com/example/ams/web/InvoiceViewAction.java	2026-11-11 00:11:28
+@@ -12,7 +12,7 @@
+     @Override
+     public ActionForward execute(ActionMapping mapping, ActionForm form,
+                                  HttpServletRequest request, HttpServletResponse response) throws Exception {
+-        Invoice invoice = OrderDao.findInvoice(Long.parseLong(request.getParameter("invoiceId")));
++        Invoice invoice = OrderDao.findInvoice(Ownership.require(request, "invoices", request.getParameter("invoiceId")));
+         if (invoice == null) {
+             response.sendError(HttpServletResponse.SC_NOT_FOUND);
+             return null;
+diff -ruN a/src/main/java/com/example/ams/web/OrderDao.java b/src/main/java/com/example/ams/web/OrderDao.java
+--- a/src/main/java/com/example/ams/web/OrderDao.java	2026-11-10 23:58:26
++++ b/src/main/java/com/example/ams/web/OrderDao.java	2026-11-11 00:11:28
+@@ -7,7 +7,6 @@
+ import java.sql.PreparedStatement;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+-import java.sql.Statement;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+@@ -52,11 +51,14 @@
+     }
+ 
+     static List<Order> search(String q) throws SQLException {
+-        String sql = "SELECT id, owner_id, item, note, total FROM orders WHERE item LIKE '%" + q + "%'";
++        String sql = "SELECT id, owner_id, item, note, total FROM orders WHERE item LIKE ?";
+         List<Order> rows = new ArrayList<>();
+-        try (Connection conn = Db.open(); Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+-            while (rs.next()) {
+-                rows.add(map(rs));
++        try (Connection conn = Db.open(); PreparedStatement ps = conn.prepareStatement(sql)) {
++            ps.setString(1, "%" + q + "%");
++            try (ResultSet rs = ps.executeQuery()) {
++                while (rs.next()) {
++                    rows.add(map(rs));
++                }
+             }
+         }
+         return rows;
+diff -ruN a/src/main/java/com/example/ams/web/OrderDetailAction.java b/src/main/java/com/example/ams/web/OrderDetailAction.java
+--- a/src/main/java/com/example/ams/web/OrderDetailAction.java	2026-11-10 23:58:26
++++ b/src/main/java/com/example/ams/web/OrderDetailAction.java	2026-11-11 00:11:28
+@@ -1,6 +1,7 @@
+ package com.example.ams.web;
+ 
+ import com.example.ams.model.Order;
++import dev.komagu.legacy.shim.OwnershipEnforcer;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ import org.apache.struts.action.Action;
+@@ -12,7 +13,14 @@
+     @Override
+     public ActionForward execute(ActionMapping mapping, ActionForm form,
+                                  HttpServletRequest request, HttpServletResponse response) throws Exception {
+-        Order order = OrderDao.find(Long.parseLong(request.getParameter("id")));
++        long id;
++        try {
++            id = Ownership.require(request, "orders", request.getParameter("id"));
++        } catch (OwnershipEnforcer.ResourceNotFoundOrForbiddenException denied) {
++            response.sendError(HttpServletResponse.SC_NOT_FOUND);
++            return null;
++        }
++        Order order = OrderDao.find(id);
+         if (order == null) {
+             response.sendError(HttpServletResponse.SC_NOT_FOUND);
+             return null;
+diff -ruN a/src/main/java/com/example/ams/web/OrderEditAction.java b/src/main/java/com/example/ams/web/OrderEditAction.java
+--- a/src/main/java/com/example/ams/web/OrderEditAction.java	2026-11-10 23:58:26
++++ b/src/main/java/com/example/ams/web/OrderEditAction.java	2026-11-11 00:11:28
+@@ -1,6 +1,7 @@
+ package com.example.ams.web;
+ 
+ import com.example.ams.model.Order;
++import dev.komagu.legacy.shim.OwnershipEnforcer;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ import org.apache.struts.action.Action;
+@@ -13,7 +14,14 @@
+     @Override
+     public ActionForward execute(ActionMapping mapping, ActionForm form,
+                                  HttpServletRequest request, HttpServletResponse response) throws Exception {
+-        Order order = OrderDao.find(Long.parseLong(request.getParameter("id")));
++        long id;
++        try {
++            id = Ownership.require(request, "orders", request.getParameter("id"));
++        } catch (OwnershipEnforcer.ResourceNotFoundOrForbiddenException denied) {
++            response.sendError(HttpServletResponse.SC_NOT_FOUND);
++            return null;
++        }
++        Order order = OrderDao.find(id);
+         if (order == null) {
+             response.sendError(HttpServletResponse.SC_NOT_FOUND);
+             return null;
+diff -ruN a/src/main/java/com/example/ams/web/OrderListAction.java b/src/main/java/com/example/ams/web/OrderListAction.java
+--- a/src/main/java/com/example/ams/web/OrderListAction.java	2026-11-10 23:58:26
++++ b/src/main/java/com/example/ams/web/OrderListAction.java	2026-11-11 00:11:28
+@@ -1,7 +1,11 @@
+ package com.example.ams.web;
+ 
+ import com.example.ams.mapper.OrderMapper;
++import dev.komagu.legacy.shim.OwnershipEnforcer;
+ import java.io.InputStream;
++import java.util.Arrays;
++import java.util.HashSet;
++import java.util.Set;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ import org.apache.ibatis.io.Resources;
+@@ -14,6 +18,7 @@
+ import org.apache.struts.action.ActionMapping;
+ 
+ public class OrderListAction extends Action {
++    private static final Set<String> SORTABLE = new HashSet<>(Arrays.asList("id", "item", "total"));
+     private static SqlSessionFactory factory;
+ 
+     private static synchronized SqlSessionFactory factory() throws Exception {
+@@ -28,11 +33,11 @@
+     @Override
+     public ActionForward execute(ActionMapping mapping, ActionForm form,
+                                  HttpServletRequest request, HttpServletResponse response) throws Exception {
+-        String sort = request.getParameter("sort");
++        String sort = OwnershipEnforcer.safeOrderBy(request.getParameter("sort"), SORTABLE, "id", request.getParameter("dir"));
+         long userId = (Long) request.getSession().getAttribute("userId");
+         try (SqlSession session = factory().openSession()) {
+             request.setAttribute("orders",
+-                    session.getMapper(OrderMapper.class).listMine(userId, sort == null ? "id" : sort));
++                    session.getMapper(OrderMapper.class).listMine(userId, sort));
+         }
+         return mapping.findForward("ok");
+     }
+diff -ruN a/src/main/java/com/example/ams/web/OrderUpdateAction.java b/src/main/java/com/example/ams/web/OrderUpdateAction.java
+--- a/src/main/java/com/example/ams/web/OrderUpdateAction.java	2026-11-10 23:58:26
++++ b/src/main/java/com/example/ams/web/OrderUpdateAction.java	2026-11-11 00:11:28
+@@ -1,5 +1,6 @@
+ package com.example.ams.web;
+ 
++import dev.komagu.legacy.shim.OwnershipEnforcer;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ import org.apache.struts.action.Action;
+@@ -17,7 +18,14 @@
+         }
+         DynaActionForm orderForm = (DynaActionForm) form;
+         String id = orderForm.getString("id");
+-        OrderDao.updateNote(Long.parseLong(id), orderForm.getString("note"));
++        long owned;
++        try {
++            owned = Ownership.require(request, "orders", id);
++        } catch (OwnershipEnforcer.ResourceNotFoundOrForbiddenException denied) {
++            response.sendRedirect(request.getContextPath() + "/login.do");
++            return null;
++        }
++        OrderDao.updateNote(owned, orderForm.getString("note"));
+         response.sendRedirect(request.getContextPath() + "/order/detail.do?id=" + id);
+         return null;
+     }
+diff -ruN a/src/main/java/com/example/ams/web/Ownership.java b/src/main/java/com/example/ams/web/Ownership.java
+--- a/src/main/java/com/example/ams/web/Ownership.java	1970-01-01 08:00:00
++++ b/src/main/java/com/example/ams/web/Ownership.java	2026-11-11 00:11:28
+@@ -0,0 +1,32 @@
++package com.example.ams.web;
++
++import com.example.ams.Db;
++import dev.komagu.legacy.shim.OwnershipEnforcer;
++import dev.komagu.legacy.shim.OwnershipEnforcer.TableOwnershipSchema;
++import java.sql.Connection;
++import java.sql.SQLException;
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.Map;
++import javax.servlet.http.HttpServletRequest;
++
++/** Ownership checks for the runbook W10-3 fixes. Identity comes only from the server-side session. */
++final class Ownership {
++    private static final Map<String, TableOwnershipSchema> TABLES;
++
++    static {
++        Map<String, TableOwnershipSchema> tables = new HashMap<>();
++        tables.put("orders", new TableOwnershipSchema("orders", "id", "owner_id"));
++        tables.put("invoices", new TableOwnershipSchema("invoices", "id", "owner_id"));
++        TABLES = Collections.unmodifiableMap(tables);
++    }
++
++    private Ownership() {
++    }
++
++    static long require(HttpServletRequest request, String table, String id) throws SQLException {
++        try (Connection conn = Db.open()) {
++            return OwnershipEnforcer.requireOwnership(conn, table, id, request.getSession().getAttribute("userId"), TABLES);
++        }
++    }
++}
+diff -ruN a/src/main/webapp/WEB-INF/struts-config.xml b/src/main/webapp/WEB-INF/struts-config.xml
+--- a/src/main/webapp/WEB-INF/struts-config.xml	2026-11-10 23:58:26
++++ b/src/main/webapp/WEB-INF/struts-config.xml	2026-11-11 00:11:28
+@@ -7,6 +7,9 @@
+       <form-property name="note" type="java.lang.String"/>
+     </form-bean>
+   </form-beans>
++  <global-exceptions>
++    <exception key="error.denied" type="dev.komagu.legacy.shim.OwnershipEnforcer$ResourceNotFoundOrForbiddenException" path="/WEB-INF/jsp/denied.jsp"/>
++  </global-exceptions>
+   <action-mappings>
+     <action path="/login" type="com.example.ams.web.LoginAction">
+       <forward name="form" path="/WEB-INF/jsp/login.jsp"/>

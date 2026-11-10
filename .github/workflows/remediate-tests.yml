@@ -111,6 +111,30 @@ jobs:
       - name: Test D6 Member Portal End-to-End BOLA & D5 Continuous Authorization Verification
         run: python3 -m unittest discover -s examples/member-portal/tests -p "test_*.py"
 
+  legacy-java-rehearsal:
+    name: Legacy Java rehearsal app (Java 8 build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Java 8
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: "temurin"
+          java-version: "8"
+
+      - name: Build the vulnerable app
+        run: mvn -B -q -f examples/legacy-java-rehearsal/pom.xml package
+
+      - name: Apply the W10-3 fixes and build
+        run: |
+          fixed="$RUNNER_TEMP/rehearsal-fixed"
+          mkdir -p "$fixed"
+          cp -R examples/legacy-java-rehearsal/pom.xml examples/legacy-java-rehearsal/src "$fixed/"
+          examples/legacy-java-rehearsal/fixes/apply-fixes.sh "$fixed"
+          mvn -B -q -f "$fixed/pom.xml" package
+
   spring-suites:
     name: Kotlin / Spring Boot 3 Suites (D1 Authz, D2 Identity, D3 Query)
     runs-on: ubuntu-latest

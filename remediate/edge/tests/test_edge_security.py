@@ -423,6 +423,29 @@ class TestCorazaWafContainer(unittest.TestCase):
         self.assertNotEqual(self._status("/api/v1/orders?q=salt+and+pepper=yes"), 403)
         self.assertNotEqual(self._status("/api/v1/orders?name=C%23"), 403)
 
+    def test_struts_token_field_name_not_blocked(self):
+        """CRS 944130 reads the Struts 1 token field name as a Java class, which blocked every token form (#374)."""
+        self._require_running()
+        self.assertNotEqual(self._status("/order/update.do?org.apache.struts.taglib.html.TOKEN=abc123"), 403)
+
+    def _post_form(self, body):
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/order/update.do", data=body.encode("ascii"),
+                                     headers={"Content-Type": "application/x-www-form-urlencoded"})
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return resp.status
+        except urllib.error.HTTPError as e:
+            return e.code
+
+    def test_struts_token_form_post_not_blocked(self):
+        self._require_running()
+        self.assertNotEqual(self._post_form("org.apache.struts.taglib.html.TOKEN=abc123&id=1&note=hello"), 403)
+
+    def test_java_class_in_a_value_still_blocked(self):
+        self._require_running()
+        self.assertEqual(self._status("/order/update.do?note=java.lang.Runtime"), 403)
+        self.assertEqual(self._post_form("org.apache.struts.taglib.html.TOKEN=abc123&note=java.lang.Runtime"), 403)
+
 
 class TestCorazaWafSkipLogic(unittest.TestCase):
     """

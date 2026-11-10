@@ -403,6 +403,8 @@ def main() -> int:
                                     "injection_candidates_without_verdict", "bfla_routes_without_verdict",
                                     "mass_candidates_without_verdict", "validation_errors",
                                     "new_issues_from_verifier"))
+    for error in cov.get("validation_errors") or []:
+        print(f"validation error (finding not merged): {error}", file=sys.stderr)
     print(json.dumps({"summary": summary, "coverage_gaps": gaps}, indent=2))
     return 1 if gaps else 0
 

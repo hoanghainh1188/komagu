@@ -19,7 +19,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from java_routes import (build_class_index, collect_spring_beans, java_declared, struts2_action_extension,  # noqa: E402
+from java_routes import (build_class_index, collect_spring_beans, entry_method_line, java_declared,  # noqa: E402
+                         struts2_action_extension,
                          struts_modules, xml_declared)
 from lsa_common import (JAVA_WEB_ROOT, KIT_VERSION, call_args, compile_id_patterns, is_id_name,  # noqa: E402
                         iter_source_files, line_of, load_config, read_text, split_top, write_json)
@@ -736,6 +737,8 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
     # post-pass 1: routes declared in XML -> enrich from the handler class file
     for it in c.items:
         hf = it["handler"]["file"]
+        if it["kind"] == "declared_route" and it["handler"]["line"] == 1 and hf in texts and hf.endswith(".java"):
+            it["handler"]["line"] = entry_method_line(texts[hf], it["handler"].get("symbol")) or 1
         if it["kind"] == "declared_route" and not it["id_params"] and hf in texts and hf.endswith(".java"):
             t = texts[hf]
             it["id_params"] = c.inputs("java", t)
