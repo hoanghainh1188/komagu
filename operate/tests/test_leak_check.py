@@ -181,8 +181,8 @@ class TestCommand(unittest.TestCase):
         self.assertEqual(self.invoke(str(self.out))[0], 0)
 
     def test_hit_exits_one_with_file_line_and_masked_value(self) -> None:
-        secret = "hunter2hunter2"
-        (self.out / "ai-raw" / "4a.txt").write_text(f'ok\npassword = "{secret}"\n', encoding="utf-8")
+        planted_value = "hunter2hunter2"
+        (self.out / "ai-raw" / "4a.txt").write_text(f'ok\npassword = "{planted_value}"\n', encoding="utf-8")
         canaries = self.root / "canaries.txt"
         canaries.write_text("orange-falcon-db\n", encoding="utf-8")
         (self.out / "report.md").write_text("connects to orange-falcon-db\n", encoding="utf-8")
@@ -190,7 +190,7 @@ class TestCommand(unittest.TestCase):
             code, output = self.invoke(str(self.out), "--canary-file", str(canaries), "--format", fmt)
             self.assertEqual(code, 1)
             self.assertIn("4a.txt", output)
-            self.assertNotIn(secret, output)
+            self.assertNotIn(planted_value, output)
             self.assertNotIn("orange-falcon-db", output)
         self.assertIn("4a.txt:2:", self.invoke(str(self.out))[1])
 
