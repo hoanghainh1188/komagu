@@ -9,8 +9,9 @@ to call it. Every other persona is sent the request and must be refused:
   normal write plus privileged fields; reading the object back shows that a
   privileged field was stored.
 
-Tokens are read only from environment variables (``token_env``). They never
-appear in a suite file, a result or a report.
+Tokens are read only from environment variables (``token_env``). Session
+cookies come from an environment variable or a file (``cookie_env`` /
+``cookie_file``). Neither appears in a suite file, a result or a report.
 
 Python standard library only.
 """
@@ -24,14 +25,31 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from operate.cross_user_tester.session_config import read_cookie
+from operate.cross_user_tester.session_http import (
+    ALLOWED,
+    DEFAULT_DENY_STATUS,
+    DENIED,
+    INCONCLUSIVE,
+    STRICT_DENY_STATUS,
+    CsrfConfig,
+    DenialSignal,
+    HttpReply,
+    SessionConfigError,
+    SessionRequest,
+    classify,
+    deliver,
+    is_form_action,
+    parse_body_format,
+    parse_csrf,
+)
 from operate.lsa_sarif.sarif_findings import findings_from_sarif, is_sarif
 
 SUITE_VERSION = 2
-DENY_STATUS = (401, 403, 404)
-STRICT_DENY_STATUS = (404,)
+DENY_STATUS = DEFAULT_DENY_STATUS
 ALLOW_STATUS = (200, 201, 202, 204)
 WRITE_METHODS = ("POST", "PUT", "PATCH")
 HTTP_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE")
@@ -40,8 +58,8 @@ MAX_BODY_BYTES = 1_000_000
 
 _ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _PLACEHOLDER = re.compile(r"\{([A-Za-z0-9_-]+)\}|:([A-Za-z_][A-Za-z0-9_]*)")
-_PERSONA_KEYS = {"token_env", "description"}
-_ROUTE_KEYS = {"name", "method", "path", "params", "payload", "allow", "mass_assignment_probe"}
+_PERSONA_KEYS = {"token_env", "cookie_env", "cookie_file", "description"}
+_ROUTE_KEYS = {"name", "method", "path", "params", "payload", "allow", "mass_assignment_probe", "body_format", "csrf"}
 _PROBE_KEYS = {"fields", "persona", "readback"}
 
 
@@ -53,6 +71,8 @@ class SuiteError(ValueError):
 class Persona:
     name: str
     token_env: Optional[str] = None
+    cookie_env: Optional[str] = None
+    cookie_file: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +88,8 @@ class MatrixCase:
     probe_fields: Optional[Dict[str, Any]] = None
     readback: Optional[Tuple[str, str]] = None
     finding_id: Optional[str] = None
+    body_format: str = "json"
+    csrf: Optional[CsrfConfig] = None
 
 
 @dataclass(frozen=True)
@@ -121,7 +143,14 @@ def _parse_personas(raw: Any) -> Dict[str, Persona]:
         env = spec.get("token_env")
         if env is not None and (not isinstance(env, str) or not _ENV_NAME.match(env)):
             raise SuiteError(f"persona '{name}': token_env must be an environment variable name")
-        personas[name] = Persona(name=name, token_env=env)
+        cookie_env, cookie_file = spec.get("cookie_env"), spec.get("cookie_file")
+        if cookie_env is not None and (not isinstance(cookie_env, str) or not _ENV_NAME.match(cookie_env)):
+            raise SuiteError(f"persona '{name}': cookie_env must be an environment variable name")
+        if cookie_file is not None and not isinstance(cookie_file, str):
+            raise SuiteError(f"persona '{name}': cookie_file must be a path")
+        if sum(v is not None for v in (env, cookie_env, cookie_file)) > 1:
+            raise SuiteError(f"persona '{name}': use only one of token_env, cookie_env, cookie_file")
+        personas[name] = Persona(name=name, token_env=env, cookie_env=cookie_env, cookie_file=cookie_file)
     return personas
 
 
@@ -154,6 +183,8 @@ def _route_cases(
     route: Any,
     personas: Dict[str, Persona],
     default_id: str,
+    default_body_format: str = "json",
+    default_csrf: Optional[CsrfConfig] = None,
 ) -> List[MatrixCase]:
     if not isinstance(route, dict):
         raise SuiteError(f"routes[{index}] must be an object")
@@ -179,6 +210,9 @@ def _route_cases(
     if payload is not None and not isinstance(payload, dict):
         raise SuiteError(f"routes[{index}]: 'payload' must be an object")
 
+    body_format = parse_body_format(route.get("body_format"), f"routes[{index}]", default_body_format)
+    csrf = parse_csrf(route.get("csrf"), f"routes[{index}]", default_csrf)
+
     path = fill_path(raw_path, params, default_id)
     label = route.get("name") or f"{method} {raw_path}"
     cases = [
@@ -189,6 +223,8 @@ def _route_cases(
             method=method,
             path=path,
             payload=payload if method in WRITE_METHODS else None,
+            body_format=body_format,
+            csrf=csrf,
         )
         for name, p in personas.items()
         if name not in allow
@@ -196,7 +232,11 @@ def _route_cases(
 
     probe = route.get("mass_assignment_probe")
     if probe is not None:
-        cases.append(_probe_case(index, label, method, path, payload, probe, allow, personas, params, default_id))
+        cases.append(replace(
+            _probe_case(index, label, method, path, payload, probe, allow, personas, params, default_id),
+            body_format=body_format,
+            csrf=csrf,
+        ))
     return cases
 
 
@@ -237,7 +277,12 @@ def _probe_case(
     )
 
 
-def load_persona_suite(data: Dict[str, Any], default_id: str = "1") -> List[MatrixCase]:
+def load_persona_suite(
+    data: Dict[str, Any],
+    default_id: str = "1",
+    default_body_format: str = "json",
+    default_csrf: Optional[CsrfConfig] = None,
+) -> List[MatrixCase]:
     """Build matrix cases from a parsed v2 suite."""
     if not is_v2_suite(data):
         raise SuiteError(f"suite 'version' must be {SUITE_VERSION}")
@@ -247,7 +292,7 @@ def load_persona_suite(data: Dict[str, Any], default_id: str = "1") -> List[Matr
         raise SuiteError("'routes' must be a non-empty list")
     cases: List[MatrixCase] = []
     for i, route in enumerate(routes):
-        cases.extend(_route_cases(i, route, personas, default_id))
+        cases.extend(_route_cases(i, route, personas, default_id, default_body_format, default_csrf))
     return cases
 
 
@@ -279,6 +324,9 @@ def generate_matrix_cases_from_findings(
     token_env: Optional[str],
     default_id: str = "12345",
     min_consensus: float = 0.0,
+    cookie_env: Optional[str] = None,
+    body_format: str = "auto",
+    csrf: Optional[CsrfConfig] = None,
 ) -> List[MatrixCase]:
     """Turn BFLA and mass assignment findings (findings.json or SARIF) into matrix cases.
 
@@ -289,7 +337,7 @@ def generate_matrix_cases_from_findings(
     if is_sarif(data):
         data = findings_from_sarif(data)
     items = data if isinstance(data, list) else (data.get("findings", []) if isinstance(data, dict) else [])
-    persona = Persona(name="user", token_env=token_env)
+    persona = Persona(name="user", token_env=None if cookie_env else token_env, cookie_env=cookie_env)
     cases: List[MatrixCase] = []
     for item in items:
         kind = _finding_kind(item)
@@ -304,11 +352,14 @@ def generate_matrix_cases_from_findings(
         methods = [m.strip().upper() for m in str(av.get("method") or ep.get("method") or "GET").split("|") if m.strip()]
         fid = str(item.get("finding_id", ""))
         title = item.get("title", path)
+        is_form = body_format == "form" or (body_format == "auto" and is_form_action(raw_path))
+        request_shape: Dict[str, Any] = {"body_format": "form" if is_form else "json", "csrf": csrf}
         if kind == "bfla":
             for m in methods:
                 cases.append(MatrixCase(
                     kind="bfla", name=f"[{fid}] {title} ({m})", persona=persona,
                     method=m, path=path, payload={} if m in WRITE_METHODS else None, finding_id=fid,
+                    **request_shape,
                 ))
             continue
         write = next((m for m in methods if m in WRITE_METHODS), None)
@@ -320,6 +371,7 @@ def generate_matrix_cases_from_findings(
             kind="mass_assignment", name=f"[{fid}] {title} ({write})", persona=persona,
             method=write, path=path, payload={}, probe_fields=dict(fields),
             readback=(rb_method, fill_path(rb_path, {}, default_id)), finding_id=fid,
+            **request_shape,
         ))
     return cases
 
@@ -351,6 +403,7 @@ class PersonaMatrixRunner:
         auth_header: str = "Authorization",
         token_prefix: str = "Bearer ",
         timeout: float = 10.0,
+        denial: Optional[DenialSignal] = None,
     ) -> None:
         parsed = urllib.parse.urlsplit(base_url)
         if parsed.scheme not in ("http", "https") or not parsed.netloc:
@@ -358,6 +411,7 @@ class PersonaMatrixRunner:
         self.base_url = base_url.rstrip("/")
         self.env = os.environ if env is None else env
         self.deny_status = STRICT_DENY_STATUS if strict else DENY_STATUS
+        self.denial = denial
         self.auth_header = auth_header
         self.token_prefix = token_prefix
         self.timeout = timeout
@@ -371,7 +425,30 @@ class PersonaMatrixRunner:
             return None, f"environment variable {persona.token_env} is not set"
         return token, None
 
-    def _send(self, method: str, path: str, token: Optional[str], body: Optional[Dict[str, Any]]) -> Tuple[int, bytes, Optional[str]]:
+    def _cookie(self, persona: Persona) -> Tuple[Optional[str], Optional[str]]:
+        """Return (cookie, error). Personas without a cookie source have neither."""
+        try:
+            return read_cookie(persona.cookie_env, persona.cookie_file, self.env, persona.name), None
+        except SessionConfigError as err:
+            return None, str(err)
+
+    def _session_mode(self, cookie: Optional[str], csrf: Optional[CsrfConfig], body_format: str) -> bool:
+        return cookie is not None or self.denial is not None or csrf is not None or body_format == "form"
+
+    def _deliver(
+        self, method: str, path: str, token: Optional[str], cookie: Optional[str], body: Optional[Dict[str, Any]],
+        body_format: str, csrf: Optional[CsrfConfig],
+    ) -> HttpReply:
+        auth = (self.auth_header, f"{self.token_prefix}{token}".strip()) if token else None
+        return deliver(self.base_url, SessionRequest(method, path, cookie, auth, body, body_format, csrf), self.timeout)
+
+    def _send(
+        self, method: str, path: str, token: Optional[str], body: Optional[Dict[str, Any]],
+        cookie: Optional[str] = None, body_format: str = "json", csrf: Optional[CsrfConfig] = None,
+    ) -> Tuple[int, bytes, Optional[str]]:
+        if self._session_mode(cookie, csrf, body_format):
+            reply = self._deliver(method, path, token, cookie, body, body_format, csrf)
+            return reply.status, reply.body.encode("utf-8"), reply.error
         headers: Dict[str, str] = {}
         if token:
             headers[self.auth_header] = f"{self.token_prefix}{token}".strip()
@@ -389,9 +466,9 @@ class PersonaMatrixRunner:
         except Exception as ex:  # network errors are reported, not raised
             return 0, b"", f"{type(ex).__name__}: {ex}"
 
-    def _readback(self, case: MatrixCase, token: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
+    def _readback(self, case: MatrixCase, token: Optional[str], cookie: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
         assert case.readback is not None
-        status, raw, err = self._send(case.readback[0], case.readback[1], token, None)
+        status, raw, err = self._send(case.readback[0], case.readback[1], token, None, cookie)
         if err or status not in ALLOW_STATUS:
             return None, err or f"readback {case.readback[0]} {case.readback[1]} returned HTTP {status}"
         try:
@@ -399,7 +476,20 @@ class PersonaMatrixRunner:
         except ValueError:
             return None, "readback response is not JSON"
 
-    def _run_bfla(self, case: MatrixCase, token: Optional[str], start: float) -> MatrixResult:
+    def _run_session_bfla(self, case: MatrixCase, token: Optional[str], cookie: Optional[str], start: float) -> MatrixResult:
+        signal = self.denial or DenialSignal(deny_status=self.deny_status)
+        reply = self._deliver(case.method, case.path, token, cookie, case.payload, case.body_format, case.csrf)
+        verdict, reason = classify(signal, reply.status, reply.location, reply.body) if not reply.error else (INCONCLUSIVE, reply.error)
+        return MatrixResult(
+            case=case, status_code=reply.status,
+            is_breach=verdict == ALLOWED, is_secure=verdict == DENIED,
+            duration_ms=(time.time() - start) * 1000.0,
+            error_message=reason if verdict == INCONCLUSIVE else None,
+        )
+
+    def _run_bfla(self, case: MatrixCase, token: Optional[str], cookie: Optional[str], start: float) -> MatrixResult:
+        if self._session_mode(cookie, case.csrf, case.body_format):
+            return self._run_session_bfla(case, token, cookie, start)
         status, _, err = self._send(case.method, case.path, token, case.payload)
         return MatrixResult(
             case=case, status_code=status,
@@ -407,26 +497,28 @@ class PersonaMatrixRunner:
             duration_ms=(time.time() - start) * 1000.0, error_message=err,
         )
 
-    def _run_probe(self, case: MatrixCase, token: Optional[str], start: float) -> MatrixResult:
+    def _run_probe(self, case: MatrixCase, token: Optional[str], cookie: Optional[str], start: float) -> MatrixResult:
         fields = case.probe_fields or {}
 
         def done(status: int, breach: bool, secure: bool, err: Optional[str] = None, persisted: Tuple[str, ...] = ()) -> MatrixResult:
             return MatrixResult(case, status, breach, secure, (time.time() - start) * 1000.0, err, persisted)
 
-        before, err = self._readback(case, token)
+        before, err = self._readback(case, token, cookie)
         if err:
             return done(0, False, False, err)
         already = [k for k, v in fields.items() if _contains_value(before, k, v)]
         if already:
             return done(0, False, False, f"inconclusive: {', '.join(already)} already has the probe value")
         body = {**(case.payload or {}), **fields}
-        status, _, err = self._send(case.method, case.path, token, body)
+        status, _, err = self._send(case.method, case.path, token, body, cookie, case.body_format, case.csrf)
         if err:
             return done(status, False, False, err)
-        if status not in ALLOW_STATUS:
+        # With redirects not followed, a 3xx may be post/redirect/get after a stored write: let the readback decide.
+        accepted = status in ALLOW_STATUS or (self._session_mode(cookie, case.csrf, case.body_format) and 300 <= status < 400)
+        if not accepted:
             # The write was refused (e.g. 400/422 for unknown fields): nothing stored.
             return done(status, False, True)
-        after, err = self._readback(case, token)
+        after, err = self._readback(case, token, cookie)
         if err:
             return done(status, False, False, err)
         persisted = tuple(k for k, v in fields.items() if _contains_value(after, k, v))
@@ -435,11 +527,12 @@ class PersonaMatrixRunner:
     def execute(self, case: MatrixCase) -> MatrixResult:
         start = time.time()
         token, err = self._token(case.persona)
-        if err:
-            return MatrixResult(case, 0, False, False, 0.0, err)
+        cookie, cookie_err = self._cookie(case.persona)
+        if err or cookie_err:
+            return MatrixResult(case, 0, False, False, 0.0, err or cookie_err)
         if case.kind == "mass_assignment":
-            return self._run_probe(case, token, start)
-        return self._run_bfla(case, token, start)
+            return self._run_probe(case, token, cookie, start)
+        return self._run_bfla(case, token, cookie, start)
 
     def run(self, cases: List[MatrixCase]) -> List[MatrixResult]:
         return [self.execute(c) for c in cases]

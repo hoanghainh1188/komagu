@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "operate/persona-suite.schema.json",
   "title": "Komagu test suite v2 (persona matrix)",
-  "description": "Personas and, per route, the personas allowed to call it. Every other persona must be refused (BFLA). Tokens come only from environment variables.",
+  "description": "Personas and, per route, the personas allowed to call it. Every other persona must be refused (BFLA). Tokens come only from environment variables; session cookies come from an environment variable or a file.",
   "type": "object",
   "required": [
     "version",
@@ -28,6 +28,15 @@
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
             "description": "Environment variable that holds this persona's bearer token. Omit for an anonymous persona."
+          },
+          "cookie_env": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "Environment variable that holds this persona's Cookie value, e.g. JSESSIONID=... Use for session-based apps instead of token_env."
+          },
+          "cookie_file": {
+            "type": "string",
+            "description": "Path to a file that holds this persona's Cookie value."
           },
           "description": {
             "type": "string"
@@ -75,7 +84,7 @@
           },
           "payload": {
             "type": "object",
-            "description": "JSON body for writes."
+            "description": "Body fields for writes, encoded as set by body_format."
           },
           "allow": {
             "type": "array",
@@ -104,6 +113,33 @@
                 "type": "string",
                 "pattern": "^((GET|POST|PUT|PATCH|DELETE) )?/",
                 "description": "Request that returns the stored object, e.g. 'GET /api/profile' (default: GET on the route path)."
+              }
+            }
+          },
+          "body_format": {
+            "enum": [
+              "json",
+              "form"
+            ],
+            "default": "json",
+            "description": "Body encoding. form sends application/x-www-form-urlencoded."
+          },
+          "csrf": {
+            "type": "object",
+            "required": [
+              "page",
+              "field"
+            ],
+            "additionalProperties": false,
+            "description": "Fetch this page before each write and send the token found in the named field.",
+            "properties": {
+              "page": {
+                "type": "string",
+                "pattern": "^/"
+              },
+              "field": {
+                "type": "string",
+                "minLength": 1
               }
             }
           }

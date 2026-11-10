@@ -23,9 +23,34 @@ import sys
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+
+if not __package__:  # run directly as a script: the repository root is not on sys.path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from operate.cross_user_tester.session_config import SessionOptions  # noqa: E402
+from operate.cross_user_tester.session_http import (  # noqa: E402
+    ALLOWED,
+    DENIED,
+    INCONCLUSIVE,
+    WRITE_METHODS,
+    CsrfConfig,
+    DenialSignal,
+    HttpReply,
+    SessionRequest,
+    classify,
+    deliver,
+    is_form_action,
+    parse_body_format,
+    parse_csrf,
+)
+
+_ID_PLACEHOLDER = re.compile(r"\{[a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*\}")
+_TAMPER_PAYLOAD = {"status": "tampered_by_attacker", "note": "Komagu BOLA exploit verification"}
 
 
 class TestCase:
@@ -44,6 +69,8 @@ class TestCase:
         insecure_status: Optional[List[int]] = None,
         finding_id: Optional[str] = None,
         consensus_score: Optional[float] = None,
+        body_format: str = "json",
+        csrf: Optional[CsrfConfig] = None,
     ) -> None:
         self.name = name
         self.finding_id = finding_id
@@ -63,6 +90,8 @@ class TestCase:
         self.headers = headers or {}
         self.expected_status = expected_status or [404]
         self.insecure_status = insecure_status or [200, 201, 202, 204]
+        self.body_format = body_format
+        self.csrf = csrf
 
 
 class TestResult:
@@ -77,6 +106,7 @@ class TestResult:
         is_secure: bool,
         duration_ms: float,
         error_message: Optional[str] = None,
+        owner_control: Optional[str] = None,
     ) -> None:
         self.test_case = test_case
         self.status_code = status_code
@@ -85,9 +115,10 @@ class TestResult:
         self.is_secure = is_secure
         self.duration_ms = duration_ms
         self.error_message = error_message
+        self.owner_control = owner_control
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        data: Dict[str, Any] = {
             "name": self.test_case.name,
             "finding_id": self.test_case.finding_id,
             "consensus_score": self.test_case.consensus_score,
@@ -99,6 +130,9 @@ class TestResult:
             "duration_ms": round(self.duration_ms, 2),
             "error_message": self.error_message,
         }
+        if self.owner_control is not None:
+            data["owner_control"] = self.owner_control
+        return data
 
 
 
@@ -112,15 +146,76 @@ class CrossUserTestRunner:
         auth_header: str = "Authorization",
         token_prefix: str = "Bearer ",
         timeout: float = 10.0,
+        session: Optional[SessionOptions] = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.default_attacker_token = default_attacker_token
         self.auth_header = auth_header
         self.token_prefix = token_prefix
         self.timeout = timeout
+        self.session = session
+
+    def _auth_header(self, test: TestCase) -> Optional[Tuple[str, str]]:
+        token = test.attacker_token or self.default_attacker_token
+        return (self.auth_header, f"{self.token_prefix}{token}".strip()) if token else None
+
+    def _deliver(
+        self,
+        test: TestCase,
+        cookie: Optional[str],
+        auth: Optional[Tuple[str, str]],
+        csrf_page: Optional[str] = None,
+    ) -> HttpReply:
+        csrf = replace(test.csrf, page=csrf_page) if test.csrf and csrf_page else test.csrf
+        request = SessionRequest(
+            method=test.method, path=test.path, cookie=cookie, auth_header=auth,
+            payload=test.payload, body_format=test.body_format, csrf=csrf, headers=test.headers,
+        )
+        return deliver(self.base_url, request, self.timeout)
+
+    def _owner_control(self, test: TestCase, options: SessionOptions, signal: DenialSignal) -> Tuple[str, Optional[str]]:
+        """Replay a refused request as the owner: it must work, or the refusal proves nothing."""
+        if not options.owner_cookie:
+            return "not_run", None
+        if test.method in WRITE_METHODS and not options.owner_control_writes:
+            if options.strict:
+                return "skipped_write", "--strict cannot pass a refused write without --owner-control-writes"
+            return "skipped_write", None
+        reply = self._deliver(test, options.owner_cookie, None, options.owner_csrf_page)
+        verdict, reason = classify(signal, reply.status, reply.location, reply.body) if not reply.error else (INCONCLUSIVE, reply.error)
+        if verdict == ALLOWED:
+            return "passed", None
+        return "failed", f"owner control failed ({reason}): the route or resource ID cannot prove a refusal"
+
+    def _execute_session_test(self, test: TestCase) -> TestResult:
+        """Legacy path: no redirects followed, verdict from the denial signal."""
+        options = self.session or SessionOptions()
+        signal = options.denial or DenialSignal(deny_status=tuple(test.expected_status))
+        auth = None if options.attacker_cookie else self._auth_header(test)
+        start_time = time.time()
+        reply = self._deliver(test, options.attacker_cookie, auth)
+        verdict, reason = classify(signal, reply.status, reply.location, reply.body) if not reply.error else (INCONCLUSIVE, reply.error)
+        control: Optional[str] = None
+        if verdict == DENIED:
+            control, problem = self._owner_control(test, options, signal)
+            if problem:
+                verdict, reason = INCONCLUSIVE, problem
+        return TestResult(
+            test_case=test,
+            status_code=reply.status,
+            response_body=reply.body[:1000],
+            is_breach=verdict == ALLOWED,
+            is_secure=verdict == DENIED,
+            duration_ms=(time.time() - start_time) * 1000.0,
+            error_message=reason if verdict == INCONCLUSIVE else None,
+            owner_control=control,
+        )
 
     def execute_test(self, test: TestCase) -> TestResult:
         """Execute a single test case against the target API."""
+        if self.session is not None or test.csrf is not None or test.body_format == "form":
+            return self._execute_session_test(test)
+
         url = f"{self.base_url}{test.path}"
         headers = dict(test.headers)
 
@@ -183,6 +278,8 @@ def generate_crud_test_cases(
     name_prefix: str = "Resource",
     attacker_token: Optional[str] = None,
     sample_payload: Optional[Dict[str, Any]] = None,
+    body_format: str = "json",
+    csrf: Optional[CsrfConfig] = None,
 ) -> List[TestCase]:
     """Generate the standard 3-operation (GET, PUT, DELETE) cross-user test cases."""
     return [
@@ -200,6 +297,8 @@ def generate_crud_test_cases(
             resource_id=resource_id,
             attacker_token=attacker_token,
             payload=sample_payload or {"status": "tampered_by_attacker"},
+            body_format=body_format,
+            csrf=csrf,
         ),
         TestCase(
             name=f"{name_prefix} - Cross-User Destruction (DELETE)",
@@ -207,11 +306,16 @@ def generate_crud_test_cases(
             method="DELETE",
             resource_id=resource_id,
             attacker_token=attacker_token,
+            csrf=csrf,
         ),
     ]
 
 
-def load_suite_from_file(file_path: str) -> List[TestCase]:
+def load_suite_from_file(
+    file_path: str,
+    default_body_format: str = "json",
+    default_csrf: Optional[CsrfConfig] = None,
+) -> List[TestCase]:
     """Load test cases from a JSON configuration file."""
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -220,6 +324,9 @@ def load_suite_from_file(file_path: str) -> List[TestCase]:
     items = data if isinstance(data, list) else data.get("tests", [])
 
     for item in items:
+        where = f"test '{item.get('name', item.get('path'))}'"
+        body_format = parse_body_format(item.get("body_format"), where, default_body_format)
+        csrf = parse_csrf(item.get("csrf"), where, default_csrf)
         # If item specifies auto_crud, generate 3 CRUD operations
         if item.get("auto_crud"):
             cases = generate_crud_test_cases(
@@ -228,6 +335,8 @@ def load_suite_from_file(file_path: str) -> List[TestCase]:
                 name_prefix=item.get("name", item["path"]),
                 attacker_token=item.get("attacker_token"),
                 sample_payload=item.get("payload"),
+                body_format=body_format,
+                csrf=csrf,
             )
             test_cases.extend(cases)
         else:
@@ -242,9 +351,47 @@ def load_suite_from_file(file_path: str) -> List[TestCase]:
                     headers=item.get("headers"),
                     expected_status=item.get("expected_status"),
                     insecure_status=item.get("insecure_status"),
+                    body_format=body_format,
+                    csrf=csrf,
                 )
             )
     return test_cases
+
+
+def _has_id_placeholder(path: str) -> bool:
+    return "{id}" in path or ":id" in path or bool(_ID_PLACEHOLDER.search(path))
+
+
+def _uses_form(path: str, body_format: str) -> bool:
+    return body_format == "form" or (body_format == "auto" and is_form_action(path))
+
+
+def _suggested_form(attack_vector: Dict[str, Any], resource_id: str) -> Dict[str, Any]:
+    """Form fields from attack_vector.suggested_payload ('id={id}&status=x'), if it has that shape."""
+    raw = attack_vector.get("suggested_payload")
+    if not isinstance(raw, str) or "=" not in raw:
+        return {}
+    return dict(urllib.parse.parse_qsl(raw.replace("{id}", resource_id), keep_blank_values=True))
+
+
+def _form_action_request(
+    path: str,
+    method: str,
+    attack_vector: Dict[str, Any],
+    resource_id: str,
+) -> Tuple[str, Optional[Dict[str, Any]]]:
+    """A legacy action takes the id as a parameter, not as a path segment."""
+    param = str(attack_vector.get("target_param") or "id")
+    in_path = _has_id_placeholder(path)
+    if method in ("POST", "PUT", "PATCH"):
+        payload: Dict[str, Any] = _suggested_form(attack_vector, resource_id) or dict(_TAMPER_PAYLOAD)
+        if not in_path:
+            payload.setdefault(param, resource_id)
+        return path, payload
+    if in_path:
+        return path, None
+    separator = "&" if "?" in path else "?"
+    return f"{path}{separator}{param}={urllib.parse.quote(resource_id, safe='')}", None
 
 
 def generate_test_cases_from_findings(
@@ -253,6 +400,8 @@ def generate_test_cases_from_findings(
     attacker_token: Optional[str] = None,
     min_consensus_score: float = 0.0,
     include_likely: bool = True,
+    body_format: str = "auto",
+    csrf: Optional[CsrfConfig] = None,
 ) -> List[TestCase]:
     """Synthesize active BOLA verification test cases from LSA findings.json or SARIF data.
 
@@ -311,7 +460,7 @@ def generate_test_cases_from_findings(
 
             # Determine resource_id to inject
             target_id = default_resource_id
-            if "{id}" not in path and ":id" not in path and not re.search(r"\{[a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*\}", path):
+            if not _has_id_placeholder(path):
                 if not path.endswith("/"):
                     target_path = f"{path}/{target_id}"
                 else:
@@ -324,19 +473,25 @@ def generate_test_cases_from_findings(
             for m in methods:
                 payload = None
                 if m in ("POST", "PUT", "PATCH"):
-                    payload = {"status": "tampered_by_attacker", "note": "Komagu BOLA exploit verification"}
+                    payload = dict(_TAMPER_PAYLOAD)
+                is_form = _uses_form(path, body_format)
+                case_path = target_path
+                if is_form:
+                    case_path, payload = _form_action_request(path, m, av, target_id)
 
                 tc_name = f"[{fid}] {item.get('title', target_path)} ({m})"
                 test_cases.append(
                     TestCase(
                         name=tc_name,
-                        path=target_path,
+                        path=case_path,
                         method=m,
                         resource_id=target_id,
                         attacker_token=attacker_token,
                         payload=payload,
                         finding_id=fid,
                         consensus_score=c_score,
+                        body_format="form" if is_form else "json",
+                        csrf=csrf,
                     )
                 )
 
@@ -371,10 +526,17 @@ def generate_test_cases_from_findings(
                     continue
 
                 target_id = default_resource_id
-                if "{id}" not in path and ":id" not in path and not re.search(r"\{[a-zA-Z0-9_-]*(?:id|ID)[a-zA-Z0-9_-]*\}", path):
+                if not _has_id_placeholder(path):
                     target_path = f"{path}/{target_id}" if not path.endswith("/") else f"{path}{target_id}"
                 else:
                     target_path = path
+
+                is_form = _uses_form(path, body_format)
+                sarif_payload: Optional[Dict[str, Any]] = None
+                if is_form:
+                    target_path, sarif_payload = _form_action_request(
+                        path, str(method).upper(), props.get("attack_vector") or {}, target_id
+                    )
 
                 fid = props.get("finding_id") or result.get("ruleId", "BOLA")
                 tc_name = f"[{fid}] SARIF {result.get('ruleId', 'BOLA')} ({method})"
@@ -385,8 +547,11 @@ def generate_test_cases_from_findings(
                         method=method,
                         resource_id=target_id,
                         attacker_token=attacker_token,
+                        payload=sarif_payload,
                         finding_id=fid,
                         consensus_score=float(props.get("consensus_score", 1.0)) if "consensus_score" in props else None,
+                        body_format="form" if is_form else "json",
+                        csrf=csrf,
                     )
                 )
 
@@ -426,6 +591,10 @@ def format_report(results: List[TestResult], base_url: str) -> Tuple[str, bool]:
                 f"[PASS - SECURE]      {t.method} {t.path} -> "
                 f"HTTP {res.status_code} ({res.duration_ms:.1f}ms)"
             )
+            if res.owner_control == "skipped_write":
+                lines.append("       Note: owner control skipped for this write; the route was not proven to work.")
+            elif res.owner_control == "not_run":
+                lines.append("       Note: no owner session; the route and resource ID were not proven to work.")
         else:
             error_count += 1
             lines.append(
