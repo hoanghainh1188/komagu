@@ -1,7 +1,7 @@
 # Pilot Execution Runbook: AMS Pilot on a Java Legacy System (Weeks 1–12)
 ## パイロット運用実施手順書（AMS・Java レガシー）
 
-**Version:** 2.2  
+**Version:** 2.3  
 **Effective Date:** 2026-11-03  
 **Project Lead & Sign-off Authority:** Harry (Principal Architect / PM / Person B)  
 **Parent Delivery Plan:** [Boilerplate 1 Delivery Plan (§Pilot)](boilerplate-1-delivery-plan.md)  
@@ -10,7 +10,7 @@
 
 Mọi lệnh trong sổ tay này đã được chạy thử trên `assess/lsa/tests/fixtures/java-legacy` (kit 0.3.1, CLI 2.4.0), trừ các lệnh cần model thật hoặc môi trường của khách hàng. Các lệnh đó được ghi chú *(chưa chạy thử)*.
 
-Các bước W9-2 đến W12-3 đã được diễn tập nối tiếp trên một ứng dụng Struts 1 / JSP đang chạy trên Tomcat ([`examples/legacy-java-rehearsal`](../examples/legacy-java-rehearsal/README.md), #374), với model giả lập cục bộ. Một số sửa lỗi của lần diễn tập chỉ có từ bản phát hành sau `v2.4.0`, nên P3 phải được cập nhật trước tuần 9.
+Các bước W9-2 đến W12-3 đã được diễn tập nối tiếp trên một ứng dụng Struts 1 / JSP đang chạy trên Tomcat ([`examples/legacy-java-rehearsal`](../examples/legacy-java-rehearsal/README.md), #374), với model giả lập cục bộ. Các sửa lỗi của lần diễn tập có từ `v2.5.0`, bản mà P3 cài đặt.
 
 ---
 
@@ -60,13 +60,13 @@ Gửi kèm [§6 Security Q&A](pilot-client-ai-approval-consent.md#6-security-qa-
 ### P3. Cài đặt máy trạm pilot
 Máy trạm phải dùng riêng cho pilot. Với phương án A, máy phải offline khi có code của khách hàng trên đó.
 ```bash
-git clone --branch v2.4.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
+git clone --branch v2.5.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
 cd ~/komagu-pilot
 grep -q _redact_lines operate/ai/context.py && echo "redaction: OK" || echo "redaction: MISSING - STOP"
 python3 assess/lsa/tests/run_tests.py
 python3 -m unittest discover -s operate/tests -p "test_*.py"
 ```
-Dòng kiểm tra phải in `redaction: OK`. Chỉ dùng `v2.4.0` trở lên: các bản trước gửi code cho model mà không che bí mật, và bộ test vẫn pass trên các bản đó vì chưa có test che bí mật.
+Dòng kiểm tra phải in `redaction: OK`. Chỉ dùng `v2.5.0` trở lên: đây là bản đầu tiên có test cross-user theo session (W11-1) và `komagu leak-check` (§9). Các bản trước `v2.4.0` còn gửi code cho model mà không che bí mật, và bộ test vẫn pass trên các bản đó vì chưa có test che bí mật.
 
 Cả hai bộ test phải pass, trong đó có `test_ai_redaction` và `test_no_planted_secret_reaches_the_model`.
 
@@ -197,7 +197,7 @@ Khi toàn bộ finding cần sửa tay, `--format diff` không tạo patch; danh
 Vì vậy **không áp dụng patch này**. Chỉ dùng `--dry-run` để liệt kê vị trí cần sửa, rồi sửa bằng tay theo bảng trên với `OwnershipEnforcer`.
 
 ### W11-1. Test cross-user *(chưa chạy thử trên môi trường khách hàng)*
-Chỉ chạy trên môi trường test, với tài khoản test do khách hàng cấp (Q7) và sau khi khách hàng đồng ý riêng. Bản `v2.4.0` chưa có các cờ session dưới đây, phải cập nhật `~/komagu-pilot` lên bản có #368 trước.
+Chỉ chạy trên môi trường test, với tài khoản test do khách hàng cấp (Q7) và sau khi khách hàng đồng ý riêng.
 
 Ứng dụng JSP / Struts / Spring MVC cũ dùng `JSESSIONID` và form, không dùng Bearer token. Làm theo thứ tự:
 
@@ -262,7 +262,7 @@ Sửa MyBatis `${...}` bằng allow-list vẫn giữ `${}` trong XML, và model 
 ## 9. Điều kiện dừng
 
 Dừng pilot và báo khách hàng ngay khi:
-- Phát hiện bí mật thật trong `ai-raw/` hoặc trong báo cáo: xoá đầu ra liên quan, báo cáo sự cố, bổ sung pattern che và test trước khi chạy lại. `.cache/` chứa mã nguồn của khách hàng, nên W9-5 và W12-1 dùng `--no-cache`. Kiểm tra sau mỗi lần chạy Tier 2 và trước khi gửi báo cáo cho khách hàng (`komagu leak-check` có từ bản phát hành sau `v2.4.0`):
+- Phát hiện bí mật thật trong `ai-raw/` hoặc trong báo cáo: xoá đầu ra liên quan, báo cáo sự cố, bổ sung pattern che và test trước khi chạy lại. `.cache/` chứa mã nguồn của khách hàng, nên W9-5 và W12-1 dùng `--no-cache`. Kiểm tra sau mỗi lần chạy Tier 2 và trước khi gửi báo cáo cho khách hàng:
   ```bash
   ./bin/komagu leak-check ~/pilot/out --canary-file ~/pilot/canaries.txt --format json > ~/pilot/leak-check.json
   ```
@@ -280,3 +280,4 @@ Dừng pilot và báo khách hàng ngay khi:
 | 2.0 | 2026-11-03 | Harry & Claude | #350: viết lại cho pilot AMS Java; chỉ dùng headless; thêm chuẩn bị trước phê duyệt (P1–P4) và bước tạo bản sao đã lọc; sửa lệnh theo CLI 2.3.0 (tên package, `komagu protect` thay cho `operate/gateway` + Konnect, `render_report.py`); bảng sửa lỗi theo stack Java; baseline ROI theo công thức ADR-0005; bước xoá dữ liệu và điều kiện dừng. |
 | 2.1 | 2026-11-10 | Harry & Claude | #355: P3 cài `v2.4.0`, bản đầu tiên có che bí mật, và thêm bước kiểm tra che bí mật. |
 | 2.2 | 2026-11-11 | Harry & Claude | #374: sửa theo lần diễn tập W9–W12 trên ứng dụng Struts 1 đang chạy: profile Kong cho ứng dụng session, `--update-baseline` chuyển sang W9-6, `--no-cache`, giới hạn của virtual patch, xử lý MyBatis ở W12-1, bỏ cờ chỉ đọc trước khi xoá. |
+| 2.3 | 2026-11-11 | Harry & Claude | #376: P3 cài `v2.5.0`, bản đầu tiên có test cross-user theo session, `komagu leak-check` và các sửa lỗi của lần diễn tập. |
