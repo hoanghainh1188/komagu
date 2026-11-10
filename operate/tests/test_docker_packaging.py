@@ -16,12 +16,12 @@ class TestDockerPackaging(unittest.TestCase):
     """Verify Docker container definition and CI/CD workflow."""
 
     def test_dockerfile_structure_and_security(self) -> None:
-        """Dockerfile must exist, use python-slim, configure non-root user, and set entrypoint."""
+        """Dockerfile must exist, use a digest-pinned python-alpine base, configure non-root user, and set entrypoint."""
         self.assertTrue(DOCKERFILE.is_file(), f"Dockerfile not found at {DOCKERFILE}")
         content = DOCKERFILE.read_text(encoding="utf-8")
 
-        self.assertRegex(content, r"(?m)^FROM python:3\.\d+-slim\b")
-        self.assertIn("useradd", content)
+        self.assertRegex(content, r"(?m)^FROM python:3\.\d+-alpine@sha256:[0-9a-f]{64}\b")
+        self.assertIn("adduser -u 1000", content)
         self.assertIn("USER komagu", content)
         self.assertIn("WORKDIR /workspace", content)
         self.assertIn('ENTRYPOINT ["/app/bin/komagu"]', content)

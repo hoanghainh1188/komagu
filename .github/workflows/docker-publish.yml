@@ -82,5 +82,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          # Never reuse a cached 'apt-get upgrade' layer: published images must carry current Debian fixes.
+          # Never reuse a cached package-upgrade layer: published images must carry current OS fixes.
           no-cache-filters: base
