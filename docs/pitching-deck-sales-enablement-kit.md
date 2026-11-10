@@ -292,7 +292,7 @@ KOMAGU (狛犬) — EXECUTIVE BRIEFING: SECURITY-FIRST LEGACY MODERNIZATION
 ========================================================================================
 MỤC TIÊU:
 Giải quyết triệt để rủi ro an ninh mạng của hệ thống di sản (BOLA/IDOR, SQLi) và mở đường 
-hiện đại hóa phần mềm an toàn, tiết kiệm 50% thời gian cho doanh nghiệp Nhật Bản.
+hiện đại hóa phần mềm an toàn cho doanh nghiệp Nhật Bản.
 
 VẤN ĐỀ CỦA DOANH NGHIỆP:
 1. Chi phí duy trì hệ thống cũ phình to theo cảnh báo "Vách đá số 2025" (METI DX Report).

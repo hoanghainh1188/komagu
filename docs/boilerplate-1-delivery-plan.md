@@ -136,7 +136,7 @@ The first three are decided. The other three are deferred (2026-10-16); they mus
 - [x] Pilot: AMS project; fallback to an internal tool if no approval by end of week 6 (decided 2026-10-16)
 - [x] Who are the lead, the two developers and Person B? (Decided: AI-augmented engineering team led by Harry on 2026-10-17)
 - [x] Is the boilerplate open source (MIT) or closed? (Decided: Open Core per ADR-0002 on 2026-10-17)
-- [x] Which past project gives the effort baseline? (Decided: Dual-Baseline Framework via [ADR-0005](adr/0005-effort-baseline-and-roi-measurement.md): IPA Japan standards + empirical D6 benchmark, adopted 2026-10-18)
+- [x] Which past project gives the effort baseline? (Decided: Dual-Baseline Framework via [ADR-0005](adr/0005-effort-baseline-and-roi-measurement.md): IPA Japan standards + modeled D6 reference baseline, adopted 2026-10-18)
 
 ## Sources
 

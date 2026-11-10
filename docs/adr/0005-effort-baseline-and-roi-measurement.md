@@ -4,6 +4,9 @@ Date: 2026-10-18 · Status: accepted · Owner: Harry (BOD / Principal Architect)
 Related Issue: [hoanghainh1188/komagu#4](https://github.com/hoanghainh1188/komagu/issues/4)  
 Parent Documents: [Boilerplate 1 Delivery Plan](../boilerplate-1-delivery-plan.md), [Modernization Proposal](../modernization-boilerplates-proposal.md)
 
+> [!NOTE]
+> **Status of the figures in this ADR (clarified by #365):** the Tier 2 figures, including 75.7%, are a modeled planning hypothesis. The 60–75% outcome is a target. The later D6 fallback run in [`delivery/pilot/pilot-final-report.md`](../../delivery/pilot/pilot-final-report.md) is an internal result on the project's own demo application and is not client evidence. Only a pilot on a real system may supply numbers shown to clients.
+
 ---
 
 ## Context
@@ -21,7 +24,7 @@ An audit of historical Application Maintenance Services (AMS) and legacy moderni
 
 ## Decision
 
-We formally decide to adopt a **Dual-Baseline Measurement Framework (Khung tham chiếu kép)** combining **IPA Japan Industry Benchmarks** with **Empirical Ground-Truth Measurements on Deliverable D6 (Member Portal)**.
+We formally decide to adopt a **Dual-Baseline Measurement Framework (Khung tham chiếu kép)** combining **IPA Japan Industry Benchmarks** with a **Modeled Reference Baseline on Deliverable D6 (Member Portal)**.
 
 ```
 +-------------------------------------------------------------------------------------------------+
@@ -97,7 +100,7 @@ $$\text{Cost Savings (JPY)} = (\text{Baseline Person-Days} - \text{Actual Pilot 
 
 - **Pilot Acceptance Threshold ([Delivery Plan §Acceptance Criteria](../boilerplate-1-delivery-plan.md#acceptance-criteria-and-metrics)):**
   - **Pass Condition:** The measured effort reduction rate must be **$\ge 50\%$** compared to the baseline.
-  - **Target Outcome:** Achieve **$60\% - 75\%$** reduction, consistent with D6 empirical results.
+  - **Target Outcome (planning target, not a result):** Achieve **$60\% - 75\%$** reduction, consistent with the modeled D6 hypothesis in §2.
 
 ---
 
@@ -105,7 +108,7 @@ $$\text{Cost Savings (JPY)} = (\text{Baseline Person-Days} - \text{Actual Pilot 
 
 ### Positive
 - **Definitive Closure of Issue #4:** Eliminates ambiguity before Week 9 kickoff, establishing a clear, defensible benchmark.
-- **Client Credibility:** Japanese enterprise clients and procurement officers receive two transparent points of comparison: recognized IPA industry data and transparent, reproducible empirical figures from D6.
+- **Client Credibility:** Japanese enterprise clients and procurement officers receive two transparent points of comparison: recognized IPA industry data and, once a real-system pilot is complete, measured figures from that pilot. D6 figures are modeled or internal and are not client evidence.
 - **Granular Effort Visibility:** Developers and Project Lead (Harry) have clear time-tracking tags for Weeks 9–12.
 
 ### Neutral / Trade-offs
