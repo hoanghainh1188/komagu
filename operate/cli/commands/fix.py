@@ -130,6 +130,10 @@ def run_fix(args: argparse.Namespace) -> int:
         for plan in report.plans:
             if plan.diff:
                 print(plan.diff)
+            else:
+                # stderr keeps stdout a valid patch; without this a run with only manual fixes prints nothing
+                print(f"[{plan.status.upper()}] {plan.finding_id} {plan.target_file}:{plan.start_line} - {plan.reason}",
+                      file=sys.stderr)
         return 0
 
     step("[2/2] Remediation execution completed")

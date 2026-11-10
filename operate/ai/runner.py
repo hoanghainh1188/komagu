@@ -15,6 +15,7 @@ Standard-library only (Python 3.8+ compatible).
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -35,6 +36,7 @@ FINDING_STATUSES = {"unverified", "confirmed", "likely", "rejected", "needs_revi
 
 
 VERIFY_BATCH_SIZE = 5
+ID_INPUT = re.compile(r"(?i)(?:^id$|id$|_no$|no$|key$|code$)")
 AUTH_MODEL_LIMIT = 6000
 RETRY_REMINDER = ("Your previous reply was empty or not valid JSON. Answer again with the JSON object only, "
                   "exactly in the format requested above, with no other text.")
@@ -322,6 +324,16 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
         self._log("ok", f"Mapped {len(route_batches)} route inventories")
 
     @staticmethod
+    def _with_route_target(finding: Dict[str, Any], route: Dict[str, Any]) -> Dict[str, Any]:
+        """Record the request parameter holding the object id, which `komagu test --from-scan` needs."""
+        attack_vector = finding.get("attack_vector") if isinstance(finding.get("attack_vector"), dict) else {}
+        if attack_vector.get("target_param"):
+            return finding
+        name = next((i.get("name") for i in route.get("id_inputs") or []
+                     if isinstance(i, dict) and ID_INPUT.search(str(i.get("name") or ""))), None)
+        return {**finding, "attack_vector": {**attack_vector, "target_param": name}} if name else finding
+
+    @staticmethod
     def _sanitize_finding(f: Dict[str, Any]) -> Dict[str, Any]:
         """Normalize finding fields to strictly comply with finding.schema.json."""
         if not isinstance(f, dict):
@@ -329,6 +341,11 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
         # impact must be a string; small models often return a list of consequences
         if isinstance(f.get("impact"), list):
             f["impact"] = "; ".join(str(i) for i in f["impact"])
+
+        # routes reach the model with a method list and models echo it; the schema wants one string joined with |
+        endpoint = f.get("endpoint")
+        if isinstance(endpoint, dict) and isinstance(endpoint.get("method"), list):
+            f["endpoint"] = {**endpoint, "method": "|".join(str(m) for m in endpoint["method"])}
 
         # a verdict written into subtype belongs in status; fall back to the category's first subtype
         allowed = CATEGORY_SUBTYPES.get(f.get("category"))
@@ -461,9 +478,10 @@ Write one finding for every "vulnerable" verdict.
                 raw_findings = parsed.get("findings", [])
                 findings = self._anchor([self._sanitize_finding(f) for f in raw_findings])
                 route_verdicts = parsed.get("route_verdicts", [])
+                by_route = {r.get("route_id"): r for r in routes_to_audit}
                 findings = self._with_verdict_findings(
-                    "4a-bola-auditor", findings, route_verdicts, "route_id",
-                    {r.get("route_id"): r for r in routes_to_audit}, "bola")
+                    "4a-bola-auditor", findings, route_verdicts, "route_id", by_route, "bola")
+                findings = [self._with_route_target(f, by_route.get(f.get("route_id")) or {}) for f in findings]
             except Exception:
                 self._parse_failed("4a-bola-auditor", r_file.stem, reply)
                 findings = []

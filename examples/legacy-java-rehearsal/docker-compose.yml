@@ -1,0 +1,6 @@
+services:
+  ams:
+    build: .
+    container_name: komagu-rehearsal-ams
+    ports:
+      - "127.0.0.1:18080:8080"

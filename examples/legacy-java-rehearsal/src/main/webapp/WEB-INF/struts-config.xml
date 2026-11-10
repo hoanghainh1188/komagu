@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.3//EN" "http://struts.apache.org/dtds/struts-config_1_3.dtd">
+<struts-config>
+  <form-beans>
+    <form-bean name="orderForm" type="org.apache.struts.action.DynaActionForm">
+      <form-property name="id" type="java.lang.String"/>
+      <form-property name="note" type="java.lang.String"/>
+    </form-bean>
+  </form-beans>
+  <action-mappings>
+    <action path="/login" type="com.example.ams.web.LoginAction">
+      <forward name="form" path="/WEB-INF/jsp/login.jsp"/>
+      <forward name="home" path="/home.do" redirect="true"/>
+    </action>
+    <action path="/home" type="com.example.ams.web.HomeAction">
+      <forward name="ok" path="/WEB-INF/jsp/home.jsp"/>
+    </action>
+    <action path="/admin/report" type="com.example.ams.web.AdminReportAction">
+      <forward name="ok" path="/WEB-INF/jsp/home.jsp"/>
+      <forward name="denied" path="/WEB-INF/jsp/denied.jsp"/>
+    </action>
+    <action path="/order/detail" type="com.example.ams.web.OrderDetailAction">
+      <forward name="ok" path="/WEB-INF/jsp/order-detail.jsp"/>
+    </action>
+    <action path="/order/edit" name="orderForm" scope="request" validate="false" type="com.example.ams.web.OrderEditAction">
+      <forward name="ok" path="/WEB-INF/jsp/order-edit.jsp"/>
+    </action>
+    <action path="/order/update" name="orderForm" scope="request" validate="false" type="com.example.ams.web.OrderUpdateAction">
+      <forward name="expired" path="/WEB-INF/jsp/expired.jsp"/>
+    </action>
+    <action path="/order/search" type="com.example.ams.web.OrderSearchAction">
+      <forward name="ok" path="/WEB-INF/jsp/order-list.jsp"/>
+    </action>
+    <action path="/order/list" type="com.example.ams.web.OrderListAction">
+      <forward name="ok" path="/WEB-INF/jsp/order-list.jsp"/>
+    </action>
+    <action path="/invoice/view" type="com.example.ams.web.InvoiceViewAction">
+      <forward name="ok" path="/WEB-INF/jsp/invoice.jsp"/>
+    </action>
+  </action-mappings>
+  <message-resources parameter="MessageResources"/>
+</struts-config>

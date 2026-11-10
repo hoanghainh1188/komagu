@@ -10,6 +10,7 @@ paths-ignore:
   - assess/lsa/tests/fixtures
   - assess/lsa/examples
   - delivery/pilot
+  - examples/legacy-java-rehearsal
   - examples/member-portal/backend-dotnet/Controllers/LegacyTestController.cs
   - "**/node_modules"
   - "**/bin"

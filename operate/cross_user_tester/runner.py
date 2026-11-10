@@ -362,6 +362,19 @@ def _has_id_placeholder(path: str) -> bool:
     return "{id}" in path or ":id" in path or bool(_ID_PLACEHOLDER.search(path))
 
 
+_WRITE_WORDS = {"update", "save", "delete", "remove", "create", "add", "insert", "submit", "regist", "register",
+                "cancel", "approve", "modify", "change"}
+
+
+def _concrete_method(method: str, path: str) -> str:
+    """Routes declared in XML accept any verb; a write action needs POST to do anything."""
+    if method.strip().upper() != "ANY":
+        return method
+    action = path.split("?", 1)[0].rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    words = {word.lower() for word in re.findall(r"[A-Z]?[a-z]+", action)}
+    return "POST" if words & _WRITE_WORDS else "GET"
+
+
 def _uses_form(path: str, body_format: str) -> bool:
     return body_format == "form" or (body_format == "auto" and is_form_action(path))
 
@@ -447,6 +460,7 @@ def generate_test_cases_from_findings(
             ep = item.get("endpoint") or {}
             path = av.get("path") or ep.get("path")
             method = av.get("method") or ep.get("method") or "GET"
+            method = _concrete_method(method, av.get("path") or ep.get("path") or "")
 
             # Fallback: attempt to find path in evidence or title
             if not path:
@@ -515,7 +529,7 @@ def generate_test_cases_from_findings(
                 # Try to extract path and method from SARIF properties or message
                 ep = props.get("endpoint") or {}
                 path = ep.get("path")
-                method = ep.get("method") or "GET"
+                method = _concrete_method(ep.get("method") or "GET", path or "")
 
                 if not path:
                     m = re.search(r"(?:GET|POST|PUT|DELETE|PATCH)?\s*(/[a-zA-Z0-9_\-\./\{\}:]+)", msg)

@@ -98,6 +98,12 @@ class TestSanitizeFinding(unittest.TestCase):
         self.assertEqual(f["evidence"][0]["line"], 7)
         self.assertEqual(f["status"], "unverified")
 
+    def test_endpoint_method_list_becomes_string(self) -> None:
+        """XML-declared Struts routes reach the model as "method": ["ANY"], and models echo it (#374)."""
+        f = HeadlessAIRunner._sanitize_finding({"category": "bola", "subtype": "missing_ownership_check",
+                                                "endpoint": {"method": ["GET", "POST"], "path": "/a.do"}})
+        self.assertEqual(f["endpoint"]["method"], "GET|POST")
+
     def test_valid_subtype_is_kept(self) -> None:
         f = HeadlessAIRunner._sanitize_finding({"category": "bfla", "subtype": "role_from_request"})
         self.assertEqual(f["subtype"], "role_from_request")

@@ -1,0 +1,2 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %><%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %><%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %><%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<html><body><h1>Order <bean:write name="order" property="id"/></h1><p>Item: <bean:write name="order" property="item"/></p><p>Note: <bean:write name="order" property="note"/></p></body></html>

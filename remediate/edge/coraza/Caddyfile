@@ -19,7 +19,7 @@
         `
     }
 
-    reverse_proxy http://mock-backend:5000 {
+    reverse_proxy {$KOMAGU_UPSTREAM:http://mock-backend:5000} {
         header_up Host {upstream_hostport}
         header_up X-Real-IP {remote_host}
     }

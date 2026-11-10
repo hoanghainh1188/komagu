@@ -13,11 +13,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 
+SESSION_ROUTE_SUFFIXES = (".do", ".action", ".jsp", ".jspx")
+
+
 class VirtualPatcher:
     """Generates OWASP Coraza / ModSecurity SecRule virtual patches from LSA findings."""
 
     def __init__(self, start_rule_id: int = 1100001) -> None:
         self.current_rule_id = start_rule_id
+        self.skipped: List[str] = []
 
     def _sanitize_regex_path(self, path: str) -> str:
         """Convert a parameterized endpoint path like /api/orders/{id} into a regex."""
@@ -121,6 +125,20 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
 """
         return rule
 
+    @staticmethod
+    def _finding_path(finding: Dict[str, Any]) -> Optional[str]:
+        return (finding.get("attack_vector") or {}).get("path") or (finding.get("endpoint") or {}).get("path")
+
+    @staticmethod
+    def _is_session_route(path: Optional[str]) -> bool:
+        """Legacy form actions sign users in with a session cookie, so no Authorization header is expected."""
+        return bool(path) and path.split("?", 1)[0].lower().endswith(SESSION_ROUTE_SUFFIXES)
+
+    def _skip(self, rules: List[str], fid: str, reason: str) -> None:
+        note = f"{fid}: no virtual patch, {reason}"
+        self.skipped.append(note)
+        rules.append(f"# {note}\n")
+
     def generate_patches_from_findings(
         self,
         findings_data: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -146,6 +164,9 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
                 continue
 
             if cat == "bola" or fid.startswith("BOLA"):
+                if self._is_session_route(self._finding_path(item)):
+                    self._skip(rules, fid, "a WAF cannot check object ownership on a session-cookie route; fix it in code")
+                    continue
                 rule_text = self.generate_bola_rule(item)
                 rules.append(rule_text)
                 manifest.append({
@@ -155,6 +176,9 @@ SecRule REQUEST_URI "@rx {path_regex}" \\
                     "endpoint": item.get("endpoint", {}).get("path", ""),
                 })
             elif cat in ("sql_injection", "nosql_injection") or fid.startswith("INJ"):
+                if not self._finding_path(item):
+                    self._skip(rules, fid, "the finding names no route; the general CRS and Komagu SQLi rules still apply")
+                    continue
                 rule_text = self.generate_sqli_rule(item)
                 rules.append(rule_text)
                 manifest.append({

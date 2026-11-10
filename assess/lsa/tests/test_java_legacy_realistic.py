@@ -390,5 +390,64 @@ class TestInjectionRecall(unittest.TestCase):
         self.assertEqual([c["line"] for c in result["candidates"]], [3])
 
 
+class XmlDeclaredHandlerLineTests(unittest.TestCase):
+    """The headless auditor reads 15 lines around handler.line, so it must point at the entry method (#374)."""
+
+    IMPORTS = "".join(f"import a.b.C{n};\n" for n in range(30))
+
+    def handler_line(self, config_rel: str, config: str, source_rel: str, source: str) -> int:
+        routes = scan_routes({config_rel: CONFIG_XML_HEADER + config, source_rel: source})
+        return next(r["handler"]["line"] for r in routes if r["handler"]["file"] == source_rel)
+
+    def test_struts1_action_points_at_execute(self) -> None:
+        source = "package a;\n" + self.IMPORTS + (
+            "public class ViewAction extends Action {\n"
+            "  public ActionForward execute(ActionMapping m, ActionForm f,\n"
+            "      HttpServletRequest request, HttpServletResponse response) {\n"
+            '    return load(request.getParameter("id"));\n'
+            "  }\n"
+            "}\n"
+        )
+        line = self.handler_line(
+            "WEB-INF/struts-config.xml",
+            '<struts-config><action-mappings><action path="/view" type="a.ViewAction"/></action-mappings></struts-config>',
+            "src/a/ViewAction.java", source)
+        self.assertEqual(line, 33)
+
+    def test_struts2_action_points_at_the_declared_method(self) -> None:
+        source = "package a;\n" + self.IMPORTS + (
+            "public class ViewAction extends ActionSupport {\n"
+            "  public String execute() { return list(); }\n"
+            "  public String show() { return load(id); }\n"
+            "}\n"
+        )
+        line = self.handler_line(
+            "src/struts.xml",
+            '<struts><package name="p"><action name="view" class="a.ViewAction" method="show"/></package></struts>',
+            "src/a/ViewAction.java", source)
+        self.assertEqual(line, 34)
+
+    def test_servlet_from_web_xml_points_at_do_post(self) -> None:
+        source = "package a;\n" + self.IMPORTS + (
+            "public class ViewServlet extends HttpServlet {\n"
+            "  protected void doPost(HttpServletRequest req, HttpServletResponse res) { load(req); }\n"
+            "}\n"
+        )
+        line = self.handler_line(
+            "WEB-INF/web.xml",
+            "<web-app><servlet><servlet-name>v</servlet-name><servlet-class>a.ViewServlet</servlet-class></servlet>"
+            "<servlet-mapping><servlet-name>v</servlet-name><url-pattern>/view</url-pattern></servlet-mapping></web-app>",
+            "src/a/ViewServlet.java", source)
+        self.assertEqual(line, 33)
+
+    def test_class_without_a_known_entry_method_keeps_line_one(self) -> None:
+        source = "package a;\npublic class Helper {\n  void run() {}\n}\n"
+        line = self.handler_line(
+            "WEB-INF/struts-config.xml",
+            '<struts-config><action-mappings><action path="/h" type="a.Helper"/></action-mappings></struts-config>',
+            "src/a/Helper.java", source)
+        self.assertEqual(line, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

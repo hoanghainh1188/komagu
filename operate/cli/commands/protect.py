@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict
+from urllib.parse import urlsplit
 
 from operate.cli.ui import (
     BOLD,
@@ -110,9 +111,30 @@ Documentation:
 
 
 
+def _valid_target(url: str) -> bool:
+    parts = urlsplit(url)
+    return parts.scheme in ("http", "https") and bool(parts.hostname)
+
+
+def _compose_env(args: argparse.Namespace, config_path: Path) -> Dict[str, str]:
+    """Settings the compose file reads; without them the stack would front its demo backend."""
+    env = dict(os.environ)
+    if args.target:
+        env["KOMAGU_UPSTREAM"] = args.target
+    if args.config:
+        env["KOMAGU_KONG_CONFIG"] = str(config_path)
+    if getattr(args, "patch_out", None):
+        env["KOMAGU_VIRTUAL_PATCH_FILE"] = str(Path(args.patch_out).resolve())
+    return env
+
+
 def execute_protect(args: argparse.Namespace) -> int:
     """Execute perimeter protection actions."""
     step("Validating Komagu Perimeter Protection assets")
+
+    if args.target and not _valid_target(args.target):
+        step_fail(f"--target must be an http(s) URL with a host: {args.target}")
+        return 2
 
     if not EDGE_DIR.is_dir():
         step_fail(f"Edge directory not found at {EDGE_DIR}")
@@ -141,6 +163,8 @@ def execute_protect(args: argparse.Namespace) -> int:
         step_info(f"Synthesizing Coraza WAF virtual patches from: {scan_path.name}")
         out_file, manifest = patcher.patch_to_file(scan_path, target_conf)
         step_ok(f"Synthesized {len(manifest)} SecRules into {out_file}")
+        for note in patcher.skipped:
+            step_warn(note)
 
         if manifest:
             patch_rows = [(f"Rule {m['rule_id']} [{m['category'].upper()}]", f"{m['finding_id']} -> {m['endpoint']}") for m in manifest]
@@ -151,7 +175,7 @@ def execute_protect(args: argparse.Namespace) -> int:
             )
 
     # If --target is supplied, report upstream routing
-    upstream_url = args.target or "http://coraza-waf:8080 (internal upstream)"
+    upstream_url = args.target or "http://mock-backend:5000 (demo backend)"
     if args.target:
         step_info(f"Configured upstream target: {args.target}")
 
@@ -160,11 +184,16 @@ def execute_protect(args: argparse.Namespace) -> int:
     compose_cmd = [docker_bin, "compose", "-f", str(EDGE_COMPOSE)] if docker_bin else None
 
     if args.up:
+        patch_out = getattr(args, "patch_out", None)
+        if patch_out and not Path(patch_out).is_file():
+            step_fail(f"Virtual patch file not found, Docker would mount a directory instead: {patch_out}")
+            return 2
         if args.dry_run or not docker_bin:
             step_info(f"[DRY-RUN] Would execute: docker compose -f {EDGE_COMPOSE} up -d")
         else:
             step("Starting perimeter containers (Kong Gateway + Coraza WAF + Mock Backend)")
-            res = subprocess.run(compose_cmd + ["up", "-d"], capture_output=True, text=True)
+            res = subprocess.run(compose_cmd + ["up", "-d"], capture_output=True, text=True,
+                                 env=_compose_env(args, config_path))
             if res.returncode != 0:
                 step_fail("Failed to start perimeter containers")
                 print(res.stderr or res.stdout, file=sys.stderr)
@@ -196,7 +225,7 @@ def execute_protect(args: argparse.Namespace) -> int:
         ("Upstream Target", upstream_url),
         ("Public Proxy Port", "http://localhost:8000"),
         ("Kong Admin API", "http://localhost:8001"),
-        ("Coraza WAF Port", "http://localhost:8080"),
+        ("Coraza WAF", "internal only, port 8080 is not published on the host"),
     ]
 
     print_summary_table(
