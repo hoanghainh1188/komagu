@@ -1,14 +1,14 @@
 # Pilot Execution Runbook: AMS Pilot on a Java Legacy System (Weeks 1–12)
 ## パイロット運用実施手順書（AMS・Java レガシー）
 
-**Version:** 2.0  
+**Version:** 2.1  
 **Effective Date:** 2026-11-03  
 **Project Lead & Sign-off Authority:** Harry (Principal Architect / PM / Person B)  
 **Parent Delivery Plan:** [Boilerplate 1 Delivery Plan (§Pilot)](boilerplate-1-delivery-plan.md)  
 **Related Documents:** [ADR-0005: Effort Baseline](adr/0005-effort-baseline-and-roi-measurement.md), [AI Data Governance Protocol & Consent Letter](pilot-client-ai-approval-consent.md), [AMS pilot profile](../delivery/pilot/pilot-config.sample.json)  
 **Related Issues:** [hoanghainh1188/komagu#75](https://github.com/hoanghainh1188/komagu/issues/75), [hoanghainh1188/komagu#350](https://github.com/hoanghainh1188/komagu/issues/350)
 
-Mọi lệnh trong sổ tay này đã được chạy thử trên `assess/lsa/tests/fixtures/java-legacy` (kit 0.3.1, CLI 2.3.0), trừ các lệnh cần model thật hoặc môi trường của khách hàng. Các lệnh đó được ghi chú *(chưa chạy thử)*.
+Mọi lệnh trong sổ tay này đã được chạy thử trên `assess/lsa/tests/fixtures/java-legacy` (kit 0.3.1, CLI 2.4.0), trừ các lệnh cần model thật hoặc môi trường của khách hàng. Các lệnh đó được ghi chú *(chưa chạy thử)*.
 
 ---
 
@@ -58,11 +58,14 @@ Gửi kèm [§6 Security Q&A](pilot-client-ai-approval-consent.md#6-security-qa-
 ### P3. Cài đặt máy trạm pilot
 Máy trạm phải dùng riêng cho pilot. Với phương án A, máy phải offline khi có code của khách hàng trên đó.
 ```bash
-git clone --branch v2.3.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
+git clone --branch v2.4.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
 cd ~/komagu-pilot
+grep -q _redact_lines operate/ai/context.py && echo "redaction: OK" || echo "redaction: MISSING - STOP"
 python3 assess/lsa/tests/run_tests.py
 python3 -m unittest discover -s operate/tests -p "test_*.py"
 ```
+Dòng kiểm tra phải in `redaction: OK`. Chỉ dùng `v2.4.0` trở lên: các bản trước gửi code cho model mà không che bí mật, và bộ test vẫn pass trên các bản đó vì chưa có test che bí mật.
+
 Cả hai bộ test phải pass, trong đó có `test_ai_redaction` và `test_no_planted_secret_reaches_the_model`.
 
 ### P4. Hiệu chuẩn hạ tầng trên repo eval (không dùng code khách hàng)
@@ -229,3 +232,4 @@ Dừng pilot và báo khách hàng ngay khi:
 |---|---|---|---|
 | 1.0 | 2026-10-18 | Harry & Komagu Lead Agent | Khởi tạo sổ tay 4 tuần (#75). |
 | 2.0 | 2026-11-03 | Harry & Claude | #350: viết lại cho pilot AMS Java; chỉ dùng headless; thêm chuẩn bị trước phê duyệt (P1–P4) và bước tạo bản sao đã lọc; sửa lệnh theo CLI 2.3.0 (tên package, `komagu protect` thay cho `operate/gateway` + Konnect, `render_report.py`); bảng sửa lỗi theo stack Java; baseline ROI theo công thức ADR-0005; bước xoá dữ liệu và điều kiện dừng. |
+| 2.1 | 2026-11-10 | Harry & Claude | #355: P3 cài `v2.4.0`, bản đầu tiên có che bí mật, và thêm bước kiểm tra che bí mật. |
