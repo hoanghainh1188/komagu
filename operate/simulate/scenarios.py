@@ -379,7 +379,7 @@ class IDCFrontierRansomwareScenario(BaseScenario):
             self.target_dir.mkdir(parents=True, exist_ok=True)
             test_file.write_text("Komagu Immutable WORM Backup - Read Only", encoding="utf-8")
             # Mark file read-only (simulating local WORM compliance mode)
-            os.chmod(str(test_file), 0o444)
+            os.chmod(str(test_file), 0o400)
         except Exception:
             pass
 
@@ -416,7 +416,7 @@ class IDCFrontierRansomwareScenario(BaseScenario):
 
         # Clean up
         try:
-            os.chmod(str(test_file), 0o666)
+            os.chmod(str(test_file), 0o600)
             test_file.unlink(missing_ok=True)
         except Exception:
             pass

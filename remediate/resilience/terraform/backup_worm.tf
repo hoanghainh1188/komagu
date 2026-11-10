@@ -148,6 +148,8 @@ resource "aws_s3_bucket_versioning" "logs_versioning" {
   }
 }
 
+# S3 server access logging requires SSE-S3 on the destination bucket: AWS does
+# not support SSE-KMS here, so a customer managed key cannot be used.
 resource "aws_s3_bucket_server_side_encryption_configuration" "logs_encryption" {
   provider = aws.secondary
   bucket   = aws_s3_bucket.worm_access_logs.id
@@ -344,6 +346,19 @@ resource "aws_s3_bucket_policy" "deny_destructive_actions" {
 }
 
 # 10. Cross-Region Replication Infrastructure (Primary Tokyo -> Secondary Osaka)
+resource "aws_kms_key" "primary_state_key" {
+  count                   = var.enable_cross_region_replication ? 1 : 0
+  provider                = aws.primary
+  description             = "KMS Key for Komagu primary state backups in Tokyo"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
+
+  tags = {
+    Name        = "${var.project_name}-primary-state-key"
+    Environment = var.environment
+  }
+}
+
 resource "aws_s3_bucket" "primary_backup" {
   count    = var.enable_cross_region_replication ? 1 : 0
   provider = aws.primary
@@ -382,8 +397,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "primary_encryptio
   bucket   = aws_s3_bucket.primary_backup[0].id
 
   rule {
+    bucket_key_enabled = true
+
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      kms_master_key_id = aws_kms_key.primary_state_key[0].arn
+      sse_algorithm     = "aws:kms"
     }
   }
 }
@@ -465,6 +483,16 @@ resource "aws_iam_policy" "replication_policy" {
         ]
         Effect   = "Allow"
         Resource = "${aws_s3_bucket.immutable_worm_backup.arn}/*"
+      },
+      {
+        Action   = ["kms:Decrypt"]
+        Effect   = "Allow"
+        Resource = aws_kms_key.primary_state_key[0].arn
+      },
+      {
+        Action   = ["kms:Encrypt", "kms:GenerateDataKey*"]
+        Effect   = "Allow"
+        Resource = aws_kms_key.worm_backup_key.arn
       }
     ]
   })
@@ -486,9 +514,19 @@ resource "aws_s3_bucket_replication_configuration" "crr" {
     id     = "ReplicateToOsakaWORM"
     status = "Enabled"
 
+    source_selection_criteria {
+      sse_kms_encrypted_objects {
+        status = "Enabled"
+      }
+    }
+
     destination {
       bucket        = aws_s3_bucket.immutable_worm_backup.arn
       storage_class = "STANDARD"
+
+      encryption_configuration {
+        replica_kms_key_id = aws_kms_key.worm_backup_key.arn
+      }
     }
   }
 

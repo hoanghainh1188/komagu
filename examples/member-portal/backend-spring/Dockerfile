@@ -9,5 +9,7 @@ RUN gradle -p examples/member-portal/backend-spring bootJar --no-daemon
 FROM eclipse-temurin:17-jre-alpine AS final
 WORKDIR /app
 COPY --from=build /home/gradle/src/examples/member-portal/backend-spring/build/libs/*.jar app.jar
+RUN addgroup -S komagu && adduser -S -G komagu komagu
 EXPOSE 5002
+USER komagu
 ENTRYPOINT ["java", "-jar", "app.jar"]

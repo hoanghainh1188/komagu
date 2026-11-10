@@ -10,6 +10,7 @@ RUN dotnet publish examples/member-portal/backend-dotnet/MemberPortal.Backend.cs
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown app:app /app/data
 EXPOSE 5001
+USER app
 ENTRYPOINT ["dotnet", "MemberPortal.Backend.dll"]
