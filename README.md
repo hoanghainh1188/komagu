@@ -231,3 +231,4 @@ komagu/
 
 - **The Two-Person Rule:** Komagu enforces strict governance ([`governance/usage-policy.md`](governance/usage-policy.md)) where automated audits/patches (Person A) must be validated by a human architect/engineer (Person B) prior to production deployment.
 - **100% Open Source Architecture ([ADR-0008](docs/adr/0008-transition-to-fully-open-source.md)):** Komagu is fully open source under the **Apache License 2.0**. The assessment kit, WAF edge shields, AST auto-fix generators, and CI cross-user testing engines are completely open and auditable by the global engineering community.
+- **Contributing:** See [`CONTRIBUTING.md`](CONTRIBUTING.md) for issues, branches, pull requests, tests, and Apache-2.0 contribution terms.
