@@ -380,9 +380,12 @@ class TestCorazaWafContainer(unittest.TestCase):
             _docker("rm", "-f", cls.container)
 
     @classmethod
-    def _status(cls, path, body=None):
+    def _status(cls, path, body=None, form=None):
         headers = {"Content-Type": "application/json"} if body is not None else {}
         data = json.dumps(body).encode("utf-8") if body is not None else None
+        if form is not None:
+            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            data = form.encode("ascii")
         req = urllib.request.Request(f"http://127.0.0.1:{cls.port}{path}", data=data, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=5) as resp:
@@ -429,13 +432,7 @@ class TestCorazaWafContainer(unittest.TestCase):
         self.assertNotEqual(self._status("/order/update.do?org.apache.struts.taglib.html.TOKEN=abc123"), 403)
 
     def _post_form(self, body):
-        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/order/update.do", data=body.encode("ascii"),
-                                     headers={"Content-Type": "application/x-www-form-urlencoded"})
-        try:
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                return resp.status
-        except urllib.error.HTTPError as e:
-            return e.code
+        return self._status("/order/update.do", form=body)
 
     def test_struts_token_form_post_not_blocked(self):
         self._require_running()
