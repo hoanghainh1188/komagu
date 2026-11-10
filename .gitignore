@@ -33,3 +33,10 @@ dist/
 *.swp
 *.DS_Store
 
+# Real pilot data stays outside this public repository (runbook W9-1); see .githooks/pilot_data_guard.py
+ai-raw/
+ams-exclude.txt
+src-file-list.txt
+canaries*.txt
+data-deletion-report.md
+leak-check.json

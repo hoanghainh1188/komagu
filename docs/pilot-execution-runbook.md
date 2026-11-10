@@ -91,27 +91,13 @@ Chỉ tiếp tục khi có văn bản đã ký và phương án hạ tầng đã
 ### W9-2. Tạo bản sao đã lọc
 Đây là biện pháp chính cho Q3 trong Q&A: file nhạy cảm không bao giờ có trong bản sao.
 ```bash
-rsync -a --exclude-from=ams-exclude.txt /path/to/client-repo/ ~/pilot/src/
+cp ~/komagu-pilot/delivery/pilot/ams-exclude.sample.txt ~/pilot/ams-exclude.txt   # agree the final list with the client
+rsync -a --exclude-from="$HOME/pilot/ams-exclude.txt" /path/to/client-repo/ ~/pilot/src/
 find ~/pilot/src -type f | sort > ~/pilot/src-file-list.txt    # send this list to the client for confirmation
 chmod -R a-w ~/pilot/src
 ```
-`ams-exclude.txt` cần được thống nhất với khách hàng. Mẫu khởi đầu cho Java:
-```text
-.git/
-*.jks
-*.keystore
-*.p12
-*.pem
-*.key
-*.crt
-**/src/test/
-**/test-data/
-**/*-prod.properties
-**/*-production.yml
-**/context.xml
-**/server.xml
-**/tomcat-users.xml
-```
+[`ams-exclude.sample.txt`](../delivery/pilot/ams-exclude.sample.txt) là mẫu khởi đầu cho Java; `ams-exclude.txt` cần được thống nhất với khách hàng và lưu ngoài repository. `operate/tests/test_pilot_safeguards.py` kiểm tra mẫu này bằng `rsync` thật: keystore, cấu hình production và `context.xml` đều bị loại. Khi thêm pattern, không dùng `**/` ở đầu vì rsync không khớp với file ở thư mục gốc của bản sao.
+
 Kiểm tra lại: `grep -rIliE "password|secret|jdbc:" ~/pilot/src | head` để xem những file còn chứa từ khoá. Bộ che bí mật sẽ xử lý các file đó, nhưng file không cần cho việc audit thì nên loại thêm.
 
 ### W9-3. Hạ tầng AI
@@ -239,15 +225,19 @@ Mỗi finding đã sửa phải có một test case: trước khi sửa thì tes
 
 ### W12-3. Bàn giao và xoá dữ liệu
 1. Bàn giao báo cáo, patch và kết quả test cho khách hàng.
-2. Xoá `~/pilot/src`, `~/pilot/src-fixed`, `~/pilot/out*` và log của model server (phương án A); kiểm tra thư mục tạm.
-3. Lập biên bản xoá (thư mục, ngày, người thực hiện, người xác nhận) và gửi khách hàng (cam kết §3-6 của đơn).
+2. Xoá `~/pilot/src`, `~/pilot/src-fixed`, `~/pilot/out*`, file cấu hình và danh sách trong `~/pilot/` (gồm `canaries.txt`) và log của model server (phương án A); kiểm tra thư mục tạm.
+3. Lập biên bản xoá theo mẫu JA/EN [`data-deletion-report.template.md`](../delivery/pilot/data-deletion-report.template.md) (thư mục, ngày, người thực hiện, người xác nhận, log model server, thư mục tạm) và gửi khách hàng (cam kết §3-6 của đơn). Lưu bản đã điền ở thư mục bảo mật, không commit.
 
 ---
 
 ## 9. Điều kiện dừng
 
 Dừng pilot và báo khách hàng ngay khi:
-- Phát hiện bí mật thật trong `ai-raw/` hoặc trong báo cáo: xoá đầu ra liên quan, báo cáo sự cố, bổ sung pattern che và test trước khi chạy lại.
+- Phát hiện bí mật thật trong `ai-raw/` hoặc trong báo cáo: xoá đầu ra liên quan, báo cáo sự cố, bổ sung pattern che và test trước khi chạy lại. Kiểm tra sau mỗi lần chạy Tier 2 và trước khi gửi báo cáo cho khách hàng (`komagu leak-check` có từ bản phát hành sau `v2.4.0`):
+  ```bash
+  ./bin/komagu leak-check ~/pilot/out --canary-file ~/pilot/canaries.txt --format json > ~/pilot/leak-check.json
+  ```
+  `~/pilot/canaries.txt` chứa các chuỗi khách hàng cung cấp (tên host nội bộ, tên DB, giá trị mồi), mỗi dòng một chuỗi, và nằm ngoài repository. Mã thoát: `0` không phát hiện gì, `1` có nghi vấn, `2` quét chưa đầy đủ (có file không đọc được, file nhị phân, hoặc đầu vào sai). Báo cáo chỉ ghi file, dòng và giá trị đã che. Mã `1` là nghi vấn: Person B mở từng vị trí để xác định có phải bí mật thật không, và chỉ dừng pilot khi đúng là bí mật thật. Mã `2` phải được xử lý rồi quét lại. Mã `0` không chứng minh là không còn bí mật, nên Person B vẫn phải kiểm tra như ở W10-1.
 - Có code được gửi ra ngoài phạm vi phương án đã duyệt (sai endpoint, sai vùng).
 - Khách hàng rút lại phê duyệt.
 

@@ -1,0 +1,42 @@
+# Starting exclude list for the filtered source copy of a Java legacy system (runbook W9-2).
+# Copy it outside this repository, agree the final list with the client, then pass it to rsync --exclude-from.
+#
+# Keep patterns free of a leading "**/": rsync does not match "**/context.xml" against a file at the top of the
+# copy. A name without "/" matches at any depth, and "src/test/" matches that directory at any depth.
+
+# Version control
+.git/
+.svn/
+
+# Keys, keystores and certificates
+*.jks
+*.jceks
+*.keystore
+*.truststore
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+id_rsa*
+
+# Environment-specific configuration
+*-prod.properties
+*-prod.yml
+*-prod.yaml
+*-prod.xml
+*-production.properties
+*-production.yml
+*-production.yaml
+*-production.xml
+.env
+.env.*
+
+# Application server configuration, which often holds datasource passwords
+context.xml
+server.xml
+tomcat-users.xml
+
+# Test code and test data
+src/test/
+test-data/

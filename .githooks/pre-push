@@ -1,12 +1,20 @@
 #!/bin/sh
-# Block direct pushes to main. Work goes through a branch and a pull request
-# (see CLAUDE.md, "Workflow & Development Guidelines"). Server-side protection
-# is enforced on GitHub; this local hook provides defense-in-depth.
+# Block direct pushes to main, and block real pilot data from reaching this public repository.
+# Work goes through a branch and a pull request (see CLAUDE.md, "Workflow & Development Guidelines").
+# Server-side protection is enforced on GitHub; this local hook provides defense-in-depth.
 # Enable once per clone: git config core.hooksPath .githooks
+refs=$(cat)
 while read -r local_ref local_sha remote_ref remote_sha; do
   if [ "$remote_ref" = "refs/heads/main" ]; then
     echo "pre-push: direct push to main is blocked. Push a branch and open a pull request." >&2
     exit 1
   fi
-done
-exit 0
+done <<EOF
+$refs
+EOF
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "pre-push: python3 is required to check for real pilot data." >&2
+  exit 1
+fi
+printf '%s\n' "$refs" | python3 "$(dirname "$0")/pilot_data_guard.py"
