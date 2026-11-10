@@ -82,12 +82,32 @@ def read_text(path: Path, encodings: List[str]) -> str:
     return data.decode("latin-1", errors="replace")
 
 
+# Default exclude names that are also ordinary Java package and web directory names
+AMBIGUOUS_DIR_EXCLUDES = {"vendor/", "packages/", "bin/", "obj/", "target/", "build/", "dist/",
+                          "test/", "tests/", "spec/", "docs/", "out/"}
+JAVA_PACKAGE_ROOT = re.compile(r"(?:^|/)src/main/java/|(?:^|/)(?=(?:com|org|net|jp|vn|cn|kr|de|fr|uk|io|edu|gov|biz|info)/[\w-]+/)")
+JAVA_WEB_ROOT = re.compile(r"(?:^|/)(?:src/main/webapp|WebContent|WebRoot|webapp)/")
+JAVA_TREE_EXTS = (".java", ".kt", ".groovy", ".jsp", ".xml")
+
+
+def _inside_java_tree(rel_slash: str, index: int, is_dir: bool) -> bool:
+    """True when the directory at `index` is a package inside a Java source tree or a directory under a web root."""
+    name = rel_slash.rstrip("/")
+    package_root = JAVA_PACKAGE_ROOT.search(rel_slash)
+    if package_root and package_root.start() <= index and (is_dir or name.endswith(JAVA_TREE_EXTS)):
+        return True
+    web_root = JAVA_WEB_ROOT.search(rel_slash)
+    return bool(web_root and web_root.start() <= index and (is_dir or name.endswith(".jsp")))
+
+
 def _excluded(rel: str, excludes: List[str]) -> bool:
-    rel_slash = rel.replace(os.sep, "/") + ("/" if not rel.endswith("/") else "")
+    is_dir = rel.endswith("/")
+    rel_slash = rel.replace(os.sep, "/") + ("" if is_dir else "/")
     for ex in excludes:
         ex = ex.replace("\\", "/")
         if ex.endswith("/"):
-            if rel_slash.startswith(ex) or ("/" + ex) in ("/" + rel_slash):
+            index = ("/" + rel_slash).find("/" + ex)
+            if index != -1 and not (ex in AMBIGUOUS_DIR_EXCLUDES and _inside_java_tree(rel_slash, index, is_dir)):
                 return True
         elif re.fullmatch(ex.replace(".", r"\.").replace("*", ".*"), rel.replace(os.sep, "/")):
             return True
@@ -135,6 +155,56 @@ def iter_source_files(root: Path, config: Dict, exts: Optional[set] = None) -> I
             except OSError:
                 continue
             yield p, rel
+
+
+JAVA_COMMENT = re.compile(r"(?m:^[ \t]*)(?:/\*[\s\S]*?\*/|//[^\n]*)")
+
+
+def blank_java_comments(text: str) -> str:
+    """Blank whole-line Java comments, keeping every other character at its original offset."""
+    return JAVA_COMMENT.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), text)
+
+
+def call_args(text: str, open_idx: int, limit: int = 4000) -> Tuple[str, int]:
+    """Return (argument text, index after the closing paren) for the call whose '(' is at open_idx."""
+    depth, i, end = 0, open_idx, min(len(text), open_idx + limit)
+    while i < end:
+        ch = text[i]
+        if ch in "\"`":
+            close = text.find(ch, i + 1)
+            while ch == '"' and close != -1 and text[close - 1] == "\\":
+                close = text.find(ch, close + 1)
+            i = close if close != -1 else end
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                return text[open_idx + 1:i], i + 1
+        i += 1
+    return text[open_idx + 1:end], end
+
+
+def split_top(args: str) -> List[str]:
+    """Split call arguments on top-level commas."""
+    parts, depth, cur, quote = [], 0, [], None
+    for ch in args:
+        if quote:
+            quote = None if ch == quote else quote
+        elif ch in "\"`":
+            quote = ch
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            parts.append("".join(cur).strip())
+            cur = []
+            continue
+        cur.append(ch)
+    if "".join(cur).strip():
+        parts.append("".join(cur).strip())
+    return parts
 
 
 def line_of(text: str, index: int) -> int:
