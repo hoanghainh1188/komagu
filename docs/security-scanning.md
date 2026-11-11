@@ -26,7 +26,7 @@ scanning** (repository → *Security* → *Code scanning*).
 | `kotlin` | Detekt 1.23.8 CLI + Komagu `StringBuiltSqlQuery` rule | `detekt` | `remediate/*/spring`, member-portal Spring backend |
 | `codeql` | CodeQL `security-extended` | `/language:<lang>` | python, go, csharp, javascript-typescript, actions |
 | `trivy` | Trivy 0.76.0 `fs` (vuln, secret, misconfig) | `trivy-fs` | Repository, minus exclusions |
-| `trivy` | Trivy 0.76.0 `image` | `trivy-image` | Root `Dockerfile` (not on PRs) |
+| `trivy` | Trivy 0.76.0 `image` | `trivy-image` | Root `Dockerfile` |
 
 Notes:
 
@@ -93,7 +93,10 @@ Microsoft (R) Visual C# Compiler, detekt, Trivy), with:
 
 The ruleset blocks a pull request that has no analysis for a required tool.
 A docs-only PR was blocked while `Security Scan` ran only for listed paths
-(#389), so the workflow now runs on every pull request.
+(#389), so the workflow now runs on every pull request. For the same reason the
+Trivy image scan runs on pull requests too: when a configuration present on
+`main` (`trivy-image`) is missing on a PR, code scanning marks the tool neutral
+and the ruleset blocks the merge.
 
 **pip-audit and NuGet audit** report to the job summary only and do not reach
 code scanning, so the ruleset does not see them. Proposal, not yet applied:

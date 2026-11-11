@@ -305,14 +305,12 @@ jobs:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
 
-      # Image CVEs mostly come from the base image and change over time, so the
-      # (slower) image scan runs on main and on the weekly schedule, not on every PR.
+      # The image scan also runs on pull requests (about 40 s): code scanning reports a
+      # missing trivy-image configuration on a PR as neutral, which the ruleset on main blocks.
       - name: Build Docker image
-        if: github.event_name != 'pull_request'
         run: docker build -t komagu:scan .
 
       - name: Trivy image scan
-        if: github.event_name != 'pull_request'
         run: |
           trivy image komagu:scan \
             --scanners vuln,secret \
@@ -321,7 +319,7 @@ jobs:
             --format sarif --output trivy-image.sarif
 
       - name: Upload Trivy image SARIF
-        if: github.event_name != 'pull_request' && env.CAN_UPLOAD == 'true'
+        if: env.CAN_UPLOAD == 'true'
         uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: trivy-image.sarif
