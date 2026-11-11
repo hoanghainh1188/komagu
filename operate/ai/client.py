@@ -12,6 +12,9 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
+# OpenAI-compatible `reasoning_effort` values; Ollama's /v1 also accepts "none" to turn thinking off (#382)
+REASONING_EFFORTS = ("none", "low", "medium", "high")
+
 
 class LLMClient:
     """Standard-library client for OpenAI-compatible /chat/completions endpoints."""
@@ -22,7 +25,10 @@ class LLMClient:
         model: str = "llama3.1",
         api_key: Optional[str] = None,
         timeout: int = 120,
+        reasoning_effort: Optional[str] = None,
     ) -> None:
+        if reasoning_effort is not None and reasoning_effort not in REASONING_EFFORTS:
+            raise ValueError(f"reasoning_effort must be one of {', '.join(REASONING_EFFORTS)}")
         raw_endpoint = endpoint.rstrip("/")
         if not raw_endpoint.endswith("/chat/completions"):
             self.endpoint = f"{raw_endpoint}/chat/completions"
@@ -31,6 +37,7 @@ class LLMClient:
         self.model = model
         self.api_key = api_key or "ollama"
         self.timeout = timeout
+        self.reasoning_effort = reasoning_effort
         # Running totals across chat() calls, read by the runner for ai-run-stats.json
         self.usage: Dict[str, float] = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "seconds": 0.0}
 
@@ -41,15 +48,7 @@ class LLMClient:
         max_tokens: Optional[int] = None,
     ) -> str:
         """Send a chat completion request and return the assistant response content."""
-        payload: Dict[str, Any] = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-        }
-        if max_tokens:
-            payload["max_tokens"] = max_tokens
-
-        data = json.dumps(payload).encode("utf-8")
+        data = json.dumps(self.build_payload(messages, temperature, max_tokens)).encode("utf-8")
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
@@ -73,6 +72,20 @@ class LLMClient:
             raise RuntimeError(f"LLM API HTTP {e.code} error: {err_body}") from e
         except urllib.error.URLError as e:
             raise RuntimeError(f"Failed to connect to LLM endpoint at {self.endpoint}: {e.reason}") from e
+
+    def build_payload(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.1,
+        max_tokens: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Request body for /chat/completions; `reasoning_effort` is sent only when it was set."""
+        payload: Dict[str, Any] = {"model": self.model, "messages": messages, "temperature": temperature}
+        if max_tokens:
+            payload["max_tokens"] = max_tokens
+        if self.reasoning_effort:
+            payload["reasoning_effort"] = self.reasoning_effort
+        return payload
 
     def _record_usage(self, usage: Dict[str, Any], seconds: float) -> None:
         self.usage = {
