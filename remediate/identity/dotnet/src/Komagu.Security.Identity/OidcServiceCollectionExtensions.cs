@@ -11,7 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 /// <summary>
 /// Service collection extension methods for configuring Komagu OIDC / JWT authentication.
 /// </summary>
-public static class OidcServiceCollectionExtensions
+public static partial class OidcServiceCollectionExtensions
 {
     /// <summary>
     /// Configures strict JWT Bearer token authentication conforming to RFC 9700 and Boilerplate 1 standards.
@@ -79,11 +79,14 @@ public static class OidcServiceCollectionExtensions
                     var logger = context.HttpContext.RequestServices.GetService<ILoggerFactory>()
                         ?.CreateLogger("Komagu.Security.Identity.Authentication");
 
-                    logger?.LogWarning(
-                        context.Exception,
-                        "[AUTH FAILURE] Token validation failed: {Message} | RemoteIP: {RemoteIp}",
-                        context.Exception.Message,
-                        context.HttpContext.Connection.RemoteIpAddress);
+                    if (logger is not null)
+                    {
+                        LogTokenValidationFailed(
+                            logger,
+                            context.Exception,
+                            context.Exception.Message,
+                            context.HttpContext.Connection.RemoteIpAddress);
+                    }
 
                     return Task.CompletedTask;
                 },
@@ -105,4 +108,14 @@ public static class OidcServiceCollectionExtensions
             };
         });
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Warning,
+        Message = "[AUTH FAILURE] Token validation failed: {Message} | RemoteIP: {RemoteIp}")]
+    private static partial void LogTokenValidationFailed(
+        ILogger logger,
+        Exception exception,
+        string message,
+        System.Net.IPAddress? remoteIp);
 }

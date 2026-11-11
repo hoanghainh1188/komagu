@@ -25,18 +25,17 @@ class SafeSortAllowList(allowedColumns: Collection<String>) {
      * Throws SecurityException on validation failure.
      */
     fun validateColumnName(columnName: String?): String {
-        if (columnName.isNullOrBlank()) {
-            throw SecurityException("Sort column name cannot be null or blank")
-        }
+        val trimmed = columnName?.trim().orEmpty()
+        val isIdentifier = trimmed.isNotEmpty() && safeIdentifierRegex.matches(trimmed)
+        val canonical = if (isIdentifier) allowedMap[trimmed.lowercase()] else null
+        return canonical ?: throw SecurityException(rejectionReason(columnName, trimmed))
+    }
 
-        val trimmed = columnName.trim()
-
-        if (!safeIdentifierRegex.matches(trimmed)) {
-            throw SecurityException("Potential SQL injection detected in sort column: '$columnName'. Illegal characters detected.")
-        }
-
-        return allowedMap[trimmed.lowercase()]
-            ?: throw SecurityException("Unauthorized sort column requested: '$columnName'. Column is not in allowed list.")
+    private fun rejectionReason(columnName: String?, trimmed: String): String = when {
+        trimmed.isEmpty() -> "Sort column name cannot be null or blank"
+        !safeIdentifierRegex.matches(trimmed) ->
+            "Potential SQL injection detected in sort column: '$columnName'. Illegal characters detected."
+        else -> "Unauthorized sort column requested: '$columnName'. Column is not in allowed list."
     }
 
     /**

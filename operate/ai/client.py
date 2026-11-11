@@ -9,6 +9,7 @@ import json
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -29,6 +30,8 @@ class LLMClient:
     ) -> None:
         if reasoning_effort is not None and reasoning_effort not in REASONING_EFFORTS:
             raise ValueError(f"reasoning_effort must be one of {', '.join(REASONING_EFFORTS)}")
+        if urllib.parse.urlparse(endpoint).scheme.lower() not in ("http", "https"):
+            raise ValueError("LLM endpoint must be an http:// or https:// URL")
         raw_endpoint = endpoint.rstrip("/")
         if not raw_endpoint.endswith("/chat/completions"):
             self.endpoint = f"{raw_endpoint}/chat/completions"
@@ -58,7 +61,8 @@ class LLMClient:
         req = urllib.request.Request(self.endpoint, data=data, headers=headers, method="POST")
         started = time.monotonic()
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            # The endpoint scheme is checked to be http(s) in __init__.
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # nosec B310
                 body = resp.read().decode("utf-8")
                 res_json = json.loads(body)
                 self._record_usage(res_json.get("usage") or {}, time.monotonic() - started)

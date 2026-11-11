@@ -242,7 +242,10 @@ class CrossUserTestRunner:
         error_message = None
 
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            if urllib.parse.urlparse(url).scheme.lower() not in ("http", "https"):
+                raise ValueError("base URL must be an http:// or https:// URL")
+            # The scheme is checked just above.
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # nosec B310
                 status_code = resp.status
                 raw = resp.read()
                 response_body = raw.decode("utf-8", errors="replace")[:1000]

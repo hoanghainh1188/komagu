@@ -39,93 +39,85 @@ class DefaultKomaguSecurityManager(
         tenantIdExtractor: ((T) -> String)?
     ): AuthorizationDecision {
         val authentication = SecurityContextHolder.getContext().authentication
-
-        if (authentication == null || !authentication.isAuthenticated || authentication is AnonymousAuthenticationToken) {
-            val reason = "Caller is unauthenticated"
-            emitDenialAudit(authentication, resource, operation, reason)
-            return AuthorizationDecision.denied(reason)
+        val denial = findDenial(authentication, resource, ownerUserIdExtractor, tenantIdExtractor)
+            ?: return AuthorizationDecision.granted()
+        if (denial.audited) {
+            emitDenialAudit(authentication, resource, operation, denial.reason, denial.resourceId)
         }
+        return AuthorizationDecision.denied(denial.reason)
+    }
 
-        val currentUserId = try {
-            getCurrentUserId(authentication)
-        } catch (ex: Exception) {
-            emitDenialAudit(authentication, resource, operation, ex.message ?: "Invalid user identity")
-            return AuthorizationDecision.denied(ex.message ?: "Invalid user identity")
+    /** Why the caller may not act on [resource], or null when it may. Checks run in order; the first failure wins. */
+    private fun <T> findDenial(
+        authentication: Authentication?,
+        resource: T?,
+        ownerUserIdExtractor: ((T) -> String)?,
+        tenantIdExtractor: ((T) -> String)?
+    ): Denial? {
+        val caller = authentication?.takeIf { it.isAuthenticated && it !is AnonymousAuthenticationToken }
+        val userId = caller?.let { runCatching { getCurrentUserId(it) } }
+        val tenantId = caller?.let { runCatching { getCurrentTenantId(it) } }
+        return when {
+            userId == null || tenantId == null -> Denial("Caller is unauthenticated")
+            userId.isFailure -> Denial(userId.exceptionOrNull()?.message ?: "Invalid user identity")
+            tenantId.isFailure -> Denial(tenantId.exceptionOrNull()?.message ?: "Invalid tenant identity")
+            resource == null -> Denial("Resource is null", audited = false)
+            else -> ownershipDenial(
+                resourceIdentity(resource, ownerUserIdExtractor, tenantIdExtractor),
+                userId.getOrThrow(),
+                tenantId.getOrThrow()
+            )
         }
+    }
 
-        val currentTenantId = try {
-            getCurrentTenantId(authentication)
-        } catch (ex: Exception) {
-            emitDenialAudit(authentication, resource, operation, ex.message ?: "Invalid tenant identity")
-            return AuthorizationDecision.denied(ex.message ?: "Invalid tenant identity")
+    private fun ownershipDenial(identity: ResourceIdentity, currentUserId: String, currentTenantId: String): Denial? {
+        val owner = identity.ownerUserId?.trim()
+        val tenant = identity.tenantId?.trim()
+        val reason = when {
+            owner.isNullOrEmpty() || tenant.isNullOrEmpty() ->
+                "Target resource does not expose ownerUserId and tenantId"
+            // 1. Tenant boundary check
+            tenant != currentTenantId ->
+                "Tenant boundary violation: current tenant '$currentTenantId' != resource tenant '$tenant'"
+            // 2. User ownership check
+            owner != currentUserId ->
+                "User ownership violation: current user '$currentUserId' != resource owner '$owner'"
+            else -> null
         }
+        return reason?.let { Denial(it, resourceId = identity.id) }
+    }
 
-        if (resource == null) {
-            return AuthorizationDecision.denied("Resource is null")
+    /** Owner, tenant and id from [OwnedResource], the extractors, then getters as a fallback. */
+    private fun <T> resourceIdentity(
+        resource: T & Any,
+        ownerUserIdExtractor: ((T) -> String)?,
+        tenantIdExtractor: ((T) -> String)?
+    ): ResourceIdentity {
+        val owned = resource as? OwnedResource<*>
+        val identity = ResourceIdentity(
+            ownerUserId = ownerUserIdExtractor?.invoke(resource) ?: owned?.ownerUserId,
+            tenantId = tenantIdExtractor?.invoke(resource) ?: owned?.tenantId,
+            id = owned?.id?.toString()
+        )
+        if (identity.ownerUserId != null && identity.tenantId != null) {
+            return identity
         }
-
-        // Extract ownerUserId and tenantId from resource
-        var resourceOwnerUserId: String? = null
-        var resourceTenantId: String? = null
-        var resourceId: String? = null
-
-        if (resource is OwnedResource<*>) {
-            resourceOwnerUserId = resource.ownerUserId
-            resourceTenantId = resource.tenantId
-            resourceId = resource.id?.toString()
-        }
-
-        if (ownerUserIdExtractor != null) {
-            resourceOwnerUserId = ownerUserIdExtractor(resource)
-        }
-        if (tenantIdExtractor != null) {
-            resourceTenantId = tenantIdExtractor(resource)
-        }
-
         // Reflection fallback if not implementing OwnedResource directly
-        if (resourceOwnerUserId == null || resourceTenantId == null) {
-            try {
-                val clazz = resource::class.java
-                val ownerField = clazz.methods.firstOrNull { it.name == "getOwnerUserId" || it.name == "ownerUserId" }
-                val tenantField = clazz.methods.firstOrNull { it.name == "getTenantId" || it.name == "tenantId" }
-                val idField = clazz.methods.firstOrNull { it.name == "getId" || it.name == "id" }
-
-                resourceOwnerUserId = resourceOwnerUserId ?: ownerField?.invoke(resource)?.toString()
-                resourceTenantId = resourceTenantId ?: tenantField?.invoke(resource)?.toString()
-                resourceId = resourceId ?: idField?.invoke(resource)?.toString()
-            } catch (_: Exception) {
-            }
+        fun read(vararg names: String): String? = try {
+            resource::class.java.methods.firstOrNull { it.name in names }?.invoke(resource)?.toString()
+        } catch (_: Exception) {
+            null
         }
-
-        val trimmedOwner = resourceOwnerUserId?.trim()
-        val trimmedTenant = resourceTenantId?.trim()
-
-        if (trimmedOwner.isNullOrEmpty() || trimmedTenant.isNullOrEmpty()) {
-            val reason = "Target resource does not expose ownerUserId and tenantId"
-            emitDenialAudit(authentication, resource, operation, reason, resourceId)
-            return AuthorizationDecision.denied(reason)
-        }
-
-        // 1. Tenant boundary check
-        if (trimmedTenant != currentTenantId) {
-            val reason = "Tenant boundary violation: current tenant '$currentTenantId' != resource tenant '$trimmedTenant'"
-            emitDenialAudit(authentication, resource, operation, reason, resourceId)
-            return AuthorizationDecision.denied(reason)
-        }
-
-        // 2. User ownership check
-        if (trimmedOwner != currentUserId) {
-            val reason = "User ownership violation: current user '$currentUserId' != resource owner '$trimmedOwner'"
-            emitDenialAudit(authentication, resource, operation, reason, resourceId)
-            return AuthorizationDecision.denied(reason)
-        }
-
-        return AuthorizationDecision.granted()
+        return ResourceIdentity(
+            ownerUserId = identity.ownerUserId ?: read("getOwnerUserId", "ownerUserId"),
+            tenantId = identity.tenantId ?: read("getTenantId", "tenantId"),
+            id = identity.id ?: read("getId", "id")
+        )
     }
 
     override fun getCurrentUserId(authentication: Authentication?): String {
         val auth = authentication ?: SecurityContextHolder.getContext().authentication
-        ?: throw IllegalStateException("No authentication present in security context")
+        ?: error("No authentication present in security context")
 
         when (val principal = auth.principal) {
             is Jwt -> {
@@ -141,12 +133,12 @@ class DefaultKomaguSecurityManager(
             return name
         }
 
-        throw IllegalStateException("Verified user identity claim missing in token context")
+        error("Verified user identity claim missing in token context")
     }
 
     override fun getCurrentTenantId(authentication: Authentication?): String {
         val auth = authentication ?: SecurityContextHolder.getContext().authentication
-        ?: throw IllegalStateException("No authentication present in security context")
+        ?: error("No authentication present in security context")
 
         when (val principal = auth.principal) {
             is Jwt -> {
@@ -166,7 +158,7 @@ class DefaultKomaguSecurityManager(
             }
         }
 
-        throw IllegalStateException("Verified tenant identity claim missing in token context")
+        error("Verified tenant identity claim missing in token context")
     }
 
     private fun <T> emitDenialAudit(
@@ -195,4 +187,8 @@ class DefaultKomaguSecurityManager(
             // Auditing failures must never alter the denial outcome
         }
     }
+
+    private class Denial(val reason: String, val resourceId: String? = null, val audited: Boolean = true)
+
+    private class ResourceIdentity(val ownerUserId: String?, val tenantId: String?, val id: String?)
 }

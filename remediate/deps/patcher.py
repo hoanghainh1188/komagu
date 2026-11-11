@@ -202,7 +202,8 @@ class CVEAdvisoryCatalog:
         )
         results: List[CVEAdvisoryEntry] = []
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            # Fixed https://api.osv.dev URL; no caller-supplied scheme.
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # nosec B310
                 data = json.loads(resp.read().decode("utf-8"))
             for vuln in data.get("vulns", []):
                 vuln_id = vuln.get("id", "OSV-UNKNOWN")

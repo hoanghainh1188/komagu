@@ -1,6 +1,7 @@
 package golang
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -67,7 +68,7 @@ func TestAuthorizer_AttackerDeniedWith404AndAudit(t *testing.T) {
 	// Verify RequireOwnership returns ErrResourceNotFound
 	sink.Events = nil // Reset sink
 	err := auth.RequireOwnership(attackerClaims, order, OpRead)
-	if err != ErrResourceNotFound {
+	if !errors.Is(err, ErrResourceNotFound) {
 		t.Fatalf("expected ErrResourceNotFound, got: %v", err)
 	}
 
@@ -129,7 +130,9 @@ func TestAuthorizer_HTTPMiddleware(t *testing.T) {
 
 	handler := auth.Middleware(claimsExtractor, loader, OpRead)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		if _, err := w.Write([]byte(`{"status":"ok"}`)); err != nil {
+			t.Errorf("write response: %v", err)
+		}
 	}))
 
 	// 1. Owner request -> 200 OK

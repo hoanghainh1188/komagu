@@ -1,6 +1,12 @@
 package io.komagu.security.query.detekt
 
-import io.gitlab.arturbosch.detekt.api.*
+import io.gitlab.arturbosch.detekt.api.CodeSmell
+import io.gitlab.arturbosch.detekt.api.Config
+import io.gitlab.arturbosch.detekt.api.Debt
+import io.gitlab.arturbosch.detekt.api.Entity
+import io.gitlab.arturbosch.detekt.api.Issue
+import io.gitlab.arturbosch.detekt.api.Rule
+import io.gitlab.arturbosch.detekt.api.Severity
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -33,37 +39,26 @@ class StringBuiltSqlQueryRule(config: Config = Config.empty) : Rule(config) {
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
 
-        val callee = expression.calleeExpression?.text ?: return
-        if (!targetSqlMethods.contains(callee)) {
+        val callee = expression.calleeExpression?.text
+        val firstArg = expression.valueArguments.firstOrNull()?.getArgumentExpression()
+        if (callee == null || callee !in targetSqlMethods || firstArg == null) {
             return
         }
 
-        val arguments = expression.valueArguments
-        if (arguments.isEmpty()) {
-            return
+        val construction = when {
+            // 1. String template with variable interpolation: "SELECT * FROM orders WHERE id = $orderId"
+            firstArg is KtStringTemplateExpression && firstArg.hasInterpolation() -> "uses string template interpolation"
+            // 2. Binary string concatenation: "SELECT * FROM orders WHERE id = " + orderId
+            firstArg is KtBinaryExpression && firstArg.operationToken == KtTokens.PLUS ->
+                "is built using binary string concatenation (+)"
+            else -> null
         }
-
-        val firstArg = arguments[0].getArgumentExpression() ?: return
-
-        // 1. String template with variable interpolation: "SELECT * FROM orders WHERE id = $orderId"
-        if (firstArg is KtStringTemplateExpression && firstArg.hasInterpolation()) {
+        if (construction != null) {
             report(
                 CodeSmell(
                     issue = issue,
                     entity = Entity.from(firstArg),
-                    message = "SQL/JPQL query in '$callee' uses string template interpolation. All parameters must be passed as parameterized bindings."
-                )
-            )
-            return
-        }
-
-        // 2. Binary string concatenation: "SELECT * FROM orders WHERE id = " + orderId
-        if (firstArg is KtBinaryExpression && firstArg.operationToken == KtTokens.PLUS) {
-            report(
-                CodeSmell(
-                    issue = issue,
-                    entity = Entity.from(firstArg),
-                    message = "SQL/JPQL query in '$callee' is built using binary string concatenation (+). All parameters must be passed as parameterized bindings."
+                    message = "SQL/JPQL query in '$callee' $construction. All parameters must be passed as parameterized bindings."
                 )
             )
         }

@@ -222,23 +222,23 @@ public class OwnershipEnforcerBehaviouralTest {
     def test_php_shim_behavioural_execution(self) -> None:
         """Verify PHP shim behavioral normalization and denial with SQLite in-memory PDO."""
         php_file = SHIMS_ROOT / "php" / "komagu_authz_shim.php"
-        php_test_script = f"""
-        require_once '{php_file}';
+        php_test_script = """
+        require_once '__PHP_FILE__';
 
         // 1. Test komagu_normalize_id
         assert(komagu_normalize_id(1) === 1);
         assert(komagu_normalize_id('42') === 42);
         
         $invalidIds = [null, '', false, true, 0, '0', -1, '-5', '007', '1e2', '0x5', '1.5'];
-        foreach ($invalidIds as $inv) {{
-            try {{
+        foreach ($invalidIds as $inv) {
+            try {
                 komagu_normalize_id($inv);
                 echo "FAIL: Expected exception for " . var_export($inv, true) . "\\n";
                 exit(1);
-            }} catch (InvalidArgumentException $e) {{
+            } catch (InvalidArgumentException $e) {
                 // Expected
-            }}
-        }}
+            }
+        }
 
         // 2. Test komagu_check_ownership with SQLite in-memory PDO
         $pdo = new PDO('sqlite::memory:');
@@ -258,7 +258,7 @@ public class OwnershipEnforcerBehaviouralTest {
         assert(komagu_check_ownership($pdo, 'orders', 'id', '', 'user_id', 100, $allowed) === false);
 
         echo "ALL_PHP_BEHAVIOURAL_TESTS_PASSED\\n";
-        """
+        """.replace("__PHP_FILE__", str(php_file))  # nosec B608  # PHP test script with a fixed repo path, not a query
         proc = subprocess.run(
             ["php", "-r", php_test_script],
             capture_output=True,

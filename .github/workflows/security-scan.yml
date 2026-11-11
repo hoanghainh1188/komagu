@@ -2,7 +2,7 @@ name: Security Scan
 
 # Phase 1 (report-only): findings never fail the build; they are published to
 # GitHub code scanning (Security tab) as SARIF. A scanner crash still fails its job.
-# See docs/security-scanning.md for the roadmap to gating.
+# Merges are gated by a code scanning ruleset on main; see docs/security-scanning.md.
 
 on:
   pull_request:

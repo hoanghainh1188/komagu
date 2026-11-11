@@ -162,6 +162,9 @@ class DocumentController(
 }
 
 @RestController
+// Each endpoint keeps the planted vulnerable branch and the remediated branch side by side,
+// with early returns, so the demo shows the before and after in one place.
+@Suppress("ReturnCount")
 @RequestMapping("/api/v1/test")
 class LegacyTestController(
     private val orderRepository: OrderRepository,
