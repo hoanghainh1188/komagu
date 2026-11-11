@@ -161,6 +161,12 @@ Examples:
         default=120,
         help="Timeout in seconds per LLM request (default: 120)",
     )
+    parser.add_argument(
+        "--ai-reasoning-effort",
+        choices=("none", "low", "medium", "high"),
+        default=None,
+        help="Send reasoning_effort with each LLM request; 'none' turns thinking off on Ollama (default: not sent)",
+    )
     parser.set_defaults(func=execute_scan)
 
 
@@ -284,7 +290,8 @@ def execute_scan(args: argparse.Namespace) -> int:
                 step_info(msg)
 
         try:
-            client = LLMClient(endpoint=endpoint, model=model, api_key=api_key, timeout=timeout)
+            client = LLMClient(endpoint=endpoint, model=model, api_key=api_key, timeout=timeout,
+                               reasoning_effort=getattr(args, "ai_reasoning_effort", None))
             runner = HeadlessAIRunner(target_path, out_dir, client, step_callback=_scan_callback)
             runner.run()
         except Exception as e:
