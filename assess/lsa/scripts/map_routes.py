@@ -24,6 +24,7 @@ from java_routes import (build_class_index, collect_spring_beans, entry_method_l
                          struts_modules, xml_declared)
 from lsa_common import (JAVA_WEB_ROOT, KIT_VERSION, call_args, compile_id_patterns, is_id_name,  # noqa: E402
                         iter_source_files, line_of, load_config, read_text, split_top, write_json)
+from laravel_routes import resolve_laravel_handlers, route_action  # noqa: E402
 from nextjs_routes import middleware_note, nextjs_declared  # noqa: E402
 from privilege import annotate_privilege  # noqa: E402
 
@@ -268,7 +269,7 @@ def php_declared(c: Collector, rel: str, text: str, stacks: set) -> bool:
         end = text.find(";", m.end())
         stmt = text[m.start(): end if end > 0 else m.end() + 200]
         c.add(stack="php-laravel", kind="declared_route", method=[verb.upper()], path="/" + path.lstrip("/"),
-              handler={"file": rel, "line": line, "symbol": None}, id_params=c.path_params(path),
+              handler={"file": rel, "line": line, "symbol": route_action(stmt)}, id_params=c.path_params(path),
               guard_hints=c.guards(stmt, line) + c.guards(text[:m.start()][-3000:], 1)[:2],
               data_hints=[], notes="handler is in the controller named in this route")
         found = True
@@ -744,6 +745,8 @@ def map_routes(target: Path, config: Dict, stack_ids: Optional[set] = None, work
             it["id_params"] = c.inputs("java", t)
             it["guard_hints"] = it["guard_hints"] or c.guards(t)
             it["data_hints"] = it["data_hints"] or c.data_ops(t)
+    # post-pass 1b: Laravel route declarations -> the controller method they name (#380)
+    c.items = resolve_laravel_handlers(c.items, target, enc, c, [rel for _, rel in files])
     # post-pass 2: servlet classes without @WebServlet -> take the path from web.xml
     xml_paths: Dict[str, List[str]] = {}
     for it in c.items:
