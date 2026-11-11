@@ -84,7 +84,7 @@ What remains suppressed, each with its reason next to the code:
 | SBOM manifest parsing | Bandit B314 | DTDs refused before parsing |
 | Member-portal Spring demo | Detekt `LongParameterList`, `LongMethod`, `ReturnCount`, `SpreadOperator` | JPA entities, seed data, side-by-side planted and fixed endpoints, Spring Boot `main` |
 
-**Ruleset.** *Require code scanning results* on `main` for every tool that
+**Ruleset** (enabled 2026-11-11, "Require code scanning results (main)"). *Require code scanning results* on `main` for every tool that
 uploads on pull requests (CodeQL, Bandit, golangci-lint, govulncheck,
 Microsoft (R) Visual C# Compiler, detekt, Trivy), with:
 
