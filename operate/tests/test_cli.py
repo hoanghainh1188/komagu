@@ -61,7 +61,7 @@ class TestKomaguCLI(unittest.TestCase):
     def test_subcommand_parser_builds_cleanly(self) -> None:
         """In-process parser must parse subcommands without throwing."""
         parser = build_parser()
-        args_scan = parser.parse_args(["scan", "/tmp", "--format", "html"])
+        args_scan = parser.parse_args(["scan", "./src", "--format", "html"])
         self.assertEqual(args_scan.subcommand, "scan")
         self.assertEqual(args_scan.format, "html")
 

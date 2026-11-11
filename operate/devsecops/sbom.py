@@ -24,6 +24,16 @@ import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional
 
 
+def _parse_xml_without_dtd(file_path: str) -> ET.Element:
+    """Parse a manifest from the scanned project, refusing DTDs (entity expansion)."""
+    with open(file_path, "r", encoding="utf-8", errors="replace") as handle:
+        text = handle.read()
+    if "<!DOCTYPE" in text.upper() or "<!ENTITY" in text.upper():
+        raise ValueError(f"{file_path}: XML with a DTD is not parsed")
+    # DTDs are refused above, so no entity can be declared or expanded.
+    return ET.fromstring(text)  # nosec B314
+
+
 class Component:
     """Represents a software package or component in an SBOM."""
 
@@ -195,8 +205,7 @@ class SBOMGenerator:
     def _parse_csproj(self, file_path: str) -> List[Component]:
         components = []
         try:
-            tree = ET.parse(file_path)
-            root = tree.getroot()
+            root = _parse_xml_without_dtd(file_path)
             for pkg in root.findall(".//PackageReference"):
                 name = pkg.get("Include") or pkg.get("Update")
                 version = pkg.get("Version")
@@ -213,8 +222,7 @@ class SBOMGenerator:
     def _parse_pom_xml(self, file_path: str) -> List[Component]:
         components = []
         try:
-            tree = ET.parse(file_path)
-            root = tree.getroot()
+            root = _parse_xml_without_dtd(file_path)
             ns = {"m": "http://maven.apache.org/POM/4.0.0"}
             # Search both with namespace and without
             deps = root.findall(".//m:dependency", ns) or root.findall(".//dependency")

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Default security audit sink implementation logging structured events via ILogger.
 /// </summary>
-public sealed class LoggingSecurityAuditSink : ISecurityAuditSink
+public sealed partial class LoggingSecurityAuditSink : ISecurityAuditSink
 {
     private readonly ILogger<LoggingSecurityAuditSink> _logger;
 
@@ -18,8 +18,8 @@ public sealed class LoggingSecurityAuditSink : ISecurityAuditSink
     {
         ArgumentNullException.ThrowIfNull(auditEvent);
 
-        _logger.LogWarning(
-            "[SECURITY AUDIT] {EventName} | TraceId: {TraceId} | Actor: {ActorUserId} | Tenant: {ActorTenantId} | Target: {ResourceType}/{ResourceId} | Op: {Operation} | IP: {ClientIp} | Reason: {Reason}",
+        LogAuditEvent(
+            _logger,
             auditEvent.EventName,
             auditEvent.TraceId ?? "none",
             auditEvent.ActorUserId ?? "anonymous",
@@ -32,4 +32,20 @@ public sealed class LoggingSecurityAuditSink : ISecurityAuditSink
 
         return ValueTask.CompletedTask;
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Warning,
+        Message = "[SECURITY AUDIT] {EventName} | TraceId: {TraceId} | Actor: {ActorUserId} | Tenant: {ActorTenantId} | Target: {ResourceType}/{ResourceId} | Op: {Operation} | IP: {ClientIp} | Reason: {Reason}")]
+    private static partial void LogAuditEvent(
+        ILogger logger,
+        string eventName,
+        string traceId,
+        string actorUserId,
+        string actorTenantId,
+        string resourceType,
+        string resourceId,
+        ResourceOperation operation,
+        string clientIp,
+        string reason);
 }

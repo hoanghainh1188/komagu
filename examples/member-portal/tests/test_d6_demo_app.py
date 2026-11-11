@@ -86,7 +86,7 @@ class TestDemoAppVerification(unittest.TestCase):
         health_url = f"{cls.base_url}/api/v1/auth/personas"
         for _ in range(50):
             try:
-                with urllib.request.urlopen(health_url, timeout=1.0) as resp:
+                with urllib.request.urlopen(health_url, timeout=1.0) as resp:  # nosec B310  # http://127.0.0.1 test server
                     if resp.status == 200:
                         ready = True
                         break
@@ -124,7 +124,7 @@ class TestDemoAppVerification(unittest.TestCase):
             url,
             headers={"Authorization": "Bearer token-user-a"},
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310  # http://127.0.0.1 test server
             self.assertEqual(resp.status, 200)
             data = json.loads(resp.read().decode("utf-8"))
             self.assertEqual(data["id"], "ord-001")
@@ -188,7 +188,7 @@ class TestDemoAppVerification(unittest.TestCase):
             headers={"Authorization": "Bearer token-user-c"},
         )
         with self.assertRaises(urllib.error.HTTPError) as ctx:
-            urllib.request.urlopen(req, timeout=5)
+            urllib.request.urlopen(req, timeout=5)  # nosec B310  # http://127.0.0.1 test server
         self.assertEqual(ctx.exception.code, 404)
 
     def test_05_safe_sort_protects_against_sqli(self) -> None:
@@ -199,7 +199,7 @@ class TestDemoAppVerification(unittest.TestCase):
             headers={"Authorization": "Bearer token-user-a"},
         )
         with self.assertRaises(urllib.error.HTTPError) as ctx:
-            urllib.request.urlopen(req, timeout=5)
+            urllib.request.urlopen(req, timeout=5)  # nosec B310  # http://127.0.0.1 test server
         # Server must reject with 400 or 500 SecurityException, not 200
         self.assertIn(ctx.exception.code, [400, 500])
 

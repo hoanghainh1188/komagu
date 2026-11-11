@@ -8,6 +8,8 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
+// JPA entity: one constructor parameter per column.
+@Suppress("LongParameterList")
 @Entity
 @Table(name = "portal_orders")
 class OrderEntity(
@@ -21,6 +23,8 @@ class OrderEntity(
     var createdAt: Instant = Instant.now()
 ) : OwnedResource<String>
 
+// JPA entity: one constructor parameter per column.
+@Suppress("LongParameterList")
 @Entity
 @Table(name = "portal_documents")
 class DocumentEntity(

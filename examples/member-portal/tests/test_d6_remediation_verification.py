@@ -88,7 +88,7 @@ class TestRemediationVerification(unittest.TestCase):
         health_url = f"{cls.base_url}/api/v1/auth/personas"
         for _ in range(50):
             try:
-                with urllib.request.urlopen(health_url, timeout=1.0) as resp:
+                with urllib.request.urlopen(health_url, timeout=1.0) as resp:  # nosec B310  # http://127.0.0.1 test server
                     if resp.status == 200:
                         ready = True
                         break
@@ -126,7 +126,7 @@ class TestRemediationVerification(unittest.TestCase):
             url,
             headers={"Authorization": "Bearer token-user-a"},
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310  # http://127.0.0.1 test server
             self.assertEqual(resp.status, 200)
             data = json.loads(resp.read().decode("utf-8"))
             self.assertEqual(data["id"], "ord-001")
@@ -169,7 +169,7 @@ class TestRemediationVerification(unittest.TestCase):
             headers={"Authorization": "Bearer token-user-b"},
         )
         with self.assertRaises(urllib.error.HTTPError) as ctx:
-            urllib.request.urlopen(req, timeout=5)
+            urllib.request.urlopen(req, timeout=5)  # nosec B310  # http://127.0.0.1 test server
         self.assertEqual(ctx.exception.code, 404)
 
     def test_04_attacker_direct_put_unauthorized_returns_404(self) -> None:
@@ -186,7 +186,7 @@ class TestRemediationVerification(unittest.TestCase):
             method="PUT",
         )
         with self.assertRaises(urllib.error.HTTPError) as ctx:
-            urllib.request.urlopen(req, timeout=5)
+            urllib.request.urlopen(req, timeout=5)  # nosec B310  # http://127.0.0.1 test server
         self.assertEqual(ctx.exception.code, 404)
 
     def test_05_attacker_direct_delete_unauthorized_returns_404(self) -> None:
@@ -198,7 +198,7 @@ class TestRemediationVerification(unittest.TestCase):
             method="DELETE",
         )
         with self.assertRaises(urllib.error.HTTPError) as ctx:
-            urllib.request.urlopen(req, timeout=5)
+            urllib.request.urlopen(req, timeout=5)  # nosec B310  # http://127.0.0.1 test server
         self.assertEqual(ctx.exception.code, 404)
 
     def test_06_parameterized_search_neutralizes_sqli(self) -> None:
@@ -210,7 +210,7 @@ class TestRemediationVerification(unittest.TestCase):
             url,
             headers={"Authorization": "Bearer token-user-a"},
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310  # http://127.0.0.1 test server
             self.assertEqual(resp.status, 200)
             data = json.loads(resp.read().decode("utf-8"))
             # When safely parameterized as LIKE '%...%', it searches for the literal string and matches nothing

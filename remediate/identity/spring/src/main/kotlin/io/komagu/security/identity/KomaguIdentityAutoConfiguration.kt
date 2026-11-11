@@ -47,46 +47,12 @@ class KomaguIdentityAutoConfiguration {
             else -> ""
         }
 
-        if (properties.audience.isBlank()) {
-            throw IllegalStateException("komagu.security.oidc.audience must not be blank")
+        check(properties.audience.isNotBlank()) { "komagu.security.oidc.audience must not be blank" }
+        check(properties.clockSkewSeconds in 0L..120L) {
+            "komagu.security.oidc.clock-skew-seconds must be between 0 and 120 (got ${properties.clockSkewSeconds})"
         }
 
-        if (properties.clockSkewSeconds < 0L || properties.clockSkewSeconds > 120L) {
-            throw IllegalStateException(
-                "komagu.security.oidc.clock-skew-seconds must be between 0 and 120 (got ${properties.clockSkewSeconds})"
-            )
-        }
-
-        val jwkUri = properties.jwkSetUri?.trim()
-        val decoder: NimbusJwtDecoder = when {
-            !jwkUri.isNullOrBlank() -> {
-                if (effectiveIssuer.isBlank()) {
-                    throw IllegalStateException("komagu.security.oidc.issuer must not be blank")
-                }
-                if (!properties.allowInsecureHttpJwks && !jwkUri.lowercase().startsWith("https://")) {
-                    throw IllegalStateException(
-                        "komagu.security.oidc.jwk-set-uri must use HTTPS ($jwkUri). " +
-                        "Set komagu.security.oidc.allow-insecure-http-jwks=true only for testing."
-                    )
-                }
-                NimbusJwtDecoder.withJwkSetUri(jwkUri).build()
-            }
-            effectiveIssuer.isNotBlank() -> {
-                if (!properties.allowInsecureHttpJwks && !effectiveIssuer.lowercase().startsWith("https://")) {
-                    throw IllegalStateException(
-                        "OIDC issuer URI must use HTTPS ($effectiveIssuer). " +
-                        "Set komagu.security.oidc.allow-insecure-http-jwks=true only for testing."
-                    )
-                }
-                NimbusJwtDecoder.withIssuerLocation(effectiveIssuer).build()
-            }
-            else -> {
-                throw IllegalStateException(
-                    "Either komagu.security.oidc.jwk-set-uri or komagu.security.oidc.issuer " +
-                    "(or spring.security.oauth2.resourceserver.jwt.issuer-uri) must be configured"
-                )
-            }
-        }
+        val decoder = buildDecoder(properties, effectiveIssuer)
 
         val expirationValidator = KomaguExpirationValidator()
         val timestampValidator = JwtTimestampValidator(Duration.ofSeconds(properties.clockSkewSeconds))
@@ -105,6 +71,33 @@ class KomaguIdentityAutoConfiguration {
         )
         return decoder
     }
+
+    private fun buildDecoder(properties: KomaguOidcProperties, effectiveIssuer: String): NimbusJwtDecoder {
+        val jwkUri = properties.jwkSetUri?.trim()
+        return when {
+            !jwkUri.isNullOrBlank() -> {
+                check(effectiveIssuer.isNotBlank()) { "komagu.security.oidc.issuer must not be blank" }
+                check(properties.allowInsecureHttpJwks || isHttps(jwkUri)) {
+                    "komagu.security.oidc.jwk-set-uri must use HTTPS ($jwkUri). " +
+                        "Set komagu.security.oidc.allow-insecure-http-jwks=true only for testing."
+                }
+                NimbusJwtDecoder.withJwkSetUri(jwkUri).build()
+            }
+            effectiveIssuer.isNotBlank() -> {
+                check(properties.allowInsecureHttpJwks || isHttps(effectiveIssuer)) {
+                    "OIDC issuer URI must use HTTPS ($effectiveIssuer). " +
+                        "Set komagu.security.oidc.allow-insecure-http-jwks=true only for testing."
+                }
+                NimbusJwtDecoder.withIssuerLocation(effectiveIssuer).build()
+            }
+            else -> error(
+                "Either komagu.security.oidc.jwk-set-uri or komagu.security.oidc.issuer " +
+                    "(or spring.security.oauth2.resourceserver.jwt.issuer-uri) must be configured"
+            )
+        }
+    }
+
+    private fun isHttps(uri: String): Boolean = uri.lowercase().startsWith("https://")
 
     @Bean
     @ConditionalOnMissingBean(SecurityFilterChain::class)

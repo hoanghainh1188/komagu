@@ -186,7 +186,7 @@ class TestMockBackendTraffic(unittest.TestCase):
                 "X-Custom-Header": "safe-value-unredacted",
             }
         )
-        with urllib.request.urlopen(req, timeout=3) as resp:
+        with urllib.request.urlopen(req, timeout=3) as resp:  # nosec B310  # local test server or KOMAGU_GATEWAY_URL under test
             self.assertEqual(resp.status, 200)
             data = json.loads(resp.read().decode("utf-8"))
 
@@ -388,7 +388,7 @@ class TestCorazaWafContainer(unittest.TestCase):
             data = form.encode("ascii")
         req = urllib.request.Request(f"http://127.0.0.1:{cls.port}{path}", data=data, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310  # local test server or KOMAGU_GATEWAY_URL under test
                 return resp.status
         except urllib.error.HTTPError as e:
             return e.code
@@ -505,7 +505,7 @@ class TestLiveEdgeSecurity(unittest.TestCase):
     def setUpClass(cls):
         try:
             req = urllib.request.Request(f"{cls.BASE_URL}/api/v1/health")
-            with urllib.request.urlopen(req, timeout=1) as resp:
+            with urllib.request.urlopen(req, timeout=1) as resp:  # nosec B310  # local test server or KOMAGU_GATEWAY_URL under test
                 cls.live_available = True
         except Exception:
             cls.live_available = False
@@ -516,7 +516,7 @@ class TestLiveEdgeSecurity(unittest.TestCase):
 
     def test_live_legitimate_request_returns_200(self):
         req = urllib.request.Request(f"{self.BASE_URL}/api/v1/orders")
-        with urllib.request.urlopen(req, timeout=3) as resp:
+        with urllib.request.urlopen(req, timeout=3) as resp:  # nosec B310  # local test server or KOMAGU_GATEWAY_URL under test
             self.assertEqual(resp.status, 200)
             self.assertIn("X-Correlation-ID", resp.headers)
 
@@ -524,7 +524,7 @@ class TestLiveEdgeSecurity(unittest.TestCase):
         sqli_url = f"{self.BASE_URL}/api/v1/orders?id=1%27+OR+1%3D1--"
         req = urllib.request.Request(sqli_url)
         try:
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with urllib.request.urlopen(req, timeout=3) as resp:  # nosec B310  # local test server or KOMAGU_GATEWAY_URL under test
                 self.fail(f"Expected 403 Forbidden but received {resp.status}")
         except urllib.error.HTTPError as e:
             self.assertEqual(e.code, 403)

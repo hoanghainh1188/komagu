@@ -34,6 +34,8 @@ import java.time.Instant
 // so the identity module's JWT decoder, which requires komagu.security.oidc.*, is left out.
 @SpringBootApplication(exclude = [KomaguIdentityAutoConfiguration::class])
 class Application {
+    // Demo seed data: one literal per row, read as a table.
+    @Suppress("LongMethod")
     @Bean
     fun seedDataRunner(
         orderRepository: OrderRepository,
@@ -107,6 +109,8 @@ class Application {
     }
 }
 
+// Standard Spring Boot entry point; the copy of args happens once at startup.
+@Suppress("SpreadOperator")
 fun main(args: Array<String>) {
     runApplication<Application>(*args)
 }

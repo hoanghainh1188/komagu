@@ -66,6 +66,11 @@ class ScenarioResult:
         }
 
 
+def _require_http(target: str) -> None:
+    if urllib.parse.urlparse(target).scheme.lower() not in ("http", "https"):
+        raise ValueError("target must be an http:// or https:// URL")
+
+
 class BaseScenario:
     """Base class for BAS attack scenarios."""
 
@@ -101,6 +106,7 @@ class TimesCarBreachScenario(BaseScenario):
         sample_ids: Optional[List[str]] = None,
         timeout: float = 10.0,
     ) -> None:
+        _require_http(target)
         super().__init__(target, timeout)
         self.endpoint_pattern = endpoint_pattern
         self.attacker_token = attacker_token
@@ -145,7 +151,8 @@ class TimesCarBreachScenario(BaseScenario):
             response_sample = ""
 
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                # self.target is checked to be http(s) in __init__.
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # nosec B310
                     status_code = resp.status
                     body = resp.read().decode("utf-8", errors="replace")[:200]
                     response_sample = body
@@ -218,6 +225,7 @@ class MetabaseZeroDayScenario(BaseScenario):
         target_param: str = "q",
         timeout: float = 10.0,
     ) -> None:
+        _require_http(target)
         super().__init__(target, timeout)
         self.query_path = query_path
         self.target_param = target_param
@@ -269,7 +277,8 @@ class MetabaseZeroDayScenario(BaseScenario):
             response_sample = ""
 
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                # self.target is checked to be http(s) in __init__.
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # nosec B310
                     status_code = resp.status
                     body = resp.read().decode("utf-8", errors="replace")[:300]
                     response_sample = body

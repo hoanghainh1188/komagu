@@ -63,7 +63,8 @@ class EchoHandler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=EchoHandler, port=5000):
-    server_address = ("0.0.0.0", port)
+    # Runs inside the edge test container; Kong reaches it over the Docker network.
+    server_address = ("0.0.0.0", port)  # nosec B104
     httpd = server_class(server_address, handler_class)
     print(f"Mock upstream backend listening on port {port}...")
     httpd.serve_forever()

@@ -4,9 +4,9 @@ The `Security Scan` workflow (`.github/workflows/security-scan.yml`) runs static
 analysis and dependency/CVE scanners and publishes the results to **GitHub code
 scanning** (repository → *Security* → *Code scanning*).
 
-## Phase 1: report-only (current)
+## Phase 1: report-only scanners
 
-- Findings **never fail** a build. A scanner that crashes still fails its job,
+- Findings **never fail** a scanner job. A scanner that crashes still fails its job,
   so a broken scanner stays visible.
 - The workflow runs on pull requests that touch scannable files, on every push to
   `main`, every Monday at 02:17 UTC, and on demand (`workflow_dispatch`).
@@ -63,10 +63,40 @@ and the Trivy `--skip-dirs` flags in the workflow.
    - Trivy misconfig: an entry in `.trivyignore` with a comment
 3. Alternatively, dismiss the alert in the Security tab and select a reason.
 
-## Phase 2: gating (planned)
+## Phase 2: gating
 
-1. Triage the phase 1 baseline until no High/Critical alerts remain open.
-2. Enable the branch protection rule *Require code scanning results* for `main`,
-   with the threshold set to *High or higher* for security alerts.
-3. Consider removing the `--exit-zero`-style flags for tools that do not
-   report to code scanning (pip-audit, NuGet audit).
+The scanners stay report-only. Merges are gated by a repository ruleset on
+`main` instead, so the decision uses the alerts in code scanning, where
+suppressions and dismissals already apply.
+
+**Baseline (#385).** All 64 alerts open after phase 1 were closed: 2
+golangci-lint errors and the Roslyn warnings fixed in code; Bandit `urlopen`
+calls now check for an http(s) URL first, and SBOM manifests with a DTD are
+skipped; the Detekt complexity findings in `remediate/*/spring` refactored.
+What remains suppressed, each with its reason next to the code:
+
+| Where | Rule | Reason |
+|---|---|---|
+| `urlopen` after an http(s) check, fixed `https://api.osv.dev` | Bandit B310 | Scheme is checked or fixed |
+| Test clients of `http://127.0.0.1` servers | Bandit B310 | Local test server |
+| `remediate/edge/mock-backend/app.py` | Bandit B104 | Binds `0.0.0.0` inside the test container |
+| PHP shim test script | Bandit B608 | Not an SQL query |
+| SBOM manifest parsing | Bandit B314 | DTDs refused before parsing |
+| Member-portal Spring demo | Detekt `LongParameterList`, `LongMethod`, `ReturnCount`, `SpreadOperator` | JPA entities, seed data, side-by-side planted and fixed endpoints, Spring Boot `main` |
+
+**Ruleset.** *Require code scanning results* on `main` for every tool that
+uploads on pull requests (CodeQL, Bandit, golangci-lint, govulncheck,
+Microsoft (R) Visual C# Compiler, detekt, Trivy), with:
+
+- security alerts threshold *High or higher*;
+- alerts threshold *Errors*.
+
+Before relying on it, check that a docs-only pull request is not blocked:
+`Security Scan` runs on pull requests only for the paths listed in the
+workflow, so such a PR has no analysis for the required tools. If it is
+blocked, drop the `paths` filter so every pull request is scanned.
+
+**pip-audit and NuGet audit** report to the job summary only and do not reach
+code scanning, so the ruleset does not see them. Proposal, not yet applied:
+fail the job on a vulnerable dependency that has a fixed version, and keep
+report-only for those without a fix.

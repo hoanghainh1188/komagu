@@ -16,9 +16,9 @@ public enum SortDirection
 /// Strict allow-list validator for dynamic column names and sort clauses.
 /// Prevents SQL injection via dynamic ORDER BY clauses.
 /// </summary>
-public sealed class SafeSortAllowList
+public sealed partial class SafeSortAllowList
 {
-    private static readonly Regex SafeIdentifierRegex = new("^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);
+    private static readonly Regex SafeIdentifierRegex = SafeIdentifier();
     private readonly HashSet<string> _allowedColumns;
 
     public SafeSortAllowList(IEnumerable<string> allowedColumns)
@@ -73,4 +73,7 @@ public sealed class SafeSortAllowList
         var dirString = direction == SortDirection.Descending ? "DESC" : "ASC";
         return $"{validColumn} {dirString}";
     }
+
+    [GeneratedRegex("^[a-zA-Z_][a-zA-Z0-9_]*$")]
+    private static partial Regex SafeIdentifier();
 }
