@@ -300,8 +300,9 @@ Output MUST be Markdown format adhering to Komagu auth-model.md specification.
                         {"name": p.get("name", "id"), "source": p.get("source", "path")}
                         for p in c.get("id_params", [])
                     ]
-                if not id_inputs:
-                    id_inputs = [{"name": "id", "source": "path"}]
+                # No detected id input stays empty: inventing a path `id` made the BOLA auditor
+                # flag routes that take no object id (#380)
+                id_inputs = id_inputs or []
 
                 mapped_routes.append({
                     "route_id": route_id,
