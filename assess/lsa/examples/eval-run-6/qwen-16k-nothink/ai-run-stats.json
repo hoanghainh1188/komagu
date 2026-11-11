@@ -1,0 +1,96 @@
+{
+  "model": "qwen3.5:9b-16k",
+  "endpoint": "http://localhost:11434/v1/chat/completions",
+  "reasoning_effort": "none",
+  "phases": {
+    "2-stack-detector": {
+      "seconds": 53.244,
+      "calls": 1,
+      "prompt_tokens": 3320,
+      "completion_tokens": 2483
+    },
+    "3-route-mapper": {
+      "seconds": 0.009,
+      "calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+    },
+    "4a-bola-auditor": {
+      "seconds": 529.81,
+      "calls": 6,
+      "prompt_tokens": 55322,
+      "completion_tokens": 22514
+    },
+    "4b-injection-auditor": {
+      "seconds": 317.354,
+      "calls": 2,
+      "prompt_tokens": 16368,
+      "completion_tokens": 13530
+    },
+    "4c-privilege-auditor": {
+      "seconds": 207.136,
+      "calls": 2,
+      "prompt_tokens": 21415,
+      "completion_tokens": 6759
+    },
+    "5-finding-verifier": {
+      "seconds": 995.499,
+      "calls": 22,
+      "prompt_tokens": 176998,
+      "completion_tokens": 28911
+    }
+  },
+  "totals": {
+    "calls": 33,
+    "prompt_tokens": 273423,
+    "completion_tokens": 74197,
+    "seconds": 2102.63
+  },
+  "parse_failures": {},
+  "call_errors": {},
+  "retries": {},
+  "repaired": {
+    "5-finding-verifier": [
+      "verified-1",
+      "verified-9"
+    ]
+  },
+  "findings_from_verdicts": {
+    "4a-bola-auditor": [
+      "BOLA-R-0043-verdict",
+      "BOLA-R-0067-verdict"
+    ],
+    "4c-privilege-auditor": [
+      "BFLA-R-0032-verdict",
+      "BFLA-R-0059-verdict",
+      "MASS-M-0011-verdict",
+      "MASS-M-0012-verdict",
+      "MASS-M-0001-verdict",
+      "MASS-M-0002-verdict",
+      "MASS-M-0006-verdict",
+      "MASS-M-0007-verdict",
+      "MASS-M-0010-verdict"
+    ]
+  },
+  "anchoring": {
+    "moved": [
+      "BOLA-R-0024-1",
+      "INJ-I-0002",
+      "INJ-I-0005",
+      "INJ-I-0009",
+      "INJ-I-0010",
+      "INJ-I-0012",
+      "INJ-I-0024",
+      "INJ-I-0025",
+      "INJ-I-0028",
+      "INJ-I-0030",
+      "INJ-I-0038",
+      "BFLA-R-0009-1",
+      "MASS-M-0004-1",
+      "MASS-M-0013-1",
+      "MASS-M-0014-1",
+      "MASS-M-0015-1"
+    ],
+    "unanchored": []
+  }
+}

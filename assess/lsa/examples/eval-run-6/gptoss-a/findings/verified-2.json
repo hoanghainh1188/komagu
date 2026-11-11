@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-2",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0007",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 6-12"
+      ],
+      "control_found": null,
+      "notes": "The controller is marked with [Authorize] but no role or ownership check is visible in the provided code. The absence of a role check is not confirmed, so the finding is likely."
+    },
+    {
+      "finding_id": "BOLA-R-0009",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-36"
+      ],
+      "control_found": null,
+      "notes": "The Export action relies solely on a query\u2011string flag and lacks any role or ownership guard in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0013",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 11-15"
+      ],
+      "control_found": null,
+      "notes": "Details retrieves an invoice by id without scoping to the current user; no ownership check is shown."
+    },
+    {
+      "finding_id": "BOLA-R-0015",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 26-30"
+      ],
+      "control_found": null,
+      "notes": "The Search action builds a raw SQL query from user input and does not enforce ownership or parameter binding."
+    },
+    {
+      "finding_id": "BOLA-R-0017",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 7-13"
+      ],
+      "control_found": null,
+      "notes": "The UPDATE statement uses a hidden field value directly; no ownership verification is visible."
+    }
+  ]
+}

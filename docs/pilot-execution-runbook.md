@@ -79,7 +79,7 @@ export KOMAGU_AI_API_KEY="<key from the secret manager>"   # never pass --api-ke
   --headless-ai http://127.0.0.1:11434/v1 --model gpt-oss:20b --ai-timeout 3600
 python3 assess/lsa/tests/score_findings.py ~/pilot-calib/eval/ground-truth.json ~/pilot-calib/calib-A
 ```
-- **Phương án A:** đã đo `gpt-oss:20b` (Run 4–5, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)). Lặp lại trên máy chủ GPU dự kiến để lấy thời gian chạy thực tế.
+- **Phương án A:** đã đo `gpt-oss:20b` (Run 6, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)): 40–56 phút trên Apple M4 Pro 24 GB; BOLA 26/29, injection 34/34, BFLA 10/10, mass assignment 14/15, precision 0,79–0,81. Lặp lại trên máy chủ GPU dự kiến để lấy thời gian chạy thực tế, và so với các số này.
 - **Phương án B** *(chưa chạy thử)*: endpoint phải tương thích OpenAI `/chat/completions` với Bearer token. Nếu dịch vụ cloud không hỗ trợ trực tiếp, đặt một proxy tương thích OpenAI (ví dụ LiteLLM) trong cùng vùng dữ liệu. Ghi lại model, vùng (region) và điều khoản lưu dữ liệu vào `pilot-config.json`.
 - Kết quả hiệu chuẩn (recall theo loại, thời gian, `ai-run-stats.json`) dùng để giải thích cho khách hàng khi họ chọn phương án.
 

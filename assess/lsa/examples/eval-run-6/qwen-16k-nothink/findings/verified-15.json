@@ -1,0 +1,110 @@
+{
+  "batch_id": "verified-15",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0024",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:29"
+      ],
+      "control_found": null,
+      "notes": "User input `req.query.shop` is interpolated directly into a MongoDB query string without any sanitization, casting, or allow-listing. The code uses backticks for template literals which bypasses standard escaping mechanisms.",
+      "suggested_subtype": "operator_injection",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/api/orders/stats",
+        "target_param": "shop"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0025",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi:13"
+      ],
+      "control_found": null,
+      "notes": "User input `$id` from `$_GET` is concatenated directly into a SQL string using double quotes. No integer casting or parameterized query is used for this specific statement.",
+      "suggested_subtype": "string_concatenation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/cgi-bin/order.cgi",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0027",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php:8"
+      ],
+      "control_found": null,
+      "notes": "Input is cast to integer on line 6 (`$uid = (int)$_GET['uid']`). This mitigates standard numeric SQL injection vectors. While concatenation exists, the explicit type coercion significantly reduces the attack surface. Severity should be lowered from critical.",
+      "suggested_subtype": "string_concatenation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/admin.php?action=view",
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0028",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php:12"
+      ],
+      "control_found": null,
+      "notes": "User input `$id` from `$_POST` is concatenated directly into a SQL DELETE statement without any sanitization or parameterization. This allows arbitrary deletion of records.",
+      "suggested_subtype": "string_concatenation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin.php?action=delete",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0029",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php:5"
+      ],
+      "control_found": null,
+      "notes": "User input `$_GET['login']` and `$_GET['pass']` are passed directly as keys in a MongoDB query object. This allows attackers to inject arbitrary fields or operators (e.g., `$where`, `$regex`) into the query structure.",
+      "suggested_subtype": "operator_injection",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/mongo_find.php",
+        "target_param": "login"
+      }
+    }
+  ]
+}

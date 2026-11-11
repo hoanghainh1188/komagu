@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-12",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0012",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:13-22"
+      ],
+      "control_found": null,
+      "notes": "The query string is built by string.Format with user-supplied Request[\"ref\"]. No parameter binding, no ownership or role check is visible in the code_context."
+    },
+    {
+      "finding_id": "INJ-I-0013",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:13-22"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement concatenates Request.Form[\"cart\"] directly into the SQL. No compensating control is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0014",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/WebContent/order/detail.jsp:1-6"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates the request parameter \"no\" into the SQL string. No ownership or role check is shown."
+    },
+    {
+      "finding_id": "INJ-I-0016",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/struts/EditUserAction.java:10-15"
+      ],
+      "control_found": null,
+      "notes": "The UPDATE statement concatenates the email and userId parameters directly. No parameter binding or ownership check is visible."
+    },
+    {
+      "finding_id": "INJ-I-0017",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/InvoiceController.java:27-31"
+      ],
+      "control_found": null,
+      "notes": "The HQL query concatenates the customer request parameter. No ownership or role check is present in the code_context."
+    }
+  ]
+}

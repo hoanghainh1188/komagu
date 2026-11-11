@@ -1,0 +1,87 @@
+{
+  "batch_id": "verified-7",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0051-1",
+      "verdict": "rejected",
+      "reason_code": "evidence_mismatch",
+      "confidence": "high",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php lines 33-37"
+      ],
+      "control_found": null,
+      "notes": "The finding references a file path 'php-laravel/app/Http/Controllers/AccountController.php'. However, the Auth Model explicitly states that the repository contains a 'polyglot legacy architecture' with Primary Web Layers of Classic ASP and Plain PHP. It notes: 'No ORM (Hibernate/JPA/Entity Framework) is detected in the primary security paths.' Laravel uses an ORM (Eloquent). The code context provided shows generic PHP syntax (`$request->user()`, `$user->fill()`), but the finding claims it is a Laravel application. Since the stack profile confirms no Laravel framework exists and the evidence points to Plain PHP, this finding relies on non-existent or misidentified code structure. The specific file path does not exist in the confirmed repository context.",
+      "suggested_subtype": "missing_ownership_check",
+      "suggested_cwe": [
+        "CWE-284"
+      ]
+    },
+    {
+      "finding_id": "BOLA-R-0043-verdict",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi lines 1-20"
+      ],
+      "control_found": null,
+      "notes": "The code shows a Perl CGI script. Line 9 retrieves the user ID from the session (`$uid = $session->param('user_id');`). However, line 13 executes a query using `$id` (from request param) without binding it to `$uid`. While line 16 shows a prepared statement with binding (`? AND ?`), this is executed in a separate statement ($sth2) after the vulnerable one ($sth). The script proceeds to execute $sth regardless of whether $sth2 succeeds or fails. There is no `die`, `return`, or conditional check preventing execution of line 13 if line 16 fails. An attacker can manipulate `$id` in the first query to access another user's order before the ownership check on line 16 runs.",
+      "attack_vector": {
+        "method": "GET",
+        "path": "/perl-cgi/cgi-bin/order.cgi",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0057-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php lines 7-8",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "The code in `admin.php` retrieves `$uid` from the GET parameter and uses it directly in a SQL query without checking if it matches the session user. The included `auth.php` only performs a login check (`if (empty($_SESSION['user_id']))`). It does not enforce ownership of the resource being accessed. This is a classic BOLA vulnerability where any authenticated user can view another user's profile by changing the `uid` parameter.",
+      "attack_vector": {
+        "method": "GET",
+        "path": "/php-plain/admin.php?action=view&uid=<user_id>",
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0058-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php lines 11-12",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "Similar to finding BOLA-R-0057-1. The code retrieves `$id` from POST and executes a DELETE query without verifying ownership. The `auth.php` include only ensures the user is logged in, not that they own the target resource. An attacker can delete any user's account by manipulating the `id` parameter.",
+      "attack_vector": {
+        "method": "POST",
+        "path": "/php-plain/admin.php?action=delete&id=<user_id>",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0061-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/order_detail.php lines 5-8",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "The code retrieves `$id` from GET and queries the `orders` table without filtering by the session user's ID. The included `auth.php` only checks for login status. There is no ownership verification before outputting the order details (address, items). This allows any authenticated user to read another user's order.",
+      "attack_vector": {
+        "method": "GET",
+        "path": "/php-plain/order_detail.php?id=<order_id>",
+        "target_param": "id"
+      }
+    }
+  ]
+}

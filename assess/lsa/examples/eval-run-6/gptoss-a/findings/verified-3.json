@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-3",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0018",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 10-22"
+      ],
+      "control_found": null,
+      "notes": "No ownership or role check is visible in the provided code. The first query uses the raw id from the query string without scoping to the current user, and the safe query is never executed."
+    },
+    {
+      "finding_id": "BOLA-R-0019",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/WebContent/order/detail.jsp lines 1-6"
+      ],
+      "control_found": null,
+      "notes": "The order number is concatenated directly into the SQL statement with no ownership check or parameter binding shown."
+    },
+    {
+      "finding_id": "BOLA-R-0001",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/struts/EditUserAction.java lines 10-14"
+      ],
+      "control_found": null,
+      "notes": "The user_id from the request is used directly in an UPDATE statement without any ownership verification or parameter binding."
+    },
+    {
+      "finding_id": "BOLA-R-0020",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 13-15"
+      ],
+      "control_found": null,
+      "notes": "The account is saved without checking that the current session user owns the account; no ownership or role check is visible."
+    },
+    {
+      "finding_id": "BOLA-R-0021",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 19-21"
+      ],
+      "control_found": null,
+      "notes": "The rename operation uses the id from the form without verifying ownership or applying a role check."
+    }
+  ]
+}

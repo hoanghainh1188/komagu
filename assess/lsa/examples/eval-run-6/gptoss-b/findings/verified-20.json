@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-20",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0003-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 13-15"
+      ],
+      "control_found": null,
+      "notes": "The controller binds the entire Account object via @ModelAttribute and persists it without any visible ownership or role check in the provided code."
+    },
+    {
+      "finding_id": "MASS-M-0004-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 25-28"
+      ],
+      "control_found": null,
+      "notes": "The update method accepts a full Account object via @RequestBody and saves it directly, with no ownership or role guard shown."
+    },
+    {
+      "finding_id": "MASS-M-0005-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/ProfileServlet.java lines 10-13"
+      ],
+      "control_found": null,
+      "notes": "BeanUtils.populate binds all request parameters to the Account object and the DAO persists it without any visible privilege check."
+    },
+    {
+      "finding_id": "MASS-M-0011-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/profile.php lines 6-8"
+      ],
+      "control_found": null,
+      "notes": "The code iterates over $_POST and assigns each field to the user object; no ownership or role validation is present in the visible snippet."
+    },
+    {
+      "finding_id": "MASS-M-0012-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/profile.php line 10"
+      ],
+      "control_found": null,
+      "notes": "Explicit assignment of the role field from $_POST occurs without any guard; the snippet shows no ownership check."
+    }
+  ]
+}

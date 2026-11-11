@@ -1,0 +1,137 @@
+{
+  "batch_id": "verified-1",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0002-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp lines 6-7",
+        "inc/auth.asp logic"
+      ],
+      "control_found": null,
+      "notes": "The UPDATE query uses `member_id` directly from `Request.Form`. The included `auth.asp` only checks if a session exists (`Session(\"UserID\") = \"\"`), it does not verify that the current user owns the target record. No ownership check is present in the SQL construction.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct ID injection into UPDATE without ownership verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/classic-asp/shop/member.asp?mode=edit",
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0003-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp line 10",
+        "inc/auth.asp logic"
+      ],
+      "control_found": null,
+      "notes": "The DELETE query uses `member_id` directly from `Request.QueryString`. The included `auth.asp` only checks if a session exists. No ownership check is present in the SQL construction.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct ID injection into DELETE without ownership verification."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/classic-asp/shop/member.asp?mode=delete&member_id=<id>",
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0005-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "OrderService.cfc lines 3-6"
+      ],
+      "control_found": null,
+      "notes": "The `getOrder` function accepts `orderId` as a string argument and uses it directly in the SQL query (`WHERE id = #arguments.orderId#`). There is no logic to retrieve the current user's ID or filter by ownership. The `access=\"remote\"` attribute confirms this is exposed.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct ID injection into SELECT without ownership verification."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/coldfusion/app/OrderService.cfc?method=getOrder&orderId=<id>",
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0007-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AdminController.cs lines 12-15"
+      ],
+      "control_found": null,
+      "notes": "The `DeleteUser` method has `[Authorize]` (ensuring the caller is authenticated) but lacks any role restriction like `[Authorize(Roles = \"Admin\")]`. It takes an integer `id` and deletes the user found by that ID without checking if the current user owns it or has admin privileges. A standard authenticated user could delete another user.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Authenticated but unprivileged user can delete any record via ID injection."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser?id=<id>",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0008-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AdminController.cs lines 21-25"
+      ],
+      "control_found": null,
+      "notes": "The `ResetPassword` method has `[Authorize(Roles = \"Admin\")]`. While this restricts access to admins, it does not prevent an Admin from resetting *another* Admin's (or any other user's) password. The finding correctly identifies that ownership verification is missing. An attacker with Admin privileges can reset any user's password.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Role-based access control (RBAC) is present but insufficient for ownership protection; ID injection allows privilege escalation within the role."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/ResetPassword?id=<id>",
+        "target_param": "id"
+      }
+    }
+  ]
+}

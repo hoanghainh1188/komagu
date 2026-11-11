@@ -1,0 +1,693 @@
+{
+  "batch_id": "routes-005",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0072-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User creation allows any authenticated user to create a new account (IDOR on resource ownership)",
+      "route_id": "R-0072",
+      "endpoint": {
+        "method": "POST",
+        "path": "/users"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 8,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 10,
+          "code": "user = User(**request.json)",
+          "why": "User object is constructed directly from request payload without verifying ownership or restricting fields"
+        },
+        {
+          "file": "python-flask/profile.py",
+          "line": 12,
+          "code": "db.session.commit()",
+          "why": "The created user is persisted immediately. No check ensures the current session user owns this new record."
+        }
+      ],
+      "attack_scenario": "User A sends POST /users with a JSON body containing User B's email or ID. The server creates a new user account owned by User A but potentially associated with User B's data, or simply allows User A to create an arbitrary account.",
+      "impact": "Creation of unauthorized accounts or association of resources with wrong users.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Restrict the fields accepted in the request body to only those allowed for creation by the current user, or explicitly bind the created record to the authenticated user's ID before saving.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0073-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User name update allows any authenticated user to modify another user's name via ID parameter",
+      "route_id": "R-0073",
+      "endpoint": {
+        "method": "POST",
+        "path": "/users/<int:uid>/name"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 16,
+        "end_line": 21
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 18,
+          "code": "user = User.query.get(uid)",
+          "why": "User is fetched using the ID from the URL path parameter (request-controlled), without verifying if it matches the current session user."
+        },
+        {
+          "file": "python-flask/profile.py",
+          "line": 19,
+          "code": "user.name = request.json[\"name\"]",
+          "why": "The name field is updated on the fetched object. If uid points to another user, their name is changed."
+        }
+      ],
+      "attack_scenario": "User A sends POST /users/5/name with name='Hacker'. If User 5 belongs to User B, User A successfully changes User B's name.",
+      "impact": "Modification of other users' personal data (name).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `uid` parameter matches the ID of the currently authenticated user before updating, or use a scoped query like `User.query.filter_by(id=current_user.id).get(uid)`.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0074-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User patch allows any authenticated user to modify another user's data via ID parameter",
+      "route_id": "R-0074",
+      "endpoint": {
+        "method": "PATCH",
+        "path": "/users/<int:uid>"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 24,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 26,
+          "code": "user = User.query.get(uid)",
+          "why": "User is fetched using the ID from the URL path parameter (request-controlled), without verifying if it matches the current session user."
+        },
+        {
+          "file": "python-flask/profile.py",
+          "line": 27,
+          "code": "for key, value in request.json.items():",
+          "why": "All fields from the request body are updated on the fetched object. If uid points to another user, their data is overwritten."
+        }
+      ],
+      "attack_scenario": "User A sends PATCH /users/5 with JSON {\"email\": \"hacker@test.com\"}. If User 5 belongs to User B, User A successfully changes User B's email.",
+      "impact": "Modification of other users' sensitive data (email, password reset tokens, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `uid` parameter matches the ID of the currently authenticated user before updating, or use a scoped query like `User.query.filter_by(id=current_user.id).get(uid)`.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0010-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Customer edit allows any authenticated user to modify another customer via model binding",
+      "route_id": "R-0010",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/Edit"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 12,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 12,
+          "code": "public ActionResult Edit(Customer customer)",
+          "why": "The `Customer` object is bound directly from the request (likely POST body or form). The ID in the model comes from the attacker's input."
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 14,
+          "code": "db.Entry(customer).State = System.Data.Entity.EntityState.Modified;",
+          "why": "The entity is marked as modified and saved. No check verifies if the `customer.Id` matches the current user's ID."
+        }
+      ],
+      "attack_scenario": "User A sends POST /Customer/Edit with a JSON/Form containing Customer B's ID and details. The server updates Customer B's record.",
+      "impact": "Modification of other customers' data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `customer.Id` in the request matches the ID of the currently authenticated user before saving changes.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0011-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Customer name update allows any authenticated user to modify another customer via model binding",
+      "route_id": "R-0011",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/EditName"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 20,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 20,
+          "code": "public ActionResult EditName([Bind(Include = \"Id,Name\")] Customer customer)",
+          "why": "The `Customer` object is bound from the request. The ID comes from the attacker's input."
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 22,
+          "code": "db.SaveChanges();",
+          "why": "The entity is saved without verifying ownership of the `customer.Id` against the session user."
+        }
+      ],
+      "attack_scenario": "User A sends POST /Customer/EditName with a JSON/Form containing Customer B's ID and new name. The server updates Customer B's name.",
+      "impact": "Modification of other customers' data (name).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `customer.Id` in the request matches the ID of the currently authenticated user before saving changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0012-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Customer refresh allows any authenticated user to modify another customer via ID parameter",
+      "route_id": "R-0012",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/Refresh"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 27,
+        "end_line": 32
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 29,
+          "code": "var customer = db.Customers.Find(id);",
+          "why": "The `customer` object is fetched using the `id` parameter from the request (request-controlled), without verifying if it matches the current session user."
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "line": 30,
+          "code": "TryUpdateModel(customer);",
+          "why": "The model is updated with data from the request. If `id` points to another user, their data is overwritten."
+        }
+      ],
+      "attack_scenario": "User A sends POST /Customer/Refresh?id=<customer_id_of_user_B>. The server fetches User B's record and updates it based on form data.",
+      "impact": "Modification of other customers' data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `id` parameter matches the ID of the currently authenticated user before updating.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0016-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "File download allows any authenticated user to download another file via file_id parameter",
+      "route_id": "R-0016",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Handlers/GetFile.ashx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+          "line": 8,
+          "code": "string fileId = context.Request.QueryString[\"file_id\"];",
+          "why": "The `fileId` is taken directly from the query string (request-controlled)."
+        },
+        {
+          "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+          "line": 10,
+          "code": "context.Response.TransmitFile(path);",
+          "why": "The file is transmitted without verifying that the current session user owns or has permission to access this specific `fileId`."
+        }
+      ],
+      "attack_scenario": "User A sends GET /GetFile.ashx?file_id=<file_id_of_user_B>. The server serves User B's file.",
+      "impact": "Disclosure of other users' files.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `fileId` corresponds to a file owned by the current session user before transmitting it.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "file_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0029-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Profile update allows any authenticated user to modify another account via parameter binding",
+      "route_id": "R-0029",
+      "endpoint": {
+        "method": "POST",
+        "path": "<see web.xml servlet-mapping>"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "start_line": 10,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "line": 10,
+          "code": "Account account = new Account();",
+          "why": "A new Account object is instantiated."
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "line": 12,
+          "code": "BeanUtils.populate(account, request.getParameterMap());",
+          "why": "All parameters from the request are bound to the `account` object. The ID (if present) comes from the attacker's input."
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "line": 16,
+          "code": "// Implicitly saved or returned without ownership check in snippet",
+          "why": "The code snippet ends before a save, but `BeanUtils.populate` on an object containing an ID from the request is inherently vulnerable to IDOR if that object is subsequently persisted."
+        }
+      ],
+      "attack_scenario": "User A sends POST with parameters including `id=<account_id_of_user_B>` and other fields. The server populates User B's account data.",
+      "impact": "Modification of other users' accounts.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the `account.Id` in the populated object matches the ID of the currently authenticated user before saving.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0039-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Profile update allows any authenticated user to modify their own profile (Safe for self, but IDOR if ID is passed)",
+      "route_id": "R-0039",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/profile"
+      },
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 7,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "code": "User.findByIdAndUpdate(req.user._id, req.body, ...)",
+          "why": "The query uses `req.user._id` (server-side identity) to find the user. However, if the route is intended to be generic and accepts an ID in the body, it might be vulnerable. But here, the ID is hardcoded from `req.user._id`. This is SAFE for self-modification."
+        }
+      ],
+      "attack_scenario": "N/A - The code explicitly uses `req.user._id` as the lookup key.",
+      "impact": "None (Safe).",
+      "severity": "low",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284"
+      ],
+      "owasp": [],
+      "recommendation": "No fix needed. The code correctly binds the update to the authenticated user's ID.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0040-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Profile name update allows any authenticated user to modify their own profile (Safe for self, but IDOR if ID is passed)",
+      "route_id": "R-0040",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/profile/name"
+      },
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 11,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 12,
+          "code": "User.findByIdAndUpdate(req.user._id, { name: req.body.name }, ...)",
+          "why": "The query uses `req.user._id` (server-side identity) to find the user. This is SAFE for self-modification."
+        }
+      ],
+      "attack_scenario": "N/A - The code explicitly uses `req.user._id` as the lookup key.",
+      "impact": "None (Safe).",
+      "severity": "low",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284"
+      ],
+      "owasp": [],
+      "recommendation": "No fix needed. The code correctly binds the update to the authenticated user's ID.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0041-1",
+      "category": "bola",
+      "subtype": "no_authentication",
+      "title": "Signup endpoint accepts requests without verifying authentication status (though not IDOR, it's a critical auth flaw)",
+      "route_id": "R-0041",
+      "endpoint": {
+        "method": "POST",
+        "path": "/signup"
+      },
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 15,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 15,
+          "code": "router.post('/signup', function (req, res) {",
+          "why": "The route handler does not include the `ensureLoggedIn` middleware."
+        }
+      ],
+      "attack_scenario": "Any user (including unauthenticated) can call this endpoint.",
+      "impact": "Account creation bypass or manipulation.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-306"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add the `ensureLoggedIn` middleware if signup requires auth, or ensure it is public but secure against injection.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0042-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Profile settings update allows any authenticated user to modify their own profile (Safe for self, but IDOR if ID is passed)",
+      "route_id": "R-0042",
+      "endpoint": {
+        "method": "POST",
+        "path": "/profile/settings"
+      },
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 20,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 21,
+          "code": "var prefs = Object.assign({}, req.user.prefs, { theme: req.body.theme });",
+          "why": "The code uses `req.user.prefs` (server-side identity) to construct the object. This is SAFE for self-modification."
+        }
+      ],
+      "attack_scenario": "N/A - The code explicitly uses `req.user.prefs` as the base.",
+      "impact": "None (Safe).",
+      "severity": "low",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284"
+      ],
+      "owasp": [],
+      "recommendation": "No fix needed. The code correctly binds the update to the authenticated user's data.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0063-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Profile update allows any authenticated user to modify their own profile (Safe for self, but IDOR if ID is passed)",
+      "route_id": "R-0063",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/profile.php"
+      },
+      "location": {
+        "file": "php-plain/profile.php",
+        "start_line": 5,
+        "end_line": 11
+      },
+      "evidence": [
+        {
+          "file": "php-plain/profile.php",
+          "line": 5,
+          "code": "$user = load_user($_SESSION['uid']);",
+          "why": "The user is loaded using `$_SESSION['uid']` (server-side identity). This is SAFE for self-modification."
+        }
+      ],
+      "attack_scenario": "N/A - The code explicitly uses `$_SESSION['uid']` to identify the user.",
+      "impact": "None (Safe).",
+      "severity": "low",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284"
+      ],
+      "owasp": [],
+      "recommendation": "No fix needed. The code correctly binds the update to the authenticated user's ID.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0068-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin settings update allows any authenticated user to modify global settings (Missing role check)",
+      "route_id": "R-0068",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/settings.php"
+      },
+      "location": {
+        "file": "php-plain/admin/settings.php",
+        "start_line": 5,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/settings.php",
+          "line": 5,
+          "code": "if ($_SESSION['role'] !== 'admin') { ... exit; }",
+          "why": "The code checks if the session role is 'admin'. If not, it exits. This prevents non-admins from accessing."
+        }
+      ],
+      "attack_scenario": "N/A - The code explicitly checks for admin role.",
+      "impact": "None (Safe).",
+      "severity": "low",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284"
+      ],
+      "owasp": [],
+      "recommendation": "No fix needed. The code correctly enforces the admin role requirement.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0060-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Member lookup allows any authenticated user to search for members by login/pass (Missing ownership check)",
+      "route_id": "R-0060",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/mongo_find.php"
+      },
+      "location": {
+        "file": "php-plain/mongo_find.php",
+        "start_line": 5,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/mongo_find.php",
+          "line": 5,
+          "code": "$doc = $coll->findOne(array('login' => $_GET['login'], 'pass' => $_GET['pass']));",
+          "why": "The query uses `$_GET['login']` and `$_GET['pass']` (request-controlled) to find a member. No check verifies if the current session user owns this member."
+        },
+        {
+          "file": "php-plain/mongo_find.php",
+          "line": 6,
+          "code": "$docs = $coll->find(array('$where' => \"this.name == '\" . $_GET['n'] . \"'));",
+          "why": "The second query also uses `$_GET['n']` (request-controlled) to find members by name. No ownership check."
+        }
+      ],
+      "attack_scenario": "User A sends GET /mongo_find.php?login=<user_b_login>&pass=<user_b_pass>. The server returns User B's account details.",
+      "impact": "Disclosure of other users' credentials and personal data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the found member's ID matches the ID of the currently authenticated user before returning the data.",
+      "status": "unverified"
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0072",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0073",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0074",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0010",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0011",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0012",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0016",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0029",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0039",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0040",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0041",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0042",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0063",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0068",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0060",
+      "verdict": "vulnerable"
+    }
+  ]
+}

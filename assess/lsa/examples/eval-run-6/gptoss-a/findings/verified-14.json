@@ -1,0 +1,66 @@
+{
+  "batch_id": "verified-14",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0025",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi:13-19"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement concatenates user input directly into the SQL string and no ownership or role check is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0027",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php:10-12",
+        "php-plain/inc/auth.php:1-7",
+        "php-plain/inc/db.php:1-4"
+      ],
+      "control_found": null,
+      "notes": "The DELETE query uses unsanitized POST data and the included auth file only verifies login, not ownership or role."
+    },
+    {
+      "finding_id": "INJ-I-0028",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php:10-12",
+        "php-plain/inc/auth.php:1-7",
+        "php-plain/inc/db.php:1-4"
+      ],
+      "control_found": null,
+      "notes": "Same as INJ-I-0027; no compensating control is visible."
+    },
+    {
+      "finding_id": "INJ-I-0029",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php:5-6",
+        "php-plain/inc/auth.php:1-7"
+      ],
+      "control_found": null,
+      "notes": "The $where clause concatenates user input; no ownership or role check is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0030",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php:5-6",
+        "php-plain/inc/auth.php:1-7"
+      ],
+      "control_found": null,
+      "notes": "Same as INJ-I-0029; no compensating control is visible."
+    }
+  ]
+}

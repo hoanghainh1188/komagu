@@ -1,0 +1,61 @@
+{
+  "batch_id": "verified-11",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0006",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "coldfusion/app/OrderService.cfc:5"
+      ],
+      "control_found": null,
+      "notes": "The query interpolates the unsanitized argument directly into the SQL string. No ownership or role check, no parameter binding, and no integer cast is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0007",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "coldfusion/app/order.cfm:3"
+      ],
+      "control_found": null,
+      "notes": "The first query uses the raw URL parameter in the WHERE clause. Although a second query later uses cfqueryparam and includes a user_id check, the vulnerable query is executed and its result is output, providing an injection vector."
+    },
+    {
+      "finding_id": "INJ-I-0009",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb:7",
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb:8"
+      ],
+      "control_found": null,
+      "notes": "Both the Note and OrderId values are concatenated into the SQL string without any parameterization or ownership check. The subsequent safe query does not mitigate the earlier vulnerable execution."
+    },
+    {
+      "finding_id": "INJ-I-0010",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb:8"
+      ],
+      "control_found": null,
+      "notes": "The OrderId is concatenated directly into the SQL string. No ownership or role validation is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0011",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:13"
+      ],
+      "control_found": null,
+      "notes": "The id from the query string is concatenated into the SQL command without parameterization or ownership verification. The later safe query does not prevent the execution of the vulnerable statement."
+    }
+  ]
+}

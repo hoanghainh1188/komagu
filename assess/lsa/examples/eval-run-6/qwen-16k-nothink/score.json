@@ -1,0 +1,106 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 29,
+      "found": 23,
+      "recall": 0.793,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "perl-cgi/cgi-bin/order.cgi:13",
+        "perl-cgi/cgi-bin/order.cgi:19",
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs:13",
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:13",
+        "classic-asp/shop/order.asp:6",
+        "coldfusion/app/order.cfm:3"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 29,
+      "recall": 0.853,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "java-legacy/src/com/acme/web/OrderServlet.java:15",
+        "java-legacy/src/com/acme/web/OrderServlet.java:17",
+        "java-legacy/src/com/acme/mapper/OrderMapper.xml:9",
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:28",
+        "php-codeigniter/application/controllers/Invoice.php:10"
+      ]
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 6,
+      "recall": 0.6,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/manage_users.php:6",
+        "dotnet-legacy/Web/Controllers/AdminController.cs:15",
+        "node-express/routes/admin.js:9",
+        "node-express/routes/admin.js:17"
+      ]
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 10,
+      "recall": 0.667,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/profile.php:6",
+        "php-plain/profile.php:10",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12",
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30",
+        "node-express/routes/profile.js:8"
+      ]
+    }
+  },
+  "active_findings": 94,
+  "matched_findings": 69,
+  "precision": 0.734,
+  "unmatched_findings": [
+    "BFLA-R-0003-1",
+    "BFLA-R-0063-1",
+    "BOLA-R-0007-1",
+    "BOLA-R-0008-1",
+    "BOLA-R-0009-1",
+    "BOLA-R-0010-1",
+    "BOLA-R-0011-1",
+    "BOLA-R-0020-1",
+    "BOLA-R-0022-1",
+    "BOLA-R-0023-1",
+    "BOLA-R-0024-1",
+    "BOLA-R-0029-1",
+    "BOLA-R-0030-1",
+    "BOLA-R-0031-1",
+    "BOLA-R-0032-1",
+    "BOLA-R-0035-1",
+    "BOLA-R-0041-1",
+    "BOLA-R-0047-1",
+    "BOLA-R-0048-1",
+    "BOLA-R-0049-1",
+    "BOLA-R-0050-1",
+    "BOLA-R-0060-1",
+    "BOLA-R-0071-1",
+    "BOLA-R-0072-1",
+    "BOLA-R-0043-verdict"
+  ],
+  "needs_review_not_scored": [],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 8,
+      "recall": 0.8,
+      "flagged_safe": [],
+      "missed": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs:15",
+        "node-express/routes/admin.js:9"
+      ]
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 15,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    }
+  }
+}

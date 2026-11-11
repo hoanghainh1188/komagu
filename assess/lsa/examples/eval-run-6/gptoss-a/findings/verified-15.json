@@ -1,0 +1,69 @@
+{
+  "batch_id": "verified-15",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0031",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/order_detail.php:5-6",
+        "php-plain/inc/auth.php:3-6",
+        "php-plain/inc/db.php:1-4"
+      ],
+      "control_found": null,
+      "notes": "The GET parameter is concatenated directly into a mysql_query without any sanitization, casting, or prepared statement. No ownership or role check is present."
+    },
+    {
+      "finding_id": "INJ-I-0032",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:6-9",
+        "php-plain/inc/auth.php:3-6",
+        "php-plain/inc/db.php:1-4"
+      ],
+      "control_found": null,
+      "notes": "The ORDER BY clause is built from an unsanitized GET parameter with no allow\u2011list or integer cast. No ownership or role check is present."
+    },
+    {
+      "finding_id": "INJ-I-0033",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:6-9",
+        "php-plain/inc/auth.php:3-6",
+        "php-plain/inc/db.php:1-4"
+      ],
+      "control_found": null,
+      "notes": "Same as INJ-I-0032: unsanitized ORDER BY input with no guard."
+    },
+    {
+      "finding_id": "INJ-I-0034",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:13-15",
+        "php-plain/inc/auth.php:3-6",
+        "php-plain/inc/db.php:1-4"
+      ],
+      "control_found": null,
+      "notes": "The heredoc interpolates a GET parameter directly into the SQL string. No escaping or parameterization is used."
+    },
+    {
+      "finding_id": "INJ-I-0036",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py:24-30",
+        "python-flask/app.py:10-20"
+      ],
+      "control_found": null,
+      "notes": "The search route uses an f\u2011string to build a query with user input. No parameter binding or sanitization is performed, and no ownership check is present."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-5",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0028",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/OrderServlet.java lines 13-15"
+      ],
+      "control_found": null,
+      "notes": "The query selects the order by id without any user or tenant filter, and no ownership check is performed before the result is used."
+    },
+    {
+      "finding_id": "BOLA-R-0030",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/admin.js lines 8-9"
+      ],
+      "control_found": null,
+      "notes": "The delete route only requires authentication but does not enforce an admin role or check that the target user is not the current user."
+    },
+    {
+      "finding_id": "BOLA-R-0033",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js lines 8-9"
+      ],
+      "control_found": null,
+      "notes": "Order retrieval is performed solely by id with no filter on the current user, exposing all orders."
+    },
+    {
+      "finding_id": "BOLA-R-0043",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi lines 13-14"
+      ],
+      "control_found": null,
+      "notes": "The first query selects an order by id without a user filter; the subsequent query that includes user_id does not mitigate the vulnerability."
+    },
+    {
+      "finding_id": "BOLA-R-0044",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-codeigniter/application/controllers/Invoice.php lines 9-10"
+      ],
+      "control_found": null,
+      "notes": "The view method queries invoices by id only, without verifying that the invoice belongs to the current user."
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "batch_id": "verified-1",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0002",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp:6-8",
+        "classic-asp/shop/inc/auth.asp:1-3",
+        "classic-asp/shop/inc/conn.asp:1-4"
+      ],
+      "control_found": null,
+      "notes": "The UPDATE statement uses Request.Form(\"member_id\") directly without any ownership check or parameter binding. No role or ownership helper is invoked in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0003",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp:9-11",
+        "classic-asp/shop/inc/auth.asp:1-3",
+        "classic-asp/shop/inc/conn.asp:1-4"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement concatenates Request.QueryString(\"member_id\") directly. No ownership verification is present in the shown code."
+    },
+    {
+      "finding_id": "BOLA-R-0004",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/order.asp:5-7",
+        "classic-asp/shop/order.asp:12-13",
+        "classic-asp/shop/inc/auth.asp:1-3",
+        "classic-asp/shop/inc/conn.asp:1-4"
+      ],
+      "control_found": null,
+      "notes": "The first SELECT retrieves the order by id without scoping to the current user and its result is output. The later scoped query is not used for output."
+    },
+    {
+      "finding_id": "BOLA-R-0005",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "coldfusion/app/OrderService.cfc:4-6"
+      ],
+      "control_found": null,
+      "notes": "The query interpolates #arguments.orderId# directly. No ownership check or parameter binding is visible."
+    },
+    {
+      "finding_id": "BOLA-R-0006",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "coldfusion/app/order.cfm:2-4",
+        "coldfusion/app/order.cfm:5-9"
+      ],
+      "control_found": null,
+      "notes": "The unscoped query qOrder uses #url.id# and its result is displayed. The scoped query qMine is not used for output."
+    }
+  ]
+}

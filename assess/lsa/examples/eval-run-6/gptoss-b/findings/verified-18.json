@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-18",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0009-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-36"
+      ],
+      "control_found": null,
+      "notes": "The Export action returns all users when the query parameter isAdmin is true, and no [Authorize] or other role check is present in the visible code."
+    },
+    {
+      "finding_id": "BFLA-R-0023-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/AdminUserController.java lines 13-16"
+      ],
+      "control_found": null,
+      "notes": "The delete method lacks any @PreAuthorize or other role guard in the visible code, allowing any authenticated user to delete any account."
+    },
+    {
+      "finding_id": "BFLA-R-0030-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/admin.js lines 8-9"
+      ],
+      "control_found": null,
+      "notes": "The route uses only ensureLoggedIn, which only checks authentication; no admin role check is present before the delete operation."
+    },
+    {
+      "finding_id": "BFLA-R-0032-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/admin.js lines 16-18"
+      ],
+      "control_found": null,
+      "notes": "The export route checks only the isAdmin query parameter and does not enforce an admin role guard in the visible code."
+    },
+    {
+      "finding_id": "BFLA-R-0057-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php lines 6-8"
+      ],
+      "control_found": null,
+      "notes": "The view action performs a SELECT on users by id without any role check; the included auth.php only verifies login, not admin privileges."
+    }
+  ]
+}

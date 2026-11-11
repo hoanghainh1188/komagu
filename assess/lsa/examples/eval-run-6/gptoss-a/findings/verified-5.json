@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-5",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0030",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "node-express/routes/admin.js:8-10"
+      ],
+      "control_found": null,
+      "notes": "The route handler only checks that a user is logged in via `ensureLoggedIn`. No role check (`requireAdmin`) or ownership verification is present in the visible code. Therefore a compensating control is not observable."
+    },
+    {
+      "finding_id": "BOLA-R-0033",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "node-express/routes/orders.js:8-10"
+      ],
+      "control_found": null,
+      "notes": "The handler retrieves an order by ID without filtering on the authenticated user. No ownership check or role guard is visible in the provided snippet."
+    },
+    {
+      "finding_id": "BOLA-R-0043",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi:13-15"
+      ],
+      "control_found": null,
+      "notes": "The first prepared statement selects `orders` solely by `id` and is executed immediately. Although a second query later includes `user_id`, the initial query is still vulnerable. No ownership guard is present in the shown code."
+    },
+    {
+      "finding_id": "BOLA-R-0044",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-codeigniter/application/controllers/Invoice.php:10-12"
+      ],
+      "control_found": null,
+      "notes": "The `view` method runs a raw query against `invoices` using the supplied `id` without scoping to the current user. No ownership check is visible."
+    },
+    {
+      "finding_id": "BOLA-R-0046",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-codeigniter/application/controllers/Invoice.php:23-24"
+      ],
+      "control_found": null,
+      "notes": "The `update` method updates an invoice by `id` without verifying that the invoice belongs to the authenticated user. No ownership guard is present in the snippet."
+    }
+  ]
+}

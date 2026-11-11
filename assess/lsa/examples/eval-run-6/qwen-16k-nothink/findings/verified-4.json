@@ -1,0 +1,145 @@
+{
+  "batch_id": "verified-4",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0025-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "InvoiceController.java show method signature",
+        "invoiceDao.findById(id) call",
+        "absence of Principal parameter or ownership check"
+      ],
+      "control_found": null,
+      "notes": "The `show` method takes `id` from the path and calls `findById(id)` without passing a user context (like `Principal`) to the DAO. Unlike the `/mine/{id}` endpoint which explicitly passes `principal.getName()`, this endpoint retrieves the resource solely based on the ID, allowing any authenticated user to view any invoice.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by ID without tenant or user context binding in the provided code."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/invoices/{id}",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0027-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "InvoiceController.java search method signature",
+        "session.createQuery string concatenation",
+        "absence of ownership filter"
+      ],
+      "control_found": null,
+      "notes": "The `search` method takes a `customer` parameter and directly concatenates it into the HQL query without filtering by the current user's ID or name. It returns all invoices matching the customer name, regardless of who is viewing them.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation of user input into query without ownership scoping."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/invoices/search",
+        "target_param": "customer"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0028-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "OrderServlet.java doGet method",
+        "request.getParameter extraction",
+        "Statement execution with string concatenation"
+      ],
+      "control_found": null,
+      "notes": "The `doGet` method retrieves `orderId` from the request parameter and uses it directly in a `Statement` query (`WHERE id = ' + id`) without verifying ownership against the session's `loginUser`. While there is a subsequent PreparedStatement for notes (which is safer), the primary order retrieval is vulnerable to IDOR.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct usage of request parameter in Statement query without ownership verification."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order/view",
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0030-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "admin.js delete route definition",
+        "ensureLoggedIn middleware",
+        "User.deleteOne call"
+      ],
+      "control_found": null,
+      "notes": "The route uses `ensureLoggedIn` which only checks if a user is logged in. It does not check if the logged-in user is an admin or if they own the target user ID. The `deleteOne` call uses `req.params.id` directly without any ownership validation.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Middleware only checks login status, not role or ownership of the target resource."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/:id/delete",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0031-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "admin.js ban route definition",
+        "ensureLoggedIn middleware",
+        "User.updateOne call"
+      ],
+      "control_found": null,
+      "notes": "Similar to the delete endpoint, the ban route relies only on `ensureLoggedIn`. It lacks a role check (like `requireAdmin`) or an ownership check. The `updateOne` call uses `req.params.id` directly.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Middleware only checks login status, not role or ownership of the target resource."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/:id/ban",
+        "target_param": "id"
+      }
+    }
+  ]
+}

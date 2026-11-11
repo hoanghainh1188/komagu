@@ -1,0 +1,106 @@
+{
+  "batch_id": "verified-10",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0029-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "ProfileServlet.java lines 10-16",
+        "BeanUtils.populate usage"
+      ],
+      "control_found": null,
+      "notes": "The code uses BeanUtils.populate which blindly maps all request parameters to the object fields. There is no visible ownership check (e.g., verifying `account.id` against session user) before any persistence logic in the provided snippet. The finding is valid.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct population of object from request without ID verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/profile/update (inferred)",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0039-1",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "severity": null,
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/profile.js line 8"
+      ],
+      "control_found": {
+        "file": "node-express/routes/profile.js",
+        "line": 8,
+        "code": "User.findByIdAndUpdate(req.user._id, req.body, ...)"
+      },
+      "notes": "The query explicitly uses `req.user._id` (server-side identity) as the lookup key. Even if an attacker sends a different ID in the body, it is ignored for the lookup. This prevents unauthorized access to other users' profiles."
+    },
+    {
+      "finding_id": "BOLA-R-0040-1",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "severity": null,
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/profile.js line 12"
+      ],
+      "control_found": {
+        "file": "node-express/routes/profile.js",
+        "line": 12,
+        "code": "User.findByIdAndUpdate(req.user._id, { name: req.body.name }, ...)"
+      },
+      "notes": "The query explicitly uses `req.user._id` as the lookup key. The ID from the request body is not used for resource identification, preventing IDOR."
+    },
+    {
+      "finding_id": "BOLA-R-0041-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/profile.js lines 15-18"
+      ],
+      "control_found": null,
+      "notes": "The `/signup` route handler does not include the `ensureLoggedIn` middleware. While this is primarily an authentication bypass (CWE-306) rather than a BOLA, it confirms the finding that the endpoint accepts requests without verifying authentication status. The finding title mentions 'no_authentication', which aligns with the code.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Missing authentication middleware on signup endpoint."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/signup",
+        "target_param": null
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0042-1",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "severity": null,
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/profile.js line 21"
+      ],
+      "control_found": {
+        "file": "node-express/routes/profile.js",
+        "line": 21,
+        "code": "var prefs = Object.assign({}, req.user.prefs, { theme: req.body.theme });"
+      },
+      "notes": "The code constructs the response object using `req.user.prefs` (server-side identity). It does not use any ID from the request to fetch or modify data. The finding claims 'IDOR if ID is passed', but no ID parameter is used in the logic, making the claim false."
+    }
+  ]
+}

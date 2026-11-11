@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-2",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0006",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "coldfusion/app/order.cfm lines 1-10"
+      ],
+      "control_found": null,
+      "notes": "The code shows a query that selects an order by id without a user filter and outputs that result. No ownership or role check is present before the output. The second query that includes a user_id filter is not used. No compensating control is visible in the provided context."
+    },
+    {
+      "finding_id": "BOLA-R-0007",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 6-18"
+      ],
+      "control_found": null,
+      "notes": "The DeleteUser action is protected only by a generic [Authorize] attribute, allowing any authenticated user to delete any user. No role or ownership check is present in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0009",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-37"
+      ],
+      "control_found": null,
+      "notes": "The Export action checks a query string parameter for \"isAdmin\" but does not enforce an admin role or any ownership check. The control is not visible in the provided context."
+    },
+    {
+      "finding_id": "BOLA-R-0013",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 6-15"
+      ],
+      "control_found": null,
+      "notes": "The Details action retrieves an invoice by id without verifying that the invoice belongs to the current user. Only a generic [Authorize] attribute is present. No ownership check is visible."
+    },
+    {
+      "finding_id": "BOLA-R-0015",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 25-30"
+      ],
+      "control_found": null,
+      "notes": "The Search action performs a raw SQL query that returns all invoices for a given customer without filtering by the current user. No ownership or role check is present in the visible code."
+    }
+  ]
+}

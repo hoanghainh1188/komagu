@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-1",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0001",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/struts/EditUserAction.java lines 10-13"
+      ],
+      "control_found": null,
+      "notes": "The code concatenates the request\u2011supplied user_id directly into the UPDATE statement with no ownership check, cast, or parameter binding visible in the provided context."
+    },
+    {
+      "finding_id": "BOLA-R-0002",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp lines 6-7"
+      ],
+      "control_found": null,
+      "notes": "The UPDATE statement uses Request.Form(\"member_id\") without any ownership verification, cast, or allow\u2011list in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0003",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp lines 9-10"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement directly uses Request.QueryString(\"member_id\") with no ownership check or sanitisation shown."
+    },
+    {
+      "finding_id": "BOLA-R-0004",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/order.asp lines 5-6"
+      ],
+      "control_found": null,
+      "notes": "The SELECT statement retrieves orders by id from the request without an ownership filter; the later block that checks user_id uses a different parameter (sid) and is not applicable."
+    },
+    {
+      "finding_id": "BOLA-R-0005",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "coldfusion/app/OrderService.cfc lines 4-5"
+      ],
+      "control_found": null,
+      "notes": "The query interpolates arguments.orderId directly into the SQL without any ownership check, cast, or allow\u2011list in the visible code."
+    }
+  ]
+}

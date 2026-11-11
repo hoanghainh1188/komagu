@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-20",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0004-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java:13-15"
+      ],
+      "control_found": null,
+      "notes": "The controller binds the entire Account object via @ModelAttribute and persists it without any visible ownership or role check, nor an allow\u2011list. No global filter or configuration is shown in the provided context."
+    },
+    {
+      "finding_id": "MASS-M-0005-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/ProfileServlet.java:10-13"
+      ],
+      "control_found": null,
+      "notes": "BeanUtils.populate() binds all request parameters to the Account object with no visible filtering or ownership enforcement in the snippet."
+    },
+    {
+      "finding_id": "MASS-M-0011-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/profile.php:6-8"
+      ],
+      "control_found": null,
+      "notes": "The code iterates over $_POST and assigns each field to the user object without any allow\u2011list or ownership check. The included auth.php only verifies login, not ownership."
+    },
+    {
+      "finding_id": "MASS-M-0012-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/profile.php:10"
+      ],
+      "control_found": null,
+      "notes": "The assignment of $_POST['role'] to $user->role occurs without any guard or allow\u2011list in the visible code."
+    },
+    {
+      "finding_id": "MASS-M-0001-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12-15"
+      ],
+      "control_found": null,
+      "notes": "The Edit action accepts a Customer model and marks it Modified without any [Bind] include or ownership check in the snippet. The [Authorize] attribute only ensures authentication, not ownership."
+    }
+  ]
+}

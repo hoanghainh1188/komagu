@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-9",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0010",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "lines 12-15 of dotnet-legacy/Web/Controllers/CustomerController.cs"
+      ],
+      "control_found": null,
+      "notes": "The Edit action accepts a Customer object and directly marks it as Modified and saves it without any ownership or role check. No compensating control is visible in the provided code."
+    },
+    {
+      "finding_id": "BOLA-R-0011",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "lines 20-23 of dotnet-legacy/Web/Controllers/CustomerController.cs"
+      ],
+      "control_found": null,
+      "notes": "EditName accepts a Customer with only Id and Name bound, then calls SaveChanges without verifying that the Id belongs to the current user. No ownership check is present in the code."
+    },
+    {
+      "finding_id": "BOLA-R-0012",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "lines 27-32 of dotnet-legacy/Web/Controllers/CustomerController.cs"
+      ],
+      "control_found": null,
+      "notes": "Refresh loads a Customer by id from the request, updates it via TryUpdateModel, and saves it without any ownership validation. No compensating control is visible."
+    },
+    {
+      "finding_id": "BOLA-R-0016",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "lines 8-10 of dotnet-legacy/Web/Handlers/GetFile.ashx"
+      ],
+      "control_found": null,
+      "notes": "GetFile retrieves a file path based on a query string parameter and transmits it without checking that the requesting user owns the file. No ownership or role check is present."
+    },
+    {
+      "finding_id": "BOLA-R-0029",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "lines 9-15 of java-legacy/src/com/acme/web/ProfileServlet.java"
+      ],
+      "control_found": null,
+      "notes": "ProfileServlet populates an Account object directly from request parameters and does not verify that the account belongs to the authenticated user. No ownership check is visible."
+    }
+  ]
+}

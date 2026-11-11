@@ -1,0 +1,50 @@
+{
+  "batch_id": "verified-22",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0007-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "node-express/routes/profile.js lines 7-9",
+        "node-express/routes/profile.js line 16"
+      ],
+      "control_found": null,
+      "notes": "The route updates the user document with the entire request body via `User.findByIdAndUpdate(req.user._id, req.body)`. No allow\u2011list, role, or ownership check is visible in the provided snippet. The code that might restrict fields (e.g., a Mongoose schema with `select: false` or a middleware that sanitizes `req.body`) is not shown, so the mass assignment remains unverified."
+    },
+    {
+      "finding_id": "MASS-M-0010-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php lines 33-37"
+      ],
+      "control_found": null,
+      "notes": "The controller calls `$user->fill($request->all())->save()`, which performs whole\u2011object binding. Laravel protects against mass assignment via `$fillable` or `$guarded` properties on the model, but the model definition is not part of the provided context. Without visibility of those properties, the assignment cannot be confirmed safe."
+    },
+    {
+      "finding_id": "MASS-M-0015-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "python-flask/profile.py lines 24-30"
+      ],
+      "control_found": null,
+      "notes": "The PATCH route iterates over all keys in `request.json` and sets them on the user object. No allow\u2011list or ownership check is present in the snippet. The model\u2019s column restrictions or any request validation are not shown, so the mass assignment remains unverified."
+    },
+    {
+      "finding_id": "MASS-M-0014-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "python-flask/profile.py lines 8-13"
+      ],
+      "control_found": null,
+      "notes": "The POST `/users` route creates a new `User` by unpacking `request.json` directly into the model constructor (`User(**request.json)`). No field filtering or validation is visible in the snippet. The model\u2019s schema or any request\u2011validation middleware is not part of the provided context."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "batch_id": "verified-14",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0025",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement concatenates the cart_id directly from user input with no sanitisation, cast, or ownership check. No compensating control is visible in the provided context."
+    },
+    {
+      "finding_id": "INJ-I-0027",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php"
+      ],
+      "control_found": {
+        "file": "php-plain/admin.php",
+        "line": 7,
+        "code": "$uid = (int)$_GET['uid'];"
+      },
+      "notes": "The SELECT query on line 8 is protected by an integer cast on $uid, mitigating injection for that statement. However, the DELETE query on line 12 uses $id from $_POST without casting or any ownership check, leaving it vulnerable."
+    },
+    {
+      "finding_id": "INJ-I-0028",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php"
+      ],
+      "control_found": null,
+      "notes": "The DELETE query on line 12 concatenates $id directly from user input with no sanitisation, cast, or ownership check. No compensating control is visible."
+    },
+    {
+      "finding_id": "INJ-I-0029",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php"
+      ],
+      "control_found": null,
+      "notes": "The $where clause concatenates $_GET['n'] directly into a MongoDB query string. No sanitisation, cast, or allow\u2011list is present."
+    },
+    {
+      "finding_id": "INJ-I-0030",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php"
+      ],
+      "control_found": null,
+      "notes": "Same as INJ-I-0029: unsanitised user input is embedded in a MongoDB $where expression with no mitigating controls."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "batch_id": "verified-6",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0057-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php lines 5-9",
+        "php-plain/inc/auth.php lines 1-7",
+        "php-plain/inc/db.php lines 1-4"
+      ],
+      "control_found": null,
+      "notes": "The code shows a direct lookup of a user by id from the request with no ownership or role check. No global filter or other control is visible in the provided context."
+    },
+    {
+      "finding_id": "BOLA-R-0057-2",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php lines 10-13",
+        "php-plain/inc/auth.php lines 1-7",
+        "php-plain/inc/db.php lines 1-4"
+      ],
+      "control_found": null,
+      "notes": "The delete action uses the id from the request without any ownership or role verification. No compensating control is shown."
+    },
+    {
+      "finding_id": "BOLA-R-0058-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php lines 10-13",
+        "php-plain/inc/auth.php lines 1-7",
+        "php-plain/inc/db.php lines 1-4"
+      ],
+      "control_found": null,
+      "notes": "Same as BOLA-R-0057-2: no ownership or role check is present in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0066-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin/delete_user.php lines 5-7",
+        "php-plain/inc/auth.php lines 1-7",
+        "php-plain/inc/db.php lines 1-4"
+      ],
+      "control_found": null,
+      "notes": "The delete query uses a bound parameter but does not restrict by the current user. No ownership or role check is visible."
+    },
+    {
+      "finding_id": "BOLA-R-0067-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin/promote.php lines 5-7",
+        "php-plain/inc/auth.php lines 1-7",
+        "php-plain/inc/db.php lines 1-4"
+      ],
+      "control_found": null,
+      "notes": "The promotion logic checks a request parameter but does not verify that the requester owns the target user or has an admin role. No compensating control is shown."
+    }
+  ]
+}

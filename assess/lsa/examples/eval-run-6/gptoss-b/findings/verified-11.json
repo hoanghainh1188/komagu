@@ -1,0 +1,68 @@
+{
+  "batch_id": "verified-11",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0005",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/order.asp line 11",
+        "classic-asp/shop/order.asp line 12"
+      ],
+      "control_found": {
+        "file": "classic-asp/shop/order.asp",
+        "line": 11,
+        "code": "sid = CLng(Request.QueryString(\"sid\"))"
+      },
+      "notes": "The sid value is cast to a long integer and the user_id is also cast to a long before concatenation, ensuring numeric values and preventing SQL injection. The query also filters by user_id, providing an ownership check."
+    },
+    {
+      "finding_id": "INJ-I-0006",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "coldfusion/app/OrderService.cfc line 5"
+      ],
+      "control_found": null,
+      "notes": "No parameter binding, casting, or ownership check is visible in the provided code. The query concatenates the raw argument, so an attacker could inject SQL."
+    },
+    {
+      "finding_id": "INJ-I-0007",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "coldfusion/app/order.cfm line 3",
+        "coldfusion/app/order.cfm lines 5-8"
+      ],
+      "control_found": null,
+      "notes": "The first query (qOrder) concatenates the raw URL id without parameterization or casting. Although a second query uses cfqueryparam and filters by user_id, the vulnerable query remains executable."
+    },
+    {
+      "finding_id": "INJ-I-0010",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 7-8"
+      ],
+      "control_found": null,
+      "notes": "The SQL string is built by concatenating txtNote.Text and hfOrderId.Value directly. No parameterization, casting, or ownership check is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0011",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs line 13",
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs line 19",
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs line 20"
+      ],
+      "control_found": null,
+      "notes": "Three unsanitized queries are executed: one concatenates the id from the query string, another uses string.Format with a request parameter, and the third uses string interpolation with a form value. No parameter binding or ownership check is applied to these queries."
+    }
+  ]
+}

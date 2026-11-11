@@ -333,3 +333,129 @@ and their tests still score against them.
 Run 5 rescored against the new ground truth (for comparison only; findings unchanged): BOLA 28 / 29
 (run A) and 16 / 29 (run B), precision 0.859 and 0.826, still no false positive on SAFE markers. Every
 new marker was already reported by both runs; Tier 1 lists all of them as BOLA route candidates.
+
+---
+
+## Run 6 — 2026-11-11, platform 2.5.0, kit 0.3.1 (#323 part 4: new harness, 121-item ground truth, redaction)
+
+Issue #323. First run on the harness from #334 (no code fields in 4a / 4b templates, quote repair,
+findings from flagged verdicts), the fixtures and ground truth from #336 (121 items: 29 BOLA, 34
+SQL/NoSQL injection, 10 BFLA, 15 mass assignment, 33 SAFE), and secret redaction of code sent to the
+model (v2.4.0). Outputs are archived in [`assess/lsa/examples/eval-run-6/`](../examples/eval-run-6/).
+Runs 4–5 are not directly comparable; the Run 5 rows below are the Run 5 findings rescored against the
+new ground truth.
+
+| Item | Value |
+|---|---|
+| Pipeline | `komagu scan <repo> --no-cache --headless-ai http://localhost:11434/v1 --model <model> --ai-timeout 3600` from `main` at v2.5.0 |
+| Hosting | Ollama 0.40.16 on the same Apple M4 Pro, 24 GB RAM, 100% GPU, local only; `gpt-oss:20b` on the llama.cpp runner with 32,768 context (as in Runs 4–5) |
+| Scoring | `tests/score_findings.py --verdicts` (tolerance 3 lines) |
+| Machine | No other heavy work while measuring; up to 5.7 GB swap in use during the `gpt-oss` runs |
+
+### Results after verification (`gpt-oss:20b`)
+
+| Run | BOLA | Injection | BFLA marker | Mass marker | BFLA verdict | Mass verdict | FP on safe code | Precision | Rejected | Retries · repaired · parse fail | From verdicts | Min · calls · tokens |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Run 5 A, rescored | 28/29 | 34/34 | 10/10 | 10/15 | 10/10 | 15/15 | 0 | 0.859 | 2 | 0 · — · 0 | — | 83 · 32 · 328K |
+| Run 5 B, rescored | 16/29 | 32/34 | 9/10 | 14/15 | 10/10 | 15/15 | 0 | 0.826 | 3 | 1 · — · 1 | — | 86 · 31 · 369K |
+| **Run 6 A** | **26/29** | **34/34** | **10/10** | **14/15** | **10/10** | **15/15** | **1** | **0.813** | 2 | 0 · 0 · 0 | 9 (5 BOLA, 4 mass) | 40 · 33 · 315K |
+| **Run 6 B** | **26/29** | **34/34** | **10/10** | **14/15** | **10/10** | **14/15** | **1** | **0.787** | 1 | 1 · 0 · 0 | 14 (5 BOLA, 9 mass) | 56 · 34 · 373K |
+
+- **The two runs now agree.** BOLA is 26 / 29 in both (Run 5: 28 and 16). No batch was lost: no parse
+  failure, no call error, no batch needed the quote repair, and the one retry (B, `injection-001`)
+  succeeded. The `routes-001` batch that failed in Run 4 B and Run 5 B now parses.
+- **Mass assignment:** 14 / 15 as located findings in both runs (Run 5: 10 and 14). Findings written from
+  flagged verdicts closed the gap: the four candidates run A of Run 5 judged `vulnerable` without a
+  finding (`profile.php` ×2, `CustomerController.cs` ×2) are findings in both runs.
+  `php-plain/register.php:4` is still missed. In A the verifier rejected it because the INSERT "only"
+  writes `email`, `name` and `role`, missing that `extract($_POST)` can overwrite `$role` (the
+  fixture change in #336); in B the auditor did not flag it.
+- **BFLA:** 10 / 10 in both runs, located and by verdict.
+- **Misses:** `perl-cgi/cgi-bin/order.cgi:19` (both runs, missed since Run 4), `node-express/routes/orders.js:29`
+  (both), `java-legacy/.../OrderServlet.java:15` (A), `python-flask/app.py:12` (B).
+- **False positives on SAFE markers: 1 per run** (Run 5: 0), both injection:
+  - A: `classic-asp/shop/member.asp:6`. The `UPDATE` starts on line 6, whose `name` value is escaped;
+    the concatenated `member_id` is on line 7, which is also reported. The finding is anchored one line
+    early rather than describing a new flaw, but it is scored as a false positive.
+  - B: `python-flask/app.py:12`. `order_id` is an `<int:...>` path parameter, so the `%` formatting
+    cannot inject. The model reported the route's missing ownership check as SQL injection, so the
+    BOLA marker on the same line was missed.
+- **Precision 0.81 / 0.79.** Five of the unmatched findings per run come from verdicts: the BOLA
+  auditor flagged the Laravel routes `/register`, `/posts`, `/teams`, `/account/rename` and
+  `/account/profile`, and the generated findings point at their declarations in `routes/web.php`
+  (lines 6–10). The triage after Run 5 found these routes act on `$request->user()` or touch no
+  record, so they are likely false positives. Without them precision would be 0.85 / 0.83.
+- **Duration:** 40 and 56 minutes (Run 5: 83 and 86). The model wrote fewer tokens (84K and 118K
+  completion tokens against about 109K and 111K); the Ollama version also changed (0.40.13 → 0.40.16).
+- **`ai-raw/`** is written only for batches that needed a repair or failed to parse. None did, so neither
+  run has an `ai-raw/` folder.
+
+### Did redaction reduce recall?
+
+No, and on this repo it cannot. Running the redaction used for model context
+(`assess/lsa/scripts/redaction.py`, `redact_lines`) over every file of the eval repo changes **0 lines**:
+the fixtures contain no secrets in the patterns it covers. The prompts sent in Run 6 are therefore the
+same code as without redaction. The BOLA difference from Run 5 A (28 → 26) is run-to-run variance (the
+same model put 16 in Run 5 B). This also means the eval repo does not test whether redaction costs
+recall on code that does contain secrets; that is covered only by the unit tests
+(`operate/tests/test_ai_redaction.py`, `test_no_planted_secret_reaches_the_model`).
+
+### `qwen3.5:9b` with a 16K context (not completed)
+
+To fit the 24 GB machine, `qwen3.5:9b` was run with `num_ctx 16384` (a local tag built
+`FROM qwen3.5:9b` with `PARAMETER num_ctx 16384`, MLX runner), same command and timeout as above. It did
+not finish: the run was stopped by hand after 3 h 14 min, while the second injection batch was still
+running and before the privilege (4c) and verifier (5) phases. The partial output is archived as
+[`eval-run-6/qwen-16k-partial/`](../examples/eval-run-6/qwen-16k-partial/) (raw batch findings, the
+per-minute memory log, and an indicative score of the unverified findings).
+
+| Phase / batch | Time | Result |
+|---|---|---|
+| Stack detection | 2 min | done |
+| BOLA `routes-001` (15 routes) | 60 min | **timed out**, empty |
+| BOLA `routes-002` … `routes-004` | 5, 3 and 2 min | 8, 7 and 9 findings |
+| BOLA `routes-005` | 60 min | **timed out**, empty |
+| BOLA `routes-006` | 1 min | 1 finding |
+| Injection `injection-001` | 11 min | 20 findings |
+| Injection `injection-002` | 49 min+ | still running when stopped |
+
+- **Memory:** the runner used 8.1 GB for the first hour, then grew to 13, 18 and finally 20 GB (from about
+  10:55, after the first timeout). Swap rose from about 4 GB (other work on the machine) to 12.4 GB of
+  13.3 GB; the run was stopped there to keep the machine usable. `gpt-oss:20b` stayed under 5.7 GB of
+  swap on the same machine.
+- **Timeouts:** a batch that hits `--ai-timeout` is not retried (only empty or unparseable replies are),
+  so two of six BOLA batches were lost outright. The quick batches suggest the model can do the task;
+  the timed-out ones look like long reasoning that does not end within the context.
+- **Indicative score** (findings before verification, from the batches that finished): BOLA 12/29,
+  injection 22/34, BFLA and mass assignment not reached, precision 0.73, no finding on a SAFE marker.
+  These numbers are not comparable with the `gpt-oss` rows: two BOLA batches, half the injection
+  candidates and the verifier are missing.
+
+Thinking looks like the cause: on this 24 GB machine a 16K context with default reasoning is **not**
+a working setting. The run below with reasoning off is.
+
+### `qwen3.5:9b` with a 16K context and reasoning off (#382)
+
+Same tag, command and timeout, plus `--ai-reasoning-effort none` (#382), which sends
+`"reasoning_effort": "none"` with every request; Ollama's `/v1` endpoint ignores `think: false` but
+honours this field. One run, archived as [`eval-run-6/qwen-16k-nothink/`](../examples/eval-run-6/qwen-16k-nothink/)
+(with `ai-raw/` for the two repaired verifier replies and the per-minute memory log).
+
+| Run | BOLA (29) | Injection (34) | BFLA (10) | Mass (15) | BFLA verdict | Mass verdict | SAFE hit | Precision | Time |
+|---|---|---|---|---|---|---|---|---|---|
+| `gpt-oss:20b` A | 26 | 34 | 10 | 14 | 10 | 15 | 1 | 0.813 | 40 min |
+| `gpt-oss:20b` B | 26 | 34 | 10 | 14 | 10 | 14 | 1 | 0.787 | 56 min |
+| `qwen3.5:9b` 16K, reasoning off | 23 | 29 | 6 | 10 | 8 | 15 | 0 | 0.734 | 35 min |
+
+- **Completed:** all phases, 33 calls, no timeout, no parse failure or call error, no retry, all findings
+  anchored. Two verifier replies were repaired (`verified-1`, `verified-9`); 11 findings were generated
+  from flagged verdicts (2 BOLA, 2 BFLA, 7 mass assignment).
+- **Recall** is lower than `gpt-oss:20b` in every category: BFLA and mass assignment are mostly found as
+  verdicts (8/10, 15/15) but placed on the right line less often (6/10, 10/15).
+- **Precision 0.73:** no finding on a SAFE marker, but 25 unmatched findings (23 BOLA, 2 BFLA), not yet triaged;
+  none is on `php-laravel/routes/web.php`.
+- **Memory and time:** the runner stayed at 14–17 GB and swap peaked at 6.0 GB (about 3.7 GB before the
+  run, from other work), against 20 GB and 12.4 GB with reasoning on. 35 minutes in all, of which the
+  verifier took 17.
+- **Minimum to run it:** a 24 GB machine is enough with `num_ctx 16384` and `--ai-reasoning-effort none`.
+  With reasoning on it needs more; on this evidence at least 32 GB RAM.

@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-16",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0035-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py line 12: cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates the unsanitized order_id directly into the SQL string. No ownership or role check is performed on this route; @login_required only ensures authentication, not authorization."
+    },
+    {
+      "finding_id": "INJ-I-0008-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs line 28: var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();"
+      ],
+      "control_found": null,
+      "notes": "The SQL string is built by concatenating the user-supplied customer value. No ownership or role guard is visible in the method; the controller is not decorated with [Authorize] in the provided context."
+    },
+    {
+      "finding_id": "INJ-I-0015-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/mapper/OrderMapper.xml line 9: ORDER BY ${orderBy}"
+      ],
+      "control_found": null,
+      "notes": "The ORDER BY clause interpolates the raw ${orderBy} value from the caller. No allow\u2011list or type cast is present in the snippet."
+    },
+    {
+      "finding_id": "INJ-I-0018-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/OrderServlet.java line 15: ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates the request parameter id directly into the SQL string. No ownership or role check is performed in the shown code."
+    },
+    {
+      "finding_id": "INJ-I-0019-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/OrderServlet.java line 17: sb.append(\" AND order_id = \").append(id);"
+      ],
+      "control_found": null,
+      "notes": "The string builder appends the unsanitized id into the SQL query. No ownership or role guard is visible in the snippet."
+    }
+  ]
+}

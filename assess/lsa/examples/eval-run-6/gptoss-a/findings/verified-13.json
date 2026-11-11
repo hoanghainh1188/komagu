@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-13",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0020",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:17"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates user input directly into the SQL string with no sanitization, casting, or parameter binding. No ownership or role check is present on this route."
+    },
+    {
+      "finding_id": "INJ-I-0021",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:29"
+      ],
+      "control_found": null,
+      "notes": "The query interpolates req.query.shop directly into the SQL string. No cast, binding, or authorization guard is visible."
+    },
+    {
+      "finding_id": "INJ-I-0022",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:21"
+      ],
+      "control_found": null,
+      "notes": "The request body is passed directly to findOne without validation or sanitization. No role or ownership check is present."
+    },
+    {
+      "finding_id": "INJ-I-0023",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:25"
+      ],
+      "control_found": null,
+      "notes": "The $where string concatenates user input directly, enabling NoSQL injection. No validation or authorization guard is visible."
+    },
+    {
+      "finding_id": "INJ-I-0024",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi:13"
+      ],
+      "control_found": null,
+      "notes": "The prepared statement interpolates $id directly into the SQL string. No parameter binding or sanitization is used. The later safe query does not mitigate this earlier vulnerability."
+    }
+  ]
+}

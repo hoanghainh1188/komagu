@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-3",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0017",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb"
+      ],
+      "control_found": null,
+      "notes": "The code_context shows a direct string concatenation of the order ID and note into an UPDATE statement with no visible ownership check, cast, or parameter binding. No role or ownership guard is present in the shown snippet."
+    },
+    {
+      "finding_id": "BOLA-R-0018",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs"
+      ],
+      "control_found": null,
+      "notes": "The unsafe SELECT query concatenates the order ID directly into the SQL and is executed. The subsequent safe query with user ID is defined but not used. No ownership check is visible in the executed path."
+    },
+    {
+      "finding_id": "BOLA-R-0019",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/WebContent/order/detail.jsp"
+      ],
+      "control_found": null,
+      "notes": "The JSP concatenates the request parameter into a SELECT statement without any ownership filtering, cast, or parameter binding. No role or ownership guard is present in the snippet."
+    },
+    {
+      "finding_id": "BOLA-R-0020",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java"
+      ],
+      "control_found": null,
+      "notes": "The controller directly calls accountDao.save(account) without checking that the current user owns the account. No ownership or role check is visible in the snippet."
+    },
+    {
+      "finding_id": "BOLA-R-0021",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java"
+      ],
+      "control_found": null,
+      "notes": "The rename operation is performed on any account ID without verifying ownership. No ownership or role check is visible in the snippet."
+    }
+  ]
+}

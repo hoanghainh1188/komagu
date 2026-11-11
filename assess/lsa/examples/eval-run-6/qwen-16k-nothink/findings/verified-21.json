@@ -1,0 +1,74 @@
+{
+  "batch_id": "verified-21",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0002-verdict",
+      "verdict": "rejected",
+      "reason_code": "evidence_mismatch",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:30"
+      ],
+      "control_found": null,
+      "notes": "The finding claims a mass assignment issue based on an auditor's 'needs_review' verdict. However, the provided code_context shows `TryUpdateModel(customer)` at line 30. In ASP.NET Entity Framework, `TryUpdateModel` is a safe method that only updates properties bound to the model class and ignores extra fields from the request (unlike `UpdateModel`). While it doesn't have an explicit allow-list like `$fillable`, it does not bind *all* request fields by default if the model doesn't define them. More importantly, the finding itself states 'the model wrote no finding for it', indicating the auditor did not flag this as a confirmed issue. The evidence provided is merely a reference to a non-existent or rejected finding, not proof of a vulnerability.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php:13",
+        "php-laravel/app/Models/User.php:8"
+      ],
+      "control_found": null,
+      "notes": "The code explicitly calls `User::create($request->all())` which binds every field in the request to the User model. The model definition confirms `protected $guarded = [];`, meaning no fields are protected from mass assignment. There is no visible compensating control (like `$fillable` restriction or a middleware check) in the provided context.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php:23",
+        "php-laravel/app/Models/Team.php:8"
+      ],
+      "control_found": null,
+      "notes": "The code calls `Team::create($request->all())` allowing all request fields. The model explicitly lists `'owner_id'` in `$fillable`. This allows an attacker to set the owner of a new team to any user ID via the request body. No compensating control is visible.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/register.php:4",
+        "php-plain/inc/db.php"
+      ],
+      "control_found": null,
+      "notes": "The code uses `extract($_POST);` at line 4. This function imports all variables from the POST array into the local scope. The subsequent SQL statement (`INSERT INTO users (email, name, role) VALUES (?, ?, ?)`) uses specific parameters, but `extract()` populates variables like `$role`, `$email`, `$name` directly from the POST data. If an attacker includes a field named `role` in the POST body, it will be assigned to the `$role` variable and injected into the SQL query. This is a classic mass assignment vector via `extract()`. The finding is valid.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py:10",
+        "python-flask/profile.py:27"
+      ],
+      "control_found": null,
+      "notes": "Line 10 uses `User(**request.json)`, which unpacks the entire JSON object into keyword arguments for the constructor. Unless the User class has a custom `__init__` that filters these arguments (which is not visible in the context), all fields are assigned. Line 27 iterates over `request.json.items()` and sets attributes directly (`setattr(user, key, value)`), allowing any field from the request to overwrite model properties including privileged ones like `role`. No allow-list or filtering control is visible.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    }
+  ]
+}

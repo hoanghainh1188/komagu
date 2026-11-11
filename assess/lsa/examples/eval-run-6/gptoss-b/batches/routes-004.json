@@ -1,0 +1,659 @@
+{
+  "batch_id": "routes-004",
+  "files": [
+    "php-laravel/routes/web.php",
+    "php-plain/admin.php",
+    "php-plain/admin/delete_user.php",
+    "php-plain/admin/promote.php",
+    "php-plain/manage_users.php",
+    "php-plain/order_detail.php",
+    "php-plain/order_detail_safe.php",
+    "python-flask/app.py"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/php.md",
+    "knowledge/stacks/node-python-ruby.md"
+  ],
+  "candidates": [
+    {
+      "stack": "php-laravel",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/rename",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 9,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "handler is in the controller named in this route",
+      "route_id": "R-0055",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-laravel",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/profile",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 10,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "handler is in the controller named in this route",
+      "route_id": "R-0056",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-laravel",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/register",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 6,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "handler is in the controller named in this route",
+      "route_id": "R-0052",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-laravel",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/posts",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 7,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "handler is in the controller named in this route",
+      "route_id": "R-0053",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-laravel",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/teams",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 8,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "handler is in the controller named in this route",
+      "route_id": "R-0054",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/php-plain/admin.php?action=view",
+      "handler": {
+        "file": "php-plain/admin.php",
+        "line": 6,
+        "symbol": "case 'view'"
+      },
+      "id_params": [
+        {
+          "name": "action",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "uid",
+          "source": "query",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "form",
+          "line": 11,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 8
+        },
+        {
+          "op": "delete",
+          "line": 12
+        }
+      ],
+      "notes": "dispatcher on 'action' (line 5), case 'view'",
+      "route_id": "R-0057",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 6,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/php-plain/admin.php?action=delete",
+      "handler": {
+        "file": "php-plain/admin.php",
+        "line": 10,
+        "symbol": "case 'delete'"
+      },
+      "id_params": [
+        {
+          "name": "action",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "uid",
+          "source": "query",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "form",
+          "line": 11,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 8
+        },
+        {
+          "op": "delete",
+          "line": 12
+        }
+      ],
+      "notes": "dispatcher on 'action' (line 5), case 'delete'",
+      "route_id": "R-0058",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 10,
+          "hint": "path:admin, write:users"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/delete_user.php",
+      "handler": {
+        "file": "php-plain/admin/delete_user.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "form",
+          "line": 5,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once '../inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "delete",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0066",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 1,
+          "hint": "path:admin, write:users"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/promote.php",
+      "handler": {
+        "file": "php-plain/admin/promote.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "is_admin",
+          "source": "form",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "uid",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once '../inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0067",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 5,
+          "hint": "$_POST['is_admin'"
+        },
+        {
+          "signal": "no_role_check",
+          "line": 1,
+          "hint": "path:admin, write:users"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/manage_users.php",
+      "handler": {
+        "file": "php-plain/manage_users.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        },
+        {
+          "hint": "$_SESSION[",
+          "line": 11
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "delete",
+          "line": 6
+        },
+        {
+          "op": "delete",
+          "line": 11
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0059",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:manage",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "client_side_role_check",
+          "line": 11,
+          "hint": "$_SESSION['role']"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/order_detail.php",
+      "handler": {
+        "file": "php-plain/order_detail.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "query",
+          "line": 5,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0061",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/order_detail_safe.php",
+      "handler": {
+        "file": "php-plain/order_detail_safe.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "query",
+          "line": 6,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        },
+        {
+          "hint": "$_SESSION[",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 5
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0062",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "python-flask",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/<int:order_id>",
+      "handler": {
+        "file": "python-flask/app.py",
+        "line": 8,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "order_id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "login_required",
+          "line": 9
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 12
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0069",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "python-flask",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/mine/<int:order_id>",
+      "handler": {
+        "file": "python-flask/app.py",
+        "line": 16,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "order_id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "login_required",
+          "line": 17
+        },
+        {
+          "hint": "current_user",
+          "line": 20
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 20
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0070",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "python-flask",
+      "kind": "declared_route",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/search",
+      "handler": {
+        "file": "python-flask/app.py",
+        "line": 24,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "q",
+          "source": "query",
+          "line": 27,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "login_required",
+          "line": 25
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 27
+        },
+        {
+          "op": "read",
+          "line": 29
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0071",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    }
+  ]
+}

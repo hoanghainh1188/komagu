@@ -1,0 +1,222 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Unrestricted user creation allows role escalation",
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Models/User.php",
+          "line": 8,
+          "why": "protected $guarded = [] allows all attributes to be mass\u2011assigned"
+        }
+      ],
+      "impact": "Any authenticated user can set the 'role' field to 'admin', escalating privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Define a $fillable array that excludes privileged fields such as 'role', or explicitly set the role server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Team creation allows arbitrary owner assignment",
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Models/Team.php",
+          "line": 8,
+          "why": "protected $fillable = ['name', 'owner_id'] includes the privileged field 'owner_id'"
+        }
+      ],
+      "impact": "Any authenticated user can set 'owner_id' to any user ID, creating a team under that user and gaining implicit ownership.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove 'owner_id' from $fillable and set it server\u2011side to the current user\u2019s ID.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0006-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at node-express/routes/profile.js:8 (from auditor verdict)",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0007-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at node-express/routes/profile.js:16 (from auditor verdict)",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at php-laravel/app/Http/Controllers/AccountController.php:36 (from auditor verdict)",
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 36,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0015-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at python-flask/profile.py:27 (from auditor verdict)",
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 27,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0014-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at python-flask/profile.py:10 (from auditor verdict)",
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 10,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "safe"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "needs_review"
+    }
+  ]
+}

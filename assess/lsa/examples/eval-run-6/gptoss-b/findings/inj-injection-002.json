@@ -1,0 +1,410 @@
+{
+  "batch_id": "injection-002",
+  "findings": [
+    {
+      "finding_id": "INJ-I-0031-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/order_detail.php:6",
+      "candidate_id": "I-0031",
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "Unsanitized input concatenated into query",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use a prepared statement with bound parameters",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0032-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/search.php:9",
+      "candidate_id": "I-0032",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "start_line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "Unsanitized input concatenated into query",
+          "line": 9
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Validate or whitelist the ORDER BY value before use",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0033-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/search.php:9",
+      "candidate_id": "I-0033",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "start_line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "Unsanitized input concatenated into query",
+          "line": 9
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Validate or whitelist the ORDER BY value before use",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0034-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/search.php:14",
+      "candidate_id": "I-0034",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 14
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "start_line": 14,
+          "code": "$q = <<<SQL\nSELECT * FROM products\nWHERE category = '{$_GET['cat']}'\nSQL;",
+          "why": "Unsanitized input concatenated into query",
+          "line": 14
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries or escape the input",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0036-1",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in python-flask/app.py:29",
+      "candidate_id": "I-0036",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 29
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 29,
+          "code": "cur.execute(f\"SELECT * FROM products WHERE name LIKE '%{q}%'\")",
+          "why": "Unsanitized input concatenated into query",
+          "line": 29
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use a parameterized query instead of f\u2011string interpolation",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0035-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in python-flask/app.py:12",
+      "candidate_id": "I-0035",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "Unsanitized input concatenated into query",
+          "line": 12
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use a parameterized query instead of string formatting",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0008-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in dotnet-legacy/Web/Controllers/InvoiceController.cs:28",
+      "candidate_id": "I-0008",
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 28
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 28,
+          "code": "var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();",
+          "why": "Unsanitized input concatenated into query",
+          "line": 28
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameterized queries or SqlParameter objects",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0015-1",
+      "category": "sql_injection",
+      "subtype": "dynamic_identifier",
+      "title": "SQL Injection in java-legacy/src/com/acme/mapper/OrderMapper.xml:9",
+      "candidate_id": "I-0015",
+      "location": {
+        "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/mapper/OrderMapper.xml",
+          "start_line": 9,
+          "code": "ORDER BY ${orderBy}",
+          "why": "Unsanitized identifier interpolated into query",
+          "line": 9
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Validate or whitelist the ORDER BY value before interpolation",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0018-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in java-legacy/src/com/acme/web/OrderServlet.java:15",
+      "candidate_id": "I-0018",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 15
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "start_line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "Unsanitized input concatenated into query",
+          "line": 15
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use a prepared statement with a parameter placeholder",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0019-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in java-legacy/src/com/acme/web/OrderServlet.java:17",
+      "candidate_id": "I-0019",
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 17
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "start_line": 17,
+          "code": "sb.append(\" AND order_id = \").append(id);",
+          "why": "Unsanitized input concatenated into query",
+          "line": 17
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use a prepared statement or parameter binding for the ID",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0026-1",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-codeigniter/application/controllers/Invoice.php:10",
+      "candidate_id": "I-0026",
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "Unsanitized input concatenated into query",
+          "line": 10
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Use parameter binding or escape the ID properly",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0037-1",
+      "category": "sql_injection",
+      "subtype": "stored_procedure_dynamic_sql",
+      "title": "SQL Injection in sql-procs/sp_search_orders.sql:5",
+      "candidate_id": "I-0037",
+      "location": {
+        "file": "sql-procs/sp_search_orders.sql",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "start_line": 5,
+          "code": "SET @sql = 'SELECT * FROM Orders WHERE Customer = ''' + @Customer + ''' ORDER BY ' + @Sort",
+          "why": "Unsanitized input concatenated into dynamic SQL",
+          "line": 5
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Validate or whitelist @Customer and @Sort before concatenation",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0038-1",
+      "category": "sql_injection",
+      "subtype": "stored_procedure_dynamic_sql",
+      "title": "SQL Injection in sql-procs/sp_search_orders.sql:6",
+      "candidate_id": "I-0038",
+      "location": {
+        "file": "sql-procs/sp_search_orders.sql",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "start_line": 6,
+          "code": "EXEC(@sql)",
+          "why": "Unsanitized dynamic SQL executed",
+          "line": 6
+        }
+      ],
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "recommendation": "Avoid EXEC with user\u2011supplied SQL; use parameterized queries or validate the constructed SQL",
+      "status": "unverified"
+    }
+  ],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "I-0031",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0032",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0033",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0034",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0036",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0035",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0015",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0018",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0019",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0026",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0037",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0038",
+      "verdict": "vulnerable"
+    }
+  ]
+}

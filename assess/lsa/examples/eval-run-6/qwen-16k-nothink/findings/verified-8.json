@@ -1,0 +1,125 @@
+{
+  "batch_id": "verified-8",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0069-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py lines 8-13"
+      ],
+      "control_found": null,
+      "notes": "The endpoint `/orders/<int:order_id>` is protected by `@login_required` but the query `SELECT * FROM orders WHERE id = %s` uses the raw `order_id` parameter without verifying ownership against `current_user.id`. Unlike the `/orders/mine/` route, this path lacks an explicit ownership check.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by request id without tenant or user context binding."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/orders/<int:order_id>",
+        "target_param": "order_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0071-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py lines 24-30"
+      ],
+      "control_found": null,
+      "notes": "The `/search` endpoint is protected by `@login_required`, but the query filters only by name (`WHERE name LIKE '%{q}%'`) and ignores ownership. An attacker can search for products owned by another user.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Search query lacks ownership scoping."
+      },
+      "attack_vector": {
+        "method": "GET|POST",
+        "path": "/search",
+        "target_param": "q"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0067-verdict",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "severity": null,
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/promote.php lines 5-8"
+      ],
+      "control_found": {
+        "file": "php-plain/admin/promote.php",
+        "line": 5,
+        "code": "if ($_POST['is_admin'] == '1') {"
+      },
+      "notes": "The code explicitly checks `$_POST['is_admin']`. If this flag is present and set to '1', the user is granted admin privileges. While this relies on a specific POST parameter, it acts as an explicit authorization gate for the privilege escalation action described in the finding title (promoting to admin). The auditor's verdict was likely based on the lack of ownership check for the `uid`, but the finding implies a general vulnerability which is mitigated by this specific role-based control."
+    },
+    {
+      "finding_id": "BOLA-R-0072-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py lines 8-13"
+      ],
+      "control_found": null,
+      "notes": "The `/users` POST endpoint creates a new user object directly from `request.json` (`User(**request.json)`) without verifying ownership or restricting fields. Any authenticated user can create accounts.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Mass assignment / IDOR on creation without ownership verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/users",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0073-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py lines 16-21"
+      ],
+      "control_found": null,
+      "notes": "The `/users/<int:uid>/name` endpoint fetches a user by ID (`User.query.get(uid)`) and updates the name without checking if `uid` belongs to the current user. This allows any authenticated user to modify another user's name.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct modification of resource by ID without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/users/<int:uid>/name",
+        "target_param": "uid"
+      }
+    }
+  ]
+}

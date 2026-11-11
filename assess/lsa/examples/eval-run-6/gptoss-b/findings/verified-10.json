@@ -1,0 +1,67 @@
+{
+  "batch_id": "verified-10",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0060",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php lines 5-6",
+        "php-plain/inc/auth.php lines 2-6"
+      ],
+      "control_found": null,
+      "notes": "The endpoint performs a MongoDB query using user-supplied parameters without any ownership filter. The included auth.php only checks for a logged\u2011in user, not for ownership of the returned documents."
+    },
+    {
+      "finding_id": "INJ-I-0001",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp lines 6-8",
+        "classic-asp/shop/member.asp line 10",
+        "classic-asp/shop/inc/auth.asp line 2"
+      ],
+      "control_found": null,
+      "notes": "The SQL UPDATE and DELETE statements concatenate Request.Form(\"member_id\") directly into the query. No role or ownership check is present, and the only sanitization is for the name field."
+    },
+    {
+      "finding_id": "INJ-I-0002",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp line 7",
+        "classic-asp/shop/inc/auth.asp line 2"
+      ],
+      "control_found": null,
+      "notes": "Same vulnerability as INJ-I-0001: member_id is concatenated without validation or ownership enforcement."
+    },
+    {
+      "finding_id": "INJ-I-0003",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp line 10",
+        "classic-asp/shop/inc/auth.asp line 2"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement uses Request.QueryString(\"member_id\") directly, exposing the same injection risk and lacking any ownership check."
+    },
+    {
+      "finding_id": "INJ-I-0004",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/order.asp lines 5-6",
+        "classic-asp/shop/order.asp lines 10-13",
+        "classic-asp/shop/inc/auth.asp line 2"
+      ],
+      "control_found": null,
+      "notes": "The first SELECT uses the raw id parameter without casting or ownership filtering. The second SELECT casts sid and user_id but still only protects that specific query; the initial query remains vulnerable."
+    }
+  ]
+}

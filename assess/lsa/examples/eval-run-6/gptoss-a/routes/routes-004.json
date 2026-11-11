@@ -1,0 +1,403 @@
+{
+  "routes": [
+    {
+      "route_id": "R-0055",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/rename",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 9
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0056",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/profile",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 10
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0052",
+      "method": [
+        "POST"
+      ],
+      "path": "/register",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 6
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0053",
+      "method": [
+        "POST"
+      ],
+      "path": "/posts",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 7
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0054",
+      "method": [
+        "POST"
+      ],
+      "path": "/teams",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/routes/web.php",
+        "line": 8
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0057",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/php-plain/admin.php?action=view",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/admin.php",
+        "line": 6
+      },
+      "id_inputs": [
+        {
+          "name": "action",
+          "source": "query"
+        },
+        {
+          "name": "uid",
+          "source": "query"
+        },
+        {
+          "name": "id",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0058",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/php-plain/admin.php?action=delete",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/admin.php",
+        "line": 10
+      },
+      "id_inputs": [
+        {
+          "name": "action",
+          "source": "query"
+        },
+        {
+          "name": "uid",
+          "source": "query"
+        },
+        {
+          "name": "id",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0066",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/delete_user.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/admin/delete_user.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0067",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/promote.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/admin/promote.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "is_admin",
+          "source": "form"
+        },
+        {
+          "name": "uid",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0059",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/manage_users.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/manage_users.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0061",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/order_detail.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/order_detail.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0062",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/order_detail_safe.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/order_detail_safe.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0069",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/<int:order_id>",
+      "path_source": "declared",
+      "handler": {
+        "file": "python-flask/app.py",
+        "line": 8
+      },
+      "id_inputs": [
+        {
+          "name": "order_id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0070",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/mine/<int:order_id>",
+      "path_source": "declared",
+      "handler": {
+        "file": "python-flask/app.py",
+        "line": 16
+      },
+      "id_inputs": [
+        {
+          "name": "order_id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0071",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/search",
+      "path_source": "declared",
+      "handler": {
+        "file": "python-flask/app.py",
+        "line": 24
+      },
+      "id_inputs": [
+        {
+          "name": "q",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    }
+  ],
+  "rejected": []
+}

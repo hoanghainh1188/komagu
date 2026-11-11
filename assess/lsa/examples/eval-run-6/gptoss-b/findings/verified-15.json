@@ -1,0 +1,70 @@
+{
+  "batch_id": "verified-15",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0031-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/order_detail.php:5-6",
+        "php-plain/inc/auth.php",
+        "php-plain/inc/db.php"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates the raw $_GET['id'] value without any cast, sanitisation, or parameter binding. No ownership or role check is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0032-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:5-9",
+        "php-plain/inc/auth.php",
+        "php-plain/inc/db.php"
+      ],
+      "control_found": null,
+      "notes": "The ORDER BY clause is built from the unsanitised $_GET['sort'] value. No allow\u2011list, cast, or ownership check is visible."
+    },
+    {
+      "finding_id": "INJ-I-0033-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:5-9",
+        "php-plain/inc/auth.php",
+        "php-plain/inc/db.php"
+      ],
+      "control_found": null,
+      "notes": "Duplicate of INJ-I-0032-1; same lack of sanitisation or ownership guard."
+    },
+    {
+      "finding_id": "INJ-I-0034-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:5-14",
+        "php-plain/inc/auth.php",
+        "php-plain/inc/db.php"
+      ],
+      "control_found": null,
+      "notes": "The category filter uses raw $_GET['cat'] inside a heredoc without escaping or parameter binding. No ownership or role check is present."
+    },
+    {
+      "finding_id": "INJ-I-0036-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py:24-30",
+        "python-flask/app.py:10-13",
+        "python-flask/app.py:16-21"
+      ],
+      "control_found": null,
+      "notes": "The search query interpolates the user supplied 'q' directly into the SQL string. No parameter binding, sanitisation, or ownership check is visible."
+    }
+  ]
+}

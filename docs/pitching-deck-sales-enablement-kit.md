@@ -78,7 +78,7 @@ flowchart LR
 | Vấn đề | Công cụ SAST truyền thống (Fortify, Checkmarx, Sonar) | Nền tảng Komagu |
 | :--- | :--- | :--- |
 | **BOLA / IDOR (CWE-639)** | ❌ **Bỏ sót:** Không hiểu mô hình sở hữu dữ liệu (Ai sở hữu bản ghi nào). | ✅ **Phát hiện 25/25 trên bộ mẫu (Run 3):** Mô hình hóa đối tượng và truy vết quyền sở hữu per-route. |
-| **Báo động giả (False Positives)** | ❌ **Quá tải:** Báo hàng nghìn cảnh báo giả, làm tê liệt đội ngũ kỹ thuật. | ✅ **Ít báo động giả:** Agent phản biện (*Skeptic Verifier*) đối chiếu control trong code; 0 cảnh báo sai trên các đoạn code an toàn của bộ mẫu (Run 3, Run 4 vòng cuối). |
+| **Báo động giả (False Positives)** | ❌ **Quá tải:** Báo hàng nghìn cảnh báo giả, làm tê liệt đội ngũ kỹ thuật. | ✅ **Ít báo động giả:** Agent phản biện (*Skeptic Verifier*) đối chiếu control trong code; 0 cảnh báo sai trên các đoạn code an toàn của bộ mẫu ở Run 3; với model local (Run 6) là 1 trên 33 điểm an toàn mỗi lần chạy. |
 | **Biện pháp can thiệp** | ❌ **Chỉ báo lỗi:** Bắt khách hàng tự tìm cách sửa code cũ mạo hiểm. | ✅ **Bảo vệ biên tức thì:** Kong + WAF che chắn ngay lập tức trước khi sửa code. |
 | **Tài liệu & Tuân thủ** | ❌ Báo cáo kỹ thuật tiếng Anh thuần túy, xa rời bối cảnh Nhật. | ✅ Báo cáo song ngữ tiếng Nhật chuẩn **IPA / NISC** và Dashboard tương tác. |
 
@@ -122,7 +122,7 @@ flowchart LR
 
 ---
 
-### SLIDE 6: Empirical Proof — Evaluation Run 3 & Run 4 Benchmark Results
+### SLIDE 6: Empirical Proof — Evaluation Run 3 & Run 6 Benchmark Results
 - **Tiêu đề Slide:** **Bằng chứng Thực nghiệm: Số đo thật trên 10 stack mẫu**
 - **Bảng số liệu kiểm chứng (Được nghiệm thu tại `assess/lsa/tests/EVAL-RESULTS.md`):**
 
@@ -133,17 +133,19 @@ flowchart LR
 | **Tỷ lệ báo động giả (False Positives)** | **0%** | **0 (`[]`)** | Tuyệt đối không báo sai các hàm truy vấn an toàn |
 | **Độ chính xác (Precision)** | $\ge 0.95$ | **1.000 (57 / 57)** | 100% lỗi báo ra là chính xác và có thể kiểm chứng |
 
-- **Run 4–5 — BFLA & Mass Assignment, model chạy local (`gpt-oss:20b` trên Ollama, code không rời máy):**
+- **Run 6 — cả 4 nhóm lỗi, model chạy local (`gpt-oss:20b` trên Ollama, Apple M4 Pro 24 GB, code không rời máy, secret được che trước khi gửi model):**
 
-| Chỉ số Đo lường | Kết quả Run 5 (2 lần chạy) | Đánh giá |
+| Chỉ số Đo lường | Kết quả Run 6 (2 lần chạy) | Đánh giá |
 | :--- | :---: | :--- |
-| **BFLA: route bị đánh giá đúng** | **10 / 10** (cả 2 lần) | Auditor nhận ra đúng mọi route thiếu kiểm tra quyền |
-| **BFLA: finding ghi đúng vị trí** | **10 / 10 và 9 / 10** | Vị trí lấy từ inventory Tier 1 thay vì để model tự ghi (Run 4: 8 và 5 / 10) |
-| **Mass Assignment (theo verdict / theo vị trí)** | **15 và 15 / 15 · 10 và 14 / 15** | Auditor được xem class model nên bắt được cả binding .NET/Java |
-| **Báo động giả trên code an toàn** | **0** | Cả 4 nhóm lỗi, cả 2 lần chạy |
+| **BOLA / IDOR** | **26 / 29** (cả 2 lần) | Bộ test mới có thêm 4 điểm BOLA so với Run 3; còn sót 3 |
+| **Injection (SQL/NoSQL)** | **34 / 34** (cả 2 lần) | Giữ nguyên mức của Run 3 |
+| **BFLA** | **10 / 10** (cả 2 lần) | Auditor nhận ra đúng mọi route thiếu kiểm tra quyền |
+| **Mass Assignment (theo vị trí / theo verdict)** | **14 / 15 · 15 và 14 / 15** | Auditor được xem class model nên bắt được cả binding .NET/Java |
+| **Độ chính xác (Precision)** | **0,81 và 0,79** | Mỗi lần chạy có 1 báo sai trên code an toàn; 5 finding còn lại chưa khớp đáp án đang được rà soát |
+| **Thời gian** | **40 và 56 phút** | Cho repo eval 10 stack, trên một máy laptop |
 
 - **Speaker Notes (Harry):**
-  > *"Tại thị trường Nhật Bản, 'nói có sách, mách có chứng'. Run 3 đo BOLA và injection trên 10 công nghệ di sản: bắt 25/25 và 34/34, không báo sai trên code an toàn. Run 4 đo thêm BFLA và mass assignment bằng một model 20B chạy hoàn toàn trên máy, không gửi code ra ngoài: model nhận ra đúng 10/10 route BFLA và 15/15 điểm mass assignment, nhưng kết quả giữa các lần chạy còn dao động, và chúng tôi công bố đúng con số đó. Đây là mức sàn của model local; model mạnh hơn có thể cho kết quả cao hơn, nhưng chúng tôi chưa đo."*
+  > *"Tại thị trường Nhật Bản, 'nói có sách, mách có chứng'. Run 3 đo BOLA và injection trên 10 công nghệ di sản: bắt 25/25 và 34/34, không báo sai trên code an toàn. Run 6 đo cả bốn nhóm lỗi bằng một model 20B chạy hoàn toàn trên máy, không gửi code ra ngoài: BOLA 26/29, injection 34/34, BFLA 10/10, mass assignment 14/15, mỗi lần chạy có 1 báo sai trên code an toàn, và chúng tôi công bố đúng con số đó. Đây là mức sàn của model local; model mạnh hơn có thể cho kết quả cao hơn, nhưng chúng tôi chưa đo."*
 
 ---
 
@@ -304,7 +306,7 @@ GIẢI PHÁP 4 TRỤ CỘT CỦA KOMAGU (A-UN LIFECYCLE):
 │  1. ASSESS   │──>│  2. PROTECT  │──>│ 3. REMEDIATE │──>│  4. OPERATE  │
 │  (LSA Kit)   │   │  (Edge WAF)  │   │(Boilerplate) │   │ (CI Testing) │
 └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
-• Assess: Phân tích sâu 10 stack di sản; Run 3: BOLA 25/25, injection 34/34, 0 báo sai; Run 5 (model local): BFLA 9–10/10, mass assignment 15/15 theo verdict.
+• Assess: Phân tích sâu 10 stack di sản; Run 3: BOLA 25/25, injection 34/34, 0 báo sai; Run 6 (model local, 4 nhóm lỗi): BOLA 26/29, injection 34/34, BFLA 10/10, mass assignment 14/15.
 • Protect: Đặt Kong Gateway + Coraza WAF che chắn tầng biên trong 10 phút, không sửa code cũ.
 • Remediate: 5 Boilerplates (.NET 8, Spring 3, Go, Node, Python; Zero-PII eKYC 2027; WORM Backup; Multi-Tenant BYOK; Legacy Shims).
 • Operate: Kiểm thử chéo User A-B, tự động vá lỗi (komagu fix), xuất SBOM & 6-job CI Security Scan.

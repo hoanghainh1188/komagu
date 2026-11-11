@@ -1,0 +1,61 @@
+{
+  "batch_id": "verified-21",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0002-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs: lines 26-31"
+      ],
+      "control_found": null,
+      "notes": "The code shows a mass assignment via TryUpdateModel(customer) but no ownership or role check, integer cast, or allow\u2011list is visible in the provided snippet."
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php: lines 21-24",
+        "php-laravel/app/Models/Team.php: line 8"
+      ],
+      "control_found": null,
+      "notes": "Team::create($request->all()) uses the model\u2019s $fillable which includes the privileged field owner_id, allowing an attacker to set ownership."
+    },
+    {
+      "finding_id": "MASS-M-0006-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/profile.js: lines 7-9"
+      ],
+      "control_found": null,
+      "notes": "User.findByIdAndUpdate(req.user._id, req.body, ...) performs a whole\u2011object bind with no allow\u2011list or ownership check."
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/profile.js: lines 16-17"
+      ],
+      "control_found": null,
+      "notes": "new User(req.body) followed by user.save() allows all fields from the request to be persisted without filtering."
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php: line 13"
+      ],
+      "control_found": null,
+      "notes": "The User model definition is not shown; therefore it is unclear whether privileged fields are protected by $fillable/$guarded."
+    }
+  ]
+}
