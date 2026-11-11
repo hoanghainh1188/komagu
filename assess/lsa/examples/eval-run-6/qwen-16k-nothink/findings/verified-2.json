@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-2",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0009-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-37"
+      ],
+      "control_found": null,
+      "notes": "The code explicitly checks `Request.QueryString[\"isAdmin\"]` and returns all users (`db.Users.ToList()`) without any ownership filter or role verification on the returned data. The `[Authorize(Roles = \"Admin\")]` attribute is missing from this specific method (lines 30-37), unlike the `ResetPassword` method above it (lines 21-28). Even if a global filter existed, the lack of an explicit check in the provided code context combined with the direct return of all users makes this a confirmed BOLA risk.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct return of all users based on a query string parameter without ownership or role binding in the provided code."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/Export?isAdmin=true",
+        "target_param": "isAdmin"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0015-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs lines 26-29"
+      ],
+      "control_found": null,
+      "notes": "The `Search` method constructs a SQL query using the `customer` parameter directly concatenated into the string (`WHERE Customer = '\" + customer + \"'`). There is no check to ensure the returned invoices belong to the current authenticated user. Unlike the `Mine` method (lines 17-23) which explicitly filters by `UserId`, this method lacks such a filter.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct concatenation of user input into SQL without filtering by current user ID."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Invoice/Search?customer=<TargetName>",
+        "target_param": "customer"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0017-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/EditOrder.aspx.vb lines 6-15"
+      ],
+      "control_found": null,
+      "notes": "The code constructs an UPDATE statement using `hfOrderId.Value` directly concatenated into the SQL string. There is no verification that the order belongs to the current user (e.g., `AND UserId = Session('UserID')`). The hidden field value is attacker-controllable.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct concatenation of hidden field value into SQL UPDATE without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Orders/EditOrder.aspx",
+        "target_param": "hfOrderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0019-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/WebContent/order/detail.jsp lines 3-5"
+      ],
+      "control_found": null,
+      "notes": "The JSP file retrieves the `no` parameter and concatenates it directly into a SQL SELECT query (`WHERE order_no = '\" + no + \"'`). There is no filter to restrict results to the current user's orders.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct concatenation of request parameter into SQL SELECT without ownership check."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order/detail.jsp?no=<TargetOrderNo>",
+        "target_param": "no"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0001-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/struts/EditUserAction.java lines 10-14"
+      ],
+      "control_found": null,
+      "notes": "The code retrieves `user_id` from the request and concatenates it directly into an SQL UPDATE statement (`WHERE id = ` + userId). There is no check to ensure the user being edited is the currently logged-in user.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct concatenation of request parameter into SQL UPDATE without ownership check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/user/edit.do",
+        "target_param": "user_id"
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+13:38:18 swap=3675.81M compr_pages=42433.
+13:39:18 swap=3675.81M compr_pages=57738. qwen3.5:9b-16k df9cabffde69 7.9 GB 100% GPU 16384 mlx 4 minutes from now
+13:40:18 swap=3675.81M compr_pages=57412. qwen3.5:9b-16k df9cabffde69 7.9 GB 100% GPU 16384 mlx 3 minutes from now
+13:41:18 swap=3675.81M compr_pages=56420. qwen3.5:9b-16k df9cabffde69 8.7 GB 100% GPU 16384 mlx 4 minutes from now
+13:42:18 swap=3659.81M compr_pages=54938. qwen3.5:9b-16k df9cabffde69 8.7 GB 100% GPU 16384 mlx 3 minutes from now
+13:43:18 swap=3651.81M compr_pages=54619. qwen3.5:9b-16k df9cabffde69 9.4 GB 100% GPU 16384 mlx 4 minutes from now
+13:44:19 swap=3651.81M compr_pages=54461. qwen3.5:9b-16k df9cabffde69 9.4 GB 100% GPU 16384 mlx 3 minutes from now
+13:45:19 swap=3651.81M compr_pages=53870. qwen3.5:9b-16k df9cabffde69 10.0 GB 100% GPU 16384 mlx 4 minutes from now
+13:46:19 swap=3651.81M compr_pages=53783. qwen3.5:9b-16k df9cabffde69 10 GB 100% GPU 16384 mlx 4 minutes from now
+13:47:19 swap=3651.81M compr_pages=53086. qwen3.5:9b-16k df9cabffde69 10 GB 100% GPU 16384 mlx 3 minutes from now
+13:48:19 swap=3651.81M compr_pages=52997. qwen3.5:9b-16k df9cabffde69 11 GB 100% GPU 16384 mlx 4 minutes from now
+13:49:19 swap=3651.81M compr_pages=104902. qwen3.5:9b-16k df9cabffde69 11 GB 100% GPU 16384 mlx 3 minutes from now
+13:50:19 swap=3651.81M compr_pages=104596. qwen3.5:9b-16k df9cabffde69 11 GB 100% GPU 16384 mlx 2 minutes from now
+13:51:19 swap=3651.81M compr_pages=104476. qwen3.5:9b-16k df9cabffde69 11 GB 100% GPU 16384 mlx About a minute from now
+13:52:19 swap=3651.81M compr_pages=111680. qwen3.5:9b-16k df9cabffde69 11 GB 100% GPU 16384 mlx 4 minutes from now
+13:53:19 swap=3651.81M compr_pages=110438. qwen3.5:9b-16k df9cabffde69 12 GB 100% GPU 16384 mlx 4 minutes from now
+13:54:19 swap=3779.56M compr_pages=378423. qwen3.5:9b-16k df9cabffde69 12 GB 100% GPU 16384 mlx 3 minutes from now
+13:55:20 swap=3763.56M compr_pages=362192. qwen3.5:9b-16k df9cabffde69 12 GB 100% GPU 16384 mlx 2 minutes from now
+13:56:20 swap=3739.56M compr_pages=381713. qwen3.5:9b-16k df9cabffde69 13 GB 100% GPU 16384 mlx 4 minutes from now
+13:57:20 swap=4470.50M compr_pages=383437. qwen3.5:9b-16k df9cabffde69 13 GB 100% GPU 16384 mlx 4 minutes from now
+13:58:20 swap=4454.50M compr_pages=381367. qwen3.5:9b-16k df9cabffde69 14 GB 100% GPU 16384 mlx 4 minutes from now
+13:59:20 swap=4685.94M compr_pages=401842. qwen3.5:9b-16k df9cabffde69 14 GB 100% GPU 16384 mlx 4 minutes from now
+14:00:20 swap=4669.94M compr_pages=424209. qwen3.5:9b-16k df9cabffde69 15 GB 100% GPU 16384 mlx 4 minutes from now
+14:01:20 swap=5394.81M compr_pages=433790. qwen3.5:9b-16k df9cabffde69 15 GB 100% GPU 16384 mlx 4 minutes from now
+14:02:20 swap=5394.81M compr_pages=435286. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:03:20 swap=5394.81M compr_pages=484879. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:04:20 swap=5410.69M compr_pages=465188. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:05:20 swap=5336.88M compr_pages=516055. qwen3.5:9b-16k df9cabffde69 17 GB 100% GPU 16384 mlx 4 minutes from now
+14:06:21 swap=5882.25M compr_pages=494168. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:07:21 swap=5074.75M compr_pages=469292. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:08:21 swap=5296.75M compr_pages=480656. qwen3.5:9b-16k df9cabffde69 17 GB 100% GPU 16384 mlx 4 minutes from now
+14:09:21 swap=5281.19M compr_pages=494084. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:10:21 swap=4827.81M compr_pages=510889. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:11:21 swap=5509.25M compr_pages=504096. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now
+14:12:21 swap=5950.88M compr_pages=468699. qwen3.5:9b-16k df9cabffde69 17 GB 100% GPU 16384 mlx 4 minutes from now
+14:13:21 swap=5670.88M compr_pages=461384. qwen3.5:9b-16k df9cabffde69 16 GB 100% GPU 16384 mlx 4 minutes from now

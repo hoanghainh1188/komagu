@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-12",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0003",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp lines 10, 8, 6, 7"
+      ],
+      "control_found": null,
+      "notes": "Direct string concatenation of Request.QueryString('member_id') into SQL DELETE statement without any integer casting, parameter binding, or ownership check. The code explicitly constructs the query using user input directly.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Unprotected string concatenation of user input into a destructive SQL query."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/member.asp?mode=delete&member_id={id}",
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0004",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/order.asp lines 6, 12"
+      ],
+      "control_found": null,
+      "notes": "Line 6 directly concatenates `id` (from Request) into SQL. Line 12 uses `CLng` on the session user ID but NOT on the `sid` parameter derived from Request. An attacker can bypass the ownership check by manipulating `sid` to match a different user's order ID or inject logic.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "User input `id` and `sid` are concatenated directly into SQL without type casting or parameterization."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order.asp?id={id}",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0005",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/order.asp lines 12, 6"
+      ],
+      "control_found": null,
+      "notes": "Duplicate of INJ-I-0004. The code at line 12 concatenates `sid` (derived from Request) directly into SQL. Although `user_id` is cast via CLng, the `sid` parameter itself is not validated or cast before insertion, allowing injection to bypass the ownership filter.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Same vulnerability as INJ-I-0004; user-controlled `sid` is concatenated into SQL."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order.asp?sid={sid}",
+        "target_param": "sid"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0006",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "coldfusion/app/OrderService.cfc lines 5, 3"
+      ],
+      "control_found": null,
+      "notes": "ColdFusion template interpolation `#arguments.orderId#` is used directly in the SQL query. The argument type is defined as 'string' (line 3), which does not enforce integer casting. Without `cfqueryparam`, this allows injection.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "String-typed argument passed directly to template interpolation without type enforcement."
+      },
+      "attack_vector": {
+        "method": "POST/GET",
+        "path": "/OrderService.cfc?orderId={id}",
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0007",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "coldfusion/app/order.cfm lines 3, 6"
+      ],
+      "control_found": null,
+      "notes": "Line 3 uses `#url.id#` directly in SQL. While line 7 shows a safe version using `cfqueryparam`, the finding specifically targets line 3 which lacks protection. The code at line 3 is reachable and vulnerable.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Unprotected template interpolation at line 3; the existence of a safe query later does not mitigate the vulnerability at line 3."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order.cfm?id={id}",
+        "target_param": "id"
+      }
+    }
+  ]
+}

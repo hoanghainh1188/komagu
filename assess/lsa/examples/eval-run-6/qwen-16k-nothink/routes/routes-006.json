@@ -1,0 +1,63 @@
+{
+  "routes": [
+    {
+      "route_id": "R-0064",
+      "method": [
+        "ANY"
+      ],
+      "path": "/php-plain/register.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/register.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0065",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/search.php",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-plain/search.php",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "q",
+          "source": "query"
+        },
+        {
+          "name": "sort",
+          "source": "query"
+        },
+        {
+          "name": "cat",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    }
+  ],
+  "rejected": []
+}

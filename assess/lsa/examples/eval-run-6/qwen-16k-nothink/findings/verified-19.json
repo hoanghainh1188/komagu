@@ -1,0 +1,140 @@
+{
+  "batch_id": "verified-19",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0067-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/promote.php lines 5-7",
+        "php-plain/inc/auth.php logic"
+      ],
+      "control_found": null,
+      "notes": "The code explicitly checks `if ($_POST['is_admin'] == '1')` to grant admin privileges. The included auth check (`auth.php`) only verifies login status (`user_id`), not the user's role. No server-side validation of the user's existing role against the database or session occurs before executing the update.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct reliance on client-controlled flag without server-side role verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php",
+        "target_param": "is_admin"
+      }
+    },
+    {
+      "finding_id": "BFLA-R-0063-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/profile.php lines 6-10",
+        "php-plain/inc/auth.php logic"
+      ],
+      "control_found": null,
+      "notes": "The code iterates through `$_POST` and assigns values directly to object properties (`$user->$field = $value`). Crucially, line 10 explicitly sets `$user->role = $_POST['role'];`. The included auth check only ensures the user is logged in. There is no logic verifying if the current user's role allows changing their own role or restricting the 'role' field.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Mass assignment of the 'role' field directly from client input without whitelist or role check."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/php-plain/profile.php",
+        "target_param": "role"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0003-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 14-15",
+        "java-legacy/src/com/acme/model/Account.java line 11"
+      ],
+      "control_found": null,
+      "notes": "The `save` method uses `@ModelAttribute Account account`, which binds all request parameters to the model object. The `Account` class has a `role` property (line 11) with no getter/setter restrictions visible in the context. No whitelist or role check is performed before calling `accountDao.save(account)`.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Spring @ModelAttribute binds all properties including privileged 'role' field directly from request."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/account/save",
+        "target_param": "role"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0004-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 26-28",
+        "java-legacy/src/com/acme/model/Account.java line 11"
+      ],
+      "control_found": null,
+      "notes": "The `update` method uses `@RequestBody Account account`, which deserializes the JSON payload into the model object. The `Account` class exposes the `role` property (line 11). No validation or whitelist is applied before passing the populated object to `accountDao.save(account)`.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "JSON deserialization via @RequestBody populates all fields including privileged 'role' field."
+      },
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/account/api",
+        "target_param": "role"
+      }
+    },
+    {
+      "finding_id": "MASS-M-0005-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/ProfileServlet.java lines 12",
+        "java-legacy/src/com/acme/model/Account.java line 11"
+      ],
+      "control_found": null,
+      "notes": "The `doPost` method uses `BeanUtils.populate(account, request.getParameterMap())`. This utility populates *all* accessible properties of the target object from the request parameters. Since `Account` has a `role` property (line 11), it will be overwritten by any incoming parameter named 'role', regardless of the user's actual role.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Apache Commons BeanUtils.populate() blindly assigns all request parameters to object properties."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/profile",
+        "target_param": "role"
+      }
+    }
+  ]
+}

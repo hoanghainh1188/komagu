@@ -1,0 +1,31 @@
+{
+  "route_candidates": 74,
+  "inventoried": 74,
+  "rejected": 0,
+  "missing_from_inventory": [],
+  "bola_routes_to_audit": 74,
+  "bola_routes_without_verdict": [],
+  "bfla_routes_to_audit": 0,
+  "bfla_routes_without_verdict": [],
+  "injection_candidates": 38,
+  "injection_candidates_without_verdict": [
+    "I-0008",
+    "I-0013",
+    "I-0014",
+    "I-0015",
+    "I-0018",
+    "I-0019",
+    "I-0026"
+  ],
+  "mass_candidates": 15,
+  "mass_candidates_without_verdict": [],
+  "findings_without_verification": [],
+  "duplicates_removed": [],
+  "validation_errors": [
+    "inj-injection-002.json:INJ-I-0035: subtype: 'string_formatting' not in ['missing_ownership_check', 'ownership_check_bypassable', 'id_from_request_used_as_identity', 'no_authentication', 'parent_checked_child_not', 'check_result_ignored', 'string_concatenation', 'string_interpolation', 'format_string', 'template_placeholder', 'dynamic_identifier', 'operator_injection', 'js_injection', 'second_order', 'stored_procedure_dynamic_sql', 'missing_role_check', 'role_from_request', 'client_side_role_check', 'whole_object_binding', 'privileged_field_writable']",
+    "verified-10.json: verifications[3].attack_vector.target_param: expected ['string'], got NoneType",
+    "verified-5.json: verifications[0].attack_vector.target_param: expected ['string'], got NoneType"
+  ],
+  "new_issues_from_verifier": [],
+  "out_of_scope_notes": []
+}

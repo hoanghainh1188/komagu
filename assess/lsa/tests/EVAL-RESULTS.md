@@ -431,7 +431,31 @@ per-minute memory log, and an indicative score of the unverified findings).
   These numbers are not comparable with the `gpt-oss` rows: two BOLA batches, half the injection
   candidates and the verifier are missing.
 
-**Minimum to run it:** on this evidence `qwen3.5:9b` needs a machine with **at least 32 GB RAM** (the
-runner alone reached 20 GB at 16K context, leaving nothing for the OS on 24 GB). A 16K context on a 24 GB
-machine is not a working setting. Not tried yet: turning reasoning off per request (Ollama `think: false`),
-which the headless client does not send today; that would need a client option and another run.
+Thinking looks like the cause: on this 24 GB machine a 16K context with default reasoning is **not**
+a working setting. The run below with reasoning off is.
+
+### `qwen3.5:9b` with a 16K context and reasoning off (#382)
+
+Same tag, command and timeout, plus `--ai-reasoning-effort none` (#382), which sends
+`"reasoning_effort": "none"` with every request; Ollama's `/v1` endpoint ignores `think: false` but
+honours this field. One run, archived as [`eval-run-6/qwen-16k-nothink/`](../examples/eval-run-6/qwen-16k-nothink/)
+(with `ai-raw/` for the two repaired verifier replies and the per-minute memory log).
+
+| Run | BOLA (29) | Injection (34) | BFLA (10) | Mass (15) | BFLA verdict | Mass verdict | SAFE hit | Precision | Time |
+|---|---|---|---|---|---|---|---|---|---|
+| `gpt-oss:20b` A | 26 | 34 | 10 | 14 | 10 | 15 | 1 | 0.813 | 40 min |
+| `gpt-oss:20b` B | 26 | 34 | 10 | 14 | 10 | 14 | 1 | 0.787 | 56 min |
+| `qwen3.5:9b` 16K, reasoning off | 23 | 29 | 6 | 10 | 8 | 15 | 0 | 0.734 | 35 min |
+
+- **Completed:** all phases, 33 calls, no timeout, no parse failure or call error, no retry, all findings
+  anchored. Two verifier replies were repaired (`verified-1`, `verified-9`); 11 findings were generated
+  from flagged verdicts (2 BOLA, 2 BFLA, 7 mass assignment).
+- **Recall** is lower than `gpt-oss:20b` in every category: BFLA and mass assignment are mostly found as
+  verdicts (8/10, 15/15) but placed on the right line less often (6/10, 10/15).
+- **Precision 0.73:** no finding on a SAFE marker, but 25 unmatched findings (23 BOLA, 2 BFLA), not yet triaged;
+  none is on `php-laravel/routes/web.php`.
+- **Memory and time:** the runner stayed at 14–17 GB and swap peaked at 6.0 GB (about 3.7 GB before the
+  run, from other work), against 20 GB and 12.4 GB with reasoning on. 35 minutes in all, of which the
+  verifier took 17.
+- **Minimum to run it:** a 24 GB machine is enough with `num_ctx 16384` and `--ai-reasoning-effort none`.
+  With reasoning on it needs more; on this evidence at least 32 GB RAM.

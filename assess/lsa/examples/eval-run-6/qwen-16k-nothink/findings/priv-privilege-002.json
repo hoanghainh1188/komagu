@@ -1,0 +1,306 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User registration binds the entire request body to the User model without field restrictions",
+      "route_id": null,
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "code": "return User::create($request->all());",
+          "why": "Binds all request fields to the User model. Model definition shows $guarded = [], meaning no fields are protected."
+        },
+        {
+          "file": "php-laravel/app/Models/User.php",
+          "line": 8,
+          "code": "protected $guarded = [];",
+          "why": "Model allows writing to all fields, including sensitive ones like role or owner_id."
+        }
+      ],
+      "impact": "An attacker can set any field (e.g., role='admin', owner_id=1) during registration.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Define a whitelist of allowed fields (e.g., $fillable = ['name', 'email']) in the User model.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team creation allows writing to the owner_id field via request body",
+      "route_id": null,
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "code": "return Team::create($request->all());",
+          "why": "Binds all request fields to the Team model. Model definition explicitly lists 'owner_id' as fillable."
+        },
+        {
+          "file": "php-laravel/app/Models/Team.php",
+          "line": 8,
+          "code": "protected $fillable = ['name', 'owner_id'];",
+          "why": "The owner_id field is explicitly allowed to be written from the request."
+        }
+      ],
+      "impact": "An attacker can set the owner_id of a new team to an arbitrary user ID, hijacking ownership.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915",
+        "CWE-269"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Remove 'owner_id' from the $fillable array in the Team model and set it server-side based on the authenticated user.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation via extract() binds all POST parameters to the database insert",
+      "route_id": null,
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "php-plain/register.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "php-plain/register.php",
+          "line": 4,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "An attacker can set the 'role' field in the POST body to escalate privileges (e.g., role='admin').",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Do not use extract() on user input. Explicitly map only required fields (email, name) to the statement parameters.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User creation via **kwargs binds all JSON fields to the User model",
+      "route_id": null,
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 10,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "An attacker can set any field (e.g., role='admin', is_verified=True) during user creation.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Explicitly pass only allowed fields to the User constructor or use a DTO with validation.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "User update via loop binds all JSON fields to the User model",
+      "route_id": null,
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 27,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "An attacker can modify any attribute of an existing user (e.g., role='admin', owner_id=1).",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "owasp": [
+        "API3:2023",
+        "A01:2021"
+      ],
+      "recommendation": "Restrict the loop to a whitelist of allowed fields (e.g., name, email) before updating.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0006-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at node-express/routes/profile.js:8 (from auditor verdict)",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0007-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at node-express/routes/profile.js:16 (from auditor verdict)",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0010-verdict",
+      "category": "mass_assignment",
+      "subtype": "whole_object_binding",
+      "title": "Mass assignment at php-laravel/app/Http/Controllers/AccountController.php:36 (from auditor verdict)",
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 36,
+          "why": "The auditor judged this candidate 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Bind only an explicit allow-list of fields; never bind role, owner or balance fields.",
+      "status": "unverified"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "needs_review",
+      "reason": "Model definition not found; cannot verify if sensitive fields like role or owner are writable."
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "needs_review",
+      "reason": "Model definition not found; cannot verify if sensitive fields like role or owner are writable."
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0008-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0009-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "needs_review",
+      "reason": "Model definition not found; cannot verify if sensitive fields like role or owner are writable."
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0013-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0014-1"
+      ]
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "MASS-M-0015-1"
+      ]
+    }
+  ]
+}

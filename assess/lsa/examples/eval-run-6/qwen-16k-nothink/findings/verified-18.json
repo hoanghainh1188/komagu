@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-18",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0009-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 32-34"
+      ],
+      "control_found": null,
+      "notes": "The code explicitly checks `Request.QueryString[\"isAdmin\"] == \"true\"` to determine role. No server-side verification of the user's actual role from an authenticated identity object is present in the provided context. The logic relies entirely on client input.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct reliance on request parameter for role determination without server-side validation."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Admin/Export",
+        "target_param": "isAdmin"
+      }
+    },
+    {
+      "finding_id": "BFLA-R-0023-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/AdminUserController.java lines 7, 13, 15"
+      ],
+      "control_found": null,
+      "notes": "The `delete` method lacks the `@PreAuthorize(\"hasRole('ADMIN')\")` annotation present on the adjacent `grant` method. The code executes `userDao.deleteById(id)` immediately without any role check. While a global filter might exist in the framework (Spring Security), it is not visible in the provided code context, and the specific absence of the annotation on this privileged action confirms the finding.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Privileged action lacks specific authorization annotation while a similar privileged action nearby has one."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BFLA-R-0057-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php lines 2, 8"
+      ],
+      "control_found": null,
+      "notes": "The file includes `inc/auth.php` which only checks for login (`$_SESSION['user_id']`). The `view` action executes a query to fetch all users (`SELECT * FROM users`) without verifying if the current user is an admin. No role check logic is visible in the provided context.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Included auth file explicitly documented as login-only; no role check found in the action logic."
+      },
+      "attack_vector": {
+        "method": "GET|POST",
+        "path": "/php-plain/admin.php?action=view",
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BFLA-R-0058-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php lines 2, 12"
+      ],
+      "control_found": null,
+      "notes": "The file includes `inc/auth.php` which only checks for login. The `delete` action executes a query to delete users without verifying if the current user is an admin. No role check logic is visible in the provided context.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Included auth file explicitly documented as login-only; no role check found in the action logic."
+      },
+      "attack_vector": {
+        "method": "GET|POST",
+        "path": "/php-plain/admin.php?action=delete",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BFLA-R-0066-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/delete_user.php lines 2, 6"
+      ],
+      "control_found": null,
+      "notes": "The file includes `inc/auth.php` which only checks for login. The code executes a prepared statement to delete users without verifying if the current user is an admin. No role check logic is visible in the provided context.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Included auth file explicitly documented as login-only; no role check found in the action logic."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/php-plain/admin/delete_user.php",
+        "target_param": "id"
+      }
+    }
+  ]
+}

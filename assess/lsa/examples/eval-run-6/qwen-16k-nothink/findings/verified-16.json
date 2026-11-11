@@ -1,0 +1,116 @@
+{
+  "batch_id": "verified-16",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0030",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php:6",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "User input $_GET['n'] is directly concatenated into the MongoDB $where clause string. No allow-list, integer cast, or parameter binding is visible in the provided code context.",
+      "suggested_subtype": "operator_injection",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/mongo_find.php",
+        "target_param": "n"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0031",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/order_detail.php:6",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "User input $_GET['id'] is directly concatenated into the SQL query string. No integer cast or parameter binding is visible in the provided code context.",
+      "suggested_subtype": "string_concatenation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order_detail.php",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0032",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:8",
+        "php-plain/search.php:9",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "User input $_GET['q'] is concatenated into the SQL query. User input $_GET['sort'] is also concatenated directly into the ORDER BY clause without any allow-list validation or integer casting visible in the code context.",
+      "suggested_subtype": "string_concatenation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/search.php",
+        "target_param": "q"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0033",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:9",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "User input $_GET['sort'] is directly concatenated into the ORDER BY clause. No allow-list or validation logic is visible in the provided code context.",
+      "suggested_subtype": "string_concatenation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/search.php",
+        "target_param": "sort"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0034",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "php-plain/search.php:14",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "User input $_GET['cat'] is interpolated directly into the SQL string using heredoc syntax. No allow-list or validation is visible in the provided code context.",
+      "suggested_subtype": "string_interpolation",
+      "suggested_cwe": [
+        "CWE-89"
+      ],
+      "attack_vector": {
+        "method": "GET",
+        "path": "/search.php",
+        "target_param": "cat"
+      }
+    }
+  ]
+}

@@ -15,17 +15,19 @@ TESTS_DIR = Path(__file__).resolve().parent
 LSA_ROOT = TESTS_DIR.parent
 EVAL_RUN_6_DIR = LSA_ROOT / "examples" / "eval-run-6"
 GROUND_TRUTH = EVAL_RUN_6_DIR / "ground-truth.json"
-RUNS = ("gptoss-a", "gptoss-b")
+RUNS = ("gptoss-a", "gptoss-b", "qwen-16k-nothink")
 QWEN_PARTIAL = EVAL_RUN_6_DIR / "qwen-16k-partial"
 # (BOLA, injection, BFLA, mass assignment) found by location, then BFLA / mass found by auditor verdict
 EXPECTED = {
     "gptoss-a": {"marker": (26, 34, 10, 14), "verdict": (10, 15)},
     "gptoss-b": {"marker": (26, 34, 10, 14), "verdict": (10, 14)},
+    "qwen-16k-nothink": {"marker": (23, 29, 6, 10), "verdict": (8, 15)},
 }
 # Findings that land on a SAFE marker, by category (see EVAL-RESULTS.md, Run 6)
 SAFE_HITS = {
     "gptoss-a": {"injection": ["classic-asp/shop/member.asp:6"]},
     "gptoss-b": {"injection": ["python-flask/app.py:12"]},
+    "qwen-16k-nothink": {},
 }
 
 

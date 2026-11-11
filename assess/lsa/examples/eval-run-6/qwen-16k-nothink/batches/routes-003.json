@@ -1,0 +1,661 @@
+{
+  "batch_id": "routes-003",
+  "files": [
+    "node-express/routes/orders.js",
+    "perl-cgi/cgi-bin/order.cgi",
+    "php-codeigniter/application/controllers/Invoice.php",
+    "php-laravel/app/Http/Controllers/AccountController.php"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/node-python-ruby.md",
+    "knowledge/stacks/perl-cgi.md",
+    "knowledge/stacks/php.md"
+  ],
+  "candidates": [
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/:id",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 8,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 9,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 8
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 6
+        },
+        {
+          "hint": "req.user",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 8
+        },
+        {
+          "op": "read",
+          "line": 9
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0033",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/:id/mine",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 12,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 13,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 12
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 6
+        },
+        {
+          "hint": "req.user",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 12
+        },
+        {
+          "op": "read",
+          "line": 13
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0034",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/reports",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 16,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "month",
+          "source": "query",
+          "line": 17,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 16
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 6
+        },
+        {
+          "hint": "req.user",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 16
+        },
+        {
+          "op": "read",
+          "line": 17
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0035",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/login",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 20,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 6
+        },
+        {
+          "hint": "req.user",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 21
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0036",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/search",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 24,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "n",
+          "source": "query",
+          "line": 25,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 24
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 6
+        },
+        {
+          "hint": "req.user",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 24
+        },
+        {
+          "op": "read",
+          "line": 25
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0037",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/stats",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 28,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "shop",
+          "source": "query",
+          "line": 29,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 6
+        },
+        {
+          "hint": "req.user",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 28
+        },
+        {
+          "op": "read",
+          "line": 29
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0038",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "perl-cgi",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/perl-cgi/cgi-bin/order.cgi",
+      "handler": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "user_id",
+          "source": "any",
+          "line": 9,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "any",
+          "line": 11,
+          "is_id_like": true
+        },
+        {
+          "name": "cart",
+          "source": "any",
+          "line": 19,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "CGI::Session",
+          "line": 5
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 8
+        },
+        {
+          "op": "read",
+          "line": 13
+        },
+        {
+          "op": "read",
+          "line": 16
+        },
+        {
+          "op": "delete",
+          "line": 19
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0043",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-codeigniter",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/invoice/view/{id}",
+      "handler": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "line": 9,
+        "symbol": "Invoice::view"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": 9,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 10
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0044",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-codeigniter",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/invoice/mine/{id}",
+      "handler": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "line": 14,
+        "symbol": "Invoice::mine"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": 14,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 16
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0045",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-codeigniter",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/invoice/update",
+      "handler": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "line": 20,
+        "symbol": "Invoice::update"
+      },
+      "id_params": [
+        {
+          "name": "invoice_id",
+          "source": "form",
+          "line": 21,
+          "is_id_like": true
+        },
+        {
+          "name": "note",
+          "source": "form",
+          "line": 22,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 23
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0046",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/register/{request}",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 11,
+        "symbol": "Account::register"
+      },
+      "id_params": [
+        {
+          "name": "request",
+          "source": "path",
+          "line": 11,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0047",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/post/{request}",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 16,
+        "symbol": "Account::post"
+      },
+      "id_params": [
+        {
+          "name": "request",
+          "source": "path",
+          "line": 16,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0048",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/team/{request}",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 21,
+        "symbol": "Account::team"
+      },
+      "id_params": [
+        {
+          "name": "request",
+          "source": "path",
+          "line": 21,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0049",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/rename/{request}",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 26,
+        "symbol": "Account::rename"
+      },
+      "id_params": [
+        {
+          "name": "request",
+          "source": "path",
+          "line": 26,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0050",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/profile/{request}",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 33,
+        "symbol": "Account::profile"
+      },
+      "id_params": [
+        {
+          "name": "request",
+          "source": "path",
+          "line": 33,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0051",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    }
+  ]
+}

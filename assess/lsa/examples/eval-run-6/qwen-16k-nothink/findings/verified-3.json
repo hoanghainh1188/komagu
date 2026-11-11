@@ -1,0 +1,140 @@
+{
+  "batch_id": "verified-3",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0020-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AccountController.java lines 13-16",
+        "accountDao.save(account) call"
+      ],
+      "control_found": null,
+      "notes": "The controller accepts a full Account object via @ModelAttribute without extracting or validating the ID against the current user's context. The DAO is called directly with the provided object. No ownership check (e.g., `if (!account.getUserId().equals(currentUser.getId()))`) is visible in the code context.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct object binding without ownership verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/account/save",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0021-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AccountController.java lines 19-22",
+        "accountDao.rename(form.getId(), form.getName()) call"
+      ],
+      "control_found": null,
+      "notes": "The controller accepts an ID from the request object (`form.getId()`) and passes it directly to the DAO without verifying if the current user owns that account. No ownership check is visible.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct ID usage without ownership verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/account/rename",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0022-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AccountController.java lines 25-28",
+        "accountDao.save(account) call"
+      ],
+      "control_found": null,
+      "notes": "The controller accepts a full Account object via @RequestBody and passes it directly to the DAO. No ownership check is visible in the code context.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct object binding without ownership verification."
+      },
+      "attack_vector": {
+        "method": "PUT",
+        "path": "/account/api",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0023-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AdminUserController.java lines 13-16",
+        "userDao.deleteById(id) call"
+      ],
+      "control_found": null,
+      "notes": "The controller accepts an ID via @PathVariable and passes it directly to the DAO for deletion. Although the class is named 'AdminUserController', there is no visible check in this specific method to ensure the current user owns the target account (e.g., `if (!user.getId().equals(currentUser.getId()))`). The `@PreAuthorize` on the next method does not apply here.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct ID usage without ownership verification."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0024-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "AdminUserController.java lines 19-23",
+        "userDao.updateRole(id, role) call"
+      ],
+      "control_found": null,
+      "notes": "The method has `@PreAuthorize(\"hasRole('ADMIN')\")`, which confirms the caller is an admin. However, it does not verify that the user identified by `{id}` belongs to the current admin (ownership check). An admin could delete another admin's account or change a regular user's role if ownership is not enforced. The code context shows no such check.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Role-based access control present but ownership check missing."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/admin/users/{id}/role",
+        "target_param": "id"
+      }
+    }
+  ]
+}

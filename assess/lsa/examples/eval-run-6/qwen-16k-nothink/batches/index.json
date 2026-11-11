@@ -1,0 +1,60 @@
+{
+  "routes": [
+    {
+      "batch_id": "routes-001",
+      "count": 15,
+      "files": 10
+    },
+    {
+      "batch_id": "routes-002",
+      "count": 12,
+      "files": 5
+    },
+    {
+      "batch_id": "routes-003",
+      "count": 15,
+      "files": 4
+    },
+    {
+      "batch_id": "routes-004",
+      "count": 15,
+      "files": 8
+    },
+    {
+      "batch_id": "routes-005",
+      "count": 15,
+      "files": 8
+    },
+    {
+      "batch_id": "routes-006",
+      "count": 2,
+      "files": 2
+    }
+  ],
+  "injection": [
+    {
+      "batch_id": "injection-001",
+      "count": 25,
+      "files": 13
+    },
+    {
+      "batch_id": "injection-002",
+      "count": 13,
+      "files": 8
+    }
+  ],
+  "privilege": [
+    {
+      "batch_id": "privilege-001",
+      "routes": 12,
+      "mass_candidates": 7,
+      "files": 12
+    },
+    {
+      "batch_id": "privilege-002",
+      "routes": 0,
+      "mass_candidates": 8,
+      "files": 4
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-9",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0074-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py lines 24-30"
+      ],
+      "control_found": null,
+      "notes": "The code explicitly fetches the user by ID from the URL path (`User.query.get(uid)`) and then iterates over `request.json.items()` to set attributes on that object without any prior check comparing `uid` to the current session user's ID. The `[Bind]` attribute or similar validation is absent in this specific snippet, allowing arbitrary field updates.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by request id without tenant or user context binding."
+      },
+      "attack_vector": {
+        "method": "PATCH",
+        "path": "/users/<int:uid>",
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0010-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs lines 12-16"
+      ],
+      "control_found": null,
+      "notes": "The controller method `Edit` accepts a `Customer` object bound directly from the request. The code sets the entity state to `Modified` and saves it without verifying if the `customer.Id` matches the ID of the currently authenticated user. While `[Authorize]` is present on the class, it only ensures authentication, not ownership verification.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Model binding accepts attacker-controlled ID; no ownership check before save."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Customer/Edit",
+        "target_param": "customer.Id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0011-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs lines 20-23"
+      ],
+      "control_found": null,
+      "notes": "The `EditName` method uses `[Bind(Include = \"Id,Name\")]`. This attribute allows the ID to be bound from the request. The code then calls `db.SaveChanges()` without checking if the bound `customer.Id` belongs to the current user. The allow-list restricts which fields are updated (only Id and Name), but it does not restrict *which* customer record is being updated.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Allow-list restricts fields but not the target resource ID."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Customer/EditName",
+        "target_param": "customer.Id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0012-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs lines 27-32"
+      ],
+      "control_found": null,
+      "notes": "The `Refresh` method accepts an integer `id` parameter. It fetches the customer using `db.Customers.Find(id)` and then updates it via `TryUpdateModel`. There is no logic to verify that the `id` provided corresponds to the current user's record.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by request id without tenant or user context binding."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Customer/Refresh",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0016-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Handlers/GetFile.ashx lines 8-10"
+      ],
+      "control_found": null,
+      "notes": "The handler retrieves `fileId` directly from the query string (`context.Request.QueryString[\"file_id\"]`) and passes it to `DocStore.PathFor(fileId)` which is then used for file transmission. There is no check to ensure the current user owns or has permission to access the file identified by this ID.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by request id without tenant or user context binding."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/dotnet-legacy/Web/Handlers/GetFile.ashx",
+        "target_param": "file_id"
+      }
+    }
+  ]
+}

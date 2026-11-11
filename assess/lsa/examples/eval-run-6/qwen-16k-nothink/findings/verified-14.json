@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-14",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0017",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "InvoiceController.java line 29"
+      ],
+      "control_found": null,
+      "notes": "User input 'customer' is directly concatenated into a Hibernate HQL string without parameter binding or allow-listing. The method signature accepts a String, and the query uses string concatenation.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation into HQL query with user-supplied input."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/invoices?customer={payload}",
+        "target_param": "customer"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0020",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "orders.js line 17"
+      ],
+      "control_found": null,
+      "notes": "User input 'req.query.month' is directly concatenated into a SQL string. No sanitization or parameter binding is visible in the provided context.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation into SQL query with user-supplied input."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/reports?month={payload}",
+        "target_param": "month"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0021",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "orders.js line 29"
+      ],
+      "control_found": null,
+      "notes": "User input 'req.query.shop' is interpolated directly into a template literal SQL string. No sanitization or parameter binding is visible.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct template literal interpolation into SQL query with user-supplied input."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/stats?shop={payload}",
+        "target_param": "shop"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0022",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "orders.js line 21"
+      ],
+      "control_found": null,
+      "notes": "The entire 'req.body' object is passed directly as the filter argument to `findOne`. This allows injection of arbitrary MongoDB operators (e.g., `$ne`, `$gt`) or field names. No schema validation or whitelisting is visible in the context.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct object passing to NoSQL query without schema validation or operator whitelisting."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/login",
+        "target_param": "body"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0023",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "orders.js line 25"
+      ],
+      "control_found": null,
+      "notes": "User input 'req.query.n' is concatenated into a JavaScript string inside the `$where` clause. This executes arbitrary JavaScript logic on the server side against the database document, allowing bypass of standard query filters.",
+      "consensus": {
+        "score": 1.0,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation into MongoDB $where clause with user-supplied input."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/search?n={payload}",
+        "target_param": "n"
+      }
+    }
+  ]
+}
