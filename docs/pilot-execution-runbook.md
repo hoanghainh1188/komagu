@@ -1,7 +1,7 @@
 # Pilot Execution Runbook: AMS Pilot on a Java Legacy System (Weeks 1–12)
 ## パイロット運用実施手順書（AMS・Java レガシー）
 
-**Version:** 2.3  
+**Version:** 2.4  
 **Effective Date:** 2026-11-03  
 **Project Lead & Sign-off Authority:** Harry (Principal Architect / PM / Person B)  
 **Parent Delivery Plan:** [Boilerplate 1 Delivery Plan (§Pilot)](boilerplate-1-delivery-plan.md)  
@@ -10,7 +10,7 @@
 
 Mọi lệnh trong sổ tay này đã được chạy thử trên `assess/lsa/tests/fixtures/java-legacy` (kit 0.3.1, CLI 2.4.0), trừ các lệnh cần model thật hoặc môi trường của khách hàng. Các lệnh đó được ghi chú *(chưa chạy thử)*.
 
-Các bước W9-2 đến W12-3 đã được diễn tập nối tiếp trên một ứng dụng Struts 1 / JSP đang chạy trên Tomcat ([`examples/legacy-java-rehearsal`](../examples/legacy-java-rehearsal/README.md), #374), với model giả lập cục bộ. Các sửa lỗi của lần diễn tập có từ `v2.5.0`, bản mà P3 cài đặt.
+Các bước W9-2 đến W12-3 đã được diễn tập nối tiếp trên một ứng dụng Struts 1 / JSP đang chạy trên Tomcat ([`examples/legacy-java-rehearsal`](../examples/legacy-java-rehearsal/README.md), #374), với model giả lập cục bộ. Các sửa lỗi của lần diễn tập có từ `v2.5.0`; P3 cài `v2.6.0`.
 
 ---
 
@@ -60,13 +60,13 @@ Gửi kèm [§6 Security Q&A](pilot-client-ai-approval-consent.md#6-security-qa-
 ### P3. Cài đặt máy trạm pilot
 Máy trạm phải dùng riêng cho pilot. Với phương án A, máy phải offline khi có code của khách hàng trên đó.
 ```bash
-git clone --branch v2.5.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
+git clone --branch v2.6.0 https://github.com/hoanghainh1188/komagu.git ~/komagu-pilot
 cd ~/komagu-pilot
 grep -q _redact_lines operate/ai/context.py && echo "redaction: OK" || echo "redaction: MISSING - STOP"
 python3 assess/lsa/tests/run_tests.py
 python3 -m unittest discover -s operate/tests -p "test_*.py"
 ```
-Dòng kiểm tra phải in `redaction: OK`. Chỉ dùng `v2.5.0` trở lên: đây là bản đầu tiên có test cross-user theo session (W11-1) và `komagu leak-check` (§9). Các bản trước `v2.4.0` còn gửi code cho model mà không che bí mật, và bộ test vẫn pass trên các bản đó vì chưa có test che bí mật.
+Dòng kiểm tra phải in `redaction: OK`. Chỉ dùng `v2.6.0` trở lên. `v2.5.0` là bản đầu tiên có test cross-user theo session (W11-1) và `komagu leak-check` (§9). `v2.6.0` thêm `--ai-reasoning-effort` (xem P4), và route không có id đầu vào không còn bị gán một id giả trong path, nên auditor BOLA không còn báo finding trên các route đó (#381). Các bản trước `v2.4.0` còn gửi code cho model mà không che bí mật, và bộ test vẫn pass trên các bản đó vì chưa có test che bí mật.
 
 Cả hai bộ test phải pass, trong đó có `test_ai_redaction` và `test_no_planted_secret_reaches_the_model`.
 
@@ -81,6 +81,8 @@ python3 assess/lsa/tests/score_findings.py ~/pilot-calib/eval/ground-truth.json 
 ```
 - **Phương án A:** đã đo `gpt-oss:20b` (Run 6, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)): 40–56 phút trên Apple M4 Pro 24 GB; BOLA 26/29, injection 34/34, BFLA 10/10, mass assignment 14/15, precision 0,79–0,81. Lặp lại trên máy chủ GPU dự kiến để lấy thời gian chạy thực tế, và so với các số này.
 - **Phương án B** *(chưa chạy thử)*: endpoint phải tương thích OpenAI `/chat/completions` với Bearer token. Nếu dịch vụ cloud không hỗ trợ trực tiếp, đặt một proxy tương thích OpenAI (ví dụ LiteLLM) trong cùng vùng dữ liệu. Ghi lại model, vùng (region) và điều khoản lưu dữ liệu vào `pilot-config.json`.
+- **Model có reasoning** (ví dụ `qwen3.5:9b`): thêm `--ai-reasoning-effort none` khi bộ nhớ hạn chế. Trên máy 24 GB với `num_ctx 16384`, reasoning mặc định làm hai batch BOLA hết `--ai-timeout`; tắt reasoning thì chạy xong mọi phase trong 35 phút (Run 6, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)). Endpoint phải nhận trường `reasoning_effort` (Ollama `/v1` có nhận). Không đặt cờ thì không gửi gì, như các bản trước.
+- Giá trị `--ai-reasoning-effort` (hoặc không đặt) được ghi vào `ai-run-stats.json`. Dùng đúng giá trị đã hiệu chuẩn ở W9-6 và W12-1, để kết quả trước và sau khi sửa so sánh được.
 - Kết quả hiệu chuẩn (recall theo loại, thời gian, `ai-run-stats.json`) dùng để giải thích cho khách hàng khi họ chọn phương án.
 
 ---
@@ -128,6 +130,7 @@ Kiểm tra trên `~/pilot/out`:
 ./bin/komagu scan ~/pilot/src --out ~/pilot/out --project "<AMS system name>" --no-cache --update-baseline \
   --headless-ai <endpoint> --model <model> --ai-timeout 3600
 ```
+- Nếu P4 hiệu chuẩn với `--ai-reasoning-effort`, thêm đúng giá trị đó vào lệnh này và lệnh W12-1.
 - `--update-baseline` phải đặt ở bước này: Tier 1 không sinh finding nên baseline tạo ở W9-5 sẽ rỗng, và W12-1 không có gì để so sánh.
 - Lưu lại toàn bộ `~/pilot/out` (gồm `ai-run-stats.json`; `ai-raw/` chỉ có khi một batch phải sửa lại định dạng). Nếu một batch lỗi (`parse_failures`), chạy lại trước khi duyệt.
 - Kiểm tra `validation_errors` trong `coverage.json`: finding sai schema bị loại khỏi `findings.json` dù lệnh vẫn thoát `0`. Nếu danh sách không rỗng, chạy lại trước khi duyệt.
@@ -281,3 +284,4 @@ Dừng pilot và báo khách hàng ngay khi:
 | 2.1 | 2026-11-10 | Harry & Claude | #355: P3 cài `v2.4.0`, bản đầu tiên có che bí mật, và thêm bước kiểm tra che bí mật. |
 | 2.2 | 2026-11-11 | Harry & Claude | #374: sửa theo lần diễn tập W9–W12 trên ứng dụng Struts 1 đang chạy: profile Kong cho ứng dụng session, `--update-baseline` chuyển sang W9-6, `--no-cache`, giới hạn của virtual patch, xử lý MyBatis ở W12-1, bỏ cờ chỉ đọc trước khi xoá. |
 | 2.3 | 2026-11-11 | Harry & Claude | #376: P3 cài `v2.5.0`, bản đầu tiên có test cross-user theo session, `komagu leak-check` và các sửa lỗi của lần diễn tập. |
+| 2.4 | 2026-11-11 | Harry & Claude | #384: P3 cài `v2.6.0`; P4, W9-6 và W12-1 hướng dẫn dùng `--ai-reasoning-effort` cho model có reasoning. |
