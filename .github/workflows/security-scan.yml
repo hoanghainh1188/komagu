@@ -1,6 +1,7 @@
 name: Security Scan
 
-# Phase 1 (report-only): findings never fail the build; they are published to
+# Scanner findings never fail the build (except the pip-audit minimum-version and
+# NuGet High/Critical gates); they are published to
 # GitHub code scanning (Security tab) as SARIF. A scanner crash still fails its job.
 # Merges are gated by a code scanning ruleset on main; see docs/security-scanning.md.
 
@@ -66,6 +67,14 @@ jobs:
                 pip-audit -r "$req" --progress-spinner off -f markdown >> "$GITHUB_STEP_SUMMARY" 2>&1 \
                   || echo "::warning file=$req::pip-audit reported vulnerabilities or failed to resolve"
               done
+
+      # The step above audits the newest versions the '>=' ranges resolve to. A client that
+      # keeps an older version still satisfies the range, so the minimum must be safe too.
+      - name: pip-audit minimum allowed versions (fails on a fixable vulnerability)
+        run: |
+          git ls-files '*requirements*.txt' \
+            | grep -Ev '^(assess/lsa/tests/fixtures|assess/lsa/examples|delivery/pilot)/' \
+            | xargs python3 .github/scripts/audit_minimum_versions.py --summary "$GITHUB_STEP_SUMMARY"
 
   go:
     name: Go (golangci-lint + govulncheck)
@@ -161,6 +170,16 @@ jobs:
                   dotnet list "$proj" package --vulnerable --include-transitive 2>&1
                   echo '```'
                 } >> "$GITHUB_STEP_SUMMARY"
+              done
+
+      - name: NuGet audit gate (fails on High or Critical, transitive included)
+        run: |
+          git ls-files 'remediate/*/dotnet/src/*.csproj' 'examples/member-portal/backend-dotnet/*.csproj' \
+            | while read -r proj; do
+                # '%3B' escapes ';' so MSBuild keeps both codes in one property value.
+                dotnet restore "$proj" --force \
+                  -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=high \
+                  "-p:WarningsAsErrors=NU1903%3BNU1904" || exit 1
               done
 
   kotlin:
