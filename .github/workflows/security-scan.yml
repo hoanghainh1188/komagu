@@ -5,28 +5,9 @@ name: Security Scan
 # Merges are gated by a code scanning ruleset on main; see docs/security-scanning.md.
 
 on:
+  # Every pull request is scanned: the code scanning ruleset on main blocks a PR
+  # that has no analysis for a required tool, docs-only PRs included.
   pull_request:
-    paths:
-      - "**/*.py"
-      - "**/requirements*.txt"
-      - "**/*.go"
-      - "**/go.mod"
-      - "**/*.cs"
-      - "**/*.csproj"
-      - "**/*.kt"
-      - "**/*.kts"
-      - "**/*.js"
-      - "**/*.ts"
-      - "**/package*.json"
-      - "**/Dockerfile"
-      - "**/*.tf"
-      - "**/docker-compose*.yml"
-      - ".github/workflows/**"
-      - ".github/codeql/**"
-      - ".github/scripts/**"
-      - ".bandit.yml"
-      - "**/.golangci.yml"
-      - "config/detekt/**"
   push:
     branches: [main]
   schedule:

@@ -8,7 +8,7 @@ scanning** (repository → *Security* → *Code scanning*).
 
 - Findings **never fail** a scanner job. A scanner that crashes still fails its job,
   so a broken scanner stays visible.
-- The workflow runs on pull requests that touch scannable files, on every push to
+- The workflow runs on every pull request, on every push to
   `main`, every Monday at 02:17 UTC, and on demand (`workflow_dispatch`).
 - SARIF upload is skipped for fork and Dependabot pull requests, because their
   token is read-only. Those PRs still run the scanners.
@@ -91,10 +91,9 @@ Microsoft (R) Visual C# Compiler, detekt, Trivy), with:
 - security alerts threshold *High or higher*;
 - alerts threshold *Errors*.
 
-Before relying on it, check that a docs-only pull request is not blocked:
-`Security Scan` runs on pull requests only for the paths listed in the
-workflow, so such a PR has no analysis for the required tools. If it is
-blocked, drop the `paths` filter so every pull request is scanned.
+The ruleset blocks a pull request that has no analysis for a required tool.
+A docs-only PR was blocked while `Security Scan` ran only for listed paths
+(#389), so the workflow now runs on every pull request.
 
 **pip-audit and NuGet audit** report to the job summary only and do not reach
 code scanning, so the ruleset does not see them. Proposal, not yet applied:
