@@ -167,6 +167,7 @@ class HeadlessAIRunner:
         stats = {
             "model": getattr(self.client, "model", None),
             "endpoint": getattr(self.client, "endpoint", None),
+            "reasoning_effort": getattr(self.client, "reasoning_effort", None),
             "phases": self.phase_stats,
             "totals": self._usage(),
             "parse_failures": self.parse_failures,

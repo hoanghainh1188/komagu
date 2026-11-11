@@ -94,6 +94,7 @@ komagu scan <target> [options]
 | `--model` | `-m` | `llama3.1` | Model name for headless cognitive AI execution |
 | `--api-key` | | `ollama` | Bearer API token for private LLM endpoint |
 | `--ai-timeout` | | `120` | Timeout in seconds per LLM request |
+| `--ai-reasoning-effort` | | not sent | `none`, `low`, `medium` or `high`, sent as `reasoning_effort` with each LLM request. `none` turns thinking off for reasoning models on Ollama's `/v1` endpoint; recorded in `ai-run-stats.json` |
 
 #### Examples
 ```bash
