@@ -1,0 +1,65 @@
+{
+  "batch_id": "verified-19",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0058-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php lines 1-14",
+        "php-plain/inc/auth.php lines 1-7"
+      ],
+      "control_found": null,
+      "notes": "No role or ownership check is present in the visible code. The included auth file only verifies login."
+    },
+    {
+      "finding_id": "BFLA-R-0066-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin/delete_user.php lines 1-8",
+        "php-plain/inc/auth.php lines 1-7"
+      ],
+      "control_found": null,
+      "notes": "The deletion is performed after casting the id, but no role check is shown. The auth file only checks authentication."
+    },
+    {
+      "finding_id": "BFLA-R-0067-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin/promote.php lines 1-8",
+        "php-plain/inc/auth.php lines 1-7"
+      ],
+      "control_found": null,
+      "notes": "The role is set to 'admin' based on a request parameter with no preceding role verification. Auth file only ensures the user is logged in."
+    },
+    {
+      "finding_id": "BFLA-R-0059-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/manage_users.php lines 1-12",
+        "php-plain/inc/auth.php lines 1-7"
+      ],
+      "control_found": null,
+      "notes": "Deletion occurs on POST without a role check. The link is only shown to admins, but the server-side action is unprotected."
+    },
+    {
+      "finding_id": "BFLA-R-0063-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/profile.php lines 1-11",
+        "php-plain/inc/auth.php lines 1-7"
+      ],
+      "control_found": null,
+      "notes": "The code assigns the role from user input without any role verification. Auth file only checks authentication."
+    }
+  ]
+}

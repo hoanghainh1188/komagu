@@ -1,0 +1,91 @@
+{
+  "model": "gpt-oss:20b",
+  "endpoint": "http://localhost:11434/v1/chat/completions",
+  "phases": {
+    "2-stack-detector": {
+      "seconds": 93.192,
+      "calls": 1,
+      "prompt_tokens": 3111,
+      "completion_tokens": 4163
+    },
+    "3-route-mapper": {
+      "seconds": 0.01,
+      "calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+    },
+    "4a-bola-auditor": {
+      "seconds": 768.98,
+      "calls": 6,
+      "prompt_tokens": 52158,
+      "completion_tokens": 26916
+    },
+    "4b-injection-auditor": {
+      "seconds": 1001.464,
+      "calls": 3,
+      "prompt_tokens": 25555,
+      "completion_tokens": 36995
+    },
+    "4c-privilege-auditor": {
+      "seconds": 261.825,
+      "calls": 2,
+      "prompt_tokens": 20020,
+      "completion_tokens": 8712
+    },
+    "5-finding-verifier": {
+      "seconds": 1248.783,
+      "calls": 22,
+      "prompt_tokens": 154422,
+      "completion_tokens": 41076
+    }
+  },
+  "totals": {
+    "calls": 34,
+    "prompt_tokens": 255266,
+    "completion_tokens": 117862,
+    "seconds": 3373.79
+  },
+  "parse_failures": {},
+  "call_errors": {},
+  "retries": {
+    "4b-injection-auditor": [
+      "injection-001"
+    ]
+  },
+  "repaired": {},
+  "findings_from_verdicts": {
+    "4a-bola-auditor": [
+      "BOLA-R-0055-verdict",
+      "BOLA-R-0056-verdict",
+      "BOLA-R-0052-verdict",
+      "BOLA-R-0053-verdict",
+      "BOLA-R-0054-verdict"
+    ],
+    "4c-privilege-auditor": [
+      "MASS-M-0011-verdict",
+      "MASS-M-0012-verdict",
+      "MASS-M-0001-verdict",
+      "MASS-M-0002-verdict",
+      "MASS-M-0006-verdict",
+      "MASS-M-0007-verdict",
+      "MASS-M-0010-verdict",
+      "MASS-M-0015-verdict",
+      "MASS-M-0014-verdict"
+    ]
+  },
+  "anchoring": {
+    "moved": [
+      "INJ-I-0010",
+      "INJ-I-0021",
+      "INJ-I-0022",
+      "INJ-I-0029",
+      "INJ-I-0032-1",
+      "BFLA-R-0007-1",
+      "BFLA-R-0009-1",
+      "MASS-M-0003-1",
+      "MASS-M-0008-1",
+      "MASS-M-0009-1"
+    ],
+    "unanchored": []
+  }
+}

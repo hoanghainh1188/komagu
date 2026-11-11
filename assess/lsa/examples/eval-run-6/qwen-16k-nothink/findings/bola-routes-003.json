@@ -1,0 +1,467 @@
+{
+  "batch_id": "routes-003",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0033-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any logged-in user via id",
+      "route_id": "R-0033",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/:id"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 9,
+          "code": "Order.findById(req.params.id, function (err, order) { res.json(order); });",
+          "why": "ID comes from request params; query fetches by ID only without checking owner against session user"
+        }
+      ],
+      "attack_scenario": "User A sends GET /orders/:id?id=<order id of user B> and receives B's order.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the order's owner matches the authenticated user before returning the data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0035-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Reports readable by any logged-in user via query params",
+      "route_id": "R-0035",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 17,
+          "code": "db.query(\"SELECT * FROM reports WHERE month = '\" + req.query.month + \"'\", function (e, rows) { res.json(rows); });",
+          "why": "Query fetches all reports for a given month without filtering by the authenticated user's ID or ownership"
+        }
+      ],
+      "attack_scenario": "User A sends GET /reports?month=2023-10 and receives reports belonging to other users.",
+      "impact": "Read other customers' reports (financial data, metrics).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a filter to ensure the retrieved reports belong to the authenticated user.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0038-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Stats readable by any logged-in user via query params",
+      "route_id": "R-0038",
+      "endpoint": {
+        "method": "GET",
+        "path": "/stats"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 28,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 29,
+          "code": "db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });",
+          "why": "Query fetches stats for a given shop without verifying if the authenticated user has access to that shop"
+        }
+      ],
+      "attack_scenario": "User A sends GET /stats?shop=123 and receives statistics for a shop they do not own.",
+      "impact": "Read business statistics (counts, totals) for other shops.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the shop_id belongs to the authenticated user before returning the data.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0044-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice detail readable by any logged-in user via id",
+      "route_id": "R-0044",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/view/{id}"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 9,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "ID comes from request params; query fetches by ID only without checking owner against session user"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoice/view/{id}?id=<invoice id of user B> and receives B's invoice.",
+      "impact": "Read other customers' invoices (amount, details).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the invoice's owner matches the authenticated user before returning the data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0046-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice update modifiable by any logged-in user via post param",
+      "route_id": "R-0046",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/update"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 20,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 21,
+          "code": "$id = $this->input->post('invoice_id');",
+          "why": "ID comes from request body; update query uses this ID without verifying ownership against session user"
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 23,
+          "code": "$this->db->query(\"UPDATE invoices SET note = ? WHERE id = ?\", array($note, $id));",
+          "why": "Update executes on the ID provided by the attacker without an ownership check"
+        }
+      ],
+      "attack_scenario": "User A sends POST /invoice/update with invoice_id=<invoice id of user B> and modifies B's note.",
+      "impact": "Modify other customers' invoices (add notes, change data).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the invoice's owner matches the authenticated user before performing the update.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "invoice_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0047-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User registration allows any user to create accounts",
+      "route_id": "R-0047",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/account/register/{request}"
+      },
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 11,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "code": "return User::create($request->all());",
+          "why": "Creates a new user directly from request data without verifying if the current authenticated user is authorized to create accounts"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/register with another user's details and creates an account impersonating them or creating unauthorized accounts.",
+      "impact": "Create unauthorized user accounts or impersonate others.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the current authenticated user is authorized to create new users before performing the creation.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0048-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Post creation allows any user to create posts",
+      "route_id": "R-0048",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/account/post/{request}"
+      },
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 18,
+          "code": "return Post::create($request->all());",
+          "why": "Creates a new post directly from request data without verifying if the current authenticated user is authorized to create posts"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/post with another user's details and creates a post impersonating them or creating unauthorized posts.",
+      "impact": "Create unauthorized posts or impersonate others.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the current authenticated user is authorized to create new posts before performing the creation.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0049-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Team creation allows any user to create teams",
+      "route_id": "R-0049",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/account/team/{request}"
+      },
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 21,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "code": "return Team::create($request->all());",
+          "why": "Creates a new team directly from request data without verifying if the current authenticated user is authorized to create teams"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/team with another user's details and creates a team impersonating them or creating unauthorized teams.",
+      "impact": "Create unauthorized teams or impersonate others.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the current authenticated user is authorized to create new teams before performing the creation.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0050-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User rename allows any user to rename others",
+      "route_id": "R-0050",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/account/rename/{request}"
+      },
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 26,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 28,
+          "code": "$user = $request->user();",
+          "why": "Loads the user from the request (which could be manipulated or spoofed) without verifying ownership of the target resource"
+        },
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 29,
+          "code": "$user->update($request->only(['name']));",
+          "why": "Updates the user directly from request data without verifying if the current authenticated user is authorized to update this specific user"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/rename with another user's ID and name, and renames that other user.",
+      "impact": "Modify other users' names or impersonate others.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the current authenticated user is authorized to update the target user before performing the update.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0051-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Profile update allows any user to modify others' profiles",
+      "route_id": "R-0051",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/account/profile/{request}"
+      },
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 33,
+        "end_line": 37
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 35,
+          "code": "$user = $request->user();",
+          "why": "Loads the user from the request (which could be manipulated or spoofed) without verifying ownership of the target resource"
+        },
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 36,
+          "code": "$user->fill($request->all())->save();",
+          "why": "Updates the user directly from request data without verifying if the current authenticated user is authorized to update this specific user"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/profile with another user's ID and profile data, and modifies that other user's profile.",
+      "impact": "Modify other users' profiles (email, name, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a check to ensure the current authenticated user is authorized to update the target user before performing the update.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0043-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at perl-cgi/cgi-bin/order.cgi:1 (from auditor verdict)",
+      "route_id": "R-0043",
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 1,
+          "why": "The auditor judged this route 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/perl-cgi/cgi-bin/order.cgi"
+      },
+      "attack_vector": {
+        "target_param": "user_id"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0033",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0034",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0035",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0036",
+      "verdict": "not_applicable"
+    },
+    {
+      "route_id": "R-0037",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0038",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0043",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0044",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0045",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0046",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0047",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0048",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0049",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0050",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0051",
+      "verdict": "vulnerable"
+    }
+  ]
+}

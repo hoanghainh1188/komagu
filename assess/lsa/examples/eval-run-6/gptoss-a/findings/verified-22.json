@@ -1,0 +1,50 @@
+{
+  "batch_id": "verified-22",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0010-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "AccountController.php: lines 18-23 (team creation)",
+        "AccountController.php: lines 36-37 (profile update)"
+      ],
+      "control_found": null,
+      "notes": "The controller performs whole\u2011object binding via $request->all() but the model\u2019s $fillable/$guarded definition is not shown. No visible field whitelist or ownership check is present in the provided code."
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "verdict": "rejected",
+      "reason_code": "evidence_mismatch",
+      "confidence": "high",
+      "checked": [
+        "register.php: lines 4-6 (extract and explicit INSERT)"
+      ],
+      "control_found": null,
+      "notes": "The code does not bind all POST values to a model; it explicitly inserts only email, name, and role columns. The evidence claiming whole\u2011object binding is incorrect."
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "profile.py: lines 24-29 (PATCH route with setattr loop)"
+      ],
+      "control_found": null,
+      "notes": "All JSON keys are set on the user object without any whitelist or guard. No compensating control is visible in the snippet."
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "profile.py: lines 8-12 (POST route creating User with **request.json)"
+      ],
+      "control_found": null,
+      "notes": "The constructor receives all JSON fields directly; no field filtering or guard is shown in the provided code."
+    }
+  ]
+}

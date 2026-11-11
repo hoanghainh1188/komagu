@@ -1,0 +1,568 @@
+{
+  "batch_id": "routes-002",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0020-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account save allows modification of any account via ID injection",
+      "route_id": "R-0020",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/save"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 13,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 14,
+          "code": "public String save(@ModelAttribute Account account) {",
+          "why": "Takes full object from request without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 15,
+          "code": "accountDao.save(account);",
+          "why": "Saves the provided object ID directly to DB without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/save with an Account object containing User B's account ID. The server saves User B's account details, allowing User A to modify them.",
+      "impact": "Modification of other users' accounts (e.g., changing names, emails, or associated data).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the account being saved belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0021-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account rename allows renaming any account via ID injection",
+      "route_id": "R-0021",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 19,
+        "end_line": 22
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 20,
+          "code": "public String rename(@ModelAttribute RenameForm form) {",
+          "why": "Takes ID from request object without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 21,
+          "code": "accountDao.rename(form.getId(), form.getName());",
+          "why": "Renames the account identified by the provided ID without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/rename with a RenameForm containing User B's account ID. The server renames User B's account.",
+      "impact": "Modification of other users' accounts (e.g., changing names).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the account being renamed belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0022-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account update allows modification of any account via ID injection",
+      "route_id": "R-0022",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/account/api"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 25,
+        "end_line": 28
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 26,
+          "code": "public Account update(@RequestBody Account account) {",
+          "why": "Takes full object from request without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 27,
+          "code": "return accountDao.save(account);",
+          "why": "Saves the provided object ID directly to DB without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends PUT /account/api with an Account object containing User B's account ID. The server updates User B's account.",
+      "impact": "Modification of other users' accounts (e.g., changing names, emails, or associated data).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the account being updated belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0023-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User deletion allows removal of any user via ID injection",
+      "route_id": "R-0023",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 13,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 14,
+          "code": "public String delete(@PathVariable(\"id\") Long id) {",
+          "why": "Takes ID from path without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 15,
+          "code": "userDao.deleteById(id);",
+          "why": "Deletes the user identified by the provided ID without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /admin/users/{id}/delete with User B's user ID. The server deletes User B's account.",
+      "impact": "Deletion of other users' accounts.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being deleted belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0024-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User role update allows changing any user's role via ID injection",
+      "route_id": "R-0024",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/role"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 20,
+        "end_line": 23
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 20,
+          "code": "@PreAuthorize(\"hasRole('ADMIN')\")",
+          "why": "Only checks if caller is admin, does not check ownership of the target user"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 21,
+          "code": "public String grant(@PathVariable(\"id\") Long id, @RequestParam(\"role\") String role) {",
+          "why": "Takes ID from path without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 22,
+          "code": "userDao.updateRole(id, role);",
+          "why": "Updates the user identified by the provided ID without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A (who is an admin) sends POST /admin/users/{id}/role with User B's user ID. The server changes User B's role.",
+      "impact": "Privilege escalation via unauthorized role assignment to other users.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being updated belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0025-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice view allows viewing any invoice via ID injection",
+      "route_id": "R-0025",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/{id}"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 15,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 16,
+          "code": "public String show(@PathVariable(\"id\") Long id, Model model) {",
+          "why": "Takes ID from path without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 17,
+          "code": "model.addAttribute(\"invoice\", invoiceDao.findById(id));",
+          "why": "Loads the invoice identified by the provided ID without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoices/{id} with User B's invoice ID. The server returns User B's invoice details.",
+      "impact": "Disclosure of other users' invoices (e.g., amounts, customer info).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the invoice being viewed belongs to the authenticated user before returning it.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0027-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice search allows viewing any invoice via customer name injection",
+      "route_id": "R-0027",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/search"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 27,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 28,
+          "code": "public String search(@RequestParam(\"customer\") String customer, Model model) {",
+          "why": "Takes customer name from request without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 29,
+          "code": "model.addAttribute(\"list\", session.createQuery(\"from Invoice i where i.customer = '\" + customer + \"'\").list());",
+          "why": "Queries all invoices matching the provided customer name without checking if current user owns them"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoices/search?customer=<Name of User B>. The server returns all invoices for that customer, including those owned by others.",
+      "impact": "Disclosure of other users' invoices (e.g., amounts, customer info).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the invoices returned belong to the authenticated user before returning them.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0028-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order view allows viewing any order via ID injection",
+      "route_id": "R-0028",
+      "endpoint": {
+        "method": "GET",
+        "path": "/order/view"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 8,
+        "end_line": 21
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 11,
+          "code": "String id = request.getParameter(\"orderId\");",
+          "why": "Takes ID from request parameter without verifying ownership"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "Loads the order identified by the provided ID without checking if current user owns it"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 17,
+          "code": "sb.append(\" AND order_id = \").append(id);",
+          "why": "Queries items for the provided order ID without checking if current user owns them"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order/view?orderId=<Order ID of User B>. The server returns User B's order details.",
+      "impact": "Disclosure of other users' orders (e.g., items, amounts).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the order being viewed belongs to the authenticated user before returning it.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0030-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User deletion allows removal of any user via ID injection",
+      "route_id": "R-0030",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/delete"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 5,
+          "code": "function ensureLoggedIn(req, res, next) { if (!req.user) return res.redirect('/login'); next(); }",
+          "why": "Only checks if user is logged in, does not check ownership of the target user"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 9,
+          "code": "User.deleteOne({ _id: req.params.id }, function () { res.sendStatus(204); });",
+          "why": "Deletes the user identified by the provided ID without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /admin/users/:id/delete with User B's user ID. The server deletes User B's account.",
+      "impact": "Deletion of other users' accounts.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being deleted belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0031-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User ban allows banning any user via ID injection",
+      "route_id": "R-0031",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/ban"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 12,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 5,
+          "code": "function ensureLoggedIn(req, res, next) { if (!req.user) return res.redirect('/login'); next(); }",
+          "why": "Only checks if user is logged in, does not check ownership of the target user"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 13,
+          "code": "User.updateOne({ _id: req.params.id }, { banned: true }, function () { res.sendStatus(204); });",
+          "why": "Updates the user identified by the provided ID without checking if current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /admin/users/:id/ban with User B's user ID. The server bans User B's account.",
+      "impact": "Denial of service via unauthorized banning of other users.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being banned belongs to the authenticated user before persisting changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0032-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Report export allows exporting any data via query parameter injection",
+      "route_id": "R-0032",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports/export"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 16,
+        "end_line": 17
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 5,
+          "code": "function ensureLoggedIn(req, res, next) { if (!req.user) return res.redirect('/login'); next(); }",
+          "why": "Only checks if user is logged in, does not check ownership of the data"
+        },
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 17,
+          "code": "if (req.query.isAdmin === 'true') { res.json([]); }",
+          "why": "Checks a query parameter to decide whether to return empty data, but does not verify ownership of the actual data being exported"
+        }
+      ],
+      "attack_scenario": "User A sends GET /reports/export?isAdmin=false. The server exports all data (assuming no other checks exist).",
+      "impact": "Disclosure of sensitive data via unauthorized export.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the data being exported belongs to the authenticated user before returning it.",
+      "status": "unverified"
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0020",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0021",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0022",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0023",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0024",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0025",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0026",
+      "verdict": "safe",
+      "reason": "Endpoint explicitly calls findByIdAndOwner(id, principal.getName()) which binds the session user to the target object."
+    },
+    {
+      "route_id": "R-0027",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0028",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0030",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0031",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0032",
+      "verdict": "vulnerable"
+    }
+  ]
+}

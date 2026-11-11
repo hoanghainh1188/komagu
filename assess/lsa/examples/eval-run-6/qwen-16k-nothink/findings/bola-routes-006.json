@@ -1,0 +1,16 @@
+{
+  "batch_id": "routes-006",
+  "findings": [],
+  "route_verdicts": [
+    {
+      "route_id": "R-0064",
+      "verdict": "safe",
+      "reason": "Endpoint performs user registration (INSERT) into a `users` table. No object identifier (like `user_id`, `order_id`) is passed from the request to identify an existing resource. The `role` is hardcoded to 'customer'. No BOLA possible."
+    },
+    {
+      "route_id": "R-0065",
+      "verdict": "safe",
+      "reason": "Endpoint performs a search on the `products` table. The query filters by `name`, `category`, and `status`. No object identifier (like `product_id`) is passed from the request to identify a specific resource. The results are global product listings, not user-specific objects."
+    }
+  ]
+}

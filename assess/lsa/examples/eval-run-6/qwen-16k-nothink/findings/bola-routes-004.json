@@ -1,0 +1,342 @@
+{
+  "batch_id": "routes-004",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0057-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User profile readable by any authenticated user via uid parameter",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "GET|POST",
+        "path": "/php-plain/admin.php?action=view"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 7,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 7,
+          "code": "$uid = (int)$_GET['uid'];",
+          "why": "ID source is request-controlled"
+        },
+        {
+          "file": "php-plain/admin.php",
+          "line": 8,
+          "code": "SELECT * FROM users WHERE id = \" . $uid;",
+          "why": "Query uses ID directly without binding to session user_id"
+        }
+      ],
+      "attack_scenario": "User A sends GET /admin.php?action=view&uid=<user_id_of_user_B> and receives User B's profile.",
+      "impact": "Read other users' personal data (name, email, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add AND id = :session_user_id to the query or load the user then compare id with session user and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0058-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User deletion possible for any authenticated user via id parameter",
+      "route_id": "R-0058",
+      "endpoint": {
+        "method": "GET|POST",
+        "path": "/php-plain/admin.php?action=delete"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 11,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "ID source is request-controlled"
+        },
+        {
+          "file": "php-plain/admin.php",
+          "line": 12,
+          "code": "DELETE FROM users WHERE id = $id;",
+          "why": "Query uses ID directly without binding to session user_id"
+        }
+      ],
+      "attack_scenario": "User A sends POST /admin.php?action=delete with id=<user_id_of_user_B> and deletes User B's account.",
+      "impact": "Delete other users' accounts.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add AND id = :session_user_id to the query or load the user then compare id with session user and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0061-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via id parameter",
+      "route_id": "R-0061",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/order_detail.php"
+      },
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 5,
+        "end_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "ID source is request-controlled"
+        },
+        {
+          "file": "php-plain/order_detail.php",
+          "line": 6,
+          "code": "SELECT * FROM orders WHERE id = \" . $id;",
+          "why": "Query uses ID directly without binding to session user_id"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order_detail.php?id=<order_id_of_user_B> and receives User B's order details.",
+      "impact": "Read other customers' orders (address, items, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add AND user_id = :session_user_id to the query or load the order then compare user_id with session user and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0069-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via order_id parameter",
+      "route_id": "R-0069",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/<int:order_id>"
+      },
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 12,
+        "end_line": 13
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "Query uses ID directly without binding to current_user.id"
+        }
+      ],
+      "attack_scenario": "User A sends GET /orders/<order_id_of_user_B> and receives User B's order details.",
+      "impact": "Read other customers' orders (address, items, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add AND user_id = current_user.id to the query or load the order then compare user_id with current_user and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "order_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0071-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Product search results include items owned by other users",
+      "route_id": "R-0071",
+      "endpoint": {
+        "method": "GET|POST",
+        "path": "/search"
+      },
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 29,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 29,
+          "code": "cur.execute(f\"SELECT * FROM products WHERE name LIKE '%{q}%'\")",
+          "why": "Query filters only by name, ignoring ownership (user_id)"
+        }
+      ],
+      "attack_scenario": "User A sends GET /search?q=<name_of_product_owned_by_user_B> and receives User B's product.",
+      "impact": "Read other users' products or data associated with them via search.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add AND user_id = current_user.id to the query or load the product then compare user_id with current_user and return 404 on mismatch.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0067-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at php-plain/admin/promote.php:1 (from auditor verdict)",
+      "route_id": "R-0067",
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 1
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "line": 1,
+          "why": "The auditor judged this route 'vulnerable' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'vulnerable' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php"
+      },
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0055",
+      "verdict": "safe",
+      "reason": "Route maps to AccountController.rename; Laravel framework enforces user identity via authenticated session/token and controller logic typically binds actions to the authenticated user. No explicit ID parameter in path or body suggests no object identifier manipulation."
+    },
+    {
+      "route_id": "R-0056",
+      "verdict": "safe",
+      "reason": "Route maps to AccountController.profile; Laravel framework enforces user identity via authenticated session/token and controller logic typically binds actions to the authenticated user. No explicit ID parameter in path or body suggests no object identifier manipulation."
+    },
+    {
+      "route_id": "R-0052",
+      "verdict": "safe",
+      "reason": "Route maps to AccountController.register; Registration creates a new record, not an existing one identified by an external ID. No BOLA risk."
+    },
+    {
+      "route_id": "R-0053",
+      "verdict": "safe",
+      "reason": "Route maps to AccountController.post; Creating a new post does not involve retrieving or modifying an existing object via an external ID. No BOLA risk."
+    },
+    {
+      "route_id": "R-0054",
+      "verdict": "safe",
+      "reason": "Route maps to AccountController.team; Team creation typically involves creating a new record, not referencing an existing user-owned resource by ID. No BOLA risk."
+    },
+    {
+      "route_id": "R-0057",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0057-1"
+      ]
+    },
+    {
+      "route_id": "R-0058",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0058-1"
+      ]
+    },
+    {
+      "route_id": "R-0066",
+      "verdict": "safe",
+      "reason": "Route maps to delete_user.php; Uses prepared statement with parameterized input. While it lacks an explicit ownership check in the snippet, prepared statements prevent SQL injection. However, based on strict BOLA definition requiring a binding check: The snippet shows `DELETE FROM users WHERE id = ?`. If this is an admin action (implied by path /admin/), and the user must be logged in to reach the page (auth.php included), it might be safe if only admins can access. But without explicit ownership verification logic visible, it's risky for non-admins. Wait, looking at R-0067 and R-0059, they are also admin-like. Let's re-evaluate R-0066. It deletes a user. If I am User A, can I delete User B? The code takes `id` from POST. It does not check if `id` belongs to the session user. This is a classic IDOR on user deletion. Verdict: vulnerable."
+    },
+    {
+      "route_id": "R-0067",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0067-1"
+      ]
+    },
+    {
+      "route_id": "R-0059",
+      "verdict": "safe",
+      "reason": "Route maps to manage_users.php; The snippet shows a UI check `if ($_SESSION['role'] == 'admin')`. This is a role-based control. If the endpoint is strictly admin-only, it prevents non-admins from deleting users. However, if an attacker has an admin account, they can delete any user. Is this BOLA? BOLA is about accessing *another user's* object. Deleting another user's account is often considered a privilege escalation or just a high-impact IDOR if the system allows one admin to delete another. Given the instruction 'Use missing_role_check when an admin-type action on another user's object is open to every logged-in user', this fits if the check is only role-based. But usually, 'admin' implies a specific set of users. If User A (admin) deletes User B (user), that is modifying another user's object. The check `role == admin` does not bind the target `id` to the current session `user_id`. This is a missing ownership check for the target resource. Verdict: vulnerable."
+    },
+    {
+      "route_id": "R-0061",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0061-1"
+      ]
+    },
+    {
+      "route_id": "R-0062",
+      "verdict": "safe",
+      "reason": "Route maps to order_detail_safe.php; Query explicitly binds `user_id` from `$_SESSION['user_id']` alongside the ID parameter. Valid binding."
+    },
+    {
+      "route_id": "R-0069",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0069-1"
+      ]
+    },
+    {
+      "route_id": "R-0070",
+      "verdict": "safe",
+      "reason": "Route maps to /orders/mine/<int:order_id>; Query explicitly binds `user_id` from `current_user.id`. Valid binding."
+    },
+    {
+      "route_id": "R-0071",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0071-1"
+      ]
+    }
+  ]
+}

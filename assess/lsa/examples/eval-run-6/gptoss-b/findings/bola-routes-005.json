@@ -1,0 +1,341 @@
+{
+  "batch_id": "routes-005",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0073",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /users/<int:uid>/name: missing owner verification",
+      "route_id": "R-0073",
+      "endpoint": {
+        "method": "POST",
+        "path": "/users/<int:uid>/name"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 18
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "start_line": 18,
+          "code": "user = User.query.get(uid)\nuser.name = request.json[\"name\"]",
+          "why": "The user ID comes from the URL and is not bound to the authenticated user; any logged\u2011in user can change any other user's name.",
+          "line": 18
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Bind the target user ID to the authenticated user by loading the user with a query that includes the current user\u2019s ID or by checking that the loaded user\u2019s ID matches the session user before updating.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0074",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in PATCH /users/<int:uid>: missing owner verification",
+      "route_id": "R-0074",
+      "endpoint": {
+        "method": "PATCH",
+        "path": "/users/<int:uid>"
+      },
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 26
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "start_line": 26,
+          "code": "user = User.query.get(uid)\nfor key, value in request.json.items():\n    setattr(user, key, value)",
+          "why": "The endpoint accepts any user ID from the URL and updates that user\u2019s record without verifying ownership.",
+          "line": 26
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Ensure the user ID in the request matches the authenticated user\u2019s ID before applying changes, or load the user with a query that includes the session user ID.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0010",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Customer/Edit: missing owner verification",
+      "route_id": "R-0010",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/Edit"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 12,
+          "code": "public ActionResult Edit(Customer customer)\n{\n    db.Entry(customer).State = System.Data.Entity.EntityState.Modified;\n    db.SaveChanges();",
+          "why": "The method accepts a Customer object with an arbitrary Id and updates it without checking that the Id belongs to the authenticated user.",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Verify that the customer Id belongs to the current user before calling SaveChanges, or load the customer via a query that includes the user\u2019s Id.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0011",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Customer/EditName: missing owner verification",
+      "route_id": "R-0011",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/EditName"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 20
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 20,
+          "code": "public ActionResult EditName([Bind(Include = \"Id,Name\")] Customer customer)\n{\n    db.SaveChanges();",
+          "why": "The customer Id is taken from the request and the record is updated without verifying ownership.",
+          "line": 20
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Ensure the Id belongs to the authenticated user before saving, or load the customer by user Id and update only that record.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0012",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Customer/Refresh: missing owner verification",
+      "route_id": "R-0012",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Customer/Refresh"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+          "start_line": 27,
+          "code": "public ActionResult Refresh(int id)\n{\n    var customer = db.Customers.Find(id);\n    TryUpdateModel(customer);\n    db.SaveChanges();",
+          "why": "The id is supplied by the caller and the customer is updated without checking that it belongs to the authenticated user.",
+          "line": 27
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Validate that the customer Id belongs to the current user before applying updates, or load the customer via a query that includes the user\u2019s Id.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0016",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /dotnet-legacy/Web/Handlers/GetFile.ashx: missing owner verification",
+      "route_id": "R-0016",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Handlers/GetFile.ashx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+          "start_line": 8,
+          "code": "string fileId = context.Request.QueryString[\"file_id\"];\nstring path = DocStore.PathFor(fileId);\ncontext.Response.TransmitFile(path);",
+          "why": "The file identifier comes from the query string and is used to locate and transmit a file without any check that the requesting user owns or is authorized to view that file.",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an ownership check that the file belongs to the authenticated user before transmitting, or restrict the handler to authenticated users only.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "file_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0029",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST <see web.xml servlet-mapping>: missing owner verification",
+      "route_id": "R-0029",
+      "endpoint": {
+        "method": "POST",
+        "path": "<see web.xml servlet-mapping>"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+          "start_line": 9,
+          "code": "protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {\n    Account account = new Account();\n    try {\n        BeanUtils.populate(account, request.getParameterMap());\n    } catch (Exception e) {\n        throw new IOException(e);\n    }",
+          "why": "The servlet populates an Account object from arbitrary request parameters and does not verify that the account belongs to the authenticated user.",
+          "line": 9
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Validate that the account being updated belongs to the current user, or load the account via a query that includes the user\u2019s Id before applying changes.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0060",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /php-plain/mongo_find.php: missing owner verification",
+      "route_id": "R-0060",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/mongo_find.php"
+      },
+      "location": {
+        "file": "php-plain/mongo_find.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/mongo_find.php",
+          "start_line": 5,
+          "code": "$doc = $coll->findOne(array('login' => $_GET['login'], 'pass' => $_GET['pass']));\n$docs = $coll->find(array('$where' => \"this.name == '\" . $_GET['n'] . \"'\"));",
+          "why": "The endpoint accepts arbitrary query parameters and returns matching documents without restricting them to the authenticated user.",
+          "line": 5
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a filter that limits returned documents to those owned by the current user, or remove the endpoint from public access.",
+      "status": "unverified"
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0072",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0073",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0074",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0010",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0011",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0012",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0016",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0029",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0039",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0040",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0041",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0042",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0063",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0068",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0060",
+      "verdict": "vulnerable"
+    }
+  ]
+}

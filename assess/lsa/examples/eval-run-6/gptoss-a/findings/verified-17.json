@@ -1,0 +1,61 @@
+{
+  "batch_id": "verified-17",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0037",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "sql-procs/sp_search_orders.sql line 5"
+      ],
+      "control_found": null,
+      "notes": "The stored procedure builds dynamic SQL from @Customer and @Sort without any visible sanitization or allow\u2011list. No ownership or role check is present in the provided code."
+    },
+    {
+      "finding_id": "INJ-I-0038",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "sql-procs/sp_search_orders.sql line 6"
+      ],
+      "control_found": null,
+      "notes": "Execution of the unsanitized @sql string is shown, but no control is visible in the snippet."
+    },
+    {
+      "finding_id": "BFLA-R-0003-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp lines 1-11",
+        "classic-asp/shop/inc/auth.asp line 2"
+      ],
+      "control_found": null,
+      "notes": "The code performs a DELETE without any role or ownership check. The included auth.asp only verifies that a user is logged in, not that they are an admin."
+    },
+    {
+      "finding_id": "BFLA-R-0007-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 6-18"
+      ],
+      "control_found": null,
+      "notes": "DeleteUser action lacks an admin role guard; only the class-level [Authorize] ensures authentication."
+    },
+    {
+      "finding_id": "BFLA-R-0009-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/AdminController.cs lines 30-36"
+      ],
+      "control_found": null,
+      "notes": "Export action grants access based solely on a request query string parameter, with no server\u2011side role validation."
+    }
+  ]
+}

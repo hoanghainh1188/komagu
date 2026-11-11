@@ -1,0 +1,333 @@
+{
+  "routes": [
+    {
+      "route_id": "R-0020",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/save",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "line": 13
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0021",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/rename",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "line": 19
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0022",
+      "method": [
+        "PUT"
+      ],
+      "path": "/account/api",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "line": 25
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0023",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/{id}/delete",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "line": 13
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0024",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/{id}/role",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "line": 20
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "role",
+          "source": "query"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0025",
+      "method": [
+        "GET"
+      ],
+      "path": "/invoices/{id}",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "line": 15
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0026",
+      "method": [
+        "GET"
+      ],
+      "path": "/invoices/mine/{id}",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "line": 21
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0027",
+      "method": [
+        "GET"
+      ],
+      "path": "/invoices/search",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "line": 27
+      },
+      "id_inputs": [
+        {
+          "name": "customer",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0028",
+      "method": [
+        "GET"
+      ],
+      "path": "/order/view",
+      "path_source": "declared",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "line": 8
+      },
+      "id_inputs": [
+        {
+          "name": "orderId",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0030",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/:id/delete",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 8
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0031",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/:id/ban",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 12
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0032",
+      "method": [
+        "GET"
+      ],
+      "path": "/reports/export",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 16
+      },
+      "id_inputs": [
+        {
+          "name": "isAdmin",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    }
+  ],
+  "rejected": []
+}

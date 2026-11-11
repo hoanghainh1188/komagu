@@ -1,0 +1,391 @@
+{
+  "batch_id": "injection-002",
+  "findings": [
+    {
+      "finding_id": "INJ-I-0031",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/order_detail.php:6 via GET parameter 'id'",
+      "candidate_id": "I-0031",
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "Source: User input from GET parameter"
+        },
+        {
+          "file": "php-plain/order_detail.php",
+          "line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "Sink: User input concatenated directly into SQL query without sanitization or binding"
+        }
+      ],
+      "data_flow": [
+        "$_GET['id'] (order_detail.php:5)",
+        "$id",
+        "mysql_query (order_detail.php:6)"
+      ],
+      "attack_scenario": "A crafted 'id' parameter can alter the WHERE clause logic, allowing access to other users' orders or bypassing intended filters.",
+      "impact": "Unauthorized data access; potential for reading, modifying, or deleting arbitrary data accessible by the database user.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries (prepared statements) instead of string concatenation.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0032",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/search.php:8 via GET parameter 'q'",
+      "candidate_id": "I-0032",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 5,
+          "code": "$kw = addslashes($_GET['q']);",
+          "why": "Source: User input from GET parameter"
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 8,
+          "code": "$sql .= \" AND name LIKE '%\" . $kw . \"%'\";",
+          "why": "Sink: Input appended to SQL string. 'addslashes' is insufficient for SQL injection prevention in this context."
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "Sink: Unsanitized 'sort' parameter concatenated into dynamic ORDER BY clause (High Risk)."
+        }
+      ],
+      "data_flow": [
+        "$_GET['q'] (search.php:5)",
+        "$kw",
+        "$sql (search.php:8)",
+        "mysql_query (search.php:11)"
+      ],
+      "attack_scenario": "A crafted 'q' parameter can break the LIKE clause or inject logic; a crafted 'sort' parameter can alter execution order or access columns.",
+      "impact": "Authentication bypass, data manipulation, or information disclosure depending on DB privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries for the search term and implement a strict allow-list validation for the 'sort' parameter.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0033",
+      "category": "sql_injection",
+      "subtype": "string_concatenation",
+      "title": "SQL Injection in php-plain/search.php:9 via GET parameter 'sort'",
+      "candidate_id": "I-0033",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 6,
+          "code": "$sort = $_GET['sort'];",
+          "why": "Source: User input from GET parameter"
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 9,
+          "code": "$sql .= \" ORDER BY \" . $sort;",
+          "why": "Sink: Unsanitized 'sort' variable concatenated into dynamic ORDER BY clause. No allow-list or binding."
+        }
+      ],
+      "data_flow": [
+        "$_GET['sort'] (search.php:6)",
+        "$sort",
+        "$sql (search.php:9)",
+        "mysql_query (search.php:11)"
+      ],
+      "attack_scenario": "An attacker can inject arbitrary SQL logic into the ORDER BY clause to manipulate query results or access data.",
+      "impact": "Data manipulation, information disclosure, or denial of service via complex queries.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Validate the 'sort' parameter against a strict allow-list of permitted column names before use.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0034",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in php-plain/search.php:14 via GET parameter 'cat'",
+      "candidate_id": "I-0034",
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 14
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 14,
+          "code": "WHERE category = '{$_GET['cat']}'",
+          "why": "Sink: User input interpolated directly into SQL string using heredoc syntax."
+        }
+      ],
+      "data_flow": [
+        "$_GET['cat'] (search.php:14)",
+        "$q",
+        "mysql_query (search.php:16)"
+      ],
+      "attack_scenario": "A crafted 'cat' parameter can alter the WHERE clause, bypassing category filters or injecting malicious SQL.",
+      "impact": "Unauthorized data access or modification based on database privileges.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries or validate the 'cat' parameter against a strict allow-list of valid category values.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0035",
+      "category": "sql_injection",
+      "subtype": "string_formatting",
+      "title": "SQL Injection in python-flask/app.py:12 via route parameter 'order_id'",
+      "candidate_id": "I-0035",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 8,
+          "code": "@app.route('/orders/<int:order_id>')",
+          "why": "Source: Route parameter (though type hint suggests integer, Flask passes it as string to the function unless explicitly cast)."
+        },
+        {
+          "file": "python-flask/app.py",
+          "line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "Sink: Variable interpolated into SQL string using Python's % formatting. While <int> hints exist, the variable passed to execute is not guaranteed to be a safe integer if the route logic or framework version allows bypass."
+        }
+      ],
+      "data_flow": [
+        "order_id (app.py:8)",
+        "$order_id",
+        "cur.execute (app.py:12)"
+      ],
+      "attack_scenario": "If the type hint <int> is not enforced strictly at runtime or if the parameter is manipulated before reaching this line, it can inject SQL.",
+      "impact": "Data access manipulation or injection of malicious SQL logic.",
+      "severity": "high",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Ensure the parameter is explicitly cast to an integer before use, or better yet, rely on the framework's prepared statement handling if possible.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0036",
+      "category": "sql_injection",
+      "subtype": "string_interpolation",
+      "title": "SQL Injection in python-flask/app.py:29 via GET parameter 'q'",
+      "candidate_id": "I-0036",
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 29
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "line": 27,
+          "code": "q = request.args.get('q', '')",
+          "why": "Source: User input from GET parameter"
+        },
+        {
+          "file": "python-flask/app.py",
+          "line": 29,
+          "code": "cur.execute(f\"SELECT * FROM products WHERE name LIKE '%{q}%'\")",
+          "why": "Sink: User input interpolated directly into SQL query using f-string."
+        }
+      ],
+      "data_flow": [
+        "request.args.get('q') (app.py:27)",
+        "$q",
+        "cur.execute (app.py:29)"
+      ],
+      "attack_scenario": "A crafted 'q' parameter can break the LIKE clause or inject SQL logic.",
+      "impact": "Data manipulation, information disclosure, or denial of service.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Use parameterized queries (e.g., `cur.execute('...', ('%{q}%',))`) instead of f-strings.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0037",
+      "category": "sql_injection",
+      "subtype": "stored_procedure_dynamic_sql",
+      "title": "SQL Injection in sql-procs/sp_search_orders.sql:5 via parameter '@Sort'",
+      "candidate_id": "I-0037",
+      "location": {
+        "file": "sql-procs/sp_search_orders.sql",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 1,
+          "code": "CREATE PROCEDURE sp_search_orders @Customer NVARCHAR(100), @Sort NVARCHAR(50)",
+          "why": "Source: Stored procedure parameter"
+        },
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 5,
+          "code": "SET @sql = 'SELECT * FROM Orders WHERE Customer = ''' + @Customer + ''' ORDER BY ' + @Sort",
+          "why": "Sink: Parameter concatenated into dynamic SQL string."
+        },
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 6,
+          "code": "EXEC(@sql)",
+          "why": "Execution of the constructed dynamic SQL."
+        }
+      ],
+      "data_flow": [
+        "@Sort parameter (sp_search_orders.sql:1)",
+        "@Sort",
+        "@sql (sp_search_orders.sql:5)",
+        "EXEC (@sql) (sp_search_orders.sql:6)"
+      ],
+      "attack_scenario": "An attacker can pass a malicious string for '@Sort' to alter the query logic or access unauthorized columns.",
+      "impact": "Data manipulation, information disclosure, or denial of service.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Validate the '@Sort' parameter against a strict allow-list of permitted column names before constructing the SQL string.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "INJ-I-0038",
+      "category": "sql_injection",
+      "subtype": "stored_procedure_dynamic_sql",
+      "title": "SQL Injection in sql-procs/sp_search_orders.sql:6 via parameter '@Customer'",
+      "candidate_id": "I-0038",
+      "location": {
+        "file": "sql-procs/sp_search_orders.sql",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 1,
+          "code": "CREATE PROCEDURE sp_search_orders @Customer NVARCHAR(100), @Sort NVARCHAR(50)",
+          "why": "Source: Stored procedure parameter"
+        },
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 5,
+          "code": "SET @sql = 'SELECT * FROM Orders WHERE Customer = ''' + @Customer + ''' ORDER BY ' + @Sort",
+          "why": "Sink: Parameter concatenated into dynamic SQL string."
+        },
+        {
+          "file": "sql-procs/sp_search_orders.sql",
+          "line": 6,
+          "code": "EXEC(@sql)",
+          "why": "Execution of the constructed dynamic SQL."
+        }
+      ],
+      "data_flow": [
+        "@Customer parameter (sp_search_orders.sql:1)",
+        "@Customer",
+        "@sql (sp_search_orders.sql:5)",
+        "EXEC (@sql) (sp_search_orders.sql:6)"
+      ],
+      "attack_scenario": "An attacker can pass a malicious string for '@Customer' to alter the WHERE clause logic.",
+      "impact": "Data manipulation, information disclosure, or denial of service.",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": [
+        "CWE-89"
+      ],
+      "owasp": [
+        "A03:2021"
+      ],
+      "recommendation": "Validate the '@Customer' parameter against a strict allow-list of permitted values or use parameterized queries within the stored procedure.",
+      "status": "unverified"
+    }
+  ],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "I-0031",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0032",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0033",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0034",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0035",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0036",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0037",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "I-0038",
+      "verdict": "vulnerable"
+    }
+  ]
+}

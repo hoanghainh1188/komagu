@@ -1,0 +1,14 @@
+{
+  "batch_id": "routes-006",
+  "findings": [],
+  "route_verdicts": [
+    {
+      "route_id": "R-0064",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0065",
+      "verdict": "safe"
+    }
+  ]
+}

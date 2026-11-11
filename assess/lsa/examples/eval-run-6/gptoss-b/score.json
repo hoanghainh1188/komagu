@@ -1,0 +1,87 @@
+{
+  "per_category": {
+    "bola": {
+      "truth_vulnerable": 29,
+      "found": 26,
+      "recall": 0.897,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "perl-cgi/cgi-bin/order.cgi:19",
+        "python-flask/app.py:12",
+        "node-express/routes/orders.js:29"
+      ]
+    },
+    "injection": {
+      "truth_vulnerable": 34,
+      "found": 34,
+      "recall": 1.0,
+      "false_positive_on_safe_code": [
+        "python-flask/app.py:12"
+      ],
+      "missed": []
+    },
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "false_positive_on_safe_code": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 14,
+      "recall": 0.933,
+      "false_positive_on_safe_code": [],
+      "missed": [
+        "php-plain/register.php:4"
+      ]
+    }
+  },
+  "active_findings": 108,
+  "matched_findings": 85,
+  "precision": 0.787,
+  "unmatched_findings": [
+    "BFLA-R-0003-1",
+    "BFLA-R-0063-1",
+    "INJ-I-0035-1",
+    "BOLA-R-0007",
+    "BOLA-R-0009",
+    "BOLA-R-0010",
+    "BOLA-R-0011",
+    "BOLA-R-0020",
+    "BOLA-R-0022",
+    "BOLA-R-0023",
+    "BOLA-R-0024",
+    "BOLA-R-0029",
+    "BOLA-R-0030",
+    "BOLA-R-0059",
+    "BOLA-R-0060",
+    "BOLA-R-0066",
+    "BOLA-R-0067",
+    "BOLA-R-0069",
+    "BOLA-R-0052-verdict",
+    "BOLA-R-0053-verdict",
+    "BOLA-R-0054-verdict",
+    "BOLA-R-0055-verdict",
+    "BOLA-R-0056-verdict"
+  ],
+  "needs_review_not_scored": [],
+  "verdict_level": {
+    "bfla": {
+      "truth_vulnerable": 10,
+      "found": 10,
+      "recall": 1.0,
+      "flagged_safe": [],
+      "missed": []
+    },
+    "mass_assignment": {
+      "truth_vulnerable": 15,
+      "found": 14,
+      "recall": 0.933,
+      "flagged_safe": [],
+      "missed": [
+        "php-plain/register.php:4"
+      ]
+    }
+  }
+}

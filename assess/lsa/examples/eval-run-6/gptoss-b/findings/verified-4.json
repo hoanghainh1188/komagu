@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-4",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0022",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "AccountController.update method in java-legacy/src/com/acme/web/AccountController.java"
+      ],
+      "control_found": null,
+      "notes": "The update method simply calls accountDao.save(account) with no visible ownership or role check. No global filter or middleware is shown in the provided context."
+    },
+    {
+      "finding_id": "BOLA-R-0023",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "AdminUserController.delete method in java-legacy/src/com/acme/web/AdminUserController.java"
+      ],
+      "control_found": null,
+      "notes": "The delete method invokes userDao.deleteById(id) without any role or ownership guard in the visible code. No other checks are shown."
+    },
+    {
+      "finding_id": "BOLA-R-0024",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "AdminUserController.delete method in java-legacy/src/com/acme/web/AdminUserController.java"
+      ],
+      "control_found": null,
+      "notes": "The method lacks an ownership check; only a role guard is present on the adjacent method. Therefore the missing ownership verification is confirmed."
+    },
+    {
+      "finding_id": "BOLA-R-0025",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "InvoiceController.show method in java-legacy/src/com/acme/web/InvoiceController.java"
+      ],
+      "control_found": null,
+      "notes": "The show method retrieves an invoice by ID without any ownership filter. No role guard or other checks are visible in the context."
+    },
+    {
+      "finding_id": "BOLA-R-0027",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "InvoiceController.search method in java-legacy/src/com/acme/web/InvoiceController.java"
+      ],
+      "control_found": null,
+      "notes": "The search method builds a query using the customer parameter directly, with no ownership or role guard shown."
+    }
+  ]
+}

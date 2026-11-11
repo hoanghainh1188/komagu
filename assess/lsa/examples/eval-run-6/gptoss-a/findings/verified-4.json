@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-4",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0022",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java lines 25-28"
+      ],
+      "control_found": null,
+      "notes": "No ownership or role check is visible in the update method; the account is persisted directly from the request body."
+    },
+    {
+      "finding_id": "BOLA-R-0023",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AdminUserController.java lines 13-15"
+      ],
+      "control_found": null,
+      "notes": "The delete action lacks any @PreAuthorize or explicit ownership check; the only role guard appears on a different method."
+    },
+    {
+      "finding_id": "BOLA-R-0025",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/InvoiceController.java lines 15-18"
+      ],
+      "control_found": null,
+      "notes": "The invoice is retrieved by ID without verifying that it belongs to the current user."
+    },
+    {
+      "finding_id": "BOLA-R-0027",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/InvoiceController.java lines 27-30"
+      ],
+      "control_found": null,
+      "notes": "The search query concatenates user input directly; no ownership filter or parameter binding is present."
+    },
+    {
+      "finding_id": "BOLA-R-0028",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/OrderServlet.java lines 11-15"
+      ],
+      "control_found": null,
+      "notes": "The order is fetched by ID from the request without any check that the logged\u2011in user owns it."
+    }
+  ]
+}

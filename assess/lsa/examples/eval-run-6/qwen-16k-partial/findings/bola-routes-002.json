@@ -1,0 +1,428 @@
+{
+  "batch_id": "routes-002",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0020-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account save missing ownership verification",
+      "route_id": "R-0020",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/save"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 13,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 14,
+          "code": "public String save(@ModelAttribute Account account) {",
+          "why": "ID comes from request model binding (form/body), not verified against session user"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 15,
+          "code": "accountDao.save(account);",
+          "why": "No ownership check (e.g. WHERE user_id = ?) before save"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/save with account.id set to User B's ID and modifies the data.",
+      "impact": "Modify another customer's account details (name, email, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification in the DAO or controller to ensure the account belongs to the current user before saving.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0021-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account rename missing ownership verification",
+      "route_id": "R-0021",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 19,
+        "end_line": 22
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 20,
+          "code": "public String rename(@ModelAttribute RenameForm form) {",
+          "why": "ID comes from request model binding (form), not verified against session user"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 21,
+          "code": "accountDao.rename(form.getId(), form.getName());",
+          "why": "No ownership check (e.g. WHERE user_id = ?) before rename"
+        }
+      ],
+      "attack_scenario": "User A sends POST /account/rename with form.id set to User B's ID and a new name.",
+      "impact": "Modify another customer's account name.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification in the DAO or controller to ensure the account belongs to the current user before renaming.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0022-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Account API update missing ownership verification",
+      "route_id": "R-0022",
+      "endpoint": {
+        "method": "PUT",
+        "path": "/account/api"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "start_line": 25,
+        "end_line": 28
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 26,
+          "code": "public Account update(@RequestBody Account account) {",
+          "why": "ID comes from request body, not verified against session user"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AccountController.java",
+          "line": 27,
+          "code": "return accountDao.save(account);",
+          "why": "No ownership check (e.g. WHERE user_id = ?) before save"
+        }
+      ],
+      "attack_scenario": "User A sends PUT /account/api with account.id set to User B's ID and modified data.",
+      "impact": "Modify another customer's account details via API.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification in the DAO or controller to ensure the account belongs to the current user before saving.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0023-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user delete missing role check",
+      "route_id": "R-0023",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/{id}/delete"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "start_line": 13,
+        "end_line": 16
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 14,
+          "code": "public String delete(@PathVariable(\"id\") Long id) {",
+          "why": "No @PreAuthorize annotation restricting access to ADMIN role"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+          "line": 15,
+          "code": "userDao.deleteById(id);",
+          "why": "Allows deletion of any user ID without verifying admin status or ownership"
+        }
+      ],
+      "attack_scenario": "User A sends POST /admin/users/{id}/delete with User B's ID. If no role check, User A can delete User B.",
+      "impact": "Delete another user's account (Privilege Escalation / BOLA).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add @PreAuthorize(\"hasRole('ADMIN')\") to restrict access to authorized administrators only.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0025-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice read missing ownership verification",
+      "route_id": "R-0025",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices/{id}"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "start_line": 15,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 16,
+          "code": "public String show(@PathVariable(\"id\") Long id, Model model) {",
+          "why": "ID comes from path parameter, not verified against session user"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+          "line": 17,
+          "code": "model.addAttribute(\"invoice\", invoiceDao.findById(id));",
+          "why": "No ownership check (e.g. findByIdAndOwner) before returning data"
+        }
+      ],
+      "attack_scenario": "User A sends GET /invoices/{id} with User B's Invoice ID.",
+      "impact": "Read another customer's invoice details (amount, items, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification in the DAO or controller to ensure the invoice belongs to the current user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0028-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order view missing ownership verification",
+      "route_id": "R-0028",
+      "endpoint": {
+        "method": "GET",
+        "path": "/order/view"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "start_line": 8,
+        "end_line": 21
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 11,
+          "code": "String id = request.getParameter(\"orderId\");",
+          "why": "ID comes from query parameter (request-controlled)"
+        },
+        {
+          "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+          "line": 15,
+          "code": "ResultSet rs = stmt.executeQuery(\"SELECT * FROM orders WHERE id = '\" + id + \"'\");",
+          "why": "No ownership check (e.g. AND user_id = ?) in SQL query"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order/view?orderId=<User B's Order ID>.",
+      "impact": "Read another customer's order details (items, address, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification in the query to ensure the order belongs to the current user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0030-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Admin user delete missing role check",
+      "route_id": "R-0030",
+      "endpoint": {
+        "method": "POST",
+        "path": "/admin/users/:id/delete"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 9,
+          "code": "User.deleteOne({ _id: req.params.id }, function () { res.sendStatus(204); });",
+          "why": "No role check (e.g. requireAdmin) before deletion"
+        }
+      ],
+      "attack_scenario": "User A sends POST /admin/users/:id/delete with User B's ID. If no role check, User A can delete User B.",
+      "impact": "Delete another user's account (Privilege Escalation / BOLA).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add role check middleware (e.g. requireAdmin) to restrict access to authorized administrators only.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0032-1",
+      "category": "bola",
+      "subtype": "missing_role_check",
+      "title": "Report export missing role check",
+      "route_id": "R-0032",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports/export"
+      },
+      "location": {
+        "file": "node-express/routes/admin.js",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/admin.js",
+          "line": 17,
+          "code": "if (req.query.isAdmin === 'true') { res.json([]); }",
+          "why": "Only checks query param for isAdmin, does not verify user role"
+        }
+      ],
+      "attack_scenario": "User A sends GET /reports/export?isAdmin=false. If no role check, User A can export all data.",
+      "impact": "Export all users' data (including other customers).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add role check middleware (e.g. requireAdmin) to restrict access to authorized administrators only.",
+      "status": "unverified"
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0020",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0020-1"
+      ]
+    },
+    {
+      "route_id": "R-0021",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0021-1"
+      ]
+    },
+    {
+      "route_id": "R-0022",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0022-1"
+      ]
+    },
+    {
+      "route_id": "R-0023",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0023-1"
+      ]
+    },
+    {
+      "route_id": "R-0024",
+      "verdict": "safe",
+      "reason": "Method has @PreAuthorize(\"hasRole('ADMIN')\") restricting access to admins only."
+    },
+    {
+      "route_id": "R-0025",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0025-1"
+      ]
+    },
+    {
+      "route_id": "R-0026",
+      "verdict": "safe",
+      "reason": "Method uses findByIdAndOwner(id, principal.getName()) which binds ID to session user."
+    },
+    {
+      "route_id": "R-0027",
+      "verdict": "not_applicable",
+      "reason": "Search endpoint with free-text filter, no specific object identifier for BOLA/IDOR check."
+    },
+    {
+      "route_id": "R-0028",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0028-1"
+      ]
+    },
+    {
+      "route_id": "R-0030",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0030-1"
+      ]
+    },
+    {
+      "route_id": "R-0031",
+      "verdict": "safe",
+      "reason": "Method has requireAdmin middleware restricting access to admins only."
+    },
+    {
+      "route_id": "R-0032",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0032-1"
+      ]
+    }
+  ]
+}

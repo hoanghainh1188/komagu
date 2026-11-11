@@ -1,0 +1,516 @@
+{
+  "batch_id": "routes-001",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0002",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /classic-asp/shop/member.asp?mode=edit: missing owner verification",
+      "route_id": "R-0002",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=edit"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 6,
+          "code": "sql = \"UPDATE members SET name = '\" & Replace(Request.Form(\"name\"), \"'\", \"''\") & \"'\"\nsql = sql & \" WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "member_id comes from the request form and is used directly in the UPDATE without checking that the member belongs to the current session user.",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an ownership check that ensures the member_id belongs to the current user before performing the UPDATE.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0003",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /classic-asp/shop/member.asp?mode=delete: missing owner verification",
+      "route_id": "R-0003",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=delete"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "start_line": 10,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "member_id comes from the query string and is used directly in the DELETE without verifying ownership.",
+          "line": 10
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an ownership check that ensures the member_id belongs to the current user before performing the DELETE.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0004",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /classic-asp/shop/order.asp: missing owner verification",
+      "route_id": "R-0004",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/order.asp"
+      },
+      "location": {
+        "file": "classic-asp/shop/order.asp",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/order.asp",
+          "start_line": 5,
+          "code": "id = Request(\"id\")\nSet rs = conn.Execute(\"SELECT * FROM orders WHERE id = \" & id)\nResponse.Write Server.HTMLEncode(rs(\"address\"))",
+          "why": "The order id is taken from the request and the order is fetched without scoping to the current user.",
+          "line": 5
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the order id to the current session user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0005",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /coldfusion/app/OrderService.cfc?method=getOrder: missing owner verification",
+      "route_id": "R-0005",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/OrderService.cfc?method=getOrder"
+      },
+      "location": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "start_line": 4,
+          "code": "<cfquery name=\"q\" datasource=\"shop\">\n  SELECT * FROM orders WHERE id = #arguments.orderId#\n</cfquery>",
+          "why": "The order id is taken from the request argument and the query is executed without scoping to the current user.",
+          "line": 4
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the order id to the current session user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0006",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /coldfusion/app/order.cfm: missing owner verification",
+      "route_id": "R-0006",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/order.cfm"
+      },
+      "location": {
+        "file": "coldfusion/app/order.cfm",
+        "start_line": 2
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/order.cfm",
+          "start_line": 2,
+          "code": "<cfquery name=\"qOrder\" datasource=\"shop\">\n  SELECT * FROM orders WHERE id = #url.id#\n</cfquery>",
+          "why": "The order id is taken from the URL and the query is executed without scoping to the current user.",
+          "line": 2
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the order id to the current session user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0007",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Admin/DeleteUser: missing owner verification",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 12,
+          "code": "public ActionResult DeleteUser(int id)\n{\n    var u = db.Users.Find(id);\n    db.Users.Remove(u);\n    db.SaveChanges();\n    return RedirectToAction(\"Index\");\n}",
+          "why": "Any authenticated user can delete any user because there is no ownership or role check.",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Restrict this action to administrators only or add an ownership check that ensures the target user is not the current user.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0009",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /Admin/Export: missing owner verification",
+      "route_id": "R-0009",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/Export"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 32
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "start_line": 32,
+          "code": "if (Request.QueryString[\"isAdmin\"] == \"true\")\n{\n    return Json(db.Users.ToList(), JsonRequestBehavior.AllowGet);\n}",
+          "why": "The endpoint is not protected by a role check; any authenticated user can retrieve all users by setting isAdmin=true.",
+          "line": 32
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an [Authorize(Roles=\"Admin\")] attribute or remove the isAdmin query parameter and enforce role checks server\u2011side.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0013",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /Invoice/Details: missing owner verification",
+      "route_id": "R-0013",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/Invoice/Details"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 11
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 11,
+          "code": "public ActionResult Details(int id)\n{\n    var inv = db.Invoices.Find(id);\n    return View(inv);\n}",
+          "why": "The invoice is fetched by id without scoping to the current user.",
+          "line": 11
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the invoice id to the current session user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0015",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /Invoice/Search: missing owner verification",
+      "route_id": "R-0015",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Invoice/Search"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 26
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "start_line": 26,
+          "code": "public ActionResult Search(string customer)\n{\n    var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();\n    return View(list);\n}",
+          "why": "The query is built from user input and returns all invoices for the given customer without scoping to the current user.",
+          "line": 26
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the customer to the current session user or use parameterized queries with ownership checks.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0017",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /dotnet-legacy/Web/Orders/EditOrder.aspx: missing owner verification",
+      "route_id": "R-0017",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "start_line": 7,
+          "code": "Dim sql As String = \"UPDATE Orders SET Note = '\" & txtNote.Text & \"'\"\nsql &= \" WHERE OrderId = \" & hfOrderId.Value\nUsing conn As New SqlConnection(ConnStr)\n    Dim cmd As New SqlCommand(sql, conn)\n    conn.Open()\n    cmd.ExecuteNonQuery()\nEnd Using",
+          "why": "The OrderId is taken from a hidden field and used directly in the UPDATE without verifying that the order belongs to the current user.",
+          "line": 7
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an ownership check that ensures the OrderId belongs to the current session user before executing the UPDATE.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "hfOrderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0018",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /dotnet-legacy/Web/Orders/OrderDetail.aspx: missing owner verification",
+      "route_id": "R-0018",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/OrderDetail.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+          "start_line": 10,
+          "code": "string id = Request.QueryString[\"id\"];\nusing (var conn = new SqlConnection(ConnStr))\n{\n    var cmd = new SqlCommand(\"SELECT * FROM Orders WHERE OrderId = \" + id, conn);\n    conn.Open();\n    var r = cmd.ExecuteReader();\n    var safe = new SqlCommand(\"SELECT * FROM Orders WHERE OrderId = @id AND UserId = @uid\", conn);",
+          "why": "The first query fetches the order by id without scoping to the current user; the safe query is never used.",
+          "line": 10
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Replace the first query with a query that includes a WHERE clause binding OrderId to the current session user.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0019",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /java-legacy/WebContent/order/detail.jsp: missing owner verification",
+      "route_id": "R-0019",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/java-legacy/WebContent/order/detail.jsp"
+      },
+      "location": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "start_line": 3
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "start_line": 3,
+          "code": "String no = request.getParameter(\"no\");\nConnection c = (Connection) application.getAttribute(\"conn\");\nResultSet rs = c.createStatement().executeQuery(\"SELECT * FROM orders WHERE order_no = '\" + no + \"'\");",
+          "why": "The order number is taken from the request and used directly in the SELECT without scoping to the current user.",
+          "line": 3
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the order number to the current session user before returning data.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "no"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0001",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /user/edit.do: missing owner verification",
+      "route_id": "R-0001",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/user/edit.do"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "start_line": 10,
+          "code": "String userId = request.getParameter(\"user_id\");\nString email = request.getParameter(\"email\");\nConnection conn = DataSourceHolder.get().getConnection();\nPreparedStatement ps = conn.prepareStatement(\"UPDATE users SET email = '\" + email + \"' WHERE id = \" + userId);\nps.executeUpdate();",
+          "why": "The user_id comes from the request and is used directly in the UPDATE without verifying that the target user belongs to the current session user.",
+          "line": 10
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add an ownership check that ensures the user_id belongs to the current session user before performing the UPDATE.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "user_id"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0002",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0003",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0004",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0005",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0006",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0008",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0013",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0014",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0015",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0017",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0018",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0019",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0001",
+      "verdict": "vulnerable"
+    }
+  ]
+}

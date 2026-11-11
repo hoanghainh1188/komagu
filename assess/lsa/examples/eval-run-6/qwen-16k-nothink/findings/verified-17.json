@@ -1,0 +1,141 @@
+{
+  "batch_id": "verified-17",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0035",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py:8 route definition",
+        "python-flask/app.py:12 SQL execution"
+      ],
+      "control_found": null,
+      "notes": "The route uses `<int:order_id>` which is a type hint. In Flask, this does not enforce strict integer casting at runtime (it passes the string to the function). The code then directly interpolates `order_id` into a SQL string using `%s`. No explicit cast or parameterized query wrapper is visible in the provided context.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Type hints in Python are not runtime enforcement for SQL injection prevention; direct string formatting is used."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/orders/{id}",
+        "target_param": "order_id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0036",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py:27 input retrieval",
+        "python-flask/app.py:29 SQL execution"
+      ],
+      "control_found": null,
+      "notes": "User input `q` is retrieved via `request.args.get`. It is directly interpolated into an f-string SQL query without any sanitization, allow-listing, or parameterized binding. The `@login_required` decorator only ensures authentication, not authorization against injection.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct f-string interpolation of user input into SQL is a confirmed vulnerability."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/search?q={payload}",
+        "target_param": "q"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0037",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "sql-procs/sp_search_orders.sql:1 procedure definition",
+        "sql-procs/sp_search_orders.sql:5 SQL construction"
+      ],
+      "control_found": null,
+      "notes": "The stored procedure accepts `@Sort` as a string parameter. Line 5 concatenates this directly into the dynamic SQL string before execution on line 6. There is no allow-list validation or casting visible in the provided context.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Dynamic SQL construction using user-supplied parameters without validation is a confirmed critical flaw."
+      },
+      "attack_vector": {
+        "method": "EXECUTE",
+        "path": "sp_search_orders",
+        "target_param": "@Sort"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0038",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "sql-procs/sp_search_orders.sql:1 procedure definition",
+        "sql-procs/sp_search_orders.sql:5 SQL construction"
+      ],
+      "control_found": null,
+      "notes": "The stored procedure accepts `@Customer` as a string parameter. Line 5 concatenates this directly into the dynamic SQL string (`WHERE Customer = ''' + @Customer + '''`). There is no allow-list validation or parameterized query usage visible in the provided context.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Dynamic SQL construction using user-supplied parameters without validation is a confirmed critical flaw."
+      },
+      "attack_vector": {
+        "method": "EXECUTE",
+        "path": "sp_search_orders",
+        "target_param": "@Customer"
+      }
+    },
+    {
+      "finding_id": "BFLA-R-0003-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp:2 include auth.asp",
+        "classic-asp/shop/inc/auth.asp:2 role check logic",
+        "classic-asp/shop/member.asp:10 delete execution"
+      ],
+      "control_found": null,
+      "notes": "The included `auth.asp` (line 2 of member.asp) only checks if `Session(\"UserID\")` is empty. It does not verify a specific role (e.g., Admin). The `delete` action on line 10 executes without any subsequent role verification. An authenticated non-admin user can trigger this.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Authentication check is present but insufficient for authorization (role-based) on a privileged action."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/classic-asp/shop/member.asp?mode=delete&member_id={id}",
+        "target_param": "member_id"
+      }
+    }
+  ]
+}

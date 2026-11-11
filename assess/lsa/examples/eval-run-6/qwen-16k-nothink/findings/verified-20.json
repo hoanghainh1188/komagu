@@ -1,0 +1,82 @@
+{
+  "batch_id": "verified-20",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0032-verdict",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/admin.js:16-18"
+      ],
+      "control_found": {
+        "file": "node-express/routes/admin.js",
+        "line": 17,
+        "code": "if (req.query.isAdmin === 'true') { res.json([]); }"
+      },
+      "notes": "The code explicitly checks for the `isAdmin` query parameter. If an attacker sets this to 'true', the server returns an empty array and does not execute the export logic. While this is a weak control (it relies on the attacker providing the flag rather than validating their identity), it effectively prevents the specific attack vector described in the finding (unauthorized access via missing role check) by forcing a safe response when the flag is present. The auditor's 'needs_review' verdict was likely triggered by the lack of a standard middleware, but this inline check acts as a compensating control for the specific GET /reports/export endpoint.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "BFLA-R-0059-verdict",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "php-plain/manage_users.php:11"
+      ],
+      "control_found": {
+        "file": "php-plain/manage_users.php",
+        "line": 11,
+        "code": "if ($_SESSION['role'] == 'admin'): ?><li><a href=\"/manage_users.php\">Delete users</a></li><?php endif; ?>"
+      },
+      "notes": "The code explicitly checks `$_SESSION['role']` before rendering the link to the page. An attacker cannot access the page via a direct URL request because the HTML link containing the path is never generated for non-admin users. This is a valid control preventing unauthorized access to the resource.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0011-verdict",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "php-plain/profile.php:6-8"
+      ],
+      "control_found": null,
+      "notes": "The code iterates over `$_POST` and assigns values to object properties. However, the finding claims 'whole_object_binding' as a vulnerability. In this specific snippet, the loop `foreach ($_POST as $field => $value)` is followed by explicit assignments for `nickname` and `role`. Crucially, there is no evidence of *privileged* fields being writable here that would constitute a mass assignment risk in the context of the finding's claim. The finding states 'needs_review' but provides no specific privileged field (like `balance`, `admin_flag`) that is being blindly assigned from POST data in this loop. Without a specific privileged field identified as writable, the finding lacks the necessary evidence to be confirmed as a mass assignment vulnerability. The auditor's verdict was likely based on an assumption of privilege escalation which is not supported by the visible code context (no sensitive fields like 'role' or 'balance' are being set in the loop).",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0012-verdict",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "php-plain/profile.php:10"
+      ],
+      "control_found": null,
+      "notes": "The code explicitly assigns `$user->role = $_POST['role'];`. This is a clear mass assignment vulnerability where a privileged field ('role') is writable via POST data. The auditor's 'needs_review' verdict correctly identified the risk, and since the evidence supports it, the finding is confirmed.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "MASS-M-0001-verdict",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:20"
+      ],
+      "control_found": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 20,
+        "code": "[Bind(Include = \"Id,Name\")]"
+      },
+      "notes": "The code uses `[Bind(Include = \"Id,Name\")]` on the `EditName` action. This attribute explicitly restricts which properties from the model can be bound to the controller parameter. By including only 'Id' and 'Name', it prevents mass assignment of other fields like 'Role', 'Balance', or 'Email'. This is a valid compensating control that mitigates the risk described in the finding.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    }
+  ]
+}

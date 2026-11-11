@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-13",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0009",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 10, 13"
+      ],
+      "control_found": null,
+      "notes": "User input 'id' from Request.QueryString is directly concatenated into the SQL string without any sanitization, casting, or parameter binding. The subsequent creation of a 'safe' command with parameters does not mitigate the risk of the first query.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation of unvalidated user input into SQL command."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/Orders/OrderDetail.aspx?id=<payload>",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0010",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 19"
+      ],
+      "control_found": null,
+      "notes": "User input 'ref' from Request is directly interpolated into a SQL string using string.Format. No validation or parameterization is applied.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string formatting of unvalidated user input into SQL command."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/Orders/OrderDetail.aspx?ref=<payload>",
+        "target_param": "ref"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0011",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 20"
+      ],
+      "control_found": null,
+      "notes": "User input 'cart' from Request.Form is directly interpolated into a SQL string using raw interpolation. No validation or parameterization is applied.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string interpolation of unvalidated user input into SQL command."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/Orders/OrderDetail.aspx",
+        "target_param": "cart"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0012",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/WebContent/order/detail.jsp lines 3, 5"
+      ],
+      "control_found": null,
+      "notes": "User input 'no' from request.getParameter is directly concatenated into a SQL string. No validation or parameterization is applied.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation of unvalidated user input into SQL command."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/order/detail.jsp?no=<payload>",
+        "target_param": "no"
+      }
+    },
+    {
+      "finding_id": "INJ-I-0016",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "critical",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/struts/EditUserAction.java lines 10, 13"
+      ],
+      "control_found": null,
+      "notes": "User input 'email' and 'user_id' from request.getParameter are directly concatenated into a SQL string. No validation or parameterization is applied.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct string concatenation of unvalidated user input into SQL command."
+      },
+      "attack_vector": {
+        "method": "POST",
+        "path": "/EditUserAction.action",
+        "target_param": "email"
+      }
+    }
+  ]
+}

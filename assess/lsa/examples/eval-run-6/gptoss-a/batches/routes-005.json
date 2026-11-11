@@ -1,0 +1,612 @@
+{
+  "batch_id": "routes-005",
+  "files": [
+    "dotnet-legacy/Web/Controllers/CustomerController.cs",
+    "dotnet-legacy/Web/Handlers/GetFile.ashx",
+    "java-legacy/src/com/acme/web/ProfileServlet.java",
+    "node-express/routes/profile.js",
+    "php-plain/admin/settings.php",
+    "php-plain/mongo_find.php",
+    "php-plain/profile.php",
+    "python-flask/profile.py"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/node-python-ruby.md",
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/java.md",
+    "knowledge/stacks/php.md"
+  ],
+  "candidates": [
+    {
+      "stack": "python-flask",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/users",
+      "handler": {
+        "file": "python-flask/profile.py",
+        "line": 8,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0072",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "python-flask",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/users/<int:uid>/name",
+      "handler": {
+        "file": "python-flask/profile.py",
+        "line": 16,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "uid",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 18
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0073",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "python-flask",
+      "kind": "declared_route",
+      "method": [
+        "PATCH"
+      ],
+      "path": "/users/<int:uid>",
+      "handler": {
+        "file": "python-flask/profile.py",
+        "line": 24,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "uid",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 26
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0074",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/Customer/Edit",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 12,
+        "symbol": "CustomerController.Edit"
+      },
+      "id_params": [
+        {
+          "name": "customer",
+          "source": "any",
+          "line": 12,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0010",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST",
+        "POST"
+      ],
+      "path": "/Customer/EditName",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 20,
+        "symbol": "CustomerController.EditName"
+      },
+      "id_params": [],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0011",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST",
+        "POST"
+      ],
+      "path": "/Customer/Refresh",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+        "line": 27,
+        "symbol": "CustomerController.Refresh"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 27,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 29
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0012",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-handlers",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/dotnet-legacy/Web/Handlers/GetFile.ashx",
+      "handler": {
+        "file": "dotnet-legacy/Web/Handlers/GetFile.ashx",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "file_id",
+          "source": "query",
+          "line": 8,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "file_read",
+          "line": 10
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0016",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-servlet",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "<see web.xml servlet-mapping>",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+        "line": 9,
+        "symbol": "doPost"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "resolve path from web.xml",
+      "route_id": "R-0029",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/profile",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 7,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 7
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0039",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/profile/name",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 11,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "name",
+          "source": "body",
+          "line": 12,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 11
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0040",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/signup",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 15,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0041",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/profile/settings",
+      "handler": {
+        "file": "node-express/routes/profile.js",
+        "line": 20,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "theme",
+          "source": "body",
+          "line": 21,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 20
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0042",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/profile.php",
+      "handler": {
+        "file": "php-plain/profile.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "nickname",
+          "source": "form",
+          "line": 9,
+          "is_id_like": false
+        },
+        {
+          "name": "role",
+          "source": "form",
+          "line": 10,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        },
+        {
+          "hint": "$_SESSION[",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0063",
+      "needs_audit_hint": false,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 10,
+          "hint": "$_POST['role'"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/settings.php",
+      "handler": {
+        "file": "php-plain/admin/settings.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "value",
+          "source": "form",
+          "line": 10,
+          "is_id_like": false
+        },
+        {
+          "name": "name",
+          "source": "form",
+          "line": 10,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once '../inc/auth.php'",
+          "line": 2
+        },
+        {
+          "hint": "$_SESSION[",
+          "line": 5
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 9
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0068",
+      "needs_audit_hint": false,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:settings"
+      ],
+      "role_checks": [
+        {
+          "hint": "$_SESSION['role']",
+          "line": 5,
+          "scope": "route"
+        }
+      ],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/mongo_find.php",
+      "handler": {
+        "file": "php-plain/mongo_find.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "login",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "pass",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "n",
+          "source": "query",
+          "line": 6,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 5
+        },
+        {
+          "op": "read",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0060",
+      "needs_audit_hint": false,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    }
+  ]
+}

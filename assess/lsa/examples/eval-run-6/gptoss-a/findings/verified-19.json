@@ -1,0 +1,64 @@
+{
+  "batch_id": "verified-19",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0066-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/delete_user.php:1-8",
+        "php-plain/inc/auth.php:1-7"
+      ],
+      "control_found": null,
+      "notes": "The file contains only a login check in auth.php and a DELETE statement that uses the supplied id. No role or ownership check is present."
+    },
+    {
+      "finding_id": "BFLA-R-0067-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/promote.php:1-8",
+        "php-plain/inc/auth.php:1-7"
+      ],
+      "control_found": null,
+      "notes": "The code updates the role based solely on a POST parameter. No role verification or ownership check is performed."
+    },
+    {
+      "finding_id": "BFLA-R-0059-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/manage_users.php:1-8",
+        "php-plain/inc/auth.php:1-7"
+      ],
+      "control_found": null,
+      "notes": "The POST handler deletes a user by id without any role or ownership guard."
+    },
+    {
+      "finding_id": "BFLA-R-0063-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/profile.php:1-11",
+        "php-plain/inc/auth.php:1-7"
+      ],
+      "control_found": null,
+      "notes": "The script assigns any POSTed field to the user object, including role, without checking the current user's privileges."
+    },
+    {
+      "finding_id": "MASS-M-0003-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "java-legacy/src/com/acme/web/AccountController.java:1-30"
+      ],
+      "control_found": null,
+      "notes": "The controller accepts a full Account model from the request and persists it directly. No role check or property allow\u2011list is present."
+    }
+  ]
+}

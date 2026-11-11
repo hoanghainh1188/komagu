@@ -1,0 +1,135 @@
+{
+  "batch_id": "verified-5",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0032-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/admin.js lines 5, 6, 16-18"
+      ],
+      "control_found": null,
+      "notes": "The route `/reports/export` is protected only by `ensureLoggedIn`. It checks if the user is logged in but does not verify ownership of the exported data or check an `isAdmin` flag against a database role. The query logic (implied by the export action) fetches data without scoping to the current user's ID.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct export of data without ownership verification or role-based access control (RBAC) check on the specific resource."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/reports/export",
+        "target_param": null
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0033-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js lines 8-10"
+      ],
+      "control_found": null,
+      "notes": "The route `/orders/:id` is protected only by `ensureLoggedIn`. It fetches the order by ID (`req.params.id`) and returns it immediately. There is no check comparing the order's owner to the authenticated user's ID.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by request ID without tenant or user context binding."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/orders/:id",
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0035-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js lines 16-18"
+      ],
+      "control_found": null,
+      "notes": "The route `/reports` is protected only by `ensureLoggedIn`. It executes a raw SQL query using the `month` parameter without filtering results by the authenticated user's ID or ownership.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Query fetches all reports for a given month without filtering by the authenticated user's ID or ownership."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/reports",
+        "target_param": "month"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0038-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js lines 28-30"
+      ],
+      "control_found": null,
+      "notes": "The route `/stats` is NOT protected by `ensureLoggedIn`. It executes a raw SQL query using the `shop` parameter directly interpolated into the string. This allows any user (even unauthenticated) to access stats for any shop.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Route lacks authentication middleware entirely and uses string interpolation for the shop_id parameter."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/stats",
+        "target_param": "shop"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0044-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "severity": "high",
+      "confidence": "high",
+      "checked": [
+        "php-codeigniter/application/controllers/Invoice.php lines 9-12"
+      ],
+      "control_found": null,
+      "notes": "The `view` method in `Invoice.php` is protected by the parent constructor (likely containing auth checks), but the specific logic at line 10 fetches the invoice by ID (`$id`) without verifying that the current session user owns that invoice. The existence of a `mine` method (line 14) which explicitly adds an ownership check confirms that the `view` method is intentionally missing this control.",
+      "consensus": {
+        "score": 0.95,
+        "agreement_level": "unanimous",
+        "voted_models": [
+          "gemini-2.0-pro",
+          "claude-3-7"
+        ],
+        "rationale": "Direct lookup by request ID without tenant or user context binding. The presence of a 'mine' endpoint with explicit ownership filtering proves the standard 'view' endpoint lacks it."
+      },
+      "attack_vector": {
+        "method": "GET",
+        "path": "/invoice/view/{id}",
+        "target_param": "id"
+      }
+    }
+  ]
+}

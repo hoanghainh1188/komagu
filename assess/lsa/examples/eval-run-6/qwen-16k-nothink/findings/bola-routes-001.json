@@ -1,0 +1,527 @@
+{
+  "batch_id": "routes-001",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0002-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Member profile editable by any authenticated user via member_id",
+      "route_id": "R-0002",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=edit"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 6,
+        "end_line": 7
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 6,
+          "code": "sql = \"UPDATE members SET name = '\" & Replace(Request.Form(\"name\"), \"'\", \"''\") & \"'\"",
+          "why": "ID source is Request.Form('member_id'), attacker controlled"
+        },
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 7,
+          "code": "sql = sql & \" WHERE member_id = \" & Request.Form(\"member_id\")",
+          "why": "No AND user_id = Session('UserID') check; relies on trust"
+        }
+      ],
+      "attack_scenario": "User A sends POST /classic-asp/shop/member.asp?mode=edit with member_id=<User B's ID> and name='Hacked'. User B's profile is updated.",
+      "impact": "Modification of another user's personal data (name).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add a check to verify the member_id belongs to the current session user before executing the update, or include AND user_id = Session('UserID') in the SQL query.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0003-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Member profile deletable by any authenticated user via member_id",
+      "route_id": "R-0003",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/classic-asp/shop/member.asp?mode=delete"
+      },
+      "location": {
+        "file": "classic-asp/shop/member.asp",
+        "start_line": 10,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "classic-asp/shop/member.asp",
+          "line": 10,
+          "code": "conn.Execute \"DELETE FROM members WHERE member_id = \" & Request.QueryString(\"member_id\")",
+          "why": "ID source is Request.QueryString('member_id'), attacker controlled; no ownership verification"
+        }
+      ],
+      "attack_scenario": "User A sends GET /classic-asp/shop/member.asp?mode=delete&member_id=<User B's ID>. User B's account is deleted.",
+      "impact": "Deletion of another user's account/data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add a check to verify the member_id belongs to the current session user before executing the delete, or include AND user_id = Session('UserID') in the SQL query.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "member_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0005-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via orderId",
+      "route_id": "R-0005",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/coldfusion/app/OrderService.cfc?method=getOrder"
+      },
+      "location": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "start_line": 4,
+        "end_line": 6
+      },
+      "evidence": [
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 3,
+          "code": "<cfargument name=\"orderId\" type=\"string\" required=\"true\">",
+          "why": "ID source is function argument passed from request"
+        },
+        {
+          "file": "coldfusion/app/OrderService.cfc",
+          "line": 5,
+          "code": "SELECT * FROM orders WHERE id = #arguments.orderId#",
+          "why": "No user_id filter applied; relies on trust"
+        }
+      ],
+      "attack_scenario": "User A sends GET /coldfusion/app/OrderService.cfc?method=getOrder&orderId=<User B's Order ID>. User A receives User B's order details.",
+      "impact": "Disclosure of another customer's order information (address, items).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Modify the query to include a condition filtering by the current user's ID (e.g., AND created_by = currentUserID).",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "orderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0007-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User deletable by any authenticated user via id",
+      "route_id": "R-0007",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/DeleteUser"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 14,
+        "end_line": 15
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 12,
+          "code": "[HttpPost]",
+          "why": "Endpoint accepts POST"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 14,
+          "code": "var u = db.Users.Find(id);",
+          "why": "ID source is parameter 'id' from request; no ownership check"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 15,
+          "code": "db.Users.Remove(u);",
+          "why": "Removes the found user without verifying if the current user owns it"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Admin/DeleteUser?id=<User B's ID>. User A deletes User B.",
+      "impact": "Deletion of another user's account.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being deleted is owned by the current authenticated user (or ensure only Admins can access this endpoint and verify admin role).",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0008-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Password resettable by any authenticated user via id",
+      "route_id": "R-0008",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/ResetPassword"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 24,
+        "end_line": 25
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 21,
+          "code": "[Authorize(Roles = \"Admin\")]",
+          "why": "Role check present"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 24,
+          "code": "var u = db.Users.Find(id);",
+          "why": "ID source is parameter 'id' from request; no ownership check against the specific user record"
+        }
+      ],
+      "attack_scenario": "User A (who has Admin role) sends POST /Admin/ResetPassword?id=<User B's ID>. User A resets User B's password.",
+      "impact": "Account takeover of another user via password reset.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being reset is owned by the current authenticated user (or ensure only Admins can access this endpoint and verify admin role).",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0009-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User list exportable by any authenticated user via isAdmin flag",
+      "route_id": "R-0009",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Admin/Export"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "start_line": 32,
+        "end_line": 34
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 30,
+          "code": "public ActionResult Export()",
+          "why": "Endpoint accepts POST"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 32,
+          "code": "if (Request.QueryString[\"isAdmin\"] == \"true\")",
+          "why": "ID source is parameter 'isAdmin' from request; no ownership check"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+          "line": 34,
+          "code": "return Json(db.Users.ToList(), JsonRequestBehavior.AllowGet);",
+          "why": "Returns all users without filtering by current user"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Admin/Export?isAdmin=true. User A receives a list of all users in the system.",
+      "impact": "Disclosure of all user accounts (names, emails, etc.).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the user being exported is owned by the current authenticated user (or ensure only Admins can access this endpoint and verify admin role).",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0015-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Customer search results readable by any authenticated user via customer param",
+      "route_id": "R-0015",
+      "endpoint": {
+        "method": "POST",
+        "path": "/Invoice/Search"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "start_line": 28,
+        "end_line": 29
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 26,
+          "code": "[HttpPost]",
+          "why": "Endpoint accepts POST"
+        },
+        {
+          "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+          "line": 28,
+          "code": "var list = db.Database.SqlQuery<Invoice>(\"SELECT * FROM Invoices WHERE Customer = '\" + customer + \"'\").ToList();",
+          "why": "ID source is parameter 'customer' from request; no ownership check against current user"
+        }
+      ],
+      "attack_scenario": "User A sends POST /Invoice/Search with customer=<Name of User B>. User A sees User B's invoices.",
+      "impact": "Disclosure of another user's invoice data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Verify that the invoices returned belong to the current authenticated user.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0017-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order note editable by any authenticated user via OrderId",
+      "route_id": "R-0017",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx"
+      },
+      "location": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "start_line": 8,
+        "end_line": 9
+      },
+      "evidence": [
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 7,
+          "code": "Dim sql As String = \"UPDATE Orders SET Note = '\" & txtNote.Text & \"'\"",
+          "why": "ID source is hidden field hfOrderId.Value; attacker can manipulate it"
+        },
+        {
+          "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+          "line": 8,
+          "code": "sql &= \" WHERE OrderId = \" & hfOrderId.Value",
+          "why": "No user_id filter applied; relies on trust"
+        }
+      ],
+      "attack_scenario": "User A sends POST with hidden field hfOrderId=<User B's Order ID>. User A modifies User B's order note.",
+      "impact": "Modification of another user's order data.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add a check to verify the OrderId belongs to the current session user before executing the update, or include AND UserId = Session('UserID') in the SQL query.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "hfOrderId"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0019-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via order_no",
+      "route_id": "R-0019",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/order/detail.jsp"
+      },
+      "location": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "start_line": 3,
+        "end_line": 5
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "line": 3,
+          "code": "String no = request.getParameter(\"no\");",
+          "why": "ID source is parameter 'no' from request"
+        },
+        {
+          "file": "java-legacy/WebContent/order/detail.jsp",
+          "line": 5,
+          "code": "ResultSet rs = c.createStatement().executeQuery(\"SELECT * FROM orders WHERE order_no = '\" + no + \"'\");",
+          "why": "No user_id filter applied; relies on trust"
+        }
+      ],
+      "attack_scenario": "User A sends GET /order/detail.jsp?no=<User B's Order Number>. User A receives User B's order details.",
+      "impact": "Disclosure of another customer's order information (address, items).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Modify the query to include a condition filtering by the current user's ID (e.g., AND created_by = currentUserID).",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "no"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0001-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "User email editable by any authenticated user via user_id param",
+      "route_id": "R-0001",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/user/edit.do"
+      },
+      "location": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "start_line": 13,
+        "end_line": 14
+      },
+      "evidence": [
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "line": 10,
+          "code": "String userId = request.getParameter(\"user_id\");",
+          "why": "ID source is parameter 'user_id' from request"
+        },
+        {
+          "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+          "line": 13,
+          "code": "PreparedStatement ps = conn.prepareStatement(\"UPDATE users SET email = '\" + email + \"' WHERE id = \" + userId);",
+          "why": "No user_id filter applied; relies on trust"
+        }
+      ],
+      "attack_scenario": "User A sends POST /user/edit.do with user_id=<User B's ID> and email=hacked@example.com. User A modifies User B's email.",
+      "impact": "Modification of another user's personal data (email).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add a check to verify the user_id belongs to the current session user before executing the update, or include AND id = currentUserID in the SQL query.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "user_id"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0002",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0003",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0004",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0005",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0006",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0007",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0008",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0013",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0014",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0015",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0017",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0018",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0019",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0001",
+      "verdict": "vulnerable"
+    }
+  ]
+}

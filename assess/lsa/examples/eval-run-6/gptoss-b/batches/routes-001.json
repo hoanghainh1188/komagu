@@ -1,0 +1,778 @@
+{
+  "batch_id": "routes-001",
+  "files": [
+    "classic-asp/shop/member.asp",
+    "classic-asp/shop/order.asp",
+    "coldfusion/app/OrderService.cfc",
+    "coldfusion/app/order.cfm",
+    "dotnet-legacy/Web/Controllers/AdminController.cs",
+    "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+    "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+    "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+    "java-legacy/WebContent/order/detail.jsp",
+    "java-legacy/src/com/acme/struts/EditUserAction.java"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/classic-asp.md",
+    "knowledge/stacks/coldfusion.md",
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/java.md"
+  ],
+  "candidates": [
+    {
+      "stack": "classic-asp",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/member.asp?mode=edit",
+      "handler": {
+        "file": "classic-asp/shop/member.asp",
+        "line": 5,
+        "symbol": "case 'edit'"
+      },
+      "id_params": [
+        {
+          "name": "mode",
+          "source": "any",
+          "line": 4,
+          "is_id_like": false
+        },
+        {
+          "name": "name",
+          "source": "form",
+          "line": 6,
+          "is_id_like": false
+        },
+        {
+          "name": "member_id",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "member_id",
+          "source": "query",
+          "line": 10,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "#include file=\"inc/auth.asp\"",
+          "line": 1
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 6
+        },
+        {
+          "op": "delete",
+          "line": 10
+        }
+      ],
+      "notes": "dispatcher on 'mode' (line 4), case 'edit'",
+      "route_id": "R-0002",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "classic-asp",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/member.asp?mode=delete",
+      "handler": {
+        "file": "classic-asp/shop/member.asp",
+        "line": 9,
+        "symbol": "case 'delete'"
+      },
+      "id_params": [
+        {
+          "name": "mode",
+          "source": "any",
+          "line": 4,
+          "is_id_like": false
+        },
+        {
+          "name": "name",
+          "source": "form",
+          "line": 6,
+          "is_id_like": false
+        },
+        {
+          "name": "member_id",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "member_id",
+          "source": "query",
+          "line": 10,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "#include file=\"inc/auth.asp\"",
+          "line": 1
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 6
+        },
+        {
+          "op": "delete",
+          "line": 10
+        }
+      ],
+      "notes": "dispatcher on 'mode' (line 4), case 'delete'",
+      "route_id": "R-0003",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "write:members"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 9,
+          "hint": "write:members"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "classic-asp",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/order.asp",
+      "handler": {
+        "file": "classic-asp/shop/order.asp",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 5,
+          "is_id_like": true
+        },
+        {
+          "name": "sid",
+          "source": "query",
+          "line": 10,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "#include file=\"inc/auth.asp\"",
+          "line": 1
+        },
+        {
+          "hint": "Session(\"",
+          "line": 12
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 6
+        },
+        {
+          "op": "read",
+          "line": 12
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0004",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "coldfusion",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/coldfusion/app/OrderService.cfc?method=getOrder",
+      "handler": {
+        "file": "coldfusion/app/OrderService.cfc",
+        "line": 2,
+        "symbol": "getOrder"
+      },
+      "id_params": [
+        {
+          "name": "orderId",
+          "source": "any",
+          "line": 2,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 5
+        }
+      ],
+      "notes": "remote CFC method",
+      "route_id": "R-0005",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "coldfusion",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/coldfusion/app/order.cfm",
+      "handler": {
+        "file": "coldfusion/app/order.cfm",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "query",
+          "line": 3,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "session.user",
+          "line": 8
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 3
+        },
+        {
+          "op": "read",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0006",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/Admin/DeleteUser",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 12,
+        "symbol": "AdminController.DeleteUser"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 12,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        },
+        {
+          "hint": "[Authorize(Roles = \"Admin\")]",
+          "line": 21
+        },
+        {
+          "hint": "Authorize(",
+          "line": 21
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 14
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0007",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 12,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST",
+        "POST"
+      ],
+      "path": "/Admin/ResetPassword",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 22,
+        "symbol": "AdminController.ResetPassword"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 22,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize(Roles = \"Admin\")]",
+          "line": 22
+        },
+        {
+          "hint": "Authorize(",
+          "line": 22
+        },
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 24
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0008",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [
+        {
+          "hint": "Authorize(Roles =",
+          "line": 21,
+          "scope": "route"
+        }
+      ],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/Admin/Export",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 30,
+        "symbol": "AdminController.Export"
+      },
+      "id_params": [
+        {
+          "name": "isAdmin",
+          "source": "query",
+          "line": 32,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize(Roles = \"Admin\")]",
+          "line": 30
+        },
+        {
+          "hint": "Authorize(",
+          "line": 30
+        },
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0009",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "path:export"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 32,
+          "hint": "Request.QueryString[\"isAdmin\""
+        },
+        {
+          "signal": "no_role_check",
+          "line": 30,
+          "hint": "path:admin, path:export"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/Invoice/Details",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "line": 11,
+        "symbol": "InvoiceController.Details"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 11,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 13
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0013",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/Invoice/Mine",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "line": 17,
+        "symbol": "InvoiceController.Mine"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 17,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 20
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0014",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/Invoice/Search",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/InvoiceController.cs",
+        "line": 26,
+        "symbol": "InvoiceController.Search"
+      },
+      "id_params": [
+        {
+          "name": "customer",
+          "source": "any",
+          "line": 26,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 28
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0015",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-webforms",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/dotnet-legacy/Web/Orders/EditOrder.aspx",
+      "handler": {
+        "file": "dotnet-legacy/Web/Orders/EditOrder.aspx.vb",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "hfOrderId",
+          "source": "hidden_field",
+          "line": 8,
+          "is_id_like": true
+        },
+        {
+          "name": "txtNote",
+          "source": "form",
+          "line": 7,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 7
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0017",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "dotnet-webforms",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/dotnet-legacy/Web/Orders/OrderDetail.aspx",
+      "handler": {
+        "file": "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "query",
+          "line": 10,
+          "is_id_like": true
+        },
+        {
+          "name": "cart",
+          "source": "form",
+          "line": 20,
+          "is_id_like": false
+        },
+        {
+          "name": "ref",
+          "source": "any",
+          "line": 19,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "Session[\"",
+          "line": 18
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 13
+        },
+        {
+          "op": "read",
+          "line": 16
+        },
+        {
+          "op": "read",
+          "line": 19
+        },
+        {
+          "op": "delete",
+          "line": 20
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0018",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-jsp",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/order/detail.jsp",
+      "handler": {
+        "file": "java-legacy/WebContent/order/detail.jsp",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "no",
+          "source": "any",
+          "line": 3,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 5
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0019",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-struts1",
+      "kind": "declared_route",
+      "method": [
+        "ANY"
+      ],
+      "path": "/user/edit.do",
+      "handler": {
+        "file": "java-legacy/src/com/acme/struts/EditUserAction.java",
+        "line": 8,
+        "symbol": "com.acme.struts.EditUserAction"
+      },
+      "id_params": [
+        {
+          "name": "user_id",
+          "source": "any",
+          "line": 10,
+          "is_id_like": true
+        },
+        {
+          "name": "email",
+          "source": "any",
+          "line": 11,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 12
+        },
+        {
+          "op": "update",
+          "line": 13
+        }
+      ],
+      "notes": "declared in java-legacy/WebContent/WEB-INF/struts-config.xml:4",
+      "route_id": "R-0001",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "batch_id": "routes-003",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0033-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Order detail readable by any authenticated user via id parameter",
+      "route_id": "R-0033",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/:id"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 8,
+        "end_line": 10
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 8,
+          "code": "router.get('/orders/:id', ensureLoggedIn, function (req, res) {",
+          "why": "Route protected by login check only"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 9,
+          "code": "Order.findById(req.params.id, function (err, order) { res.json(order); });",
+          "why": "Query fetches order by id without filtering by owner/user_id"
+        }
+      ],
+      "attack_scenario": "User A sends GET /orders/:id?id=<order id of user B> and receives B's order data.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add owner verification by filtering query with user_id from session/token or load order then compare owner and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0035-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Reports readable by any authenticated user without ownership filter",
+      "route_id": "R-0035",
+      "endpoint": {
+        "method": "GET",
+        "path": "/reports"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 16,
+        "end_line": 18
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 16,
+          "code": "router.get('/reports', ensureLoggedIn, function (req, res) {",
+          "why": "Route protected by login check only"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 17,
+          "code": "db.query(\"SELECT * FROM reports WHERE month = '\" + req.query.month + \"'\", function (e, rows) { res.json(rows); });",
+          "why": "Query fetches all reports without filtering by user_id or owner"
+        }
+      ],
+      "attack_scenario": "User A sends GET /reports?month=2024-01 and receives all users' report data.",
+      "impact": "Read other customers' reports (financial, operational data).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add owner verification by filtering query with user_id from session/token or load reports then compare owner and return 404 on mismatch.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0037-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Item search returns all items without ownership filter",
+      "route_id": "R-0037",
+      "endpoint": {
+        "method": "GET",
+        "path": "/search"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 24,
+        "end_line": 26
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 24,
+          "code": "router.get('/search', ensureLoggedIn, function (req, res) {",
+          "why": "Route protected by login check only"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 25,
+          "code": "db.collection('items').find({ $where: \"this.name == '\" + req.query.n + \"'\" }).toArray(function (e, r) { res.json(r); });",
+          "why": "Query searches all items by name without filtering by user_id or owner"
+        }
+      ],
+      "attack_scenario": "User A sends GET /search?name=product and receives all users' item data.",
+      "impact": "Read other customers' items (names, details).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add owner verification by filtering query with user_id from session/token or load items then compare owner and return 404 on mismatch.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0038-1",
+      "category": "bola",
+      "subtype": "no_authentication",
+      "title": "Stats endpoint lacks authentication guard and exposes order data",
+      "route_id": "R-0038",
+      "endpoint": {
+        "method": "GET",
+        "path": "/stats"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 28,
+        "end_line": 30
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 28,
+          "code": "router.get('/stats', function (req, res) {",
+          "why": "No authentication middleware applied"
+        },
+        {
+          "file": "node-express/routes/orders.js",
+          "line": 29,
+          "code": "db.query(`SELECT COUNT(*) AS n FROM orders WHERE shop_id = ${req.query.shop}`, function (e, r) { res.json(r); });",
+          "why": "Query accesses order data without verifying user identity"
+        }
+      ],
+      "attack_scenario": "Any user sends GET /stats?shop=123 and receives order statistics for that shop.",
+      "impact": "Read order statistics without authentication (potential sensitive business data).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-285",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API5:2023"
+      ],
+      "recommendation": "Add authentication guard middleware and verify user identity before accessing order data.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "BOLA-R-0043-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Perl CGI order endpoint fetches orders without ownership verification",
+      "route_id": "R-0043",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/perl-cgi/cgi-bin/order.cgi"
+      },
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 13,
+        "end_line": 15
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 9,
+          "code": "my $uid = $session->param('user_id');",
+          "why": "User ID from session"
+        },
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "line": 13,
+          "code": "my $sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "why": "Query fetches order by id without filtering by user_id"
+        }
+      ],
+      "attack_scenario": "User A sends request with different order id and receives another user's order data.",
+      "impact": "Read other customers' orders (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification by filtering query with user_id from session or load order then compare owner and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "user_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0044-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice view endpoint fetches invoice without ownership verification",
+      "route_id": "R-0044",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/view/{id}"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 9,
+        "end_line": 12
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 9,
+          "code": "public function view($id) {",
+          "why": "Method takes id parameter"
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "Query fetches invoice by id without filtering by user_id"
+        }
+      ],
+      "attack_scenario": "User A sends request with different invoice id and receives another user's invoice data.",
+      "impact": "Read other customers' invoices (name, address, amount).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification by filtering query with user_id from session or load invoice then compare owner and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0046-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Invoice update endpoint modifies invoice without ownership verification",
+      "route_id": "R-0046",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/update"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 20,
+        "end_line": 24
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 21,
+          "code": "$id = $this->input->post('invoice_id');",
+          "why": "ID from POST parameter"
+        },
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "line": 23,
+          "code": "$this->db->query(\"UPDATE invoices SET note = ? WHERE id = ?\", array($note, $id));",
+          "why": "Update query modifies invoice by id without filtering by user_id"
+        }
+      ],
+      "attack_scenario": "User A sends POST with different invoice_id and modifies another user's invoice.",
+      "impact": "Modify other customers' invoices (notes, data).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add ownership verification by filtering update query with user_id from session or load invoice then compare owner and return 404 on mismatch.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "invoice_id"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0033",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0034",
+      "verdict": "safe",
+      "reason": "query filters by owner: req.user._id in line 13"
+    },
+    {
+      "route_id": "R-0035",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0036",
+      "verdict": "not_applicable",
+      "reason": "login endpoint does not return or modify another user's object"
+    },
+    {
+      "route_id": "R-0037",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0038",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0043",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0044",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0045",
+      "verdict": "safe",
+      "reason": "query filters by user_id from session in line 16"
+    },
+    {
+      "route_id": "R-0046",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0047",
+      "verdict": "not_applicable",
+      "reason": "registration endpoint creates new user, does not access existing user's object"
+    },
+    {
+      "route_id": "R-0048",
+      "verdict": "not_applicable",
+      "reason": "post creation endpoint creates new post, does not access existing user's object"
+    },
+    {
+      "route_id": "R-0049",
+      "verdict": "not_applicable",
+      "reason": "team creation endpoint creates new team, does not access existing user's object"
+    },
+    {
+      "route_id": "R-0050",
+      "verdict": "safe",
+      "reason": "uses request.user() to get authenticated user and updates that specific user's record"
+    },
+    {
+      "route_id": "R-0051",
+      "verdict": "safe",
+      "reason": "uses request.user() to get authenticated user and updates that specific user's record"
+    }
+  ]
+}

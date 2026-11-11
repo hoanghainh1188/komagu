@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-13",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0020",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:17"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates user input directly into the SQL string with no cast, allow\u2011list, or parameter binding. No ownership or role check is present in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0021",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:29"
+      ],
+      "control_found": null,
+      "notes": "The query uses template literal concatenation of req.query.shop without any integer cast or allow\u2011list. No ownership or role check is visible."
+    },
+    {
+      "finding_id": "INJ-I-0022",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:17"
+      ],
+      "control_found": null,
+      "notes": "Same as INJ-I-0020: direct string concatenation of req.query.month with no sanitisation or ownership guard."
+    },
+    {
+      "finding_id": "INJ-I-0023",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "node-express/routes/orders.js:25"
+      ],
+      "control_found": null,
+      "notes": "MongoDB $where clause concatenates req.query.n directly. No cast, allow\u2011list, or parameter binding is present."
+    },
+    {
+      "finding_id": "INJ-I-0024",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "perl-cgi/cgi-bin/order.cgi:13"
+      ],
+      "control_found": null,
+      "notes": "The prepare statement interpolates $id directly into the SQL string. No parameter binding or sanitisation is used."
+    }
+  ]
+}

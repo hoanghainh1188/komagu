@@ -1,0 +1,546 @@
+{
+  "batch_id": "routes-002",
+  "files": [
+    "java-legacy/src/com/acme/web/AccountController.java",
+    "java-legacy/src/com/acme/web/AdminUserController.java",
+    "java-legacy/src/com/acme/web/InvoiceController.java",
+    "java-legacy/src/com/acme/web/OrderServlet.java",
+    "node-express/routes/admin.js"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/java.md",
+    "knowledge/stacks/node-python-ruby.md"
+  ],
+  "candidates": [
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/save",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "line": 13,
+        "symbol": "save"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0020",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/account/rename",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "line": 19,
+        "symbol": "rename"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0021",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "PUT"
+      ],
+      "path": "/account/api",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AccountController.java",
+        "line": 25,
+        "symbol": "update"
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0022",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/{id}/delete",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "line": 13,
+        "symbol": "delete"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 14,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "@PreAuthorize",
+          "line": 19
+        },
+        {
+          "hint": "Authorize(",
+          "line": 19
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0023",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 13,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/{id}/role",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "line": 20,
+        "symbol": "grant"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "role",
+          "source": "query",
+          "line": 21,
+          "is_id_like": false
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 21,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "@PreAuthorize",
+          "line": 19
+        },
+        {
+          "hint": "Authorize(",
+          "line": 19
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0024",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "path:role",
+        "path:grant"
+      ],
+      "role_checks": [
+        {
+          "hint": "@PreAuthorize",
+          "line": 19,
+          "scope": "route"
+        }
+      ],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/invoices/{id}",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "line": 15,
+        "symbol": "show"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 16,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 17
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0025",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/invoices/mine/{id}",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "line": 21,
+        "symbol": "mine"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 22,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0026",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/invoices/search",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/InvoiceController.java",
+        "line": 27,
+        "symbol": "search"
+      },
+      "id_params": [
+        {
+          "name": "customer",
+          "source": "query",
+          "line": 28,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0027",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "java-servlet",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/order/view",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/OrderServlet.java",
+        "line": 8,
+        "symbol": "doGet"
+      },
+      "id_params": [
+        {
+          "name": "orderId",
+          "source": "any",
+          "line": 11,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "session.getAttribute(",
+          "line": 10
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 13
+        },
+        {
+          "op": "read",
+          "line": 15
+        },
+        {
+          "op": "read",
+          "line": 16
+        },
+        {
+          "op": "read",
+          "line": 19
+        }
+      ],
+      "notes": "path from web.xml",
+      "route_id": "R-0028",
+      "needs_audit_hint": true,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/:id/delete",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 8,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 9,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 8
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0030",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 8,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/:id/ban",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 12,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 13,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 12
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0031",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [
+        {
+          "hint": "requireAdmin",
+          "line": 12,
+          "scope": "route"
+        }
+      ],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/reports/export",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 16,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "isAdmin",
+          "source": "query",
+          "line": 17,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 16
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 16
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0032",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:export",
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 17,
+          "hint": "req.query.isAdmin"
+        },
+        {
+          "signal": "no_role_check",
+          "line": 16,
+          "hint": "path:export, path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    }
+  ]
+}

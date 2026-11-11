@@ -1,0 +1,81 @@
+{
+  "batch_id": "verified-11",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0063-1",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "php-plain/profile.php lines 5-11",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": {
+        "file": "php-plain/profile.php",
+        "line": 5,
+        "code": "$user = load_user($_SESSION['uid']);"
+      },
+      "notes": "The code explicitly loads the user object using `$_SESSION['uid']` (server-side identity) before modifying it. The subsequent loop modifies properties on this specific `$user` object instance. Since the object is fetched by the authenticated user's ID, the modification is scoped to that user. This is a safe pattern for self-modification.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "BOLA-R-0068-1",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/settings.php lines 5-10",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": {
+        "file": "php-plain/admin/settings.php",
+        "line": 5,
+        "code": "if ($_SESSION['role'] !== 'admin') { ... exit; }"
+      },
+      "notes": "The code explicitly checks if the session role is 'admin' and exits if it is not. This prevents non-admin users from accessing or modifying global settings. The control is visible in the provided context.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "BOLA-R-0060-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/mongo_find.php lines 5-6",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "The code uses `$_GET['login']` and `$_GET['pass']` directly in the MongoDB query without verifying if the currently authenticated user owns the returned document. The auth check in `inc/auth.php` only ensures a user is logged in, not that they own the data being queried. This allows any authenticated user to look up another user's credentials.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "INJ-I-0001",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp lines 6-8"
+      ],
+      "control_found": null,
+      "notes": "The code constructs an SQL query by concatenating `Request.Form(\"name\")` directly into the string. There is no parameter binding, integer casting, or allow-list validation visible in the provided context. This is a classic SQL Injection vector.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    },
+    {
+      "finding_id": "INJ-I-0002",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/member.asp lines 7-8"
+      ],
+      "control_found": null,
+      "notes": "The code constructs an SQL query by concatenating `Request.Form(\"member_id\")` directly into the string. There is no parameter binding or integer casting visible in the provided context. This is a classic SQL Injection vector.",
+      "suggested_subtype": null,
+      "suggested_cwe": null
+    }
+  ]
+}

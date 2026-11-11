@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-16",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0008",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/InvoiceController.cs:26-28"
+      ],
+      "control_found": null,
+      "notes": "The code concatenates the user\u2011supplied customer string directly into the SQL query. No parameter binding, cast, or ownership/role check is visible in the provided context."
+    },
+    {
+      "finding_id": "INJ-I-0015",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/mapper/OrderMapper.xml:9"
+      ],
+      "control_found": null,
+      "notes": "The ORDER BY clause interpolates the ${orderBy} variable without any visible allow\u2011list or type enforcement in the snippet."
+    },
+    {
+      "finding_id": "INJ-I-0018",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/OrderServlet.java:15-17"
+      ],
+      "control_found": null,
+      "notes": "Both SQL statements build the query string by concatenating the request parameter `id` directly. No cast, parameter binding, or ownership check is shown."
+    },
+    {
+      "finding_id": "INJ-I-0019",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/OrderServlet.java:15-17"
+      ],
+      "control_found": null,
+      "notes": "Same code as INJ-I-0018; no visible mitigation."
+    },
+    {
+      "finding_id": "INJ-I-0026",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-codeigniter/application/controllers/Invoice.php:10"
+      ],
+      "control_found": null,
+      "notes": "The `view` method concatenates the `$id` variable directly into the query. No parameter binding, cast, or ownership check is present in the snippet."
+    }
+  ]
+}
