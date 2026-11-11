@@ -8,7 +8,7 @@ scanning** (repository → *Security* → *Code scanning*).
 
 - Findings **never fail** a scanner job. A scanner that crashes still fails its job,
   so a broken scanner stays visible.
-- The workflow runs on pull requests that touch scannable files, on every push to
+- The workflow runs on every pull request, on every push to
   `main`, every Monday at 02:17 UTC, and on demand (`workflow_dispatch`).
 - SARIF upload is skipped for fork and Dependabot pull requests, because their
   token is read-only. Those PRs still run the scanners.
@@ -26,7 +26,7 @@ scanning** (repository → *Security* → *Code scanning*).
 | `kotlin` | Detekt 1.23.8 CLI + Komagu `StringBuiltSqlQuery` rule | `detekt` | `remediate/*/spring`, member-portal Spring backend |
 | `codeql` | CodeQL `security-extended` | `/language:<lang>` | python, go, csharp, javascript-typescript, actions |
 | `trivy` | Trivy 0.76.0 `fs` (vuln, secret, misconfig) | `trivy-fs` | Repository, minus exclusions |
-| `trivy` | Trivy 0.76.0 `image` | `trivy-image` | Root `Dockerfile` (not on PRs) |
+| `trivy` | Trivy 0.76.0 `image` | `trivy-image` | Root `Dockerfile` |
 
 Notes:
 
@@ -84,17 +84,19 @@ What remains suppressed, each with its reason next to the code:
 | SBOM manifest parsing | Bandit B314 | DTDs refused before parsing |
 | Member-portal Spring demo | Detekt `LongParameterList`, `LongMethod`, `ReturnCount`, `SpreadOperator` | JPA entities, seed data, side-by-side planted and fixed endpoints, Spring Boot `main` |
 
-**Ruleset.** *Require code scanning results* on `main` for every tool that
+**Ruleset** (enabled 2026-11-11, "Require code scanning results (main)"). *Require code scanning results* on `main` for every tool that
 uploads on pull requests (CodeQL, Bandit, golangci-lint, govulncheck,
 Microsoft (R) Visual C# Compiler, detekt, Trivy), with:
 
 - security alerts threshold *High or higher*;
 - alerts threshold *Errors*.
 
-Before relying on it, check that a docs-only pull request is not blocked:
-`Security Scan` runs on pull requests only for the paths listed in the
-workflow, so such a PR has no analysis for the required tools. If it is
-blocked, drop the `paths` filter so every pull request is scanned.
+The ruleset blocks a pull request that has no analysis for a required tool.
+A docs-only PR was blocked while `Security Scan` ran only for listed paths
+(#389), so the workflow now runs on every pull request. For the same reason the
+Trivy image scan runs on pull requests too: when a configuration present on
+`main` (`trivy-image`) is missing on a PR, code scanning marks the tool neutral
+and the ruleset blocks the merge.
 
 **pip-audit and NuGet audit** report to the job summary only and do not reach
 code scanning, so the ruleset does not see them. Proposal, not yet applied:
