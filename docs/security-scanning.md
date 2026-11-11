@@ -6,7 +6,7 @@ scanning** (repository → *Security* → *Code scanning*).
 
 ## Phase 1: report-only scanners
 
-- Findings **never fail** a scanner job. A scanner that crashes still fails its job,
+- Findings **never fail** a scanner job, except the two dependency gates below. A scanner that crashes still fails its job,
   so a broken scanner stays visible.
 - The workflow runs on every pull request, on every push to
   `main`, every Monday at 02:17 UTC, and on demand (`workflow_dispatch`).
@@ -18,11 +18,13 @@ scanning** (repository → *Security* → *Code scanning*).
 | Job | Tool | Category | Scope |
 |---|---|---|---|
 | `python` | Bandit 1.9.4 (medium and above) | `bandit` | All Python, minus exclusions |
-| `python` | pip-audit 2.10.1 | job summary only | Every `requirements*.txt` |
+| `python` | pip-audit 2.10.1 | job summary only | Every `requirements*.txt`, newest versions |
+| `python` | pip-audit 2.10.1, `audit_minimum_versions.py` | job summary; **fails** the job | Every `requirements*.txt`, lowest allowed versions |
 | `go` | golangci-lint 2.15.0 (gosec, errcheck, staticcheck, ...) | `golangci-lint` | `remediate/authz/golang` |
 | `go` | govulncheck 1.9.0 | `govulncheck` | `remediate/authz/golang` |
 | `dotnet` | Roslyn analyzers (`latest-recommended`, security = all) | `roslyn` | `remediate/*/dotnet/src`, member-portal backend |
 | `dotnet` | `dotnet list package --vulnerable` | job summary only | Same projects |
+| `dotnet` | NuGet audit (`dotnet restore`, High and Critical) | **fails** the job | Same projects, transitive included |
 | `kotlin` | Detekt 1.23.8 CLI + Komagu `StringBuiltSqlQuery` rule | `detekt` | `remediate/*/spring`, member-portal Spring backend |
 | `codeql` | CodeQL `security-extended` | `/language:<lang>` | python, go, csharp, javascript-typescript, actions |
 | `trivy` | Trivy 0.76.0 `fs` (vuln, secret, misconfig) | `trivy-fs` | Repository, minus exclusions |
@@ -98,7 +100,17 @@ Trivy image scan runs on pull requests too: when a configuration present on
 `main` (`trivy-image`) is missing on a PR, code scanning marks the tool neutral
 and the ruleset blocks the merge.
 
-**pip-audit and NuGet audit** report to the job summary only and do not reach
-code scanning, so the ruleset does not see them. Proposal, not yet applied:
-fail the job on a vulnerable dependency that has a fixed version, and keep
-report-only for those without a fix.
+**Dependency gates (#390).** pip-audit and NuGet audit do not report to code
+scanning, so the ruleset does not see them. They fail their job instead:
+
+- **Python, lowest allowed version.** The requirements files use `>=`, so
+  pip-audit resolves the newest release, which already has every fix. A client
+  that keeps an older version still satisfies the range.
+  `.github/scripts/audit_minimum_versions.py` audits `name==X` for every
+  `name>=X` and fails on a vulnerability that has a fixed version; raise the
+  minimum to fix it. Vulnerabilities without a fixed version are listed only.
+  This raised `cryptography` to `>=50.0.0` and `pyjwt` to `>=2.15.0`.
+- **NuGet, High and Critical.** `dotnet restore` with `NuGetAuditMode=all`
+  turns NU1903 (High) and NU1904 (Critical) into errors, transitive packages
+  included. NuGet does not say whether a fix exists, so severity is the gate,
+  matching the ruleset's *High or higher*.
