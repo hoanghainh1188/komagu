@@ -1,0 +1,69 @@
+{
+  "batch_id": "verified-18",
+  "verifications": [
+    {
+      "finding_id": "BFLA-R-0023-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/AdminUserController.java",
+        "java-legacy/src/com/acme/web/AdminUserController.java lines 13-15",
+        "java-legacy/src/com/acme/web/AdminUserController.java lines 19-23"
+      ],
+      "control_found": null,
+      "notes": "No @PreAuthorize or other role check is visible on the delete method. Global security configuration is not shown."
+    },
+    {
+      "finding_id": "BFLA-R-0030-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "node-express/routes/admin.js",
+        "node-express/routes/admin.js lines 8-9",
+        "node-express/routes/admin.js lines 5-6"
+      ],
+      "control_found": null,
+      "notes": "The delete route only uses ensureLoggedIn; no admin guard is present in the visible code."
+    },
+    {
+      "finding_id": "BFLA-R-0032-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "node-express/routes/admin.js",
+        "node-express/routes/admin.js lines 16-18"
+      ],
+      "control_found": null,
+      "notes": "Export endpoint checks only a query parameter; no role validation is visible."
+    },
+    {
+      "finding_id": "BFLA-R-0057-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php",
+        "php-plain/admin.php lines 6-9",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "Only a login check is performed; no admin role check is present in the visible code."
+    },
+    {
+      "finding_id": "BFLA-R-0058-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-plain/admin.php",
+        "php-plain/admin.php lines 10-12",
+        "php-plain/inc/auth.php"
+      ],
+      "control_found": null,
+      "notes": "The delete action lacks any admin role verification in the visible code."
+    }
+  ]
+}

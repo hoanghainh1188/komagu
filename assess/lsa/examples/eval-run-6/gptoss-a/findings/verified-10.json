@@ -1,0 +1,68 @@
+{
+  "batch_id": "verified-10",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0001",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp lines 6-8",
+        "classic-asp/shop/inc/auth.asp lines 1-3"
+      ],
+      "control_found": null,
+      "notes": "No ownership or role check is visible in the code context. The authentication include only verifies that a user is logged in, not that the user owns the member record."
+    },
+    {
+      "finding_id": "INJ-I-0002",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp lines 6-8",
+        "classic-asp/shop/inc/auth.asp lines 1-3"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates the member_id from the form with no ownership or role guard shown in the context."
+    },
+    {
+      "finding_id": "INJ-I-0003",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/member.asp lines 9-11",
+        "classic-asp/shop/inc/auth.asp lines 1-3"
+      ],
+      "control_found": null,
+      "notes": "The DELETE statement uses a member_id from the query string with no visible ownership check."
+    },
+    {
+      "finding_id": "INJ-I-0004",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "classic-asp/shop/order.asp lines 5-7",
+        "classic-asp/shop/inc/auth.asp lines 1-3"
+      ],
+      "control_found": null,
+      "notes": "The SELECT query uses an id from the request without casting or an ownership guard in the visible code."
+    },
+    {
+      "finding_id": "INJ-I-0005",
+      "verdict": "rejected",
+      "reason_code": "control_found",
+      "confidence": "high",
+      "checked": [
+        "classic-asp/shop/order.asp lines 10-12"
+      ],
+      "control_found": {
+        "file": "classic-asp/shop/order.asp",
+        "line": 12,
+        "code": "Set rs2 = conn.Execute(\"SELECT * FROM orders WHERE id = \" & sid & \" AND user_id = \" & CLng(Session(\"UserID\")))"
+      },
+      "notes": "The query includes an ownership check by binding the user_id to the session value and casts the sid to a long, preventing injection and ensuring the user can only access their own orders."
+    }
+  ]
+}

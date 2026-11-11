@@ -1,0 +1,124 @@
+{
+  "batch_id": "privilege-002",
+  "files": [
+    "node-express/routes/profile.js",
+    "php-laravel/app/Http/Controllers/AccountController.php",
+    "php-plain/register.php",
+    "python-flask/profile.py"
+  ],
+  "knowledge_files": [
+    "knowledge/bfla-patterns.md",
+    "knowledge/mass-assignment-patterns.md",
+    "knowledge/stacks/node-python-ruby.md",
+    "knowledge/stacks/php.md"
+  ],
+  "routes": [],
+  "mass_candidates": [
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 8,
+      "language": "js",
+      "rule": "js-model-call",
+      "subtype": "whole_object_binding",
+      "target": "User",
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "User.findByIdAndUpdate(req.user._id, req.body, function (e, u) { res.json(u); });",
+      "candidate_id": "M-0006"
+    },
+    {
+      "file": "node-express/routes/profile.js",
+      "line": 16,
+      "language": "js",
+      "rule": "js-model-call",
+      "subtype": "whole_object_binding",
+      "target": "User",
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "var user = new User(req.body);",
+      "candidate_id": "M-0007"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 13,
+      "language": "php",
+      "rule": "php-eloquent-static",
+      "subtype": "whole_object_binding",
+      "target": "User",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "return User::create($request->all());",
+      "candidate_id": "M-0008"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 23,
+      "language": "php",
+      "rule": "php-eloquent-static",
+      "subtype": "privileged_field_writable",
+      "target": "Team",
+      "allowlist": "seen",
+      "priority": "high",
+      "sensitive_fields": [
+        "owner_id"
+      ],
+      "code": "return Team::create($request->all());",
+      "candidate_id": "M-0009"
+    },
+    {
+      "file": "php-laravel/app/Http/Controllers/AccountController.php",
+      "line": 36,
+      "language": "php",
+      "rule": "php-eloquent-fill",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "$user->fill($request->all())->save();",
+      "candidate_id": "M-0010"
+    },
+    {
+      "file": "php-plain/register.php",
+      "line": 4,
+      "language": "php",
+      "rule": "php-extract",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "extract($_POST);",
+      "candidate_id": "M-0013"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 27,
+      "language": "python",
+      "rule": "py-items-loop",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "for key, value in request.json.items():",
+      "candidate_id": "M-0015"
+    },
+    {
+      "file": "python-flask/profile.py",
+      "line": 10,
+      "language": "python",
+      "rule": "py-kwargs-request",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "medium",
+      "sensitive_fields": [],
+      "code": "user = User(**request.json)",
+      "candidate_id": "M-0014"
+    }
+  ]
+}

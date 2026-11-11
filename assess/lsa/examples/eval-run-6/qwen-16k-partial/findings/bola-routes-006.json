@@ -1,0 +1,67 @@
+{
+  "batch_id": "routes-006",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0065-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Product search returns all products without user ownership verification",
+      "route_id": "R-0065",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/search.php"
+      },
+      "location": {
+        "file": "php-plain/search.php",
+        "start_line": 7,
+        "end_line": 15
+      },
+      "evidence": [
+        {
+          "file": "php-plain/search.php",
+          "line": 7,
+          "code": "$sql = \"SELECT id, name FROM products WHERE 1=1\";",
+          "why": "Query starts without user_id filter"
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 8,
+          "code": "$sql .= \" AND name LIKE '%\" . $kw . \"%'\";",
+          "why": "Only filters by search term, no ownership check"
+        },
+        {
+          "file": "php-plain/search.php",
+          "line": 14,
+          "code": "WHERE category = '{$_GET['cat']}'",
+          "why": "Category filter only, no user_id or owner binding"
+        }
+      ],
+      "attack_scenario": "Authenticated User A sends GET /search.php?q=widget&cat=electronics with another user's product ID in results and receives products they don't own.",
+      "impact": "Read other customers' product data (names, categories, potentially prices if returned).",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639"
+      ],
+      "owasp": [
+        "API1:2023"
+      ],
+      "recommendation": "Add AND user_id = :current_user_id to all product queries, or load products then compare owner and return 404 on mismatch",
+      "status": "unverified"
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0064",
+      "verdict": "not_applicable",
+      "reason": "Registration endpoint creates new user records; no object identifier to manipulate for accessing another user's existing data"
+    },
+    {
+      "route_id": "R-0065",
+      "verdict": "vulnerable",
+      "finding_ids": [
+        "BOLA-R-0065-1"
+      ]
+    }
+  ]
+}

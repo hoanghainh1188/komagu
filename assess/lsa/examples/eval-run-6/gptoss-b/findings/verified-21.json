@@ -1,0 +1,62 @@
+{
+  "batch_id": "verified-21",
+  "verifications": [
+    {
+      "finding_id": "MASS-M-0001-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:12-15"
+      ],
+      "control_found": null,
+      "notes": "The Edit action accepts a full Customer model and persists it without any ownership or allow\u2011list checks. No role or ownership guard is visible in the provided code."
+    },
+    {
+      "finding_id": "MASS-M-0002-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Controllers/CustomerController.cs:27-31"
+      ],
+      "control_found": null,
+      "notes": "TryUpdateModel binds all request parameters to the Customer entity, and there is no visible ownership or allow\u2011list enforcement before saving."
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php:11-14",
+        "php-laravel/app/Models/User.php:6-9"
+      ],
+      "control_found": null,
+      "notes": "User::create($request->all()) uses a model with $guarded = [], allowing all attributes\u2014including 'role'\u2014to be mass\u2011assigned. No server\u2011side role assignment or guard is present."
+    },
+    {
+      "finding_id": "MASS-M-0009-1",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/app/Http/Controllers/AccountController.php:21-24",
+        "php-laravel/app/Models/Team.php:6-9"
+      ],
+      "control_found": null,
+      "notes": "Team::create($request->all()) allows 'owner_id' to be set via the request. No server\u2011side assignment of the current user\u2019s ID is performed."
+    },
+    {
+      "finding_id": "MASS-M-0006-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "node-express/routes/profile.js:7-9"
+      ],
+      "control_found": null,
+      "notes": "User.findByIdAndUpdate(req.user._id, req.body, ...) updates the user document with the entire request body, exposing all fields to client manipulation. No allow\u2011list or role guard is visible."
+    }
+  ]
+}

@@ -1,0 +1,838 @@
+{
+  "batch_id": "privilege-001",
+  "files": [
+    "classic-asp/shop/member.asp",
+    "dotnet-legacy/Web/Controllers/AdminController.cs",
+    "dotnet-legacy/Web/Controllers/CustomerController.cs",
+    "java-legacy/src/com/acme/web/AccountController.java",
+    "java-legacy/src/com/acme/web/AdminUserController.java",
+    "java-legacy/src/com/acme/web/ProfileServlet.java",
+    "node-express/routes/admin.js",
+    "php-plain/admin.php",
+    "php-plain/admin/delete_user.php",
+    "php-plain/admin/promote.php",
+    "php-plain/manage_users.php",
+    "php-plain/profile.php"
+  ],
+  "knowledge_files": [
+    "knowledge/bfla-patterns.md",
+    "knowledge/mass-assignment-patterns.md",
+    "knowledge/stacks/classic-asp.md",
+    "knowledge/stacks/dotnet.md",
+    "knowledge/stacks/java.md",
+    "knowledge/stacks/node-python-ruby.md",
+    "knowledge/stacks/php.md"
+  ],
+  "routes": [
+    {
+      "stack": "classic-asp",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/classic-asp/shop/member.asp?mode=delete",
+      "handler": {
+        "file": "classic-asp/shop/member.asp",
+        "line": 9,
+        "symbol": "case 'delete'"
+      },
+      "id_params": [
+        {
+          "name": "mode",
+          "source": "any",
+          "line": 4,
+          "is_id_like": false
+        },
+        {
+          "name": "name",
+          "source": "form",
+          "line": 6,
+          "is_id_like": false
+        },
+        {
+          "name": "member_id",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "member_id",
+          "source": "query",
+          "line": 10,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "#include file=\"inc/auth.asp\"",
+          "line": 1
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 6
+        },
+        {
+          "op": "delete",
+          "line": 10
+        }
+      ],
+      "notes": "dispatcher on 'mode' (line 4), case 'delete'",
+      "route_id": "R-0003",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "write:members"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 9,
+          "hint": "write:members"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/Admin/DeleteUser",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 12,
+        "symbol": "AdminController.DeleteUser"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "any",
+          "line": 12,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        },
+        {
+          "hint": "[Authorize(Roles = \"Admin\")]",
+          "line": 21
+        },
+        {
+          "hint": "Authorize(",
+          "line": 21
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 14
+        }
+      ],
+      "notes": "path is convention-based",
+      "route_id": "R-0007",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 12,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "dotnet-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/Admin/Export",
+      "handler": {
+        "file": "dotnet-legacy/Web/Controllers/AdminController.cs",
+        "line": 30,
+        "symbol": "AdminController.Export"
+      },
+      "id_params": [
+        {
+          "name": "isAdmin",
+          "source": "query",
+          "line": 32,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "[Authorize(Roles = \"Admin\")]",
+          "line": 30
+        },
+        {
+          "hint": "Authorize(",
+          "line": 30
+        },
+        {
+          "hint": "[Authorize]",
+          "line": 6
+        }
+      ],
+      "data_hints": [],
+      "notes": "path is convention-based",
+      "route_id": "R-0009",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "path:export"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 32,
+          "hint": "Request.QueryString[\"isAdmin\""
+        },
+        {
+          "signal": "no_role_check",
+          "line": 30,
+          "hint": "path:admin, path:export"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "java-spring-mvc",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/{id}/delete",
+      "handler": {
+        "file": "java-legacy/src/com/acme/web/AdminUserController.java",
+        "line": 13,
+        "symbol": "delete"
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 14,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "@PreAuthorize",
+          "line": 19
+        },
+        {
+          "hint": "Authorize(",
+          "line": 19
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0023",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 13,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "POST"
+      ],
+      "path": "/admin/users/:id/delete",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 8,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "path",
+          "line": null,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "path",
+          "line": 9,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 8
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0030",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 8,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "node-express",
+      "kind": "declared_route",
+      "method": [
+        "GET"
+      ],
+      "path": "/reports/export",
+      "handler": {
+        "file": "node-express/routes/admin.js",
+        "line": 16,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "isAdmin",
+          "source": "query",
+          "line": 17,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "ensureLoggedIn",
+          "line": 16
+        },
+        {
+          "hint": "ensureLoggedIn",
+          "line": 5
+        },
+        {
+          "hint": "req.user",
+          "line": 5
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 16
+        }
+      ],
+      "notes": "check app.use() order and router mount prefix",
+      "route_id": "R-0032",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:export",
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 17,
+          "hint": "req.query.isAdmin"
+        },
+        {
+          "signal": "no_role_check",
+          "line": 16,
+          "hint": "path:export, path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/php-plain/admin.php?action=view",
+      "handler": {
+        "file": "php-plain/admin.php",
+        "line": 6,
+        "symbol": "case 'view'"
+      },
+      "id_params": [
+        {
+          "name": "action",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "uid",
+          "source": "query",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "form",
+          "line": 11,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 8
+        },
+        {
+          "op": "delete",
+          "line": 12
+        }
+      ],
+      "notes": "dispatcher on 'action' (line 5), case 'view'",
+      "route_id": "R-0057",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 6,
+          "hint": "path:admin"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET",
+        "POST"
+      ],
+      "path": "/php-plain/admin.php?action=delete",
+      "handler": {
+        "file": "php-plain/admin.php",
+        "line": 10,
+        "symbol": "case 'delete'"
+      },
+      "id_params": [
+        {
+          "name": "action",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "uid",
+          "source": "query",
+          "line": 7,
+          "is_id_like": true
+        },
+        {
+          "name": "id",
+          "source": "form",
+          "line": 11,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 8
+        },
+        {
+          "op": "delete",
+          "line": 12
+        }
+      ],
+      "notes": "dispatcher on 'action' (line 5), case 'delete'",
+      "route_id": "R-0058",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 10,
+          "hint": "path:admin, write:users"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/delete_user.php",
+      "handler": {
+        "file": "php-plain/admin/delete_user.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "form",
+          "line": 5,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once '../inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "delete",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0066",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "no_role_check",
+          "line": 1,
+          "hint": "path:admin, write:users"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/admin/promote.php",
+      "handler": {
+        "file": "php-plain/admin/promote.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "is_admin",
+          "source": "form",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "uid",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once '../inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "update",
+          "line": 6
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0067",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:admin",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 5,
+          "hint": "$_POST['is_admin'"
+        },
+        {
+          "signal": "no_role_check",
+          "line": 1,
+          "hint": "path:admin, write:users"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/manage_users.php",
+      "handler": {
+        "file": "php-plain/manage_users.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "id",
+          "source": "form",
+          "line": 7,
+          "is_id_like": true
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        },
+        {
+          "hint": "$_SESSION[",
+          "line": 11
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "delete",
+          "line": 6
+        },
+        {
+          "op": "delete",
+          "line": 11
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0059",
+      "needs_audit_hint": true,
+      "privilege_hint": "privileged",
+      "privilege_reasons": [
+        "path:manage",
+        "write:users"
+      ],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "client_side_role_check",
+          "line": 11,
+          "hint": "$_SESSION['role']"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "POST"
+      ],
+      "path": "/php-plain/profile.php",
+      "handler": {
+        "file": "php-plain/profile.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "nickname",
+          "source": "form",
+          "line": 9,
+          "is_id_like": false
+        },
+        {
+          "name": "role",
+          "source": "form",
+          "line": 10,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        },
+        {
+          "hint": "$_SESSION[",
+          "line": 5
+        }
+      ],
+      "data_hints": [],
+      "notes": "",
+      "route_id": "R-0063",
+      "needs_audit_hint": false,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [
+        {
+          "signal": "role_from_request",
+          "line": 10,
+          "hint": "$_POST['role'"
+        }
+      ],
+      "needs_bfla_audit_hint": true
+    }
+  ],
+  "mass_candidates": [
+    {
+      "file": "php-plain/profile.php",
+      "line": 6,
+      "language": "php",
+      "rule": "php-foreach-input",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "foreach ($_POST as $field => $value) {",
+      "candidate_id": "M-0011"
+    },
+    {
+      "file": "php-plain/profile.php",
+      "line": 10,
+      "language": "php",
+      "rule": "php-privileged-field",
+      "subtype": "privileged_field_writable",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [
+        "role"
+      ],
+      "code": "$user->role = $_POST['role'];",
+      "candidate_id": "M-0012"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 12,
+      "language": "cs",
+      "rule": "cs-entity-binding",
+      "subtype": "whole_object_binding",
+      "target": "Customer",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "public ActionResult Edit(Customer customer)",
+      "candidate_id": "M-0001"
+    },
+    {
+      "file": "dotnet-legacy/Web/Controllers/CustomerController.cs",
+      "line": 30,
+      "language": "cs",
+      "rule": "cs-update-model",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "TryUpdateModel(customer);",
+      "candidate_id": "M-0002"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 14,
+      "language": "java",
+      "rule": "java-entity-binding",
+      "subtype": "whole_object_binding",
+      "target": "Account",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "public String save(@ModelAttribute Account account) {",
+      "candidate_id": "M-0003"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/AccountController.java",
+      "line": 27,
+      "language": "java",
+      "rule": "java-entity-binding",
+      "subtype": "whole_object_binding",
+      "target": "Account",
+      "allowlist": "none",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "public Account update(@RequestBody Account account) {",
+      "candidate_id": "M-0004"
+    },
+    {
+      "file": "java-legacy/src/com/acme/web/ProfileServlet.java",
+      "line": 12,
+      "language": "java",
+      "rule": "java-beanutils-populate",
+      "subtype": "whole_object_binding",
+      "target": null,
+      "allowlist": "unknown",
+      "priority": "high",
+      "sensitive_fields": [],
+      "code": "BeanUtils.populate(account, request.getParameterMap());",
+      "candidate_id": "M-0005"
+    }
+  ]
+}

@@ -88,12 +88,12 @@ Nhằm đáp ứng linh hoạt theo chính sách bảo mật nội bộ của t�
 
 | Đặc tính kỹ thuật | **Phương án A: On-Premises / Air-Gapped (Khuyên dùng cho khối tài chính/y tế)** | **Phương án B: Private Enterprise Cloud (Khuyên dùng cho khối thương mại/dịch vụ)** |
 |---|---|---|
-| **Mô hình AI** | Open-weight model chạy qua endpoint tương thích OpenAI (Ollama / vLLM). Đã đo: `gpt-oss:20b` trên Apple M4 Pro 24 GB (Run 4–5, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)). Máy chủ GPU của khách hàng có thể chạy model lớn hơn | Model enterprise do khách hàng chấp thuận (ví dụ Claude trên AWS Bedrock Tokyo, GPT trên Azure OpenAI Japan East). **Chưa đo ở chế độ headless**: phải đo trên repo eval trước khi chạy pilot (runbook bước P4) |
+| **Mô hình AI** | Open-weight model chạy qua endpoint tương thích OpenAI (Ollama / vLLM). Đã đo: `gpt-oss:20b` trên Apple M4 Pro 24 GB (Run 6, v2.5.0 có che secret, [EVAL-RESULTS](../assess/lsa/tests/EVAL-RESULTS.md)): 40–56 phút cho repo eval. Máy chủ GPU của khách hàng có thể chạy model lớn hơn | Model enterprise do khách hàng chấp thuận (ví dụ Claude trên AWS Bedrock Tokyo, GPT trên Azure OpenAI Japan East). **Chưa đo ở chế độ headless**: phải đo trên repo eval trước khi chạy pilot (runbook bước P4) |
 | **Hạ tầng máy chủ** | Chạy trên Private GPU Server nội bộ của khách hàng hoặc Máy trạm cô lập (Offshore Dedicated Workstation) không kết nối Internet | Chạy qua Microsoft Azure OpenAI (Japan East/West) hoặc AWS Bedrock (Tokyo Region) |
 | **Kết nối mạng** | Hoàn toàn Offline / Air-Gapped (Mạng nội bộ cách ly) | Kết nối bảo mật TLS 1.3 qua Private Endpoint / VPC Peering |
 | **Chính sách lưu vết** | Dữ liệu không bao giờ rời khỏi hạ tầng chỉ định | Hợp đồng Enterprise Zero Data Retention (ZDR), không lưu trữ prompt. **Cần kiểm tra điều khoản hiện hành của nhà cung cấp trước khi cam kết**, ví dụ chế độ lưu prompt để giám sát lạm dụng (abuse monitoring) của Azure OpenAI và thủ tục xin miễn |
 | **Phù hợp chính sách** | Khách hàng cấm tuyệt đối truyền mã nguồn ra ngoài mạng nội bộ | Khách hàng cho phép dùng Cloud có bảo chứng Enterprise Compliance |
-| **Đánh đổi** | Không có rủi ro truyền dữ liệu; model nhỏ cho độ chính xác thấp hơn (Run 5: BOLA 24/25 ở run A nhưng 12/25 ở run B, do lỗi JSON đã sửa ở #323) | Độ chính xác dự kiến cao hơn; phụ thuộc hợp đồng và vùng dữ liệu |
+| **Đánh đổi** | Không có rủi ro truyền dữ liệu; model nhỏ cho độ chính xác thấp hơn (Run 6, 2 lần chạy: BOLA 26/29, injection 34/34, BFLA 10/10, mass assignment 14/15, precision 0,79–0,81, 1 báo sai trên code an toàn mỗi lần) | Độ chính xác dự kiến cao hơn; phụ thuộc hợp đồng và vùng dữ liệu |
 
 Cả hai phương án dùng chung một lệnh (`komagu scan --headless-ai <endpoint> --model <model>`), chỉ khác endpoint. Có thể chuẩn bị song song và chốt khi khách hàng chọn.
 

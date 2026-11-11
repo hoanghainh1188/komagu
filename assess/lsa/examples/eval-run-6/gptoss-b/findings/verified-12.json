@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-12",
+  "verifications": [
+    {
+      "finding_id": "INJ-I-0012",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 13-22"
+      ],
+      "control_found": null,
+      "notes": "The code concatenates user input into SQL statements (sql2 and sql3) and executes them. No ownership or role check, integer cast, or parameter binding is visible in the provided context."
+    },
+    {
+      "finding_id": "INJ-I-0013",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "dotnet-legacy/Web/Orders/OrderDetail.aspx.cs lines 13-22"
+      ],
+      "control_found": null,
+      "notes": "Same as INJ-I-0012: the DELETE query uses unsanitized input and is executed. No control is shown in the context."
+    },
+    {
+      "finding_id": "INJ-I-0014",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/WebContent/order/detail.jsp lines 1-6"
+      ],
+      "control_found": null,
+      "notes": "The query concatenates the request parameter \"no\" directly into the SQL string and is executed. No ownership or role check is present in the snippet."
+    },
+    {
+      "finding_id": "INJ-I-0016",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/struts/EditUserAction.java lines 10-15"
+      ],
+      "control_found": null,
+      "notes": "The UPDATE statement concatenates user-supplied email and userId into the SQL string. No ownership or role check is visible in the provided context."
+    },
+    {
+      "finding_id": "INJ-I-0017",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "java-legacy/src/com/acme/web/InvoiceController.java lines 27-30"
+      ],
+      "control_found": null,
+      "notes": "The HQL query concatenates the \"customer\" request parameter directly into the query string and is executed. No ownership or role check is shown in the snippet."
+    }
+  ]
+}

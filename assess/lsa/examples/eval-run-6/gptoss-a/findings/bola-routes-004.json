@@ -1,0 +1,561 @@
+{
+  "batch_id": "routes-004",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0057-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /account/rename: missing owner verification",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "GET",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 7,
+          "code": "$uid = (int)$_GET['uid'];",
+          "why": "Object ID comes from the request",
+          "line": 7
+        },
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 8,
+          "code": "$r = mysql_query(\"SELECT * FROM users WHERE id = \" . $uid);",
+          "why": "Query does not restrict by current user",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership after fetching the record",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0057-2",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /account/rename: missing owner verification",
+      "route_id": "R-0057",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "Object ID comes from the request",
+          "line": 11
+        },
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "Delete query does not restrict by current user",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership before deletion",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0058-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /account/rename: missing owner verification",
+      "route_id": "R-0058",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "location": {
+        "file": "php-plain/admin.php",
+        "start_line": 11
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 11,
+          "code": "$id = $_POST['id'];",
+          "why": "Object ID comes from the request",
+          "line": 11
+        },
+        {
+          "file": "php-plain/admin.php",
+          "start_line": 12,
+          "code": "mysql_query(\"DELETE FROM users WHERE id = $id\");",
+          "why": "Delete query does not restrict by current user",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership before deletion",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0066-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /php-plain/admin/delete_user.php: missing owner verification",
+      "route_id": "R-0066",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/delete_user.php"
+      },
+      "location": {
+        "file": "php-plain/admin/delete_user.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "start_line": 5,
+          "code": "$id = (int)$_POST['id'];",
+          "why": "Object ID comes from the request",
+          "line": 5
+        },
+        {
+          "file": "php-plain/admin/delete_user.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "Query does not restrict by current user",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership before deletion",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0067-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /php-plain/admin/promote.php: missing owner verification",
+      "route_id": "R-0067",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/admin/promote.php"
+      },
+      "location": {
+        "file": "php-plain/admin/promote.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/admin/promote.php",
+          "start_line": 5,
+          "code": "if ($_POST['is_admin'] == '1') {",
+          "why": "Object ID comes from the request",
+          "line": 5
+        },
+        {
+          "file": "php-plain/admin/promote.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"UPDATE users SET role = 'admin' WHERE id = ?\");",
+          "why": "Query does not restrict by current user",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership before role change",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "uid"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0059-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in POST /php-plain/manage_users.php: missing owner verification",
+      "route_id": "R-0059",
+      "endpoint": {
+        "method": "POST",
+        "path": "/php-plain/manage_users.php"
+      },
+      "location": {
+        "file": "php-plain/manage_users.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/manage_users.php",
+          "start_line": 5,
+          "code": "if ($_SERVER['REQUEST_METHOD'] === 'POST') {",
+          "why": "Object ID comes from the request",
+          "line": 5
+        },
+        {
+          "file": "php-plain/manage_users.php",
+          "start_line": 6,
+          "code": "$stmt = $db->prepare(\"DELETE FROM users WHERE id = ?\");",
+          "why": "Query does not restrict by current user",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership before deletion",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0061-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /php-plain/order_detail.php: missing owner verification",
+      "route_id": "R-0061",
+      "endpoint": {
+        "method": "GET",
+        "path": "/php-plain/order_detail.php"
+      },
+      "location": {
+        "file": "php-plain/order_detail.php",
+        "start_line": 5
+      },
+      "evidence": [
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 5,
+          "code": "$id = $_GET['id'];",
+          "why": "Object ID comes from the request",
+          "line": 5
+        },
+        {
+          "file": "php-plain/order_detail.php",
+          "start_line": 6,
+          "code": "$res = mysql_query(\"SELECT * FROM orders WHERE id = \" . $id);",
+          "why": "Query does not restrict by current user",
+          "line": 6
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the session user or verify ownership after fetching the record",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0069-1",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /orders/<int:order_id>: missing owner verification",
+      "route_id": "R-0069",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/<int:order_id>"
+      },
+      "location": {
+        "file": "python-flask/app.py",
+        "start_line": 12
+      },
+      "evidence": [
+        {
+          "file": "python-flask/app.py",
+          "start_line": 12,
+          "code": "cur.execute(\"SELECT * FROM orders WHERE id = %s\" % order_id)",
+          "why": "Query does not restrict by current user",
+          "line": 12
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-284",
+        "CWE-639"
+      ],
+      "recommendation": "Add a WHERE clause that binds the user ID to the current_user.id or verify ownership after fetching the record",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "order_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0055-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at php-laravel/routes/web.php:9 (from auditor verdict)",
+      "route_id": "R-0055",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 9
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 9,
+          "why": "The auditor judged this route 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/rename"
+      },
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0056-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at php-laravel/routes/web.php:10 (from auditor verdict)",
+      "route_id": "R-0056",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 10,
+          "why": "The auditor judged this route 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "POST",
+        "path": "/account/profile"
+      },
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0052-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at php-laravel/routes/web.php:6 (from auditor verdict)",
+      "route_id": "R-0052",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 6
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 6,
+          "why": "The auditor judged this route 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "POST",
+        "path": "/register"
+      },
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0053-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at php-laravel/routes/web.php:7 (from auditor verdict)",
+      "route_id": "R-0053",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 7
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 7,
+          "why": "The auditor judged this route 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "POST",
+        "path": "/posts"
+      },
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0054-verdict",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "Missing ownership check at php-laravel/routes/web.php:8 (from auditor verdict)",
+      "route_id": "R-0054",
+      "location": {
+        "file": "php-laravel/routes/web.php",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/routes/web.php",
+          "line": 8,
+          "why": "The auditor judged this route 'needs_review' but wrote no finding"
+        }
+      ],
+      "impact": "Generated from the auditor's 'needs_review' verdict; the model wrote no finding for it.",
+      "severity": "medium",
+      "confidence": "low",
+      "cwe": [
+        "CWE-284"
+      ],
+      "recommendation": "Bind the object lookup to the current user or tenant, or check ownership before using it.",
+      "status": "unverified",
+      "endpoint": {
+        "method": "POST",
+        "path": "/teams"
+      },
+      "attack_vector": {
+        "target_param": "id"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0055",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0056",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0052",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0053",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0054",
+      "verdict": "needs_review"
+    },
+    {
+      "route_id": "R-0057",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0058",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0066",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0067",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0059",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0061",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0062",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0069",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0070",
+      "verdict": "safe"
+    },
+    {
+      "route_id": "R-0071",
+      "verdict": "safe"
+    }
+  ]
+}

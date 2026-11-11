@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-6",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0046",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-codeigniter/application/controllers/Invoice.php line 23"
+      ],
+      "control_found": null,
+      "notes": "The update query updates an invoice by id without filtering on the authenticated user\u2019s id, and no role or ownership check is present in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0057",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php line 7"
+      ],
+      "control_found": null,
+      "notes": "The view action selects a user by id from the request without any ownership or role guard; the included auth file only verifies login."
+    },
+    {
+      "finding_id": "BOLA-R-0058",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin.php line 11"
+      ],
+      "control_found": null,
+      "notes": "The delete action deletes a user by id from the request without any ownership or role guard; the included auth file only verifies login."
+    },
+    {
+      "finding_id": "BOLA-R-0066",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/delete_user.php line 5"
+      ],
+      "control_found": null,
+      "notes": "The delete_user script deletes a user by id from the request without any ownership or role guard; the included auth file only verifies login."
+    },
+    {
+      "finding_id": "BOLA-R-0067",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/admin/promote.php line 5"
+      ],
+      "control_found": null,
+      "notes": "The promote script updates a user\u2019s role based on an id from the request without any ownership or role guard; the included auth file only verifies login."
+    }
+  ]
+}

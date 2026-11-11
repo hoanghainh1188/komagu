@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-8",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0052-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php:6"
+      ],
+      "control_found": null,
+      "notes": "The route maps POST /register to AccountController::register, but the controller code is not shown. Registration typically does not require an ownership check, so the evidence is insufficient to confirm a missing check."
+    },
+    {
+      "finding_id": "BOLA-R-0053-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php:7"
+      ],
+      "control_found": null,
+      "notes": "The route maps POST /posts to AccountController::post. The controller implementation is not visible; creating a post usually does not involve an ownership check on the target resource, so the evidence is insufficient."
+    },
+    {
+      "finding_id": "BOLA-R-0054-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php:8"
+      ],
+      "control_found": null,
+      "notes": "The route maps POST /teams to AccountController::team. The controller code is not shown; team creation typically does not require an ownership check on an existing resource, so the evidence is insufficient."
+    },
+    {
+      "finding_id": "BOLA-R-0073",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py:16-20"
+      ],
+      "control_found": null,
+      "notes": "The rename endpoint loads a User by the uid from the URL and updates the name without verifying that uid matches the authenticated user. No ownership check is present."
+    },
+    {
+      "finding_id": "BOLA-R-0074",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py:24-30"
+      ],
+      "control_found": null,
+      "notes": "The patch endpoint loads a User by uid from the URL and applies arbitrary updates without checking ownership. No ownership verification is present."
+    }
+  ]
+}

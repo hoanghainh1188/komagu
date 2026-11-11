@@ -1,0 +1,253 @@
+{
+  "batch_id": "privilege-002",
+  "findings": [
+    {
+      "finding_id": "MASS-M-0009-1",
+      "category": "mass_assignment",
+      "subtype": "privileged_field_writable",
+      "title": "Team owner_id is writable via mass assignment",
+      "candidate_id": "M-0009",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Whole object binding: Team::create($request->all());"
+        },
+        {
+          "file": "php-laravel/app/Models/Team.php",
+          "line": 8,
+          "why": "fillable includes privileged field owner_id"
+        }
+      ],
+      "impact": "Any authenticated user can set the owner_id of a Team, effectively taking ownership of any team.",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Remove owner_id from $fillable or set it server\u2011side after validating ownership.",
+      "status": "unverified"
+    },
+    {
+      "finding_id": "MASS-M-0006-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0006",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 8,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review the User model definition and ensure privileged fields are not mass\u2011assignable.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0007-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0007",
+      "location": {
+        "file": "node-express/routes/profile.js",
+        "start_line": 16
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/profile.js",
+          "line": 16,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review the User model definition and ensure privileged fields are not mass\u2011assignable.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0008-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0008",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 13,
+          "why": "Whole object binding: User::create($request->all());"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable due to missing field list.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Inspect the User model to confirm which fields are mass\u2011assignable and restrict privileged ones.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0010-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0010",
+      "location": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "start_line": 36
+      },
+      "evidence": [
+        {
+          "file": "php-laravel/app/Http/Controllers/AccountController.php",
+          "line": 23,
+          "why": "Whole object binding: Team::create($request->all());"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Review the Team model definition and ensure privileged fields are not mass\u2011assignable.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0013-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0013",
+      "location": {
+        "file": "php-plain/register.php",
+        "start_line": 4
+      },
+      "evidence": [
+        {
+          "file": "php-plain/register.php",
+          "line": 4,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Avoid using extract() and bind all POST values; explicitly whitelist fields.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0015-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0015",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 27
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 27,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Validate and whitelist request fields before setting attributes.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    },
+    {
+      "finding_id": "MASS-M-0014-1",
+      "category": "mass_assignment",
+      "title": "Unknown model fields in whole object binding",
+      "candidate_id": "M-0014",
+      "location": {
+        "file": "python-flask/profile.py",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "python-flask/profile.py",
+          "line": 10,
+          "why": "Location taken from the Tier 1 inventory"
+        }
+      ],
+      "impact": "Unable to determine if privileged fields are writable.",
+      "severity": "medium",
+      "confidence": "medium",
+      "cwe": [
+        "CWE-915"
+      ],
+      "recommendation": "Use a DTO or explicit field mapping to prevent mass assignment of privileged fields.",
+      "status": "needs_review",
+      "subtype": "whole_object_binding"
+    }
+  ],
+  "privilege_route_verdicts": [],
+  "candidate_verdicts": [
+    {
+      "candidate_id": "M-0006",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0007",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0008",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0009",
+      "verdict": "vulnerable"
+    },
+    {
+      "candidate_id": "M-0010",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0013",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0015",
+      "verdict": "needs_review"
+    },
+    {
+      "candidate_id": "M-0014",
+      "verdict": "needs_review"
+    }
+  ]
+}

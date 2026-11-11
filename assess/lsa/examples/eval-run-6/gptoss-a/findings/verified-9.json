@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-9",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0010",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "Reviewed CustomerController.cs lines 11-16"
+      ],
+      "control_found": null,
+      "notes": "No ownership check, cast, or allow\u2011list is visible in the method body."
+    },
+    {
+      "finding_id": "BOLA-R-0011",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "Reviewed CustomerController.cs lines 20-23"
+      ],
+      "control_found": null,
+      "notes": "The method only calls SaveChanges(); no ownership verification is shown."
+    },
+    {
+      "finding_id": "BOLA-R-0012",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "Reviewed CustomerController.cs lines 27-32"
+      ],
+      "control_found": null,
+      "notes": "Customer is loaded by id and updated without any ownership check in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0016",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "Reviewed GetFile.ashx lines 8-10"
+      ],
+      "control_found": null,
+      "notes": "File ID is taken directly from the query string and used to transmit a file; no ownership guard is present."
+    },
+    {
+      "finding_id": "BOLA-R-0029",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "Reviewed ProfileServlet.java lines 9-13"
+      ],
+      "control_found": null,
+      "notes": "Account object is populated from request parameters without any ownership validation in the shown code."
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "batch_id": "routes-003",
+  "findings": [
+    {
+      "finding_id": "BOLA-R-0033",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in GET /orders/:id: missing owner verification",
+      "route_id": "R-0033",
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/:id"
+      },
+      "location": {
+        "file": "node-express/routes/orders.js",
+        "start_line": 8
+      },
+      "evidence": [
+        {
+          "file": "node-express/routes/orders.js",
+          "start_line": 8,
+          "code": "Order.findById(req.params.id, function (err, order) { res.json(order); });",
+          "why": "The order ID comes from the request and is used without checking that the order belongs to the authenticated user.",
+          "line": 8
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-284"
+      ],
+      "recommendation": "Add an ownership check by filtering on the authenticated user\u2019s ID or by loading the order and verifying its owner before returning it.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0043",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /perl-cgi/cgi-bin/order.cgi: missing owner verification",
+      "route_id": "R-0043",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/perl-cgi/cgi-bin/order.cgi"
+      },
+      "location": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "start_line": 13
+      },
+      "evidence": [
+        {
+          "file": "perl-cgi/cgi-bin/order.cgi",
+          "start_line": 13,
+          "code": "$sth = $dbh->prepare(\"SELECT * FROM orders WHERE id = $id\");",
+          "why": "The order ID is taken directly from the request and the query does not constrain the result to the authenticated user.",
+          "line": 13
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-284"
+      ],
+      "recommendation": "Modify the query to include a user_id filter or verify the owner after fetching the record.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "user_id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0044",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /invoice/view/{id}: missing owner verification",
+      "route_id": "R-0044",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/view/{id}"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 10
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 10,
+          "code": "$q = $this->db->query(\"SELECT * FROM invoices WHERE id = $id\");",
+          "why": "The invoice ID is taken from the request and the query does not restrict to the authenticated user\u2019s invoices.",
+          "line": 10
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-284"
+      ],
+      "recommendation": "Add a WHERE clause that includes the current user\u2019s ID or load the invoice and compare its owner before returning it.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "id"
+      }
+    },
+    {
+      "finding_id": "BOLA-R-0046",
+      "category": "bola",
+      "subtype": "missing_ownership_check",
+      "title": "BOLA in ANY /invoice/update: missing owner verification",
+      "route_id": "R-0046",
+      "endpoint": {
+        "method": "ANY",
+        "path": "/invoice/update"
+      },
+      "location": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "start_line": 23
+      },
+      "evidence": [
+        {
+          "file": "php-codeigniter/application/controllers/Invoice.php",
+          "start_line": 23,
+          "code": "$this->db->query(\"UPDATE invoices SET note = ? WHERE id = ?\", array($note, $id));",
+          "why": "The invoice ID is taken from the request and the update statement does not verify that the invoice belongs to the authenticated user.",
+          "line": 23
+        }
+      ],
+      "severity": "high",
+      "confidence": "high",
+      "cwe": [
+        "CWE-639",
+        "CWE-284"
+      ],
+      "recommendation": "Include the authenticated user\u2019s ID in the WHERE clause or verify ownership before performing the update.",
+      "status": "unverified",
+      "attack_vector": {
+        "target_param": "invoice_id"
+      }
+    }
+  ],
+  "route_verdicts": [
+    {
+      "route_id": "R-0033",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0034",
+      "verdict": "safe",
+      "reason": "Ownership check is performed via owner field in the query."
+    },
+    {
+      "route_id": "R-0035",
+      "verdict": "safe",
+      "reason": "No user\u2011specific data accessed."
+    },
+    {
+      "route_id": "R-0036",
+      "verdict": "safe",
+      "reason": "Login endpoint, no data access."
+    },
+    {
+      "route_id": "R-0037",
+      "verdict": "safe",
+      "reason": "Search endpoint, no user\u2011specific data accessed."
+    },
+    {
+      "route_id": "R-0038",
+      "verdict": "safe",
+      "reason": "Stats endpoint, no user\u2011specific data accessed."
+    },
+    {
+      "route_id": "R-0043",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0044",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0045",
+      "verdict": "safe",
+      "reason": "Ownership check is performed via user_id in the query."
+    },
+    {
+      "route_id": "R-0046",
+      "verdict": "vulnerable"
+    },
+    {
+      "route_id": "R-0047",
+      "verdict": "safe",
+      "reason": "No user\u2011specific data accessed by ID."
+    },
+    {
+      "route_id": "R-0048",
+      "verdict": "safe",
+      "reason": "No user\u2011specific data accessed by ID."
+    },
+    {
+      "route_id": "R-0049",
+      "verdict": "safe",
+      "reason": "No user\u2011specific data accessed by ID."
+    },
+    {
+      "route_id": "R-0050",
+      "verdict": "safe",
+      "reason": "No user\u2011specific data accessed by ID."
+    },
+    {
+      "route_id": "R-0051",
+      "verdict": "safe",
+      "reason": "No user\u2011specific data accessed by ID."
+    }
+  ]
+}

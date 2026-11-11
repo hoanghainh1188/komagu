@@ -1,0 +1,400 @@
+{
+  "routes": [
+    {
+      "route_id": "R-0033",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/:id",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 8
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0034",
+      "method": [
+        "GET"
+      ],
+      "path": "/orders/:id/mine",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 12
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        },
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0035",
+      "method": [
+        "GET"
+      ],
+      "path": "/reports",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 16
+      },
+      "id_inputs": [
+        {
+          "name": "month",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0036",
+      "method": [
+        "POST"
+      ],
+      "path": "/login",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 20
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0037",
+      "method": [
+        "GET"
+      ],
+      "path": "/search",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 24
+      },
+      "id_inputs": [
+        {
+          "name": "n",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0038",
+      "method": [
+        "GET"
+      ],
+      "path": "/stats",
+      "path_source": "declared",
+      "handler": {
+        "file": "node-express/routes/orders.js",
+        "line": 28
+      },
+      "id_inputs": [
+        {
+          "name": "shop",
+          "source": "query"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0043",
+      "method": [
+        "ANY"
+      ],
+      "path": "/perl-cgi/cgi-bin/order.cgi",
+      "path_source": "declared",
+      "handler": {
+        "file": "perl-cgi/cgi-bin/order.cgi",
+        "line": 1
+      },
+      "id_inputs": [
+        {
+          "name": "user_id",
+          "source": "any"
+        },
+        {
+          "name": "id",
+          "source": "any"
+        },
+        {
+          "name": "cart",
+          "source": "any"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0044",
+      "method": [
+        "ANY"
+      ],
+      "path": "/invoice/view/{id}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "line": 9
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0045",
+      "method": [
+        "ANY"
+      ],
+      "path": "/invoice/mine/{id}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "line": 14
+      },
+      "id_inputs": [
+        {
+          "name": "id",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0046",
+      "method": [
+        "ANY"
+      ],
+      "path": "/invoice/update",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-codeigniter/application/controllers/Invoice.php",
+        "line": 20
+      },
+      "id_inputs": [
+        {
+          "name": "invoice_id",
+          "source": "form"
+        },
+        {
+          "name": "note",
+          "source": "form"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0047",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/register/{request}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 11
+      },
+      "id_inputs": [
+        {
+          "name": "request",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0048",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/post/{request}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 16
+      },
+      "id_inputs": [
+        {
+          "name": "request",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0049",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/team/{request}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 21
+      },
+      "id_inputs": [
+        {
+          "name": "request",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0050",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/rename/{request}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 26
+      },
+      "id_inputs": [
+        {
+          "name": "request",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    },
+    {
+      "route_id": "R-0051",
+      "method": [
+        "ANY"
+      ],
+      "path": "/account/profile/{request}",
+      "path_source": "declared",
+      "handler": {
+        "file": "php-laravel/app/Http/Controllers/AccountController.php",
+        "line": 33
+      },
+      "id_inputs": [
+        {
+          "name": "request",
+          "source": "path"
+        }
+      ],
+      "guards": [],
+      "data_ops": [
+        {
+          "op": "read"
+        }
+      ],
+      "needs_bola_audit": true
+    }
+  ],
+  "rejected": []
+}

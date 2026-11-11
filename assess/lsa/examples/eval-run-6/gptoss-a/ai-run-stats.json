@@ -1,0 +1,87 @@
+{
+  "model": "gpt-oss:20b",
+  "endpoint": "http://localhost:11434/v1/chat/completions",
+  "phases": {
+    "2-stack-detector": {
+      "seconds": 70.138,
+      "calls": 1,
+      "prompt_tokens": 3111,
+      "completion_tokens": 2599
+    },
+    "3-route-mapper": {
+      "seconds": 0.008,
+      "calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+    },
+    "4a-bola-auditor": {
+      "seconds": 668.959,
+      "calls": 6,
+      "prompt_tokens": 47070,
+      "completion_tokens": 25435
+    },
+    "4b-injection-auditor": {
+      "seconds": 355.556,
+      "calls": 2,
+      "prompt_tokens": 15807,
+      "completion_tokens": 13395
+    },
+    "4c-privilege-auditor": {
+      "seconds": 259.07,
+      "calls": 2,
+      "prompt_tokens": 18324,
+      "completion_tokens": 9192
+    },
+    "5-finding-verifier": {
+      "seconds": 1041.91,
+      "calls": 22,
+      "prompt_tokens": 146767,
+      "completion_tokens": 33792
+    }
+  },
+  "totals": {
+    "calls": 33,
+    "prompt_tokens": 231079,
+    "completion_tokens": 84413,
+    "seconds": 2395.175
+  },
+  "parse_failures": {},
+  "call_errors": {},
+  "retries": {},
+  "repaired": {},
+  "findings_from_verdicts": {
+    "4a-bola-auditor": [
+      "BOLA-R-0055-verdict",
+      "BOLA-R-0056-verdict",
+      "BOLA-R-0052-verdict",
+      "BOLA-R-0053-verdict",
+      "BOLA-R-0054-verdict"
+    ],
+    "4c-privilege-auditor": [
+      "MASS-M-0011-verdict",
+      "MASS-M-0012-verdict",
+      "MASS-M-0001-verdict",
+      "MASS-M-0002-verdict"
+    ]
+  },
+  "anchoring": {
+    "moved": [
+      "BOLA-R-0057-2",
+      "INJ-I-0027",
+      "INJ-I-0029",
+      "BFLA-R-0007-1",
+      "BFLA-R-0009-1",
+      "BFLA-R-0023-1",
+      "BFLA-R-0030-1",
+      "BFLA-R-0032-1",
+      "MASS-M-0003-1",
+      "MASS-M-0006-1",
+      "MASS-M-0007-1",
+      "MASS-M-0010-1",
+      "MASS-M-0013-1",
+      "MASS-M-0015-1",
+      "MASS-M-0014-1"
+    ],
+    "unanchored": []
+  }
+}

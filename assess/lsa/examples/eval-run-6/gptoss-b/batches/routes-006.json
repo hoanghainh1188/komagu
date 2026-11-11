@@ -1,0 +1,106 @@
+{
+  "batch_id": "routes-006",
+  "files": [
+    "php-plain/register.php",
+    "php-plain/search.php"
+  ],
+  "knowledge_files": [
+    "knowledge/stacks/php.md"
+  ],
+  "candidates": [
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "ANY"
+      ],
+      "path": "/php-plain/register.php",
+      "handler": {
+        "file": "php-plain/register.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [],
+      "guard_hints": [],
+      "data_hints": [
+        {
+          "op": "create",
+          "line": 5
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0064",
+      "needs_audit_hint": false,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    },
+    {
+      "stack": "php",
+      "kind": "file_endpoint",
+      "method": [
+        "GET"
+      ],
+      "path": "/php-plain/search.php",
+      "handler": {
+        "file": "php-plain/search.php",
+        "line": 1,
+        "symbol": null
+      },
+      "id_params": [
+        {
+          "name": "q",
+          "source": "query",
+          "line": 5,
+          "is_id_like": false
+        },
+        {
+          "name": "sort",
+          "source": "query",
+          "line": 6,
+          "is_id_like": false
+        },
+        {
+          "name": "cat",
+          "source": "query",
+          "line": 14,
+          "is_id_like": false
+        }
+      ],
+      "guard_hints": [
+        {
+          "hint": "require_once 'inc/auth.php'",
+          "line": 2
+        }
+      ],
+      "data_hints": [
+        {
+          "op": "read",
+          "line": 7
+        },
+        {
+          "op": "read",
+          "line": 10
+        },
+        {
+          "op": "read",
+          "line": 13
+        },
+        {
+          "op": "read",
+          "line": 17
+        }
+      ],
+      "notes": "",
+      "route_id": "R-0065",
+      "needs_audit_hint": false,
+      "privilege_hint": "unknown",
+      "privilege_reasons": [],
+      "role_checks": [],
+      "bfla_signals": [],
+      "needs_bfla_audit_hint": false
+    }
+  ]
+}

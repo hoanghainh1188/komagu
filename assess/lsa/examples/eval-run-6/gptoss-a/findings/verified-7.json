@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-7",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0059-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/manage_users.php:5-8"
+      ],
+      "control_found": null,
+      "notes": "The POST handler deletes a user by id without any role or ownership check. The only role check is in the HTML link, not in the request handling code."
+    },
+    {
+      "finding_id": "BOLA-R-0061-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "php-plain/order_detail.php:5-6"
+      ],
+      "control_found": null,
+      "notes": "The query selects an order by id without scoping to the current user and no ownership check is present."
+    },
+    {
+      "finding_id": "BOLA-R-0069-1",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/app.py:8-13"
+      ],
+      "control_found": null,
+      "notes": "The route '/orders/<int:order_id>' retrieves an order by id without filtering by user_id. The only ownership check is in the '/orders/mine/<int:order_id>' route."
+    },
+    {
+      "finding_id": "BOLA-R-0055-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php:6-9"
+      ],
+      "control_found": null,
+      "notes": "The route definition is shown, but the controller implementation is not visible in the provided context, so ownership checks cannot be confirmed or denied."
+    },
+    {
+      "finding_id": "BOLA-R-0056-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php:6-10"
+      ],
+      "control_found": null,
+      "notes": "Only the route definition is visible; the controller logic that might enforce ownership is not shown."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "batch_id": "verified-8",
+  "verifications": [
+    {
+      "finding_id": "BOLA-R-0052-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php line 6"
+      ],
+      "control_found": null,
+      "notes": "The route definition does not show any ownership or role check. No ownership verification is visible in the provided code context."
+    },
+    {
+      "finding_id": "BOLA-R-0053-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php line 7"
+      ],
+      "control_found": null,
+      "notes": "The route definition does not contain any ownership or role check. No ownership verification is visible in the provided code context."
+    },
+    {
+      "finding_id": "BOLA-R-0054-verdict",
+      "verdict": "likely",
+      "reason_code": "code_not_visible",
+      "confidence": "medium",
+      "checked": [
+        "php-laravel/routes/web.php line 8"
+      ],
+      "control_found": null,
+      "notes": "The route definition does not contain any ownership or role check. No ownership verification is visible in the provided code context."
+    },
+    {
+      "finding_id": "BOLA-R-0073",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py lines 16-20"
+      ],
+      "control_found": null,
+      "notes": "The function loads a User by uid and updates the name without any ownership check or role verification. No compensating control is present in the visible code."
+    },
+    {
+      "finding_id": "BOLA-R-0074",
+      "verdict": "confirmed",
+      "reason_code": "traced",
+      "confidence": "high",
+      "checked": [
+        "python-flask/profile.py lines 24-30"
+      ],
+      "control_found": null,
+      "notes": "The function loads a User by uid and applies arbitrary updates without verifying that the current user owns the record. No compensating control is present in the visible code."
+    }
+  ]
+}
