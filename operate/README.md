@@ -22,7 +22,12 @@ This directory provides CI/CD components for automated security verification, pr
    - `github/cross-user-authz.yml`: Reusable GitHub Actions workflow.
    - `gitlab/cross-user-authz.gitlab-ci.yml`: GitLab CI security template.
 
-4. **Automated Remediation Runner (`remediator/runner.py` / `komagu fix`)**:
+4. **MCP server (`operate/mcp/`, `komagu mcp --stdio`)**:
+   - Speaks the Model Context Protocol on stdin/stdout with the Python standard library only (no MCP SDK).
+   - Tools stay local: Tier 1 `scan`, `read_audit`, `leak_check`, `inventory`, and `fix_preview`.
+   - `fix_preview` is a dry run and does not modify source. Patch apply, the edge gateway, and live cross-user tests stay on the CLI.
+
+5. **Automated Remediation Runner (`remediator/runner.py` / `komagu fix`)**:
    - Parses audit findings (`findings.json` or SARIF) and generates automated code fixes for BOLA/IDOR and SQLi vulnerabilities.
    - Supports dry-run simulation, unified patch export, and direct in-place remediation.
 

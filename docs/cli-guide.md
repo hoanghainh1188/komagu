@@ -597,6 +597,53 @@ komagu demo --down
 
 ---
 
+### 3.11 `komagu mcp` — Zero-Dependency MCP Server
+
+Serves a [Model Context Protocol](https://modelcontextprotocol.io) endpoint on stdio so an AI client (Cursor, Claude Code, Codex, or any other MCP host) can call Komagu without a third-party package. The server is Python 3.8+ standard library only. It speaks newline-delimited JSON-RPC 2.0 and accepts protocol revisions `2024-11-05`, `2025-03-26`, and `2025-06-18`. A revision it does not implement is answered with `2025-06-18`.
+
+Stdout carries protocol messages only. Logs go to stderr, and the ASCII banner is suppressed for this command. `--stdio` is required.
+
+```bash
+komagu mcp --stdio
+```
+
+Client configuration:
+
+```json
+{
+  "mcpServers": {
+    "komagu": {
+      "command": "komagu",
+      "args": ["mcp", "--stdio"]
+    }
+  }
+}
+```
+
+From a checkout, point `command` at `python3` and `args` at `["-m", "operate.cli.main", "mcp", "--stdio"]` with the repository root as the working directory. `npx @hoanghainh/komagu mcp --stdio` works the same way, because the Node launcher inherits stdin and stdout.
+
+#### Tools
+
+| Tool | What it does | Writes source? |
+| :--- | :--- | :--- |
+| `scan` | Tier 1 audit of `target` into `out`. No `--headless-ai`, so the scan does not call a model. | Audit files under `out` only |
+| `read_audit` | Summarizes `findings.json`, the stack profile, and coverage. Finding rows are id, category, severity, title, file, and line. | No |
+| `leak_check` | Same checker as `komagu leak-check`. Secret values come back masked. | No |
+| `inventory` | Compares a routes file with an OpenAPI document and an optional gateway log. | No |
+| `fix_preview` | Dry-run remediation plan. `appliedCount` is 0 and no patch file is written. | No |
+
+Applying a patch, starting `komagu protect`, and sending live cross-user requests stay on the CLI. Those actions are not tools.
+
+`scan` and `leak_check` put the process exit code in the tool result (`exitCode`). A leak or a rejected path is a successful tool call whose payload describes the outcome, so the client can read it. A missing argument comes back as `isError: true`.
+
+#### Command Options
+
+| Option | Description |
+| :--- | :--- |
+| `--stdio` | Serve MCP on stdin/stdout. This is the only transport. Omitting it exits `2` and writes nothing to stdout. |
+
+---
+
 ## 4. Exit Codes & Invariants Matrix
 
 Komagu CLI returns standardized POSIX exit codes to guarantee seamless gating in CI/CD pipelines:
@@ -699,6 +746,9 @@ komagu-exploit-gating:
 
 #### Q: Does Komagu send source code or customer data to third-party LLMs?
 **A:** No. Komagu operates strictly under the **BYO-LLM and Local Execution Protocol**. Deterministic scanning, testing, WAF patching, and breach simulations execute 100% locally with zero external network transmission.
+
+#### Q: How do I let Cursor or another MCP client call Komagu?
+**A:** Add a stdio server that runs `komagu mcp --stdio`. The process uses only the Python standard library. Tool results stay on the machine: `fix_preview` does not modify source, and `scan` does not enable `--headless-ai`. See §3.11.
 
 #### Q: How do I suppress the ASCII banner in automated CI scripts?
 **A:** Place `--no-banner` before any subcommand:

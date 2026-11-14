@@ -111,6 +111,7 @@ Komagu operates on a strict **Bring-Your-Own-LLM (BYO-LLM)** and runtime-neutral
 | `komagu devsecops run <target>` | Complete SAST, secret leak (Gitleaks), and SCA scan | `npx @hoanghainh/komagu devsecops run .` |
 | `komagu simulate --scenario <name>` | Executes Breach & Attack Simulation (Times Car, Metabase SQLi, IDC Frontier) | `npx @hoanghainh/komagu simulate --target http://localhost:5001 -o report.md` |
 | `komagu demo --up` | Launches the interactive Member Portal reference app | `npx @hoanghainh/komagu demo --up` |
+| `komagu mcp --stdio` | Serves local analysis tools (scan, audit summary, leak check, inventory, dry-run fix preview) over the Model Context Protocol. Standard library only; stdout is JSON-RPC. | `npx @hoanghainh/komagu mcp --stdio` |
 
 ---
 
