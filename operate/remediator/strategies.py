@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from remediate.authz.bfla_patcher import BFLARolePatcher
+from remediate.authz.mass_assignment_patcher import MassAssignmentPatcher
 from remediate.authz.patcher import BOLAOwnershipPatcher
 from remediate.deps.patcher import DependencyManifestPatcher
 from remediate.query.patcher import ParameterizedQueryPatcher
@@ -158,6 +160,66 @@ class DependencyVulnerabilityRemediationStrategy(BaseRemediationStrategy):
         return content, result.explanation or "No automated dependency version upgrade applicable; requires manual remediation."
 
 
+class BFLARemediationStrategy(BaseRemediationStrategy):
+    """Strategy for remediating Broken Function Level Authorization (OWASP API5:2023, CWE-285/862)."""
+
+    name: str = "bfla"
+
+    def can_handle(self, finding: Dict[str, Any]) -> bool:
+        category = str(finding.get("category", "")).lower()
+        cwe = str(finding.get("cwe", "")).upper()
+        return category == "bfla" or "CWE-285" in cwe or "CWE-862" in cwe or "CWE-269" in cwe
+
+    def generate_patch(
+        self,
+        target_file: Path,
+        content: str,
+        finding: Dict[str, Any],
+    ) -> Tuple[str, str]:
+        lines = content.splitlines(keepends=True)
+        loc = finding.get("location", {})
+        start_line = loc.get("start_line", 1) - 1
+
+        if start_line < 0 or start_line >= len(lines):
+            return content, "Target line number is out of bounds."
+
+        patcher = BFLARolePatcher()
+        patched_content, result = patcher.patch_file(target_file, start_line + 1, finding, content=content)
+        if result.changed:
+            return patched_content, result.explanation
+        return content, result.explanation or "No automated BFLA role guard rewrite applicable; requires manual remediation."
+
+
+class MassAssignmentRemediationStrategy(BaseRemediationStrategy):
+    """Strategy for remediating Mass Assignment (OWASP API3:2023, CWE-915)."""
+
+    name: str = "mass_assignment"
+
+    def can_handle(self, finding: Dict[str, Any]) -> bool:
+        category = str(finding.get("category", "")).lower()
+        cwe = str(finding.get("cwe", "")).upper()
+        return category == "mass_assignment" or "CWE-915" in cwe
+
+    def generate_patch(
+        self,
+        target_file: Path,
+        content: str,
+        finding: Dict[str, Any],
+    ) -> Tuple[str, str]:
+        lines = content.splitlines(keepends=True)
+        loc = finding.get("location", {})
+        start_line = loc.get("start_line", 1) - 1
+
+        if start_line < 0 or start_line >= len(lines):
+            return content, "Target line number is out of bounds."
+
+        patcher = MassAssignmentPatcher()
+        patched_content, result = patcher.patch_file(target_file, start_line + 1, finding, content=content)
+        if result.changed:
+            return patched_content, result.explanation
+        return content, result.explanation or "No automated mass-assignment allow-list rewrite applicable; requires manual remediation."
+
+
 class StrategyRegistry:
     """Registry coordinating available remediation strategies."""
 
@@ -166,6 +228,8 @@ class StrategyRegistry:
             DependencyVulnerabilityRemediationStrategy(),
             SQLInjectionRemediationStrategy(),
             BOLARemediationStrategy(),
+            BFLARemediationStrategy(),
+            MassAssignmentRemediationStrategy(),
         ]
 
     def register(self, strategy: BaseRemediationStrategy) -> None:
