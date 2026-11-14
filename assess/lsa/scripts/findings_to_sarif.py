@@ -50,6 +50,14 @@ RULE_TEXT = {
         "Mass assignment of object properties",
         "A request body is bound to a model or entity without an allow-list, so a caller can write properties they must not control.",
     ),
+    "path_traversal": (
+        "Path traversal / arbitrary file access",
+        "A filesystem path is constructed from request-controlled input without canonicalizing and enforcing a base directory boundary.",
+    ),
+    "ssrf": (
+        "Server-Side Request Forgery (SSRF)",
+        "An outbound network request target URL is derived from request-controlled input without host allow-listing or private-IP blocking.",
+    ),
 }
 
 CWE_TAXONOMY_DEFS: Dict[str, Dict[str, str]] = {
@@ -101,6 +109,18 @@ CWE_TAXONOMY_DEFS: Dict[str, Dict[str, str]] = {
         "shortDescription": "Improper Input Validation",
         "helpUri": "https://cwe.mitre.org/data/definitions/20.html",
     },
+    "CWE-22": {
+        "id": "CWE-22",
+        "name": "Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+        "shortDescription": "Path Traversal",
+        "helpUri": "https://cwe.mitre.org/data/definitions/22.html",
+    },
+    "CWE-918": {
+        "id": "CWE-918",
+        "name": "Server-Side Request Forgery (SSRF)",
+        "shortDescription": "Server-Side Request Forgery (SSRF)",
+        "helpUri": "https://cwe.mitre.org/data/definitions/918.html",
+    },
 }
 
 OWASP_TAGS = {
@@ -128,6 +148,15 @@ OWASP_TAGS = {
         "external/owasp/a01-2021-broken-access-control",
         "OWASP:A01:2021-Broken Access Control",
         "OWASP-API3:2023-BOPLA",
+    ],
+    "path_traversal": [
+        "external/owasp/a01-2021-broken-access-control",
+        "OWASP:A01:2021-Broken Access Control",
+    ],
+    "ssrf": [
+        "external/owasp/a10-2021-server-side-request-forgery",
+        "OWASP:A10:2021-Server-Side Request Forgery",
+        "OWASP-API7:2023-SSRF",
     ],
 }
 

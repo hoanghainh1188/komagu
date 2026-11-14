@@ -19,7 +19,7 @@
   "properties": {
     "finding_id": {
       "type": "string",
-      "pattern": "^(BOLA|INJ|BFLA|MASS)-[A-Za-z0-9_.-]+$"
+      "pattern": "^(BOLA|INJ|BFLA|MASS|PATH|SSRF)-[A-Za-z0-9_.-]+$"
     },
     "category": {
       "enum": [
@@ -27,7 +27,9 @@
         "sql_injection",
         "nosql_injection",
         "bfla",
-        "mass_assignment"
+        "mass_assignment",
+        "path_traversal",
+        "ssrf"
       ]
     },
     "fingerprint": {

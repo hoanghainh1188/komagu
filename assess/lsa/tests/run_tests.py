@@ -187,6 +187,10 @@ def main() -> int:
     if res_mod.returncode != 0:
         fails.append(f"test_modern_stacks.py failed:\n{res_mod.stdout}\n{res_mod.stderr}")
     print(f"  modern stacks    {'OK' if res_mod.returncode == 0 else 'FAIL'}")
+    res_ps = subprocess.run([sys.executable, str(HERE / "test_path_ssrf.py")], capture_output=True, text=True)
+    if res_ps.returncode != 0:
+        fails.append(f"test_path_ssrf.py failed:\n{res_ps.stdout}\n{res_ps.stderr}")
+    print(f"  path & ssrf      {'OK' if res_ps.returncode == 0 else 'FAIL'}")
     res_perf = subprocess.run([sys.executable, str(HERE / "test_performance.py")], capture_output=True, text=True)
     if res_perf.returncode != 0:
         fails.append(f"test_performance.py failed:\n{res_perf.stdout}\n{res_perf.stderr}")

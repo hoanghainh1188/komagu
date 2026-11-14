@@ -36,8 +36,10 @@ See `_shared-rules.md` §4. Severity and confidence are independent: a
 | `sql_injection` | string_concatenation, string_interpolation, format_string, template_placeholder, dynamic_identifier, second_order, stored_procedure_dynamic_sql | CWE-89 | A03:2021 |
 | `sql_injection` | (HQL/JPQL) | CWE-564, CWE-89 | A03:2021 |
 | `nosql_injection` | operator_injection, js_injection | CWE-943 | A03:2021 |
+| `path_traversal` | arbitrary_file_read, arbitrary_file_write | CWE-22 | A01:2021 |
+| `ssrf` | unvalidated_outbound_url, internal_metadata_probe | CWE-918 | A10:2021, API7:2023 |
 
-Finding id prefixes: `BOLA-`, `INJ-`, `BFLA-`, `MASS-`.
+Finding id prefixes: `BOLA-`, `INJ-`, `BFLA-`, `MASS-`, `PATH-`, `SSRF-`.
 
 ## Fingerprint
 
