@@ -25,6 +25,7 @@ from detect_stack import detect  # noqa: E402
 from changed_files import ChangedFilesError, git_changed_files, select_files  # noqa: E402
 from find_injection import find_injection  # noqa: E402
 from find_mass_assignment import find_mass_assignment  # noqa: E402
+from find_path_ssrf import find_path_ssrf  # noqa: E402
 from lsa_common import KIT_VERSION, deep_merge, load_config, write_json  # noqa: E402
 from make_batches import make_batches  # noqa: E402
 from map_routes import map_routes  # noqa: E402
@@ -91,6 +92,8 @@ def main() -> int:
     write_json(out / "injection.candidates.json", inj)
     mass = find_mass_assignment(target, scan_cfg, cache=cache)
     write_json(out / "mass-assignment.candidates.json", mass)
+    path_ssrf = find_path_ssrf(target, scan_cfg, cache=cache)
+    write_json(out / "path-ssrf.candidates.json", path_ssrf)
 
     if cache.enabled:
         cache.save()
@@ -116,6 +119,7 @@ def main() -> int:
         f"- Route candidates: {routes['summary']['total']} (with id-like params: {routes['summary']['with_id_like_params']})",
         f"- Injection candidates: {inj['summary']['total']} (high priority: {inj['summary']['high_priority']})",
         f"- Mass assignment candidates: {mass['summary']['total']} (high priority: {mass['summary']['high_priority']})",
+        f"- Path traversal / SSRF candidates: {path_ssrf['summary']['total']} (path_traversal: {path_ssrf['summary']['path_traversal']}, ssrf: {path_ssrf['summary']['ssrf']})",
         f"- BFLA route hints: {routes['summary'].get('bfla_hints', 0)}",
         f"- Batches: {len(idx['routes'])} route, {len(idx['injection'])} injection",
         f"- Knowledge files to load: {', '.join(prof['knowledge_files'])}", "",

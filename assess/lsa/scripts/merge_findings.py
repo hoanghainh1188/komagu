@@ -139,7 +139,7 @@ def load_validator(schema_name: str):
 
 
 BASE_CATEGORIES = ("bola", "sql_injection", "nosql_injection")
-EXTRA_CATEGORIES = ("bfla", "mass_assignment")
+EXTRA_CATEGORIES = ("bfla", "mass_assignment", "path_traversal", "ssrf")
 
 
 def count_by_category(active: List[Dict]) -> Dict[str, int]:
