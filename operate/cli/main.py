@@ -7,7 +7,20 @@ import sys
 from typing import List, Optional
 
 from operate.cli import __version__
-from operate.cli.commands import demo, devsecops, evidence, fix, init, inventory, leak_check, protect, scan, simulate, test
+from operate.cli.commands import (
+    demo,
+    devsecops,
+    evidence,
+    fix,
+    init,
+    inventory,
+    leak_check,
+    mcp,
+    protect,
+    scan,
+    simulate,
+    test,
+)
 from operate.cli.ui import print_banner
 
 
@@ -30,6 +43,7 @@ Quick Start Workflow:
   9. Reconcile API inventory:   komagu inventory --routes OUT/routes.json --openapi openapi.json
   10. Bundle METI SCS evidence: komagu evidence --audit-dir OUT/ --output-dir ./evidence-pack
   11. Check outputs for leaks:   komagu leak-check OUT/ --canary-file canaries.txt
+  12. Serve tools to an AI client: komagu mcp --stdio
 
 Documentation & Guides:
   Comprehensive User Guide: docs/cli-guide.md
@@ -68,6 +82,7 @@ Learn more about a specific command:
     inventory.register_subcommand(subparsers)
     evidence.register_subcommand(subparsers)
     leak_check.register_subcommand(subparsers)
+    mcp.register_subcommand(subparsers)
 
     help_parser = subparsers.add_parser(
         "help",
@@ -77,8 +92,24 @@ Learn more about a specific command:
     help_parser.add_argument(
         "topic",
         nargs="?",
-        choices=["scan", "protect", "test", "demo", "devsecops", "fix", "init", "simulate", "inventory", "evidence", "leak-check"],
-        help="Subcommand topic to display help for (scan, protect, test, demo, devsecops, fix, init, simulate, inventory, evidence, leak-check)",
+        choices=[
+            "scan",
+            "protect",
+            "test",
+            "demo",
+            "devsecops",
+            "fix",
+            "init",
+            "simulate",
+            "inventory",
+            "evidence",
+            "leak-check",
+            "mcp",
+        ],
+        help=(
+            "Subcommand topic to display help for "
+            "(scan, protect, test, demo, devsecops, fix, init, simulate, inventory, evidence, leak-check, mcp)"
+        ),
     )
 
     return parser
@@ -90,7 +121,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     is_json = getattr(args, "format", "") == "json"
-    if not getattr(args, "no_banner", False) and getattr(args, "subcommand", None) is not None and not is_json:
+    # The MCP server owns stdout. A banner would break the JSON-RPC stream.
+    suppress_banner = getattr(args, "subcommand", None) == "mcp"
+    if (
+        not getattr(args, "no_banner", False)
+        and getattr(args, "subcommand", None) is not None
+        and not is_json
+        and not suppress_banner
+    ):
         print_banner()
 
     if getattr(args, "subcommand", None) is None:
