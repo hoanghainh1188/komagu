@@ -287,6 +287,14 @@ class BOLAOwnershipPatcher:
         elif lang == "python":
             guard_lines.append(f"{indent}@RequireOwnership(operation=ResourceOperation.{operation}, id_param=\"id\")\n")
 
+        elif lang == "golang":
+            return content, BOLARewriteResult(
+                original_line=target_line,
+                patched_line=target_line,
+                changed=False,
+                explanation="Go BOLA guard requires Authorizer.Middleware(resourceLoader, ...) with a domain resourceLoader; requires manual remediation.",
+            )
+
         else:
             return content, BOLARewriteResult(
                 original_line=target_line,
