@@ -190,7 +190,7 @@ class TestTools(unittest.TestCase):
                                 "title": "missing owner check",
                                 "status": "new",
                                 "location": {"file": "app.php", "start_line": 12},
-                                "evidence": [{"snippet": "SELECT * FROM users WHERE id = " + "request"}],
+                                "evidence": [{"snippet": "EVIDENCE-MARKER"}],
                             }
                         ],
                     }
@@ -204,19 +204,23 @@ class TestTools(unittest.TestCase):
             self.assertEqual(body["findings"][0]["finding_id"], "BOLA-1")
             self.assertEqual(body["findings"][0]["start_line"], 12)
             self.assertNotIn("evidence", body["findings"][0])
-            self.assertNotIn("SELECT", result["content"][0]["text"])
+            self.assertNotIn("EVIDENCE-MARKER", result["content"][0]["text"])
 
-    def test_leak_check_masks_a_planted_secret(self) -> None:
+    def test_leak_check_masks_a_planted_canary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            report = Path(tmp) / "report.md"
-            secret = "hunter2hunter2"
-            report.write_text(f'String password = "{secret}";\n', encoding="utf-8")
-            result = self._call("leak_check", {"paths": [str(report)]})
+            root = Path(tmp)
+            report = root / "report.md"
+            marker = "komagu-mcp-" + "canary-marker"
+            canaries = root / "canaries.txt"
+            canaries.write_text(marker + "\n", encoding="utf-8")
+            report.write_text("client sent " + marker + "\n", encoding="utf-8")
+            result = self._call("leak_check", {"paths": [str(report)], "canary_file": str(canaries)})
             body = result["structuredContent"]
             self.assertEqual(body["exitCode"], 1)
-            self.assertIn("redaction-pattern", [hit["detector"] for hit in body["hits"]])
-            self.assertTrue(all(secret not in hit["masked"] for hit in body["hits"]))
-            self.assertNotIn(secret, result["content"][0]["text"])
+            self.assertEqual(body["canariesLoaded"], 1)
+            self.assertIn("canary", [hit["detector"] for hit in body["hits"]])
+            self.assertTrue(all(marker not in hit["masked"] for hit in body["hits"]))
+            self.assertNotIn(marker, result["content"][0]["text"])
 
     def test_inventory_reports_a_shadow_route(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
