@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
+
+from operate.ai.client import REASONING_EFFORTS
+from operate.remediator.ai_fixer import AITier2Fixer
 
 from operate.cli.ui import (
     BOLD,
@@ -89,6 +93,38 @@ Examples:
         default="summary",
         help="Output format: summary table (default), json, or diff",
     )
+    parser.add_argument(
+        "--ai",
+        action="store_true",
+        help="Enable Tier 2 AI-assisted multi-line fix fallback with verification gate when deterministic patchers cannot rewrite a finding",
+    )
+    parser.add_argument(
+        "--ai-endpoint",
+        default=os.environ.get("KOMAGU_AI_ENDPOINT", "http://localhost:11434/v1"),
+        help="OpenAI-compatible /v1 endpoint for --ai fixes (default: $KOMAGU_AI_ENDPOINT or http://localhost:11434/v1)",
+    )
+    parser.add_argument(
+        "--ai-model",
+        default=os.environ.get("KOMAGU_AI_MODEL", "llama3.1"),
+        help="Model name for --ai fixes (default: $KOMAGU_AI_MODEL or llama3.1)",
+    )
+    parser.add_argument(
+        "--ai-api-key",
+        default=os.environ.get("KOMAGU_AI_API_KEY") or os.environ.get("OPENAI_API_KEY"),
+        help="API key for --ai endpoint (default: $KOMAGU_AI_API_KEY or $OPENAI_API_KEY)",
+    )
+    parser.add_argument(
+        "--ai-timeout",
+        type=int,
+        default=120,
+        help="Timeout in seconds per --ai LLM request (default: 120)",
+    )
+    parser.add_argument(
+        "--ai-reasoning-effort",
+        choices=REASONING_EFFORTS,
+        default=None,
+        help="Reasoning effort passed to OpenAI-compatible endpoint (default: not sent)",
+    )
     parser.set_defaults(func=run_fix)
 
 
@@ -100,6 +136,16 @@ def run_fix(args: argparse.Namespace) -> int:
         step_fail(f"Target path does not exist: {target_path}")
         return 1
 
+    ai_fixer = None
+    if getattr(args, "ai", False):
+        ai_fixer = AITier2Fixer(
+            endpoint=args.ai_endpoint,
+            model=args.ai_model,
+            api_key=args.ai_api_key,
+            timeout=args.ai_timeout,
+            reasoning_effort=args.ai_reasoning_effort,
+        )
+
     runner = RemediationRunner(
         target_dir=target_path,
         findings_path=args.findings_path,
@@ -107,6 +153,7 @@ def run_fix(args: argparse.Namespace) -> int:
         output_patch=args.output_patch,
         scan_sca=getattr(args, "sca", False),
         query_osv=getattr(args, "osv", False),
+        ai_fixer=ai_fixer,
     )
 
     mode_label = "DRY-RUN (Simulated)" if args.dry_run else "APPLY (In-place)"

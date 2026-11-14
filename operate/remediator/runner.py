@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from operate.remediator.ai_fixer import AITier2Fixer
 from operate.remediator.models import RemediationPlan, RemediationReport
 from operate.remediator.strategies import BaseRemediationStrategy, StrategyRegistry
 from remediate.deps.patcher import CVEAdvisoryCatalog
@@ -177,6 +178,7 @@ class RemediationRunner:
         scan_sca: bool = False,
         query_osv: bool = False,
         sync_lockfiles: bool = True,
+        ai_fixer: Optional[AITier2Fixer] = None,
     ) -> None:
         self.target_dir = Path(target_dir).resolve()
         self.findings_path = Path(findings_path).resolve() if findings_path else None
@@ -186,6 +188,7 @@ class RemediationRunner:
         self.scan_sca = scan_sca
         self.query_osv = query_osv
         self.sync_lockfiles = sync_lockfiles
+        self.ai_fixer = ai_fixer
         self.registry = StrategyRegistry()
         self._virtual_contents: Dict[Path, str] = {}
         self._pre_patch_contents: Dict[Path, str] = {}
@@ -381,6 +384,14 @@ class RemediationRunner:
                 current_line = line_after_earlier_patches(self._pre_patch_contents[abs_file], original_content, start_line)
             located_finding = {**finding, "location": {**loc, "start_line": current_line}}
             patched_content, explanation = strategy.generate_patch(abs_file, original_content, located_finding)
+
+            if patched_content == original_content and self.ai_fixer is not None and category != "dependency":
+                ai_res = self.ai_fixer.generate_verified_patch(abs_file, original_content, located_finding)
+                if ai_res.changed:
+                    patched_content = ai_res.patched_content
+                    explanation = ai_res.explanation
+                elif ai_res.explanation:
+                    explanation = f"{explanation} ({ai_res.explanation})" if explanation else ai_res.explanation
 
             if patched_content == original_content:
                 return RemediationPlan(
